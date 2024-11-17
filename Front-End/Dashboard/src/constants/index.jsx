@@ -24,10 +24,10 @@ export const menuItems = [
   { title: "Dashboard Overview" },
   {
     title: "User Management",
-    icon: <FaUserCircle className="h-8 w-8" />,
+    icon: <FaUserCircle className="h-8 w-8 text-slate-500" />,
     submenu: true,
     submenuItems: [
-      { title: "User Profile" },
+      { title: "Super Admin Profile" },
       { title: "User Activity Log" },
       { title: "Plan Assignment" },
       { title: "Billing & Payment History" },
@@ -35,7 +35,7 @@ export const menuItems = [
   },
   {
     title: "Internet Plans",
-    icon: <TfiWorld className="h-8 w-8" />,
+    icon: <TfiWorld className="h-8 w-8 text-slate-500" />,
     submenu: true,
     spacing: true,
     submenuItems: [
@@ -46,7 +46,7 @@ export const menuItems = [
   },
   {
     title: "Network Management",
-    icon: <BsFillRouterFill className="h-8 w-8" />,
+    icon: <BsFillRouterFill className="h-8 w-8 text-slate-500" />,
     submenu: true,
     submenuItems: [
       { title: "Bandwidth Allocation" },
@@ -57,7 +57,7 @@ export const menuItems = [
   },
   {
     title: "Payment Processing",
-    icon: <RiSecurePaymentLine className="h-8 w-8" />,
+    icon: <RiSecurePaymentLine className="h-8 w-8 text-slate-500" />,
     submenu: true,
     submenuItems: [
       { title: "Transaction Monitoring" },
@@ -66,7 +66,7 @@ export const menuItems = [
   },
   {
     title: "Reporting & Analytics",
-    icon: <HiDocumentReport className="h-8 w-8" />,
+    icon: <HiDocumentReport className="h-8 w-8 text-slate-500" />,
     submenu: true,
     spacing: true,
     submenuItems: [
@@ -77,7 +77,7 @@ export const menuItems = [
   },
   {
     title: "Support & Maintenance",
-    icon: <FcSupport className="h-8 w-8" />,
+    icon: <FcSupport className="h-8 w-8 text-slate-500" />,
     submenu: true,
     submenuItems: [
       { title: "User Support Tickets" },
@@ -88,7 +88,7 @@ export const menuItems = [
   },
   {
     title: "Automation & Alerts",
-    icon: <TbSettingsAutomation className="h-8 w-8" />,
+    icon: <TbSettingsAutomation className="h-8 w-8 text-slate-500" />,
     submenu: true,
     submenuItems: [
       { title: "Automated Alerts" },

@@ -47,8 +47,8 @@ const SideBar = () => {
             src={logo}
             alt="InterLink Logo"
           />
-          <span className={`text-2xl text-black tracking-tight duration-300 ${!isExpanded && "scale-0"}`}>
-            Banana
+          <span className={`text-2xl text-black tracking-tight duration-300 font-semibold ${!isExpanded && "scale-0"}`}>
+            InterLink
           </span>
         </div>
 
@@ -68,7 +68,7 @@ const SideBar = () => {
                     hover:shadow-lg hover:shadow-purple-500/20 duration-300`
                   }
                 >
-                  <span className="text-black">{menu.icon || <BiSolidDashboard className="h-8 w-8" />}</span>
+                  <span className="text-black">{menu.icon || <BiSolidDashboard className="h-8 w-8 text-slate-500" />}</span>
                   <span className={`text-sm font-medium flex-1 text-black duration-200 ${!isExpanded && "hidden"}`}>
                     {menu.title}
                   </span>
@@ -124,3 +124,4 @@ const SideBar = () => {
 };
 
 export default SideBar;
+
