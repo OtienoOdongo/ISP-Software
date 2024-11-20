@@ -12,6 +12,7 @@ import SuperAdminProfile from './Pages/UserManagement/SuperAdminProfile';
 import UserActivityLog from './Pages/UserManagement/UserActivityLog';
 import PlanAssignment from './Pages/UserManagement/PlanAssignment';
 import PaymentHistory from './Pages/UserManagement/PaymentHistory';
+import UserProfile from './Pages/UserManagement/UserProfile';
 
 // Internet Plans Routes
 import CreatePlans from './Pages/InternetPlans/CreatePlans';
@@ -23,6 +24,7 @@ import BandwidthAllocation from './Pages/NetworkManagement/BandwidthAllocation';
 import IPAddressManagement from './Pages/NetworkManagement/IPAddressManagement';
 import NetworkDiagnostics from './Pages/NetworkManagement/NetworkDiagnostics';
 import SecuritySettings from './Pages/NetworkManagement/SecuritySettings';
+import RouterManagement from './Pages/NetworkManagement/RouterManagement';
 
 // Payment Processing Routes
 import TransactionMonitoring from './Pages/PaymentProcessing/TransactionMonitoring';
@@ -31,7 +33,7 @@ import PaymentGatewaySettings from './Pages/PaymentProcessing/PaymentGatewaySett
 // Reporting & Analytics Routes
 import UsageReports from './Pages/ReportingAnalytics/UsageReports';
 import FinancialReports from './Pages/ReportingAnalytics/FinancialReports';
-import ExportData from './Pages/ReportingAnalytics/ExportData';
+
 
 // Support & Maintenance Routes
 import UserSupportTickets from './Pages/SupportMaintenance/UserSupportTickets';
@@ -46,6 +48,7 @@ import TaskAutomation from './Pages/AutomationAlerts/TaskAutomation';
 
 // Page Not Found
 import NoMatch from './Pages/NotFound/NoMatch';
+
 
 /**
  * App Component
@@ -66,6 +69,8 @@ const App = () => {
         <Route path="user-management/user-activity-log" element={<UserActivityLog />} />
         <Route path="user-management/plan-assignment" element={<PlanAssignment />} />
         <Route path="user-management/billing-&-payment-history" element={<PaymentHistory />} />
+        <Route path="user-management/user-profile" element={<UserProfile />} />
+
 
         {/* Internet Plans Routes */}
         <Route path="internet-plans/create-plans" element={<CreatePlans />} />
@@ -77,6 +82,7 @@ const App = () => {
         <Route path="network-management/ip-address-management" element={<IPAddressManagement />} />
         <Route path="network-management/network-diagnostics" element={<NetworkDiagnostics />} />
         <Route path="network-management/security-settings" element={<SecuritySettings />} />
+        <Route path="network-management/router-management" element={<RouterManagement />} />
 
         {/* Payment Processing Routes */}
         <Route path="payment-processing/transaction-monitoring" element={<TransactionMonitoring />} />
@@ -85,7 +91,7 @@ const App = () => {
         {/* Reporting & Analytics Routes */}
         <Route path="reporting-&-analytics/usage-reports" element={<UsageReports />} />
         <Route path="reporting-&-analytics/financial-reports" element={<FinancialReports />} />
-        <Route path="reporting-&-analytics/export-data" element={<ExportData />} />
+        
 
         {/* Support & Maintenance Routes */}
         <Route path="support-&-maintenance/user-support-tickets" element={<UserSupportTickets />} />

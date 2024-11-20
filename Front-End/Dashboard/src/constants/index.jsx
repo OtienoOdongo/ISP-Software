@@ -28,6 +28,7 @@ export const menuItems = [
     submenu: true,
     submenuItems: [
       { title: "Super Admin Profile" },
+      { title: "User Profile" },
       { title: "User Activity Log" },
       { title: "Plan Assignment" },
       { title: "Billing & Payment History" },
@@ -49,6 +50,7 @@ export const menuItems = [
     icon: <BsFillRouterFill className="h-8 w-8 text-slate-500" />,
     submenu: true,
     submenuItems: [
+      {title: "Router Management"},
       { title: "Bandwidth Allocation" },
       { title: "IP Address Management" },
       { title: "Network Diagnostics" },
@@ -72,7 +74,6 @@ export const menuItems = [
     submenuItems: [
       { title: "Usage Reports" },
       { title: "Financial Reports" },
-      { title: "Export Data" },
     ],
   },
   {
@@ -97,6 +98,11 @@ export const menuItems = [
     ],
   },
 ];
+
+
+
+
+
 
 
 
