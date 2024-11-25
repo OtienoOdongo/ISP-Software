@@ -38,7 +38,6 @@ export const menuItems = [
     title: "Internet Plans",
     icon: <TfiWorld className="h-8 w-8 text-slate-500" />,
     submenu: true,
-    spacing: true,
     submenuItems: [
       { title: "Create Plans" },
       { title: "Plan Analytics" },
@@ -70,7 +69,6 @@ export const menuItems = [
     title: "Reporting & Analytics",
     icon: <HiDocumentReport className="h-8 w-8 text-slate-500" />,
     submenu: true,
-    spacing: true,
     submenuItems: [
       { title: "Usage Reports" },
       { title: "Financial Reports" },

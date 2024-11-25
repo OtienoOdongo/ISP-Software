@@ -194,7 +194,7 @@ const SideBar = () => {
                     hover:shadow-lg duration-300`
                   }
                 >
-                  <span className="text-black">{menu.icon || <BiSolidDashboard className="h-8 w-8 text-slate-500" />}</span>
+                  <span className="text-black">{menu.icon || <BiSolidDashboard className="h-8 w-8 text-slate-500 -ml-[8px]" />}</span>
                   <span className={`text-sm font-medium flex-1 text-black duration-200 ${!isExpanded && "hidden"}`}>
                     {menu.title}
                   </span>
@@ -216,7 +216,7 @@ const SideBar = () => {
                   </span>
                   {/* Adjusted alert bubble positioning */}
                   {activeMenuIndex === index && (
-                    <div className="absolute right-5 top-5 w-2 h-2 rounded-full bg-indigo-400" />
+                    <div className="absolute right-5 top-5 w-2 h-2 rounded-full bg-indigo-800" />
                   )}
                   {/* Icon to show menu expansion */}
                   {menu.submenuItems && (

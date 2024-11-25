@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 const WiFiAccessControl = () => {
   const [accessControl, setAccessControl] = useState({
     isolation: false,
-    maxDevices: 1,
+    maxDevices: 3,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
