@@ -1,165 +1,240 @@
-import React, { useState } from "react";
 
-const UserProfiles = () => {
-  const [users, setUsers] = useState([
-    { id: 1, name: "Alice Johnson", phone: "1234567890", plan: "Basic", status: "Active", autoRenewal: true },
-    { id: 2, name: "Bob Smith", phone: "0987654321", plan: "Plus", status: "Inactive", autoRenewal: false },
-    { id: 3, name: "Charlie Brown", phone: "1122334455", plan: "Premium", status: "Active", autoRenewal: true },
-  ]);
 
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
+import React, { useState, useCallback, useEffect } from "react";
+import {
+  Users,
+  WifiHigh,
+  CheckCircle,
+  Clock,
+  Ban,
+  HelpCircle
+} from "lucide-react";
 
-  const plans = ["Basic", "Plus", "Premium"];
+const mockUsers = [
+  {
+    id: 1,
+    name: "Ken Opiyo",
+    phone: "+254701234567",
+    lastLogin: "2025-01-12T14:30:00Z",
+    active: true,
+    dataUsage: { used: 20, total: 100, unit: "GB" },
+    paymentStatus: "Paid",
+    subscription: {
+      plan: "Premium",
+      startDate: "2025-01-01",
+      expiryDate: "2025-02-01",
+    },
+  },
+  {
+    id: 2,
+    name: "Lenox Kamari",
+    phone: "+254712345678",
+    lastLogin: "2025-01-11T12:00:00Z",
+    active: false,
+    dataUsage: { used: 15, total: 30, unit: "GB" },
+    paymentStatus: "Pending",
+    subscription: {
+      plan: "Plus",
+      startDate: "2025-01-05",
+      expiryDate: "2025-02-05",
+    },
+  },
+  {
+    id: 3,
+    name: "Lucy Wange",
+    phone: "+25474567890",
+    lastLogin: "2025-01-11T12:00:00Z",
+    active: false,
+    dataUsage: { used: 9.9, total: 10, unit: "GB" },
+    paymentStatus: "Paid",
+    subscription: {
+      plan: "Basic",
+      startDate: "2025-01-05",
+      expiryDate: "2025-02-05",
+    },
+  },
+];
 
-  // Handle Plan Update
-  const handlePlanUpdate = (userId, newPlan) => {
-    setUsers((prevUsers) =>
-      prevUsers.map((user) =>
-        user.id === userId ? { ...user, plan: newPlan } : user
+const UserProfile = () => {
+  const [users, setUsers] = useState(mockUsers);
+  const [selectedUser, setSelectedUser] = useState(mockUsers[0]);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = useCallback((event) => {
+    setSearchQuery(event.target.value);
+  }, []);
+
+  const filteredUsers = users.filter((user) =>
+    user.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleUserSelect = useCallback((userId) => {
+    const user = users.find((u) => u.id === userId);
+    setSelectedUser(user);
+  }, [users]);
+
+  const handleSuspend = useCallback(() => {
+    setUsers(prevUsers =>
+      prevUsers.map(user =>
+        user.id === selectedUser.id ? { ...user, active: !user.active } : user
       )
     );
-  };
+    setSelectedUser(prev => ({ ...prev, active: !prev.active }));
+  }, [selectedUser, users]);
 
-  // Toggle Auto-Renewal
-  const toggleAutoRenewal = (userId) => {
-    setUsers((prevUsers) =>
-      prevUsers.map((user) =>
-        user.id === userId ? { ...user, autoRenewal: !user.autoRenewal } : user
-      )
-    );
-  };
+  const formatDateTime = useCallback((dateTime) => {
+    const options = { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" };
+    return new Date(dateTime).toLocaleDateString("en-US", options);
+  }, []);
 
-  // Update User Status
-  const updateStatus = (userId, newStatus) => {
-    setUsers((prevUsers) =>
-      prevUsers.map((user) =>
-        user.id === userId ? { ...user, status: newStatus } : user
-      )
-    );
-  };
+  // Use useEffect to set the initial selected user from local storage if available
+  useEffect(() => {
+    const storedUser = localStorage.getItem("selectedUser");
+    if (storedUser) {
+      setSelectedUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  // Save selected user to local storage when changed
+  useEffect(() => {
+    localStorage.setItem("selectedUser", JSON.stringify(selectedUser));
+  }, [selectedUser]);
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <h1 className="text-2xl font-semibold mb-6">User Profiles</h1>
-
-      {/* User List */}
-      <div className="bg-white shadow-md rounded-lg p-4">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="border-b">
-              <th className="py-2 px-4">Name</th>
-              <th className="py-2 px-4">Phone</th>
-              <th className="py-2 px-4">Plan</th>
-              <th className="py-2 px-4">Auto Renewal</th>
-              <th className="py-2 px-4">Status</th>
-              <th className="py-2 px-4">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id} className="border-b hover:bg-gray-100">
-                <td className="py-2 px-4">{user.name}</td>
-                <td className="py-2 px-4">{user.phone}</td>
-                <td className="py-2 px-4">{user.plan}</td>
-                <td className="py-2 px-4">
-                  {user.autoRenewal ? "Enabled" : "Disabled"}
-                </td>
-                <td className="py-2 px-4">{user.status}</td>
-                <td className="py-2 px-4">
-                  <button
-                    className="bg-blue-500 text-white px-3 py-1 rounded-md mr-2"
-                    onClick={() => {
-                      setSelectedUser(user);
-                      setIsEditing(true);
-                    }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="bg-gray-300 text-black px-3 py-1 rounded-md"
-                    onClick={() =>
-                      updateStatus(user.id, user.status === "Active" ? "Inactive" : "Active")
-                    }
-                  >
-                    {user.status === "Active" ? "Suspend" : "Activate"}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="bg-white shadow-lg rounded-lg p-6 space-y-6">
+      {/* Search Bar */}
+      <div className="relative mb-4">
+        <input
+          type="text"
+          placeholder="Search users by name..."
+          value={searchQuery}
+          onChange={handleSearch}
+          className="px-4 py-2 w-full border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+          aria-label="Search for users"
+        />
+        <select
+          value={selectedUser.id}
+          onChange={(e) => handleUserSelect(Number(e.target.value))}
+          className="absolute right-0 top-0 px-4 py-2 border-l border-gray-300 rounded-r-lg bg-white focus:outline-none focus:ring focus:ring-blue-300"
+        >
+          <option value="" disabled>Select User</option>
+          {filteredUsers.map((user) => (
+            <option key={user.id} value={user.id}>
+              {user.name}
+            </option>
+          ))}
+        </select>
       </div>
 
-      {/* Edit Modal */}
-      {isEditing && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-96">
-            <h2 className="text-lg font-semibold mb-4">Edit User</h2>
-            <div className="mb-4">
-              <label className="block mb-1 font-semibold">Name</label>
-              <input
-                type="text"
-                value={selectedUser.name}
-                disabled
-                className="w-full border p-2 rounded-md"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block mb-1 font-semibold">Phone</label>
-              <input
-                type="text"
-                value={selectedUser.phone}
-                disabled
-                className="w-full border p-2 rounded-md"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block mb-1 font-semibold">Plan</label>
-              <select
-                className="w-full border p-2 rounded-md"
-                value={selectedUser.plan}
-                onChange={(e) => handlePlanUpdate(selectedUser.id, e.target.value)}
-              >
-                {plans.map((plan) => (
-                  <option key={plan} value={plan}>
-                    {plan}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="mb-4">
-              <label className="block mb-1 font-semibold">Auto Renewal</label>
-              <div className="flex items-center">
-                <button
-                  className={`px-4 py-2 rounded-md ${
-                    selectedUser.autoRenewal ? "bg-green-500 text-white" : "bg-gray-300"
-                  }`}
-                  onClick={() => toggleAutoRenewal(selectedUser.id)}
-                >
-                  {selectedUser.autoRenewal ? "Disable" : "Enable"}
-                </button>
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <button
-                className="bg-blue-500 text-white px-4 py-2 rounded-md mr-2"
-                onClick={() => setIsEditing(false)}
-              >
-                Save
-              </button>
-              <button
-                className="bg-gray-300 px-4 py-2 rounded-md"
-                onClick={() => setIsEditing(false)}
-              >
-                Cancel
-              </button>
-            </div>
+      {/* User Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <Users className="w-8 h-8 text-blue-500" />
+          <h1 className="text-2xl font-bold text-gray-800">{selectedUser.name}</h1>
+        </div>
+      </div>
+
+      {/* Profile Details */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="p-4 bg-gray-50 rounded-lg shadow-sm">
+          <h2 className="text-lg font-semibold mb-2">Profile Details</h2>
+          <p className="text-sm text-gray-600">
+            <span className="font-bold mr-2">Phone:</span> {selectedUser.phone}
+          </p>
+          <p className="text-sm text-gray-600">
+            <span className="font-bold mr-2">Status:</span>
+            <span className={selectedUser.active ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
+              {selectedUser.active ? "Active" : "Suspended"}
+            </span>
+          </p>
+        </div>
+
+        {/* Activity */}
+        <div className="p-4 bg-gray-50 rounded-lg shadow-sm">
+          <h2 className="text-lg font-semibold mb-2">Activity</h2>
+          <div className="flex items-center space-x-2 mb-2">
+            <Clock className="w-9 h-9 text-orange-500" />
+            <p className="text-sm text-gray-600">
+              <span className="font-bold mr-2">Last Login:</span> {formatDateTime(selectedUser.lastLogin)}
+            </p>
+          </div>
+          <p className="text-sm text-gray-600">
+            <span className="font-bold mr-2">User Logins:</span> 10 times this month
+          </p>
+          <p className="text-sm text-gray-600">
+            <span className="font-bold mr-2">Recent Activity:</span> Updated plan 2 days ago
+          </p>
+        </div>
+      </div>
+
+      {/* Data Usage */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="p-4 bg-gray-50 rounded-lg shadow-sm">
+          <h2 className="text-lg font-semibold mb-2">Data Usage</h2>
+          <div className="flex items-center space-x-2 mb-2">
+            <WifiHigh className="w-11 h-11 text-blue-500" />
+            <p className="text-sm text-gray-600">
+              <span className="font-bold mr-2">Usage:</span>
+              {selectedUser.dataUsage.total === 'unlimited' ? 'Unlimited' :
+                `${selectedUser.dataUsage.used} / ${selectedUser.dataUsage.total}${selectedUser.dataUsage.unit} (${Math.round((selectedUser.dataUsage.used / selectedUser.dataUsage.total) * 100)}% used)`}
+            </p>
+          </div>
+          <div className="h-2 bg-gray-200 rounded-full w-full">
+            <div
+              className="h-full bg-blue-500 rounded-full"
+              style={{ width: `${selectedUser.dataUsage.total === 'unlimited' ? 0 : (selectedUser.dataUsage.used / selectedUser.dataUsage.total) * 100}%` }}
+            ></div>
           </div>
         </div>
-      )}
+
+        {/* Payment Status */}
+        <div className="p-4 bg-gray-50 rounded-lg shadow-sm">
+          <h2 className="text-lg font-semibold mb-2">Payment Status</h2>
+          <div className="flex items-center space-x-2 mb-2">
+            {selectedUser.paymentStatus === "Paid" ? (
+              <CheckCircle className="w-9 h-9 text-green-500" />
+            ) : (
+              <HelpCircle className="w-9 h-9 text-red-500" />
+            )}
+            <p className="text-sm text-gray-600">
+              <span className="font-bold mr-2">Status:</span> {selectedUser.paymentStatus}
+            </p>
+          </div>
+          <p className="text-sm text-gray-600">
+            <span className="font-bold mr-2">Last Payment:</span> {formatDateTime("2025-01-01T00:00:00Z")}
+          </p>
+          <p className="text-sm text-gray-600">
+            <span className="font-bold mr-2">Next Payment Due:</span> {formatDateTime("2025-02-01T00:00:00Z")}
+          </p>
+        </div>
+      </div>
+
+      {/* Subscription Details */}
+      <div className="p-4 bg-gray-50 rounded-lg shadow-sm">
+        <h2 className="text-lg font-semibold mb-2">Subscription</h2>
+        <p className="text-sm text-gray-600">
+          <span className="font-bold mr-2" style={{ color: selectedUser.subscription.plan === "Premium" ? "#FFD700" : selectedUser.subscription.plan === "Plus" ? "#FF4500" : "#008000" }}>Plan:</span> {selectedUser.subscription.plan}
+        </p>
+        <p className="text-sm text-gray-600">
+          <span className="font-bold mr-2">Start Date:</span> {formatDateTime(selectedUser.subscription.startDate)}
+        </p>
+        <p className="text-sm text-gray-600">
+          <span className="font-bold mr-2">Expiry Date:</span> {formatDateTime(selectedUser.subscription.expiryDate)}
+        </p>
+      </div>
+
+      {/* Suspend User Button */}
+      <div className="mt-6 flex justify-center">
+        <button
+          onClick={handleSuspend}
+          className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+        >
+          <Ban size={20} className="inline-block mr-2" />
+          Suspend
+        </button>
+      </div>
     </div>
   );
 };
 
-export default UserProfiles;
+export default UserProfile;

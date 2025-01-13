@@ -27,7 +27,7 @@ export const menuItems = [
     icon: <FaUserCircle className="h-8 w-8 text-slate-500" />,
     submenu: true,
     submenuItems: [
-      { title: "Super Admin Profile" },
+      { title: "Admin Profile" },
       { title: "User Profile" },
       { title: "User Activity Log" },
       { title: "Plan Assignment" },

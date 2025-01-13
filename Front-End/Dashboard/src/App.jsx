@@ -8,7 +8,7 @@ import Layout from './Pages/Layout/Layout';
 import DashboardOverview from './Pages/DashBoard/DashboardOverview';
 
 // User Management Routes
-import SuperAdminProfile from './Pages/UserManagement/SuperAdminProfile';
+import AdminProfile from './Pages/UserManagement/AdminProfile';
 import UserActivityLog from './Pages/UserManagement/UserActivityLog';
 import PlanAssignment from './Pages/UserManagement/PlanAssignment';
 import PaymentHistory from './Pages/UserManagement/PaymentHistory';
@@ -65,7 +65,7 @@ const App = () => {
         
 
         {/* User Management Routes */}
-        <Route path="user-management/super-admin-profile" element={<SuperAdminProfile />} />
+        <Route path="user-management/admin-profile" element={<AdminProfile />} />
         <Route path="user-management/user-activity-log" element={<UserActivityLog />} />
         <Route path="user-management/plan-assignment" element={<PlanAssignment />} />
         <Route path="user-management/billing-&-payment-history" element={<PaymentHistory />} />

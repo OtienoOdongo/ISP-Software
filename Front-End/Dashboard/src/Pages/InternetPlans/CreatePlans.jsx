@@ -1,348 +1,236 @@
-// import React, { useState } from "react";
-
-// const CreatePlans = () => {
-//   // State to manage plans
-//   const [plans, setPlans] = useState([
-//     { id: 1, name: "Basic Plan", price: 10, duration: "1 Week", data: "5GB" },
-//     { id: 2, name: "Plus Plan", price: 25, duration: "1 Month", data: "20GB" },
-//     { id: 3, name: "Premium Plan", price: 50, duration: "3 Months", data: "Unlimited" },
-//   ]);
-//   const [newPlan, setNewPlan] = useState({
-//     name: "",
-//     price: "",
-//     duration: "",
-//     data: "",
-//   });
-//   const [isEditing, setIsEditing] = useState(false);
-//   const [editingPlanId, setEditingPlanId] = useState(null);
-
-//   // Handle input changes
-//   const handleInputChange = (e) => {
-//     const { name, value } = e.target;
-//     setNewPlan((prevPlan) => ({ ...prevPlan, [name]: value }));
-//   };
-
-//   // Handle adding or editing a plan
-//   const handleSubmit = (e) => {
-//     e.preventDefault();
-//     if (isEditing) {
-//       setPlans((prevPlans) =>
-//         prevPlans.map((plan) =>
-//           plan.id === editingPlanId ? { ...plan, ...newPlan } : plan
-//         )
-//       );
-//       setIsEditing(false);
-//       setEditingPlanId(null);
-//     } else {
-//       const newPlanId = plans.length + 1;
-//       setPlans([...plans, { id: newPlanId, ...newPlan }]);
-//     }
-//     setNewPlan({ name: "", price: "", duration: "", data: "" });
-//   };
-
-//   // Handle editing a plan
-//   const handleEdit = (plan) => {
-//     setIsEditing(true);
-//     setEditingPlanId(plan.id);
-//     setNewPlan({ name: plan.name, price: plan.price, duration: plan.duration, data: plan.data });
-//   };
-
-//   // Handle deleting a plan
-//   const handleDelete = (planId) => {
-//     setPlans((prevPlans) => prevPlans.filter((plan) => plan.id !== planId));
-//   };
-
-//   return (
-//     <div className="p-6 bg-gray-100 min-h-screen">
-//       <h1 className="text-2xl font-semibold mb-6">Create Plans</h1>
-
-//       {/* Form to Add/Edit Plan */}
-//       <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-//         <h2 className="text-lg font-semibold mb-4">
-//           {isEditing ? "Edit Plan" : "Add New Plan"}
-//         </h2>
-//         <form onSubmit={handleSubmit}>
-//           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-//             <div>
-//               <label className="block font-semibold mb-1">Plan Name</label>
-//               <input
-//                 type="text"
-//                 name="name"
-//                 value={newPlan.name}
-//                 onChange={handleInputChange}
-//                 className="w-full border p-2 rounded-md"
-//                 required
-//               />
-//             </div>
-//             <div>
-//               <label className="block font-semibold mb-1">Price ($)</label>
-//               <input
-//                 type="number"
-//                 name="price"
-//                 value={newPlan.price}
-//                 onChange={handleInputChange}
-//                 className="w-full border p-2 rounded-md"
-//                 required
-//               />
-//             </div>
-//             <div>
-//               <label className="block font-semibold mb-1">Duration</label>
-//               <input
-//                 type="text"
-//                 name="duration"
-//                 value={newPlan.duration}
-//                 onChange={handleInputChange}
-//                 className="w-full border p-2 rounded-md"
-//                 placeholder="e.g., 1 Week, 1 Month"
-//                 required
-//               />
-//             </div>
-//             <div>
-//               <label className="block font-semibold mb-1">Data</label>
-//               <input
-//                 type="text"
-//                 name="data"
-//                 value={newPlan.data}
-//                 onChange={handleInputChange}
-//                 className="w-full border p-2 rounded-md"
-//                 placeholder="e.g., 5GB, Unlimited"
-//                 required
-//               />
-//             </div>
-//           </div>
-//           <button
-//             type="submit"
-//             className={`${
-//               isEditing ? "bg-green-500" : "bg-blue-500"
-//             } text-white px-4 py-2 rounded-md`}
-//           >
-//             {isEditing ? "Update Plan" : "Add Plan"}
-//           </button>
-//         </form>
-//       </div>
-
-//       {/* Plan List */}
-//       <div className="bg-white shadow-md rounded-lg p-4">
-//         <h2 className="text-lg font-semibold mb-4">Existing Plans</h2>
-//         {plans.length > 0 ? (
-//           <table className="w-full text-left">
-//             <thead>
-//               <tr className="border-b">
-//                 <th className="py-2 px-4">Name</th>
-//                 <th className="py-2 px-4">Price</th>
-//                 <th className="py-2 px-4">Duration</th>
-//                 <th className="py-2 px-4">Data</th>
-//                 <th className="py-2 px-4">Actions</th>
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {plans.map((plan) => (
-//                 <tr key={plan.id} className="border-b hover:bg-gray-50">
-//                   <td className="py-2 px-4">{plan.name}</td>
-//                   <td className="py-2 px-4">${plan.price}</td>
-//                   <td className="py-2 px-4">{plan.duration}</td>
-//                   <td className="py-2 px-4">{plan.data}</td>
-//                   <td className="py-2 px-4">
-//                     <button
-//                       className="bg-yellow-500 text-white px-3 py-1 rounded-md mr-2"
-//                       onClick={() => handleEdit(plan)}
-//                     >
-//                       Edit
-//                     </button>
-//                     <button
-//                       className="bg-red-500 text-white px-3 py-1 rounded-md"
-//                       onClick={() => handleDelete(plan.id)}
-//                     >
-//                       Delete
-//                     </button>
-//                   </td>
-//                 </tr>
-//               ))}
-//             </tbody>
-//           </table>
-//         ) : (
-//           <p className="text-gray-500">No plans available. Add a new plan to get started.</p>
-//         )}
-//       </div>
-//     </div>
-//   );
-// };
-
-
 import React, { useState } from "react";
+import { FiTrash2, FiPlus } from "react-icons/fi"; // For remove and add icons
+import { motion } from "framer-motion"; // For smooth animations
+import { CheckCircle } from "lucide-react"; // Import the CheckCircle icon
 
 const CreatePlans = () => {
   const [plans, setPlans] = useState([
-    { id: 1, name: "Basic Plan", price: 10, duration: "1 Week", data: "5GB" },
-    { id: 2, name: "Plus Plan", price: 25, duration: "1 Month", data: "20GB" },
-    { id: 3, name: "Premium Plan", price: 50, duration: "3 Months", data: "Unlimited" },
+    {
+      id: 1,
+      name: "Basic Plan",
+      price: 10,
+      duration: "1 Week",
+      data: "5GB",
+      description: "An affordable plan for light users.",
+      features: ["Access to basic internet", "5GB data cap"],
+    },
+    {
+      id: 2,
+      name: "Plus Plan",
+      price: 25,
+      duration: "1 Month",
+      data: "20GB",
+      description: "A plan for regular users.",
+      features: ["Higher speed", "20GB data cap"],
+    },
+    {
+      id: 3,
+      name: "Premium Plan",
+      price: 50,
+      duration: "3 Months",
+      data: "Unlimited",
+      description: "Unlimited internet for heavy users.",
+      features: ["Unlimited data", "Priority support"],
+    },
   ]);
+
   const [newPlan, setNewPlan] = useState({
     name: "",
     price: "",
     duration: "",
     data: "",
+    description: "",
+    features: [],
   });
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingPlanId, setEditingPlanId] = useState(null);
+
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewPlan((prevPlan) => ({ ...prevPlan, [name]: value }));
+    setNewPlan((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (isEditing) {
-      setPlans((prevPlans) =>
-        prevPlans.map((plan) =>
-          plan.id === editingPlanId ? { ...plan, ...newPlan } : plan
-        )
-      );
-      setIsEditing(false);
-      setEditingPlanId(null);
+  const handleAddFeature = () => {
+    setNewPlan((prev) => ({ ...prev, features: [...prev.features, ""] }));
+  };
+
+  const handleRemoveFeature = (index) => {
+    setNewPlan((prev) => {
+      const updatedFeatures = prev.features.filter((_, i) => i !== index);
+      return { ...prev, features: updatedFeatures };
+    });
+  };
+
+  const handleFeatureChange = (index, value) => {
+    setNewPlan((prev) => {
+      const updatedFeatures = [...prev.features];
+      updatedFeatures[index] = value;
+      return { ...prev, features: updatedFeatures };
+    });
+  };
+
+  const handleCreatePlan = () => {
+    if (newPlan.name && newPlan.price && newPlan.duration && newPlan.data) {
+      setPlans((prev) => [
+        ...prev,
+        { id: prev.length + 1, ...newPlan },
+      ]);
+      setNewPlan({
+        name: "",
+        price: "",
+        duration: "",
+        data: "",
+        description: "",
+        features: [],
+      });
+      setErrorMessage("");
     } else {
-      const newPlanId = plans.length + 1;
-      setPlans([...plans, { id: newPlanId, ...newPlan }]);
+      setErrorMessage("Please fill in all required fields.");
     }
-    setNewPlan({ name: "", price: "", duration: "", data: "" });
-  };
-
-  const handleEdit = (plan) => {
-    setIsEditing(true);
-    setEditingPlanId(plan.id);
-    setNewPlan({ name: plan.name, price: plan.price, duration: plan.duration, data: plan.data });
-  };
-
-  const handleDelete = (planId) => {
-    setPlans((prevPlans) => prevPlans.filter((plan) => plan.id !== planId));
-  };
-
-  const handleAddNewPlan = () => {
-    setIsEditing(false);
-    setEditingPlanId(null);
-    setNewPlan({ name: "", price: "", duration: "", data: "" });
   };
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <h1 className="text-2xl font-semibold mb-6">Create Plans</h1>
+    <div className="p-6 bg-gradient-to-r from-blue-50 to-teal-50 min-h-screen">
+      <h2 className="text-2xl font-extrabold mb-6 text-center text-gray-800">
+        Create Internet Plans
+      </h2>
 
-      {/* Button to Add New Plan */}
-      <button
-        onClick={handleAddNewPlan}
-        className="bg-blue-500 text-white px-4 py-2 rounded-md mb-4"
+      {/* Error Message */}
+      {errorMessage && (
+        <div className="bg-red-100 text-red-700 p-4 mb-6 rounded-md text-center shadow-md">
+          {errorMessage}
+        </div>
+      )}
+
+      <motion.div
+        className="space-y-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
       >
-        Add New Plan
-      </button>
+        {/* Plan Name, Price, Duration, Data Limit */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <input
+            type="text"
+            name="name"
+            placeholder="Plan Name"
+            value={newPlan.name}
+            onChange={handleInputChange}
+            className="border-2 p-3 rounded-md w-full focus:ring-2 focus:ring-blue-400 transition-all"
+          />
+          <input
+            type="number"
+            name="price"
+            placeholder="Price (Ksh)"
+            value={newPlan.price}
+            onChange={handleInputChange}
+            className="border-2 p-3 rounded-md w-full focus:ring-2 focus:ring-blue-400 transition-all"
+          />
+          <input
+            type="text"
+            name="duration"
+            placeholder="Duration"
+            value={newPlan.duration}
+            onChange={handleInputChange}
+            className="border-2 p-3 rounded-md w-full focus:ring-2 focus:ring-blue-400 transition-all"
+          />
+          <input
+            type="text"
+            name="data"
+            placeholder="Data Limit"
+            value={newPlan.data}
+            onChange={handleInputChange}
+            className="border-2 p-3 rounded-md w-full focus:ring-2 focus:ring-blue-400 transition-all"
+          />
+        </div>
 
-      {/* Form to Add/Edit Plan */}
-      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4">
-          {isEditing ? "Edit Plan" : "Add New Plan"}
-        </h2>
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block font-semibold mb-1">Plan Name</label>
+        {/* Description Textarea */}
+        <textarea
+          name="description"
+          placeholder="Description"
+          value={newPlan.description}
+          onChange={handleInputChange}
+          className="border-2 p-3 rounded-md w-full focus:ring-2 focus:ring-blue-400 transition-all"
+        ></textarea>
+
+        {/* Features Section */}
+        <div>
+          <h3 className="text-xl font-semibold mb-3">Features</h3>
+          {newPlan.features.map((feature, index) => (
+            <div key={index} className="flex items-center space-x-4 mb-4">
               <input
                 type="text"
-                name="name"
-                value={newPlan.name}
-                onChange={handleInputChange}
-                className="w-full border p-2 rounded-md"
-                required
+                value={feature}
+                onChange={(e) => handleFeatureChange(index, e.target.value)}
+                className="border-2 p-3 rounded-md w-full focus:ring-2 focus:ring-blue-400 transition-all"
+                placeholder={`Feature ${index + 1}`}
               />
+              <button
+                type="button"
+                onClick={() => handleRemoveFeature(index)}
+                className="text-red-500 hover:text-red-700"
+              >
+                <FiTrash2 size={20} />
+              </button>
             </div>
-            <div>
-              <label className="block font-semibold mb-1">Price (KES)</label>
-              <input
-                type="number"
-                name="price"
-                value={newPlan.price}
-                onChange={handleInputChange}
-                className="w-full border p-2 rounded-md"
-                required
-              />
-            </div>
-            <div>
-              <label className="block font-semibold mb-1">Duration</label>
-              <input
-                type="text"
-                name="duration"
-                value={newPlan.duration}
-                onChange={handleInputChange}
-                className="w-full border p-2 rounded-md"
-                placeholder="e.g., 1 Week, 1 Month"
-                required
-              />
-            </div>
-            <div>
-              <label className="block font-semibold mb-1">Data</label>
-              <input
-                type="text"
-                name="data"
-                value={newPlan.data}
-                onChange={handleInputChange}
-                className="w-full border p-2 rounded-md"
-                placeholder="e.g., 5GB, Unlimited"
-                required
-              />
-            </div>
-          </div>
+          ))}
           <button
-            type="submit"
-            className={`${
-              isEditing ? "bg-green-500" : "bg-blue-500"
-            } text-white px-4 py-2 rounded-md`}
+            onClick={handleAddFeature}
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 flex items-center space-x-2 transition-all"
           >
-            {isEditing ? "Update Plan" : "Add Plan"}
+            <FiPlus size={18} />
+            <span>Add Feature</span>
           </button>
-        </form>
-      </div>
+        </div>
 
-      {/* Plan List */}
-      <div className="bg-white shadow-md rounded-lg p-4">
-        <h2 className="text-lg font-semibold mb-4">Existing Plans</h2>
-        {plans.length > 0 ? (
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b">
-                <th className="py-2 px-4">Name</th>
-                <th className="py-2 px-4">Price</th>
-                <th className="py-2 px-4">Duration</th>
-                <th className="py-2 px-4">Data</th>
-                <th className="py-2 px-4">Actions</th>
+        {/* Submit Button */}
+        <motion.button
+          onClick={handleCreatePlan}
+          className="bg-green-500 text-white px-14 py-2 rounded-md w-auto hover:bg-green-600 transition-all mt-6 mx-auto flex items-center justify-center"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Create Plan
+        </motion.button>
+      </motion.div>
+
+      <h2 className="text-2xl font-bold mt-12 mb-6 text-center text-gray-800">
+        Available Plans
+      </h2>
+      <div className="overflow-x-auto bg-white shadow-lg rounded-lg">
+        <table className="min-w-full table-auto">
+          <thead className="bg-gray-100 sticky top-0">
+            <tr>
+              <th className="border px-6 py-4">Name</th>
+              <th className="border px-6 py-4">Price</th>
+              <th className="border px-6 py-4">Duration</th>
+              <th className="border px-6 py-4">Data</th>
+              <th className="border px-6 py-4">Description</th>
+              <th className="border px-6 py-4">Features</th>
+            </tr>
+          </thead>
+          <tbody>
+            {plans.map((plan) => (
+              <tr key={plan.id} className="hover:bg-gray-50 transition-colors">
+                <td className="border px-6 py-4">{plan.name}</td>
+                <td className="border px-6 py-4">Ksh {plan.price}</td>
+                <td className="border px-6 py-4">{plan.duration}</td>
+                <td className="border px-6 py-4">{plan.data}</td>
+                <td className="border px-6 py-4">{plan.description}</td>
+                <td className="border px-6 py-4">
+                  <ul className="list-disc pl-6">
+                    {(plan.features || []).map((feature, index) => (
+                      <li key={index} className="flex items-center space-x-2">
+                        <CheckCircle size={16} className="text-green-500" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {plans.map((plan) => (
-                <tr key={plan.id} className="border-b hover:bg-gray-50">
-                  <td className="py-2 px-4">{plan.name}</td>
-                  <td className="py-2 px-4">KES {plan.price}</td>
-                  <td className="py-2 px-4">{plan.duration}</td>
-                  <td className="py-2 px-4">{plan.data}</td>
-                  <td className="py-2 px-4">
-                    <button
-                      className="bg-yellow-500 text-white px-3 py-1 rounded-md mr-2"
-                      onClick={() => handleEdit(plan)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="bg-red-500 text-white px-3 py-1 rounded-md"
-                      onClick={() => handleDelete(plan.id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="text-gray-500">No plans available. Add a new plan to get started.</p>
-        )}
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

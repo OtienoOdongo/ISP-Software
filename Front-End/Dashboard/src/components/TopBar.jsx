@@ -1,7 +1,6 @@
 import { IoIosSearch } from "react-icons/io";
-import { LuBellRing } from "react-icons/lu";
+import { LuBellRing, LuUser } from "react-icons/lu"; 
 import { BsChevronDown } from "react-icons/bs";
-import { LuUserCircle2 } from "react-icons/lu";
 import { CiSettings } from "react-icons/ci";
 import { TbLogout2 } from "react-icons/tb";
 import { FiHelpCircle } from "react-icons/fi";
@@ -85,11 +84,10 @@ const TopBar = () => {
                 <button
                   key={lang}
                   onClick={() => changeLanguage(lang)}
-                  className={`block px-4 py-2 text-sm ${
-                    language === lang
+                  className={`block px-4 py-2 text-sm ${language === lang
                       ? "bg-gray-100 text-blue-500 font-semibold"
                       : "hover:bg-gray-100"
-                  }`}
+                    }`}
                 >
                   {lang === "EN" ? "English" : "Swahili"}
                 </button>
@@ -162,7 +160,7 @@ const TopBar = () => {
                     href="/profile"
                     className="px-4 py-2 text-sm flex gap-2 hover:bg-gray-100"
                   >
-                    <LuUserCircle2 className="w-6 h-6 text-gray-500" />
+                    <LuUser className="w-6 h-6 text-gray-500" />
                     Profile
                   </a>
                 </li>
@@ -194,4 +192,3 @@ const TopBar = () => {
 };
 
 export default TopBar;
-              
