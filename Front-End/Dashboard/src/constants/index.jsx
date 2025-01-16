@@ -5,6 +5,7 @@ import { RiSecurePaymentLine } from "react-icons/ri";
 import { HiDocumentReport } from "react-icons/hi";
 import { FcSupport } from "react-icons/fc";
 import { TbSettingsAutomation } from "react-icons/tb";
+import { Settings } from 'lucide-react';
 import ActiveUsers  from "../assets/ActiveUsers.png"
 import WifiSignal from "../assets/WifiSignal.png"
 import customers from  "../assets/customers.png"
@@ -27,7 +28,6 @@ export const menuItems = [
     icon: <FaUserCircle className="h-8 w-8 text-slate-500" />,
     submenu: true,
     submenuItems: [
-      { title: "Admin Profile" },
       { title: "User Profile" },
       { title: "User Activity Log" },
       { title: "Plan Assignment" },
@@ -93,6 +93,18 @@ export const menuItems = [
       { title: "Automated Alerts" },
       { title: "Scheduled Maintenance" },
       { title: "Task Automation" },
+    ],
+  },
+
+
+  {
+    title: "Account",
+    icon: <Settings className="h-8 w-8 text-slate-500" />,
+    submenu: true,
+    spacing: true,
+    submenuItems: [
+      { title: "Admin Profile" },
+      { title: "Settings" },
     ],
   },
 ];

@@ -8,7 +8,6 @@ import Layout from './Pages/Layout/Layout';
 import DashboardOverview from './Pages/DashBoard/DashboardOverview';
 
 // User Management Routes
-import AdminProfile from './Pages/UserManagement/AdminProfile';
 import UserActivityLog from './Pages/UserManagement/UserActivityLog';
 import PlanAssignment from './Pages/UserManagement/PlanAssignment';
 import PaymentHistory from './Pages/UserManagement/PaymentHistory';
@@ -46,6 +45,10 @@ import AutomatedAlerts from './Pages/AutomationAlerts/AutomatedAlerts';
 import ScheduledMaintenance from './Pages/AutomationAlerts/ScheduledMaintenance';
 import TaskAutomation from './Pages/AutomationAlerts/TaskAutomation';
 
+// account and admin profile
+import AdminProfile from './Pages/Account/AdminProfile';
+import AccountSettings from './Pages/Account/AccountSettings';
+
 // Page Not Found
 import NoMatch from './Pages/NotFound/NoMatch';
 
@@ -65,7 +68,6 @@ const App = () => {
         
 
         {/* User Management Routes */}
-        <Route path="user-management/admin-profile" element={<AdminProfile />} />
         <Route path="user-management/user-activity-log" element={<UserActivityLog />} />
         <Route path="user-management/plan-assignment" element={<PlanAssignment />} />
         <Route path="user-management/billing-&-payment-history" element={<PaymentHistory />} />
@@ -103,6 +105,10 @@ const App = () => {
         <Route path="automation-&-alerts/automated-alerts" element={<AutomatedAlerts />} />
         <Route path="automation-&-alerts/scheduled-maintenance" element={<ScheduledMaintenance />} />
         <Route path="automation-&-alerts/task-automation" element={<TaskAutomation />} />
+
+        {/*Admin profile and account settings*/}
+        <Route path="account/admin-profile" element={<AdminProfile />} />
+        <Route path="account/settings" element={<AccountSettings />} />
 
         {/* Page Not Found */}
         <Route path="*" element={<NoMatch />} />

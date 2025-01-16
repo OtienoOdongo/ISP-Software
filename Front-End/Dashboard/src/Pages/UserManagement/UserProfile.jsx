@@ -115,11 +115,12 @@ const UserProfile = () => {
         <select
           value={selectedUser.id}
           onChange={(e) => handleUserSelect(Number(e.target.value))}
-          className="absolute right-0 top-0 px-4 py-2 border-l border-gray-300 rounded-r-lg bg-white focus:outline-none focus:ring focus:ring-blue-300"
+          className="absolute right-0 top-0 px-4 py-2 border-l border-gray-300 rounded-r-lg
+           bg-white focus:outline-none focus:ring focus:ring-blue-300 cursor-pointer"
         >
-          <option value="" disabled>Select User</option>
+          <option  value="" disabled>Select User</option>
           {filteredUsers.map((user) => (
-            <option key={user.id} value={user.id}>
+            <option  key={user.id} value={user.id}>
               {user.name}
             </option>
           ))}
