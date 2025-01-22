@@ -1,0 +1,41 @@
+Metadata-Version: 2.1
+Name: librouteros
+Version: 3.4.1
+Summary: Python implementation of MikroTik RouterOS API
+Home-page: https://github.com/luqasz/librouteros
+License: GPL-2.0-or-later
+Keywords: mikrotik,routeros,api
+Author: Łukasz Kostka
+Author-email: lukasz.g.kostka@gmail.com
+Requires-Python: >=3.8.0,<4.0.0
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU General Public License v2 (GPLv2)
+Classifier: License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)
+Classifier: Operating System :: MacOS
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: Unix
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Topic :: Software Development :: Libraries
+Requires-Dist: toml (>=0.10.2,<0.11.0)
+Project-URL: Documentation, https://librouteros.readthedocs.io
+Project-URL: Repository, https://github.com/luqasz/librouteros
+Description-Content-Type: text/x-rst
+
+Documentation
+=============
+
+Documentation resides over at
+`readthedocs <https://librouteros.readthedocs.io/>`_
+
+
