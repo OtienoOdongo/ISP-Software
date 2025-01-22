@@ -1,19 +1,27 @@
 import React, { useState } from 'react'
 import WiFiAccessControl from '../../components/WiFiAccessControl'
+import SecurityTips from '../../components/SecurityTips'
 
 const SecuritySettings = () => {
   const [settings, setSettings] = useState({
     firewall: null,
     vpn: null,
     ports: null,
+    guestNetwork: null,
+    twoFactorAuth: false, // New: Two-Factor Authentication
+    softwareUpdates: null, // New: Software Update Status
+    dnsEncryption: 'Disabled', // New: DNS Encryption
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [deviceLimit, setDeviceLimit] = useState(2); // Device limit based on user's plan
+  const [registeredDevices, setRegisteredDevices] = useState([]);
 
   const configureSettings = () => {
     setLoading(true);
     setError(null);
 
+    // Mock responses for new settings
     const mockFirewallResponse = {
       status: 'Firewall configured successfully',
       rules: [
@@ -37,15 +45,52 @@ const SecuritySettings = () => {
       ],
     };
 
+    const mockGuestNetworkResponse = {
+      status: 'Guest network configured',
+      networkName: 'Guest_WiFi',
+      isolation: true,
+    };
+
+    const mock2FAResponse = {
+      status: '2FA Enabled',
+      method: 'SMS',
+    };
+
+    const mockSoftwareUpdates = {
+      status: 'All systems up to date',
+      lastUpdated: '2024-11-15',
+    };
+
+    const mockDNSEncryption = {
+      status: 'DNS Encryption Enabled',
+      protocol: 'DoH',
+    };
+
     // Simulating API response delay
     setTimeout(() => {
       setSettings({
         firewall: mockFirewallResponse,
         vpn: mockVPNResponse,
         ports: mockPortsResponse,
+        guestNetwork: mockGuestNetworkResponse,
+        twoFactorAuth: mock2FAResponse,
+        softwareUpdates: mockSoftwareUpdates,
+        dnsEncryption: mockDNSEncryption,
       });
       setLoading(false);
     }, 2000);
+  };
+
+  const registerDevice = (macAddress) => {
+    if (registeredDevices.length < deviceLimit) {
+      setRegisteredDevices([...registeredDevices, macAddress]);
+    } else {
+      alert('You have reached your device limit.');
+    }
+  };
+
+  const removeDevice = (macAddress) => {
+    setRegisteredDevices(registeredDevices.filter(device => device !== macAddress));
   };
 
   return (
@@ -72,9 +117,8 @@ const SecuritySettings = () => {
                 {settings.firewall.rules.map((rule, index) => (
                   <li
                     key={index}
-                    className={`flex justify-between items-center p-3 rounded-md ${
-                      rule.type === 'Block' ? 'bg-red-100' : 'bg-green-100'
-                    }`}
+                    className={`flex justify-between items-center p-3 rounded-md ${rule.type === 'Block' ? 'bg-red-100' : 'bg-green-100'
+                      }`}
                   >
                     <div>
                       <p className="font-medium">
@@ -136,8 +180,67 @@ const SecuritySettings = () => {
             <p className="text-gray-500">No data yet.</p>
           )}
         </div>
+
+        {/* Guest Network */}
+        <div>
+          <h3 className="text-xl font-semibold text-gray-700">Guest Network</h3>
+          {settings.guestNetwork ? (
+            <div className="mt-2 bg-gray-50 p-4 rounded-lg">
+              <p className="text-green-600 font-medium">{settings.guestNetwork.status}</p>
+              <p>Network Name: {settings.guestNetwork.networkName}</p>
+              <p>Isolation: {settings.guestNetwork.isolation ? 'Enabled' : 'Disabled'}</p>
+            </div>
+          ) : (
+            <p className="text-gray-500">No data yet.</p>
+          )}
+        </div>
+
+        {/* Two-Factor Authentication */}
+        <div>
+          <h3 className="text-xl font-semibold text-gray-700">Two-Factor Authentication</h3>
+          {settings.twoFactorAuth ? (
+            <div className="mt-2 bg-gray-50 p-4 rounded-lg">
+              <p className="text-green-600 font-medium">{settings.twoFactorAuth.status}</p>
+              <p>Method: {settings.twoFactorAuth.method}</p>
+            </div>
+          ) : (
+            <p className="text-gray-500">No data yet.</p>
+          )}
+        </div>
+
+        {/* Software Updates */}
+        <div>
+          <h3 className="text-xl font-semibold text-gray-700">Software Updates</h3>
+          {settings.softwareUpdates ? (
+            <div className="mt-2 bg-gray-50 p-4 rounded-lg">
+              <p className="text-green-600 font-medium">{settings.softwareUpdates.status}</p>
+              <p>Last Updated: {settings.softwareUpdates.lastUpdated}</p>
+            </div>
+          ) : (
+            <p className="text-gray-500">No data yet.</p>
+          )}
+        </div>
+
+        {/* DNS Encryption */}
+        <div>
+          <h3 className="text-xl font-semibold text-gray-700">DNS Encryption</h3>
+          <div className="mt-2 bg-gray-50 p-4 rounded-lg">
+            <p className="text-green-600 font-medium">Status: {settings.dnsEncryption.status}</p>
+            <p>Protocol: {settings.dnsEncryption.protocol || 'Not set'}</p>
+          </div>
+        </div>
+
+        {/* WiFi Access Control */}
+        <WiFiAccessControl
+          deviceLimit={deviceLimit}
+          registeredDevices={registeredDevices}
+          registerDevice={registerDevice}
+          removeDevice={removeDevice}
+        />
+
+        {/* Security Tips */}
+        <SecurityTips />
       </div>
-      <WiFiAccessControl />
     </div>
   );
 };

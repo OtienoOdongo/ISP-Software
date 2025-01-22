@@ -41,7 +41,6 @@ export const menuItems = [
     submenuItems: [
       { title: "Create Plans" },
       { title: "Plan Analytics" },
-      { title: "Auto-Renewal Settings" },
     ],
   },
   {
@@ -61,8 +60,11 @@ export const menuItems = [
     icon: <RiSecurePaymentLine className="h-8 w-8 text-slate-500" />,
     submenu: true,
     submenuItems: [
-      { title: "Transaction Monitoring" },
-      { title: "Payment Gateway Settings" },
+      { title: "M-Pesa Transaction Log" },
+      { title: "M-Pesa Configuration" },
+      { title: "M-Pesa Callback Settings" },
+      { title: "Payment Reconciliation" },
+      { title: "M-Pesa Refund Management" },
     ],
   },
   {

@@ -16,7 +16,6 @@ import UserProfile from './Pages/UserManagement/UserProfile';
 // Internet Plans Routes
 import CreatePlans from './Pages/InternetPlans/CreatePlans';
 import PlanAnalytics from './Pages/InternetPlans/PlanAnalytics';
-import AutoRenewalSettings from './Pages/InternetPlans/AutoRenewalSettings';
 
 // Network Management Routes
 import BandwidthAllocation from './Pages/NetworkManagement/BandwidthAllocation';
@@ -25,9 +24,12 @@ import NetworkDiagnostics from './Pages/NetworkManagement/NetworkDiagnostics';
 import SecuritySettings from './Pages/NetworkManagement/SecuritySettings';
 import RouterManagement from './Pages/NetworkManagement/RouterManagement';
 
-// Payment Processing Routes
-import TransactionMonitoring from './Pages/PaymentProcessing/TransactionMonitoring';
-import PaymentGatewaySettings from './Pages/PaymentProcessing/PaymentGatewaySettings';
+// Payment Processing
+import MpesaTransactionLog from './Pages/PaymentProcessing/MpesaTransactionLog';
+import MpesaConfiguration from './Pages/PaymentProcessing/MpesaConfiguration';
+import MpesaCallbackSettings from './Pages/PaymentProcessing/MpesaCallbackSettings';
+import PaymentReconciliation from './Pages/PaymentProcessing/PaymentReconciliation';
+import MpesaRefundManagement from './Pages/PaymentProcessing/MpesaRefundManagement';
 
 // Reporting & Analytics Routes
 import UsageReports from './Pages/ReportingAnalytics/UsageReports';
@@ -77,8 +79,7 @@ const App = () => {
         {/* Internet Plans Routes */}
         <Route path="internet-plans/create-plans" element={<CreatePlans />} />
         <Route path="internet-plans/plan-analytics" element={<PlanAnalytics />} />
-        <Route path="internet-plans/auto-renewal-settings" element={<AutoRenewalSettings />} />
-
+        
         {/* Network Management Routes */}
         <Route path="network-management/bandwidth-allocation" element={<BandwidthAllocation />} />
         <Route path="network-management/ip-address-management" element={<IPAddressManagement />} />
@@ -86,9 +87,14 @@ const App = () => {
         <Route path="network-management/security-settings" element={<SecuritySettings />} />
         <Route path="network-management/router-management" element={<RouterManagement />} />
 
+
         {/* Payment Processing Routes */}
-        <Route path="payment-processing/transaction-monitoring" element={<TransactionMonitoring />} />
-        <Route path="payment-processing/payment-gateway-settings" element={<PaymentGatewaySettings />} />
+        <Route path="payment-processing/m-pesa-transaction-log" element={<MpesaTransactionLog />} />
+        <Route path="payment-processing/m-pesa-configuration" element={<MpesaConfiguration />} />
+        <Route path="payment-processing/m-pesa-callback-settings" element={<MpesaCallbackSettings />} />
+        <Route path="payment-processing/payment-reconciliation" element={<PaymentReconciliation />} />
+        <Route path="payment-processing/m-pesa-refund-management" element={<MpesaRefundManagement />} />
+
 
         {/* Reporting & Analytics Routes */}
         <Route path="reporting-&-analytics/usage-reports" element={<UsageReports />} />
