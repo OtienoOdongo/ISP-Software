@@ -1,76 +1,44 @@
-from rest_framework.views import APIView
+from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework import status
-from .models import SupportTicket, KnowledgeBaseArticle, RemoteSupportSession, FirmwareUpdate
-from .serializers import (
-    SupportTicketSerializer,
-    KnowledgeBaseArticleSerializer,
-    RemoteSupportSessionSerializer,
-    FirmwareUpdateSerializer,
-)
+from rest_framework.permissions import IsAdminUser
+from django.db.models import Q
+from .models import FAQ, SupportTicket
+from .serializers import FAQSerializer, SupportTicketSerializer
+from user_management.models import UserProfile
 
-
-class UserSupportTicketsView(APIView):
+class FAQViewSet(viewsets.ModelViewSet):
     """
-    Manages user support tickets.
+    ViewSet for managing FAQs, providing CRUD operations.
     """
+    queryset = FAQ.objects.all()
+    serializer_class = FAQSerializer
+    permission_classes = [IsAdminUser]
 
-    def get(self, request):
-        """
-        Retrieve all support tickets.
-        """
-        tickets = SupportTicket.objects.all()
-        serializer = SupportTicketSerializer(tickets, many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        query = self.request.query_params.get('search', '')
+        if query:
+            return self.queryset.filter(
+                Q(question__icontains=query) | Q(answer__icontains=query)
+            )
+        return self.queryset
 
-
-class KnowledgeBaseView(APIView):
+class SupportTicketViewSet(viewsets.ModelViewSet):
     """
-    Manages knowledge base articles.
+    ViewSet for managing Support Tickets, providing CRUD operations.
     """
+    queryset = SupportTicket.objects.all()
+    serializer_class = SupportTicketSerializer
+    permission_classes = [IsAdminUser]
 
-    def get(self, request):
+    def create(self, request, *args, **kwargs):
         """
-        Retrieve all knowledge base articles.
+        Custom create method to ensure the user exists before creating a ticket.
         """
-        articles = KnowledgeBaseArticle.objects.all()
-        serializer = KnowledgeBaseArticleSerializer(articles, many=True)
-        return Response(serializer.data)
-
-
-class RemoteSupportAccessView(APIView):
-    """
-    Manages remote support sessions.
-    """
-
-    def get(self, request):
-        """
-        Retrieve all remote support sessions.
-        """
-        sessions = RemoteSupportSession.objects.all()
-        serializer = RemoteSupportSessionSerializer(sessions, many=True)
-        return Response(serializer.data)
-
-
-class FirmwareUpdatesView(APIView):
-    """
-    Manages firmware updates for connected devices.
-    """
-
-    def get(self, request):
-        """
-        Retrieve all firmware updates.
-        """
-        updates = FirmwareUpdate.objects.all()
-        serializer = FirmwareUpdateSerializer(updates, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        """
-        Add a new firmware update.
-        """
-        serializer = FirmwareUpdateSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user_id = request.data.get('user_id')
+        if user_id:
+            try:
+                user = UserProfile.objects.get(id=user_id)
+                request.data['user'] = user.id  
+            except UserProfile.DoesNotExist:
+                return Response({"error": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        return super().create(request, *args, **kwargs)

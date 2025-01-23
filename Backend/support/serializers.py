@@ -1,25 +1,18 @@
 from rest_framework import serializers
-from .models import SupportTicket, KnowledgeBase, FirmwareUpdate
+from .models import FAQ, SupportTicket
+
+class FAQSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the FAQ model to handle API serialization.
+    """
+    class Meta:
+        model = FAQ
+        fields = ['id', 'question', 'answer']
 
 class SupportTicketSerializer(serializers.ModelSerializer):
-    """Serializer for SupportTicket model."""
-
+    """
+    Serializer for the SupportTicket model to handle API serialization.
+    """
     class Meta:
         model = SupportTicket
-        fields = '__all__'
-
-
-class KnowledgeBaseSerializer(serializers.ModelSerializer):
-    """Serializer for KnowledgeBase model."""
-
-    class Meta:
-        model = KnowledgeBase
-        fields = '__all__'
-
-
-class FirmwareUpdateSerializer(serializers.ModelSerializer):
-    """Serializer for FirmwareUpdate model."""
-
-    class Meta:
-        model = FirmwareUpdate
-        fields = '__all__'
+        fields = ['id', 'user', 'issue', 'status', 'date_created']

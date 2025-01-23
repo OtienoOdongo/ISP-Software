@@ -64,7 +64,6 @@ export const menuItems = [
       { title: "M-Pesa Configuration" },
       { title: "M-Pesa Callback Settings" },
       { title: "Payment Reconciliation" },
-      { title: "M-Pesa Refund Management" },
     ],
   },
   {
@@ -83,20 +82,10 @@ export const menuItems = [
     submenuItems: [
       { title: "User Support Tickets" },
       { title: "Knowledge Base" },
-      { title: "Remote Support Access" },
-      { title: "Firmware Updates" },
+      
     ],
   },
-  {
-    title: "Automation & Alerts",
-    icon: <TbSettingsAutomation className="h-8 w-8 text-slate-500" />,
-    submenu: true,
-    submenuItems: [
-      { title: "Automated Alerts" },
-      { title: "Scheduled Maintenance" },
-      { title: "Task Automation" },
-    ],
-  },
+ 
 
 
   {

@@ -1,5 +1,4 @@
-
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   IoAddCircleOutline as AddIcon,
   IoSaveOutline as SaveIcon,
@@ -9,7 +8,6 @@ import {
 } from 'react-icons/io5';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import PropTypes from 'prop-types';
 
 const useLocalStorage = (key, initialValue) => {
   const [storedValue, setStoredValue] = useState(() => {
@@ -39,18 +37,11 @@ const MpesaCallbackSettings = () => {
   const [callbacks, setCallbacks] = useLocalStorage('mpesa-callbacks', []);
   const [newCallback, setNewCallback] = useState({ event: '', url: '' });
   const [editingId, setEditingId] = useState(null);
-  const [eventOptions, setEventOptions] = useState([
-    'Payment Success', 'Payment Failure', 'Transaction Cancellation', 'Refund Processed'
+  const [eventOptions] = useState([
+    'Payment Success', 'Payment Failure', 'Transaction Cancellation'
   ]);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
-
-  useEffect(() => {
-    const storedCallbacks = localStorage.getItem('mpesa-callbacks');
-    if (storedCallbacks) {
-      setCallbacks(JSON.parse(storedCallbacks));
-    }
-  }, []);
 
   const handleChange = useCallback((e, field) => {
     setNewCallback(prev => ({ ...prev, [field]: e.target.value }));
@@ -108,7 +99,7 @@ const MpesaCallbackSettings = () => {
     });
   }, []);
 
-  const filteredCallbacks = useCallback(() => {
+  const filteredCallbacks = useMemo(() => {
     return callbacks.filter(callback =>
       callback.event.toLowerCase().includes(searchTerm.toLowerCase()) &&
       (activeFilter === 'all' || callback.event === activeFilter)
@@ -131,6 +122,7 @@ const MpesaCallbackSettings = () => {
           />
           <button
             className="ml-3 px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none"
+            onClick={() => { /* search logic if needed */ }}
           >
             <SearchIcon />
           </button>
@@ -189,7 +181,7 @@ const MpesaCallbackSettings = () => {
       {/* Callbacks Table */}
       <div className="bg-white shadow-lg rounded-lg p-8">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Current Callbacks</h2>
-        {filteredCallbacks().length === 0 ? (
+        {filteredCallbacks.length === 0 ? (
           <p className="text-center text-gray-500">No callbacks match your criteria.</p>
         ) : (
           <table className="w-full text-left border-collapse">
@@ -201,7 +193,7 @@ const MpesaCallbackSettings = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredCallbacks().map(callback => (
+              {filteredCallbacks.map(callback => (
                 <tr key={callback.id} className="border-b">
                   <td className="py-3 px-4">{callback.event}</td>
                   <td className="py-3 px-4">
@@ -233,7 +225,5 @@ const MpesaCallbackSettings = () => {
     </div>
   );
 };
-
-MpesaCallbackSettings.propTypes = {};
 
 export default MpesaCallbackSettings;

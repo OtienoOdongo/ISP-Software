@@ -1,25 +1,28 @@
+
+
 import React, { useState, useEffect } from 'react';
-import { FaSearch, FaFileDownload } from 'react-icons/fa';
+import { FaSearch, FaFileDownload, FaTimes, FaCheck, FaExclamationTriangle } from 'react-icons/fa';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { CSVLink } from 'react-csv';
 
 const PaymentReconciliation = () => {
-  // State for managing reconciliation data, search, and date range
   const [transactions, setTransactions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortColumn, setSortColumn] = useState('date');
+  const [sortDirection, setSortDirection] = useState('asc');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Mock data for reconciliation. In a real app, this would be fetched from an API.
   const mockTransactions = [
-    { id: 1, date: '2023-10-01', amount: '1000', status: 'Matched', type: 'Payment', reference: 'MPESA123' },
-    { id: 2, date: '2023-10-02', amount: '500', status: 'Unmatched', type: 'Refund', reference: 'MPESA456' },
-    { id: 3, date: '2023-10-03', amount: '1500', status: 'Discrepancy', type: 'Payment', reference: 'MPESA789' },
+    { id: 1, date: '2023-10-01', amount: '1000.00', status: 'Matched', type: 'Payment', reference: 'MPESA123' },
+    { id: 2, date: '2023-10-02', amount: '500.00', status: 'Pending', type: 'Payment', reference: 'MPESA456' },
+    { id: 3, date: '2023-10-03', amount: '1500.00', status: 'Discrepancy', type: 'Payment', reference: 'MPESA789' },
   ];
 
-  // Effect for fetching transactions. Here we're using mock data for demonstration.
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -34,66 +37,62 @@ const PaymentReconciliation = () => {
     }, 1000);
   }, []);
 
-  // Filter transactions based on search term and date range
   const filteredTransactions = transactions.filter(transaction =>
     transaction.reference.toLowerCase().includes(searchTerm.toLowerCase()) &&
     (!startDate || new Date(transaction.date) >= new Date(startDate)) &&
-    (!endDate || new Date(transaction.date) <= new Date(endDate))
-  );
+    (!endDate || new Date(transaction.date) <= new Date(endDate)) &&
+    (statusFilter === 'all' || transaction.status.toLowerCase() === statusFilter)
+  ).sort((a, b) => {
+    if (a[sortColumn] < b[sortColumn]) return sortDirection === 'asc' ? -1 : 1;
+    if (a[sortColumn] > b[sortColumn]) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
 
-  // Function to download reconciliation report as CSV
+  const totalAmount = filteredTransactions.reduce((sum, transaction) => sum + parseFloat(transaction.amount), 0);
+
   const downloadCSV = () => {
     if (filteredTransactions.length === 0) {
       toast.error('No data to download.');
       return;
     }
+    toast.success('Report download initiated!');
+  };
 
-    const csvContent = [
-      ["ID", "Date", "Amount", "Status", "Type", "Reference"],
-      ...filteredTransactions.map(transaction => [
-        transaction.id,
-        transaction.date,
-        transaction.amount,
-        transaction.status,
-        transaction.type,
-        transaction.reference
-      ])
-    ].map(row => row.join(',')).join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      link.setAttribute("href", url);
-      link.setAttribute("download", "reconciliation_report.csv");
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+  const handleSort = (column) => {
+    if (column === sortColumn) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
     }
-    toast.success('Report downloaded successfully!');
+  };
+
+  const statusIcons = {
+    'Matched': <FaCheck className="text-green-500 inline-block mr-1" />,
+    'Pending': <FaExclamationTriangle className="text-yellow-500 inline-block mr-1" />,
+    'Discrepancy': <FaTimes className="text-red-500 inline-block mr-1" />
   };
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <h1 className="text-3xl font-bold text-indigo-800 mb-6">Payment Reconciliation</h1>
 
-      <div className="mb-4 flex flex-wrap items-center">
+      <div className="mb-4 flex flex-wrap items-center space-y-4 md:space-y-0 md:space-x-4">
         <input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search by reference..."
-          className="p-2 rounded-l-lg border-t border-b border-l border-gray-300 focus:outline-none focus:ring focus:border-indigo-300 w-full md:w-1/3 mr-4 mb-2 md:mb-0"
+          className="p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring focus:border-indigo-300 w-full md:w-1/4"
         />
-        <div className="flex items-center">
+        <div className="flex items-center space-x-2">
           <input
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="p-2 border rounded-lg mr-2 focus:outline-none focus:ring focus:border-indigo-300"
+            className="p-2 border rounded-lg focus:outline-none focus:ring focus:border-indigo-300"
           />
-          <span className="mr-2">to</span>
+          <span className="text-gray-600">to</span>
           <input
             type="date"
             value={endDate}
@@ -101,12 +100,24 @@ const PaymentReconciliation = () => {
             className="p-2 border rounded-lg focus:outline-none focus:ring focus:border-indigo-300"
           />
         </div>
-        <button
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="p-2 border rounded-lg focus:outline-none focus:ring focus:border-indigo-300"
+        >
+          <option value="all">All Statuses</option>
+          <option value="matched">Matched</option>
+          <option value="pending">Pending</option>
+          <option value="discrepancy">Discrepancy</option>
+        </select>
+        <CSVLink
+          data={filteredTransactions}
+          filename={"reconciliation_report.csv"}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
           onClick={downloadCSV}
-          className="ml-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
         >
           <FaFileDownload className="inline-block mr-2" /> Download Report
-        </button>
+        </CSVLink>
       </div>
 
       {loading ? (
@@ -118,9 +129,15 @@ const PaymentReconciliation = () => {
           <table className="w-full text-left">
             <thead className="bg-gray-50">
               <tr>
-                <th className="py-3 px-4 text-sm font-medium text-gray-600">ID</th>
-                <th className="py-3 px-4 text-sm font-medium text-gray-600">Date</th>
-                <th className="py-3 px-4 text-sm font-medium text-gray-600">Amount</th>
+                <th className="py-3 px-4 text-sm font-medium text-gray-600 cursor-pointer" onClick={() => handleSort('id')}>
+                  ID {sortColumn === 'id' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
+                </th>
+                <th className="py-3 px-4 text-sm font-medium text-gray-600 cursor-pointer" onClick={() => handleSort('date')}>
+                  Date {sortColumn === 'date' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
+                </th>
+                <th className="py-3 px-4 text-sm font-medium text-gray-600 cursor-pointer" onClick={() => handleSort('amount')}>
+                  Amount {sortColumn === 'amount' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
+                </th>
                 <th className="py-3 px-4 text-sm font-medium text-gray-600">Status</th>
                 <th className="py-3 px-4 text-sm font-medium text-gray-600">Type</th>
                 <th className="py-3 px-4 text-sm font-medium text-gray-600">Reference</th>
@@ -131,11 +148,12 @@ const PaymentReconciliation = () => {
                 <tr key={transaction.id} className="border-t">
                   <td className="py-3 px-4">{transaction.id}</td>
                   <td className="py-3 px-4">{transaction.date}</td>
-                  <td className="py-3 px-4">{transaction.amount}</td>
+                  <td className="py-3 px-4">KES {transaction.amount}</td>
                   <td className="py-3 px-4">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                    {statusIcons[transaction.status] || ''}
+                    <span className={`inline-block px-2 text-xs leading-5 font-semibold rounded-full 
                       ${transaction.status === 'Matched' ? 'bg-green-100 text-green-800' :
-                        transaction.status === 'Unmatched' ? 'bg-yellow-100 text-yellow-800' :
+                        transaction.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-red-100 text-red-800'}`}
                     >
                       {transaction.status}
@@ -152,9 +170,17 @@ const PaymentReconciliation = () => {
           }
         </div>
       )}
+
+      <div className="mt-4 text-right font-bold text-indigo-800">
+        Total Earnings: KES {totalAmount.toFixed(2)}
+      </div>
+
       <ToastContainer />
     </div>
   );
 };
 
 export default PaymentReconciliation;
+
+
+

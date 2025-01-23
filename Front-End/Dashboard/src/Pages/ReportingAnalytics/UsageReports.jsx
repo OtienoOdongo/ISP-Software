@@ -72,7 +72,7 @@ const UsageReports = () => {
       intersect: false,
     },
     dataLabels: {
-      enabled: true,
+      enabled: false,
       style: {
           fontSize: '8px',
           fontWeight: 'bold',

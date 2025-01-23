@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     'payments',
     'reporting',
     'support',
-    'automation',
+  
 
 
     # Third-Party Apps

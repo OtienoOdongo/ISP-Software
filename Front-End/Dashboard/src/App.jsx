@@ -29,7 +29,7 @@ import MpesaTransactionLog from './Pages/PaymentProcessing/MpesaTransactionLog';
 import MpesaConfiguration from './Pages/PaymentProcessing/MpesaConfiguration';
 import MpesaCallbackSettings from './Pages/PaymentProcessing/MpesaCallbackSettings';
 import PaymentReconciliation from './Pages/PaymentProcessing/PaymentReconciliation';
-import MpesaRefundManagement from './Pages/PaymentProcessing/MpesaRefundManagement';
+
 
 // Reporting & Analytics Routes
 import UsageReports from './Pages/ReportingAnalytics/UsageReports';
@@ -39,13 +39,9 @@ import FinancialReports from './Pages/ReportingAnalytics/FinancialReports';
 // Support & Maintenance Routes
 import UserSupportTickets from './Pages/SupportMaintenance/UserSupportTickets';
 import KnowledgeBase from './Pages/SupportMaintenance/KnowledgeBase';
-import RemoteSupportAccess from './Pages/SupportMaintenance/RemoteSupportAccess';
-import FirmwareUpdates from './Pages/SupportMaintenance/FirmwareUpdates';
 
-// Automation & Alerts Routes
-import AutomatedAlerts from './Pages/AutomationAlerts/AutomatedAlerts';
-import ScheduledMaintenance from './Pages/AutomationAlerts/ScheduledMaintenance';
-import TaskAutomation from './Pages/AutomationAlerts/TaskAutomation';
+
+
 
 // account and admin profile
 import AdminProfile from './Pages/Account/AdminProfile';
@@ -93,7 +89,7 @@ const App = () => {
         <Route path="payment-processing/m-pesa-configuration" element={<MpesaConfiguration />} />
         <Route path="payment-processing/m-pesa-callback-settings" element={<MpesaCallbackSettings />} />
         <Route path="payment-processing/payment-reconciliation" element={<PaymentReconciliation />} />
-        <Route path="payment-processing/m-pesa-refund-management" element={<MpesaRefundManagement />} />
+        
 
 
         {/* Reporting & Analytics Routes */}
@@ -104,13 +100,9 @@ const App = () => {
         {/* Support & Maintenance Routes */}
         <Route path="support-&-maintenance/user-support-tickets" element={<UserSupportTickets />} />
         <Route path="support-&-maintenance/knowledge-base" element={<KnowledgeBase />} />
-        <Route path="support-&-maintenance/remote-support-access" element={<RemoteSupportAccess />} />
-        <Route path="support-&-maintenance/firmware-updates" element={<FirmwareUpdates />} />
+        
 
-        {/* Automation & Alerts Routes */}
-        <Route path="automation-&-alerts/automated-alerts" element={<AutomatedAlerts />} />
-        <Route path="automation-&-alerts/scheduled-maintenance" element={<ScheduledMaintenance />} />
-        <Route path="automation-&-alerts/task-automation" element={<TaskAutomation />} />
+        
 
         {/*Admin profile and account settings*/}
         <Route path="account/admin-profile" element={<AdminProfile />} />
