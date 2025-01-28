@@ -1,20 +1,15 @@
+
+
 import React, { useState } from "react";
 import {
     Users,
     Gauge,
     DollarSign,
-    BarChart,
     WifiHigh,
-    Server,
     TrendingUp,
-    Settings,
-    ShieldCheck,
-    CameraIcon
+    CameraIcon,
 } from "lucide-react";
 import avatar from "../../assets/avatar.png";
-
-// Commented out useEffect for now, using dummy data instead
-// import axios from 'axios';
 
 const AdminProfile = () => {
     const [profile, setProfile] = useState({
@@ -28,25 +23,22 @@ const AdminProfile = () => {
         profilePic: "",
     });
 
-    // Using dummy data for recent activities
     const [recentActivities, setRecentActivities] = useState([
         { description: "New client registered: Acme Corp" },
         { description: "Network upgrade completed for Nairobi region" },
         { description: "Monthly billing cycle started" },
-        { description: "Security patch applied to all routers" }
+        { description: "Security patch applied to all routers" },
     ]);
 
-    // Using dummy data for network health
     const [networkHealth, setNetworkHealth] = useState({
         latency: "45ms",
-        bandwidthUsage: "70%"
+        bandwidthUsage: "70%",
     });
 
-    // Using dummy data for server status
     const [serverStatus, setServerStatus] = useState([
         { name: "Main Router", status: "Online", color: "green" },
         { name: "Backup Router", status: "Offline", color: "red" },
-        { name: "Router 1", status: "Online", color: "green" }
+        { name: "Router 1", status: "Online", color: "green" },
     ]);
 
     const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -56,32 +48,28 @@ const AdminProfile = () => {
         confirmPassword: "",
     });
 
-    // useEffect(() => {
-    //   const fetchAdminData = async () => {
-    //     try {
-    //       const profileResponse = await axios.get('/api/admin-profile');
-    //       setProfile(prev => ({ ...prev, ...profileResponse.data }));
-    // 
-    //       const activitiesResponse = await axios.get('/api/recent-activities');
-    //       setRecentActivities(activitiesResponse.data);
-    // 
-    //       const networkHealthResponse = await axios.get('/api/network-health');
-    //       setNetworkHealth(networkHealthResponse.data);
-    // 
-    //       const serverStatusResponse = await axios.get('/api/server-status');
-    //       setServerStatus(serverStatusResponse.data);
-    //     } catch (error) {
-    //       console.error('Error fetching data:', error);
-    //     }
-    //   };
-
-    //   fetchAdminData();
-    // }, []);
+    const [isUpdatingPhone, setIsUpdatingPhone] = useState(false);
+    const [newPhoneNumber, setNewPhoneNumber] = useState("");
 
     const handlePasswordChange = () => {
+        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+            alert("Passwords do not match!");
+            return;
+        }
         console.log("Password changed:", passwordForm);
         setIsChangingPassword(false);
         // Implement actual password change API call
+    };
+
+    const handlePhoneNumberUpdate = () => {
+        if (!newPhoneNumber) {
+            alert("Please enter a valid phone number.");
+            return;
+        }
+        setProfile({ ...profile, phone: newPhoneNumber });
+        console.log("Phone number updated:", newPhoneNumber);
+        setIsUpdatingPhone(false);
+        // Implement actual phone number update API call
     };
 
     const handleFileUpload = (e) => {
@@ -93,63 +81,52 @@ const AdminProfile = () => {
     };
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_3fr] gap-6 min-h-screen p-6 bg-gray-100">
-            {/* Sidebar */}
-            <aside className="bg-white shadow-lg rounded-lg p-6 lg:sticky lg:top-6">
-                <div className="flex flex-col items-center gap-4 mb-6">
-                    <div className="relative w-32 h-32">
-                        <img
-                            src={profile.profilePic || avatar}
-                            alt="Profile"
-                            className="w-full h-full object-cover rounded-full border-2 border-gray-300"
-                        />
-                        <label
-                            htmlFor="profile-pic-upload"
-                            className="absolute bottom-0 right-0 bg-blue-500 text-white p-2 rounded-full cursor-pointer"
-                            title="Change Profile Picture"
-                        >
-                            <CameraIcon size={20} />
-                        </label>
-                        <input
-                            type="file"
-                            id="profile-pic-upload"
-                            className="hidden"
-                            onChange={handleFileUpload}
-                            accept="image/*"
-                        />
-                    </div>
-                    <h2 className="text-lg font-semibold">{profile.name}</h2>
-                    <p className="text-sm text-gray-500">{profile.role}</p>
-                </div>
-
-                <ul className="space-y-4">
-                    {[
-                        { icon: Settings, label: "Account Settings", path: "/settings" },
-                        { icon: Users, label: "Client Management", path: "/clients" },
-                        { icon: Gauge, label: "Network Performance", path: "/network" },
-                        { icon: DollarSign, label: "Financial Overview", path: "/finance" },
-                        { icon: Server, label: "Router Management", path: "/router-management" },
-                        { icon: BarChart, label: "Analytics", path: "/analytics" },
-                        { icon: ShieldCheck, label: "Security", path: "/security" },
-                    ].map(({ icon: Icon, label, path }) => (
-                        <li key={label} className="flex items-center gap-3 text-gray-700 hover:text-blue-500 cursor-pointer">
-                            <Icon size={20} />
-                            <a href={path}>{label}</a>
-                        </li>
-                    ))}
-                </ul>
-            </aside>
-
+        <div className="min-h-screen p-6 bg-gray-100">
             {/* Main Content */}
             <main className="bg-white shadow-lg rounded-lg p-6 space-y-6">
+                {/* Header */}
                 <header className="flex justify-between items-center mb-6">
-                    <h1 className="text-3xl font-bold text-gray-800">Welcome, {profile.name}</h1>
-                    <button
-                        onClick={() => setIsChangingPassword(!isChangingPassword)}
-                        className="bg-indigo-500 text-white px-6 py-3 rounded-lg hover:bg-indigo-600 shadow-md transition-colors"
-                    >
-                        Change Password
-                    </button>
+                    <div className="flex items-center space-x-4">
+                        <div className="relative w-20 h-20">
+                            <img
+                                src={profile.profilePic || avatar}
+                                alt="Profile"
+                                className="w-full h-full object-cover rounded-full border-2 border-gray-300"
+                            />
+                            <label
+                                htmlFor="profile-pic-upload"
+                                className="absolute bottom-0 right-0 bg-blue-500 text-white p-2 rounded-full cursor-pointer"
+                                title="Change Profile Picture"
+                            >
+                                <CameraIcon size={16} />
+                            </label>
+                            <input
+                                type="file"
+                                id="profile-pic-upload"
+                                className="hidden"
+                                onChange={handleFileUpload}
+                                accept="image/*"
+                            />
+                        </div>
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-800">Welcome, {profile.name}</h1>
+                            <p className="text-sm text-gray-500">{profile.role}</p>
+                        </div>
+                    </div>
+                    <div className="flex space-x-4">
+                        <button
+                            onClick={() => setIsChangingPassword(!isChangingPassword)}
+                            className="bg-indigo-500 text-white px-6 py-3 rounded-lg hover:bg-indigo-600 shadow-md transition-colors"
+                        >
+                            Change Password
+                        </button>
+                        <button
+                            onClick={() => setIsUpdatingPhone(!isUpdatingPhone)}
+                            className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 shadow-md transition-colors"
+                        >
+                            Update Phone Number
+                        </button>
+                    </div>
                 </header>
 
                 {/* Quick Stats */}
@@ -245,11 +222,39 @@ const AdminProfile = () => {
                         </div>
                     </div>
                 )}
+
+                {/* Phone Number Update Modal */}
+                {isUpdatingPhone && (
+                    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                            <h3 className="text-lg font-semibold mb-4">Update Phone Number</h3>
+                            <div className="mb-4">
+                                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="newPhoneNumber">
+                                    New Phone Number
+                                </label>
+                                <input
+                                    type="text"
+                                    id="newPhoneNumber"
+                                    value={newPhoneNumber}
+                                    onChange={(e) => setNewPhoneNumber(e.target.value)}
+                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                    placeholder="Enter new phone number"
+                                />
+                            </div>
+                            <div className="flex justify-end">
+                                <button
+                                    onClick={handlePhoneNumberUpdate}
+                                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                                >
+                                    Update Phone Number
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
     );
 };
 
 export default AdminProfile;
-
-

@@ -1,16 +1,19 @@
+
 import { IoIosSearch } from "react-icons/io";
-import { LuBellRing, LuUser } from "react-icons/lu"; 
+import { LuBellRing, LuUser } from "react-icons/lu";
 import { BsChevronDown } from "react-icons/bs";
 import { CiSettings } from "react-icons/ci";
 import { TbLogout2 } from "react-icons/tb";
 import { FiHelpCircle } from "react-icons/fi";
 import { MdOutlineLightMode, MdOutlineDarkMode } from "react-icons/md";
 import avatar from "../assets/avatar.png";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { NavLink } from "react-router-dom";
 
 const TopBar = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [notificationCount, setNotificationCount] = useState(5);
   const [themeIcon, setThemeIcon] = useState("light"); // "light" or "dark"
@@ -22,8 +25,16 @@ const TopBar = () => {
     email: "mildredauma@gmail.com",
   };
 
+  const profileRef = useRef(null);
+  const notificationsRef = useRef(null);
+
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
+  };
+
+  const performSearch = () => {
+    console.log("Search for:", searchQuery);
+    // Here you'd typically dispatch an action or update a search context
   };
 
   const toggleProfile = () => {
@@ -39,6 +50,32 @@ const TopBar = () => {
     setIsLanguageOpen(false); // Close the dropdown after selection
   };
 
+  const toggleTheme = () => {
+    setThemeIcon(prevTheme => (prevTheme === "light" ? "dark" : "light"));
+    // Toggle the theme in your app's context or store here
+  };
+
+  const toggleNotifications = () => {
+    setIsNotificationsOpen(!isNotificationsOpen);
+  };
+
+  // Effect to handle clicks outside of the profile menu or notifications
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsProfileOpen(false);
+      }
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+        setIsNotificationsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className="border-b h-14 flex items-center justify-between px-4 bg-white text-gray-800">
       {/* Search Section */}
@@ -49,6 +86,7 @@ const TopBar = () => {
           placeholder="Search..."
           value={searchQuery}
           onChange={handleSearch}
+          onKeyPress={(e) => e.key === 'Enter' && performSearch()}
           className="text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 px-4 py-2 rounded-md border border-gray-200 pl-10 pr-4 w-64"
           aria-label="Search"
         />
@@ -58,6 +96,7 @@ const TopBar = () => {
       <div className="flex items-center space-x-4">
         {/* Theme Toggle */}
         <button
+          onClick={toggleTheme}
           className="p-2 hover:bg-gray-100 rounded-full transition-colors"
           aria-label="Theme Toggle"
         >
@@ -85,8 +124,8 @@ const TopBar = () => {
                   key={lang}
                   onClick={() => changeLanguage(lang)}
                   className={`block px-4 py-2 text-sm ${language === lang
-                      ? "bg-gray-100 text-blue-500 font-semibold"
-                      : "hover:bg-gray-100"
+                    ? "bg-gray-100 text-blue-500 font-semibold"
+                    : "hover:bg-gray-100"
                     }`}
                 >
                   {lang === "EN" ? "English" : "Swahili"}
@@ -97,8 +136,9 @@ const TopBar = () => {
         </div>
 
         {/* Notifications */}
-        <div className="relative">
+        <div className="relative" ref={notificationsRef}>
           <button
+            onClick={toggleNotifications}
             className="p-2 hover:bg-gray-100 rounded-full relative"
             aria-label="Notifications"
           >
@@ -109,6 +149,20 @@ const TopBar = () => {
               </span>
             )}
           </button>
+
+          {isNotificationsOpen && (
+            <div className="absolute right-0 top-14 w-64 bg-white rounded-md shadow-lg py-1 z-50">
+              {/* Notification items here */}
+              <div className="px-4 py-3 border-b">
+                <p className="text-sm font-medium">Notifications</p>
+              </div>
+              <ul className="py-1">
+                <li className="px-4 py-2 text-sm hover:bg-gray-100">Notification 1</li>
+                <li className="px-4 py-2 text-sm hover:bg-gray-100">Notification 2</li>
+                {/* Add more notifications here */}
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* Help */}
@@ -120,7 +174,7 @@ const TopBar = () => {
         </button>
 
         {/* User Profile */}
-        <div className="relative flex items-center space-x-2">
+        <div className="relative flex items-center space-x-2" ref={profileRef}>
           <span className="text-sm font-medium">{user.name}</span>
           <button
             onClick={toggleProfile}
@@ -156,22 +210,26 @@ const TopBar = () => {
               </div>
               <ul className="py-1">
                 <li>
-                  <a
-                    href="/profile"
-                    className="px-4 py-2 text-sm flex gap-2 hover:bg-gray-100"
+                  <NavLink
+                    to="account/admin-profile"
+                    className={({ isActive }) =>
+                      `px-4 py-2 text-sm flex gap-2 ${isActive ? "bg-gray-200" : "hover:bg-gray-100"}`
+                    }
                   >
                     <LuUser className="w-6 h-6 text-gray-500" />
                     Profile
-                  </a>
+                  </NavLink>
                 </li>
                 <li>
-                  <a
-                    href="/settings"
-                    className="px-4 py-2 text-sm flex gap-2 hover:bg-gray-100"
+                  <NavLink
+                    to="account/settings"
+                    className={({ isActive }) =>
+                      `px-4 py-2 text-sm flex gap-2 ${isActive ? "bg-gray-200" : "hover:bg-gray-100"}`
+                    }
                   >
                     <CiSettings className="w-6 h-6 text-gray-500" />
                     Settings
-                  </a>
+                  </NavLink>
                 </li>
                 <li>
                   <a

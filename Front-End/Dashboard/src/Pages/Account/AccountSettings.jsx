@@ -1,186 +1,332 @@
-import React, { useState, useEffect } from "react";
-import {
-    ShieldCheck,
-    Bell,
-    Lock,
-    RefreshCcw,
-    File,
-    FileText,
-    Trash,
-    Key,
-    UserCheck,
-    Database,
-    GitBranch,
-    Bolt,
-    Eye,
-    EyeOff,
-} from "lucide-react";
+
+
+
+import React, { useState, useCallback } from "react";
+import { User, Lock, Bell, Shield } from "lucide-react";
+import avatar from "../../assets/avatar.png";
 
 const AccountSettings = () => {
-    const [twoFAEnabled, setTwoFAEnabled] = useState(false);
-    const [notificationPreference, setNotificationPreference] = useState('all');
-    const [apiKeys, setApiKeys] = useState([]);
-    const [auditLogs, setAuditLogs] = useState([]);
-    const [backupStatus, setBackupStatus] = useState('Not Started');
-    const [showSensitiveData, setShowSensitiveData] = useState(false);
+    const [profile, setProfile] = useState({
+        name: "Clinton Odongo",
+        email: "admin@interlink.com",
+        phone: "+254 700 123 456",
+        role: "Admin",
+        profilePic: "",
+    });
 
-    useEffect(() => {
-        const fetchData = async () => {
-            // Simulating API calls
-            setApiKeys([
-                { id: 1, name: "Billing Integration", key: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" },
-                { id: 2, name: "User Management", key: "yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy" },
-            ]);
-            setAuditLogs([
-                { id: 1, action: "Login", timestamp: "2023-10-01T12:00:00Z", user: "Admin" },
-                { id: 2, action: "Profile Update", timestamp: "2023-10-02T09:30:00Z", user: "Support" },
-            ]);
-        };
-        fetchData();
+    const [security, setSecurity] = useState({
+        twoFactorAuth: false,
+        passwordLastChanged: "2023-10-01",
+    });
+
+    const [notifications, setNotifications] = useState({
+        internetUsageAlerts: {
+            active: true,
+            threshold: "80%",
+            frequency: "daily"
+        },
+        subscriptionReminders: {
+            active: true,
+            daysBefore: 3,
+            frequency: "daily"
+        },
+        systemUpdates: {
+            active: true,
+            frequency: "as-it-happens"
+        },
+    });
+
+    const [passwordForm, setPasswordForm] = useState({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+    });
+
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const handleFileUpload = useCallback((e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setProfile(prev => ({ ...prev, profilePic: URL.createObjectURL(file) }));
+            // Implement file upload to backend
+        }
     }, []);
 
-    const toggleTwoFA = () => setTwoFAEnabled(!twoFAEnabled);
-    const handleNotificationChange = (event) => setNotificationPreference(event.target.value);
+    const handleProfileUpdate = useCallback((e) => {
+        e.preventDefault();
+        setLoading(true);
+        // Simulate backend call
+        setTimeout(() => {
+            alert("Profile updated!");
+            setLoading(false);
+        }, 2000);
+    }, [profile]);
 
-    const handleApiKeyRegeneration = (id) => {
-        setApiKeys(apiKeys.map(key =>
-            key.id === id ? { ...key, key: "new-generated-key-" + Math.random().toString(36).substr(2, 9) } : key
-        ));
-    };
+    const handlePasswordChange = useCallback((e) => {
+        e.preventDefault();
+        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+            alert("Passwords do not match!");
+            return;
+        }
+        setLoading(true);
+        // Simulate backend call
+        setTimeout(() => {
+            console.log("Password changed:", passwordForm);
+            setIsPasswordModalOpen(false);
+            alert("Password changed successfully!");
+            setLoading(false);
+        }, 2000);
+    }, [passwordForm]);
 
-    const handleBackupNow = () => {
-        setBackupStatus('In Progress');
-        setTimeout(() => setBackupStatus('Completed'), 5000);
-    };
+    const toggleTwoFactorAuth = useCallback(() => {
+        setSecurity(prev => ({ ...prev, twoFactorAuth: !prev.twoFactorAuth }));
+        console.log("Two-factor authentication toggled:", !security.twoFactorAuth);
+        // Implement backend call to toggle two-factor auth
+    }, [security.twoFactorAuth]);
 
-    const toggleSensitiveData = () => setShowSensitiveData(!showSensitiveData);
+    const handleNotificationChange = useCallback((type, key) => (e) => {
+        setNotifications(prev => ({
+            ...prev,
+            [type]: {
+                ...prev[type],
+                [key]: key === 'active' ? !prev[type][key] : e.target.value
+            }
+        }));
+        console.log(`${type} notification ${key} updated to:`, e.target.value || !prev[type][key]);
+        // Implement backend call to update notification preferences
+    }, []);
+
+    const PasswordModal = () => (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                <h3 className="text-lg font-semibold mb-4">Change Password</h3>
+                <form onSubmit={handlePasswordChange} className="space-y-4">
+                    {["currentPassword", "newPassword", "confirmPassword"].map((field) => (
+                        <div key={field}>
+                            <label className="block text-sm font-medium mb-2 capitalize">
+                                {field.replace(/([A-Z])/g, ' $1')}
+                            </label>
+                            <input
+                                type="password"
+                                value={passwordForm[field]}
+                                onChange={(e) => setPasswordForm({ ...passwordForm, [field]: e.target.value })}
+                                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-300"
+                                required
+                            />
+                        </div>
+                    ))}
+                    <div className="flex justify-between">
+                        <button
+                            type="button"
+                            onClick={() => setIsPasswordModalOpen(false)}
+                            className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-200"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                            disabled={loading}
+                        >
+                            {loading ? "Saving..." : "Save Changes"}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
 
     return (
-        <div className="bg-gradient-to-br from-gray-100 to-blue-100 min-h-screen p-6">
-            <div className="max-w-7xl mx-auto bg-white rounded-3xl shadow-2xl p-8 space-y-8">
-                <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 mb-6">
-                    Account Settings Dashboard
-                </h1>
+        <div className="min-h-screen p-6 bg-gray-100">
+            <main className="bg-white shadow-lg rounded-lg p-6 max-w-6xl mx-auto">
+                <header className="mb-8 text-center">
+                    <h1 className="text-4xl font-bold text-gray-800 mb-2">Account Settings</h1>
+                    <p className="text-sm text-gray-500">Manage your account preferences and security settings.</p>
+                </header>
 
-                {/* Security Settings */}
-                <section className="bg-indigo-50 p-6 rounded-2xl shadow-lg">
-                    <h2 className="text-2xl font-bold text-indigo-800 mb-4 flex items-center">
-                        <ShieldCheck className="mr-2 text-indigo-600" /> Security Fortress
-                    </h2>
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <label className="text-lg font-medium text-gray-700">Two-Factor Authentication</label>
-                            <input type="checkbox" checked={twoFAEnabled} onChange={toggleTwoFA} className="form-checkbox h-6 w-6 text-indigo-600" />
-                        </div>
-                        <div className="flex items-center">
-                            <RefreshCcw className="text-gray-500 mr-2" />
-                            <button className="text-lg text-indigo-600 hover:text-indigo-700">Fortify Your Password</button>
-                        </div>
-                        <div className="flex items-center">
-                            <Key className="text-gray-500 mr-2" />
-                            <button className="text-lg text-indigo-600 hover:text-indigo-700">Master API Keys</button>
-                        </div>
-                    </div>
-                </section>
+                <div className="space-y-8">
 
-                {/* Notifications */}
-                <section className="bg-yellow-50 p-6 rounded-2xl shadow-lg">
-                    <h2 className="text-2xl font-bold text-yellow-800 mb-4 flex items-center">
-                        <Bell className="mr-2 text-yellow-600" /> Notification Hub
-                    </h2>
-                    <div className="space-y-4">
-                        <label className="text-lg font-medium text-gray-700">Alert Preferences</label>
-                        <select onChange={handleNotificationChange} value={notificationPreference} className="w-full p-3 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
-                            <option value="all">Galactic Broadcast</option>
-                            <option value="important">Critical Alerts Only</option>
-                            <option value="none">Silent Mode</option>
-                        </select>
-                    </div>
-                </section>
+                    {/* Personal Information */}
+                    <section className="bg-white rounded-lg shadow p-6">
+                        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-blue-600">
+                            <User className="w-6 h-6" />
+                            Personal Information
+                        </h2>
+                        <div className="flex items-center justify-center mb-6">
+                            <div className="relative w-32 h-32">
+                                <img
+                                    src={profile.profilePic || avatar}
+                                    alt="Profile"
+                                    className="w-full h-full object-cover rounded-full border-2 border-gray-300"
+                                />
+                                <label
+                                    htmlFor="profile-pic-upload"
+                                    className="absolute bottom-2 right-2 bg-blue-600 text-white p-2 rounded-full cursor-pointer"
+                                    title="Change Profile Picture"
+                                >
+                                    <User className="w-4 h-4" />
+                                </label>
+                                <input
+                                    type="file"
+                                    id="profile-pic-upload"
+                                    className="hidden"
+                                    onChange={handleFileUpload}
+                                    accept="image/*"
+                                />
+                            </div>
+                        </div>
+                        <form onSubmit={handleProfileUpdate} className="space-y-4">
+                            <div>
+                                <label htmlFor="fullName" className="block text-sm font-medium mb-1">Full Name</label>
+                                <input
+                                    id="fullName"
+                                    type="text"
+                                    value={profile.name}
+                                    onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-300"
+                                    placeholder="Enter your full name"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="email" className="block text-sm font-medium mb-1">Email Address</label>
+                                <input
+                                    id="email"
+                                    type="email"
+                                    value={profile.email}
+                                    onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-300"
+                                    placeholder="Enter your email address"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="phone" className="block text-sm font-medium mb-1">Phone Number</label>
+                                <input
+                                    id="phone"
+                                    type="tel"
+                                    value={profile.phone}
+                                    onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-300"
+                                    placeholder="Enter your phone number"
+                                    required
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+                                disabled={loading}
+                            >
+                                {loading ? "Updating..." : "Update Profile"}
+                            </button>
+                        </form>
+                    </section>
 
-                {/* API Keys */}
-                <section className="bg-green-50 p-6 rounded-2xl shadow-lg">
-                    <h2 className="text-2xl font-bold text-green-800 mb-4 flex items-center">
-                        <Key className="mr-2 text-green-600" /> API Key Vault
-                    </h2>
-                    <div className="space-y-4">
-                        {apiKeys.map((key) => (
-                            <div key={key.id} className="flex justify-between items-center p-4 bg-white rounded-lg shadow-sm">
+                    {/* Security Settings */}
+                    <section className="bg-white rounded-lg shadow p-6">
+                        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-red-600">
+                            <Shield className="w-6 h-6" />
+                            Security
+                        </h2>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-lg font-medium">{key.name}</p>
-                                    <p className="text-sm text-gray-500">{showSensitiveData ? key.key : key.key.slice(0, 10) + '...'}
-                                        <button onClick={toggleSensitiveData} className="ml-2 text-xs">
-                                            {showSensitiveData ? <EyeOff size={16} /> : <Eye size={16} />}
-                                        </button>
+                                    <h3 className="text-lg font-medium">Two-Factor Authentication</h3>
+                                    <p className="text-sm text-gray-500">
+                                        Add an extra layer of security to your account.
                                     </p>
                                 </div>
-                                <button onClick={() => handleApiKeyRegeneration(key.id)} className="px-4 py-2 text-sm bg-red-500 text-white rounded-full hover:bg-red-600">
-                                    Regenerate
+                                <button
+                                    onClick={toggleTwoFactorAuth}
+                                    className={`p-2 rounded-full ${security.twoFactorAuth ? "bg-green-600" : "bg-gray-300"} text-white hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-green-200`}
+                                >
+                                    {security.twoFactorAuth ? "On" : "Off"}
                                 </button>
                             </div>
-                        ))}
-                        <button className="px-4 py-2 text-lg bg-green-500 text-white rounded-full hover:bg-green-600">Forge New Key</button>
-                    </div>
-                </section>
-
-                {/* Audit Logs */}
-                <section className="bg-blue-50 p-6 rounded-2xl shadow-lg">
-                    <h2 className="text-2xl font-bold text-blue-800 mb-4 flex items-center">
-                        <UserCheck className="mr-2 text-blue-600" /> Audit Trail
-                    </h2>
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                        {auditLogs.map((log) => (
-                            <div key={log.id} className="p-3 bg-white rounded-lg shadow-sm">
-                                <p className="text-sm">
-                                    <span className="font-semibold">{log.action}</span> by {log.user} at {new Date(log.timestamp).toLocaleString()}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-                </section>
-
-                {/* Data Management */}
-                <section className="bg-pink-50 p-6 rounded-2xl shadow-lg">
-                    <h2 className="text-2xl font-bold text-pink-800 mb-4 flex items-center">
-                        <Database className="mr-2 text-pink-600" /> Data Sanctuary
-                    </h2>
-                    <div className="space-y-4">
-                        <div className="flex items-center">
-                            <FileText className="text-gray-500 mr-2" />
-                            <button className="text-lg text-pink-600 hover:text-pink-700">Extract Data</button>
+                            <button
+                                onClick={() => setIsPasswordModalOpen(true)}
+                                className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                disabled={loading}
+                            >
+                                <Lock className="w-5 h-5" />
+                                Change Password
+                            </button>
+                            <p className="text-sm text-gray-500 italic">Last changed: {security.passwordLastChanged}</p>
                         </div>
-                        <div className="flex items-center">
-                            <GitBranch className="text-gray-500 mr-2" />
-                            <button onClick={handleBackupNow} className="text-lg text-pink-600 hover:text-pink-700">Backup Now</button>
-                            <span className="ml-2 text-lg font-medium text-gray-700">{backupStatus}</span>
-                        </div>
-                        <div className="flex items-center">
-                            <Trash className="text-gray-500 mr-2" />
-                            <button className="text-lg text-red-600 hover:text-red-700">Erase Account</button>
-                        </div>
-                    </div>
-                </section>
+                    </section>
 
-                {/* Legal */}
-                <section className="bg-gray-50 p-6 rounded-2xl shadow-lg">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                        <File className="mr-2 text-gray-600" /> Legal Archives
-                    </h2>
-                    <div className="space-y-4">
-                        <a href="/terms" className="text-lg text-indigo-600 hover:text-indigo-700 flex items-center">
-                            <FileText className="mr-2" /> Terms of Service
-                        </a>
-                        <a href="/privacy" className="text-lg text-indigo-600 hover:text-indigo-700 flex items-center">
-                            <FileText className="mr-2" /> Privacy Policy
-                        </a>
-                    </div>
-                </section>
-
-                <div className="text-center mt-6">
-                    <Bolt className="w-10 h-10 inline-block text-yellow-500 animate-pulse" />
-                    <p className="text-xl font-medium text-gray-600">Empower Your Admin Experience</p>
+                    {/* Notifications */}
+                    <section className="bg-white rounded-lg shadow p-6">
+                        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-yellow-600">
+                            <Bell className="w-6 h-6" />
+                            Notifications
+                        </h2>
+                        <div className="space-y-4">
+                            {Object.entries(notifications).map(([type, { active, threshold, daysBefore, frequency }]) => (
+                                <div key={type} className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <h3 className="text-lg font-medium">{type.replace(/([A-Z])/g, " $1").trim()}</h3>
+                                        <button
+                                            onClick={handleNotificationChange(type, 'active')}
+                                            className={`p-2 rounded-full ${active ? "bg-green-600" : "bg-gray-300"} text-white hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-green-200`}
+                                        >
+                                            {active ? "On" : "Off"}
+                                        </button>
+                                    </div>
+                                    {active && (
+                                        <>
+                                            {type === "internetUsageAlerts" && (
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">Usage Threshold</label>
+                                                    <select
+                                                        onChange={handleNotificationChange(type, 'threshold')}
+                                                        value={threshold}
+                                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-300"
+                                                    >
+                                                        <option value="80%">80%</option>
+                                                        <option value="90%">90%</option>
+                                                        <option value="100%">100%</option>
+                                                    </select>
+                                                </div>
+                                            )}
+                                            {type === "subscriptionReminders" && (
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">Remind Before</label>
+                                                    <select
+                                                        onChange={handleNotificationChange(type, 'daysBefore')}
+                                                        value={daysBefore}
+                                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-300"
+                                                    >
+                                                        <option value="3">3 Days</option>
+                                                        <option value="7">7 Days</option>
+                                                        <option value="14">14 Days</option>
+                                                    </select>
+                                                </div>
+                                            )}
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1">Frequency</label>
+                                                <select
+                                                    onChange={handleNotificationChange(type, 'frequency')}
+                                                    value={frequency}
+                                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-300"
+                                                >
+                                                    <option value="daily">Daily</option>
+                                                    <option value="weekly">Weekly</option>
+                                                    <option value="monthly">Monthly</option>
+                                                    <option value="as-it-happens">As It Happens</option>
+                                                </select>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </section>
                 </div>
-            </div>
+            </main>
+
+            {isPasswordModalOpen && <PasswordModal />}
         </div>
     );
 };
