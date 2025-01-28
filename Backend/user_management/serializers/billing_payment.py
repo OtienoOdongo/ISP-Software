@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from ..models import UserBilling
+from user_management.models.billing_payment import UserBilling
+from user_management.models.billing_payment import Payment
+from user_management.serializers.plan_assignment import PlanSerializer
 
 class UserBillingSerializer(serializers.ModelSerializer):
     """
@@ -14,19 +16,16 @@ class UserBillingSerializer(serializers.ModelSerializer):
         fields = ['user', 'phone_number']
 
 
-from rest_framework import serializers
-from ..models import Payment
-from ..serializers import PlanSerializer
-
 class PaymentSerializer(serializers.ModelSerializer):
     """
     Serializer for Payment model. Includes nested serialization of the Plan.
 
     Attributes:
+        plan (PlanSerializer): Nested serializer for the associated plan.
         Meta.model (Payment): The model class to serialize.
         Meta.fields (list): List of fields to include in serialization.
     """
-    plan = PlanSerializer()
+    plan = PlanSerializer(read_only=True)
 
     class Meta:
         model = Payment

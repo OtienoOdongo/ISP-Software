@@ -2,9 +2,9 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
 from django.db.models import Q
-from .models import FAQ, SupportTicket
-from .serializers import FAQSerializer, SupportTicketSerializer
-from user_management.models import UserProfile
+from support.models import FAQ, SupportTicket
+from support.serializers import FAQSerializer, SupportTicketSerializer
+from user_management.models.user_profile import UserProfile
 
 class FAQViewSet(viewsets.ModelViewSet):
     """

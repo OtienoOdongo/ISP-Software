@@ -3,8 +3,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
-from payments.models import MpesaTransaction
-from payments.serializers import MpesaTransactionSerializer
+from payments.models.mpesa_transaction_log import MpesaTransaction
+from payments.serializers.mpesa_transaction_log import MpesaTransactionSerializer
 from django.db.models import Q
 from django.utils import timezone
 from datetime import timedelta

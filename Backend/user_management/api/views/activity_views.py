@@ -1,6 +1,6 @@
 from rest_framework import viewsets
-from ...models import UserActivity
-from ...serializers import UserActivitySerializer
+from user_management.models.activity_log import UserActivity
+from user_management.serializers.activity_log import UserActivitySerializer
 
 class UserActivityViewSet(viewsets.ModelViewSet):
     """

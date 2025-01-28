@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from reporting.models import UsageReport
+from reporting.models.usage_report import UsageReport
 
 class UsageReportSerializer(serializers.ModelSerializer):
     """

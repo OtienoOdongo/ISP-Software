@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from network_management.models import IPAddress, Subnet
+from network_management.models.IP_Address_Management import IPAddress, Subnet
 
 class SubnetSerializer(serializers.ModelSerializer):
     """

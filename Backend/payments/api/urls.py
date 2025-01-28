@@ -1,7 +1,11 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import( MpesaTransactionViewSet, MpesaConfigViewSet, 
-MpesaCallbackViewSet, PaymentReconciliationViewSet)
+from payments.api.views.mpesa_transaction_log import MpesaTransactionViewSet
+from payments.api.views.mpesa_callback_settings import MpesaCallbackViewSet
+from payments.api.views.mpesa_configuration import MpesaConfigViewSet
+from payments.api.views.payment_reconciliation import PaymentReconciliationViewSet
+
+
 
 router = DefaultRouter()
 router.register(r'mpesa-transactions', MpesaTransactionViewSet)

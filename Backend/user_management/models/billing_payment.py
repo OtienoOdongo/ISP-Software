@@ -1,5 +1,7 @@
 from django.db import models
-from ..models import UserProfile
+from user_management.models.user_profile import UserProfile
+from user_management.models.plan_assignment import Plan
+from django.utils import timezone
 
 class UserBilling(models.Model):
     """
@@ -17,11 +19,6 @@ class UserBilling(models.Model):
         return f"{self.user.name}'s Billing"
 
 
-
-from django.db import models
-from ..models import UserProfile
-from ..models import Plan
-from django.utils import timezone
 
 class Payment(models.Model):
     """

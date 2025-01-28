@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from payments.models import MpesaCallback
+from payments.models.mpesa_callback_settings import MpesaCallback
 
 class MpesaCallbackSerializer(serializers.ModelSerializer):
     """

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import Device
+from network_management.models.Bandwidth_Allocation import Device
 
 class DeviceSerializer(serializers.ModelSerializer):
     """

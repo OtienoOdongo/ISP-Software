@@ -1,5 +1,5 @@
 from django.db import models
-from user_management.models import UserProfile
+from user_management.models.user_profile import UserProfile
 
 class FAQ(models.Model):
     """

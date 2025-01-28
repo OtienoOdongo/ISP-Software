@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from payments.models import MpesaConfig
+from payments.models.mpesa_configuration import MpesaConfig
 
 class MpesaConfigSerializer(serializers.ModelSerializer):
     """

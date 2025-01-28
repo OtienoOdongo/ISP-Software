@@ -1,6 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import InternetPlanViewSet, PlanAnalyticsViewSet
+from internet_plans.api.views.create_plans import InternetPlanViewSet
+from internet_plans.api.views.plan_analytics import PlanAnalyticsViewSet
+
 
 router = DefaultRouter()
 router.register(r'plans', InternetPlanViewSet, basename='plans')  # For creating and managing plans

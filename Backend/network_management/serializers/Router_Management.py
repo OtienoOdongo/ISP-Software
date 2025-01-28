@@ -1,6 +1,5 @@
-# serializers.py
 from rest_framework import serializers
-from ..models import Router
+from network_management.models.Router_Management import Router
 
 class RouterSerializer(serializers.ModelSerializer):
     """

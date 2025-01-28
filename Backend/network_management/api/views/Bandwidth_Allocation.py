@@ -1,8 +1,8 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
-from network_management.models import Device
-from network_management.serializers import DeviceSerializer
+from network_management.models.Bandwidth_Allocation import Device
+from network_management.serializers.Bandwidth_Allocation import DeviceSerializer
 
 class DeviceViewSet(viewsets.ModelViewSet):
     """

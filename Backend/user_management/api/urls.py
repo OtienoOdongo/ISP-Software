@@ -1,7 +1,9 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import UserProfileViewSet, UserActivityViewSet, PlanViewSet, \
-    UserPlanViewSet, UserBillingViewSet, PaymentViewSet
+from user_management.api.views.user_views import UserProfileViewSet
+from user_management.api.views.activity_views import UserActivityViewSet
+from user_management.api.views.plan_views import PlanViewSet, UserPlanViewSet
+from user_management.api.views.billing_views import UserBillingViewSet, PaymentViewSet
 
 
 router = DefaultRouter()

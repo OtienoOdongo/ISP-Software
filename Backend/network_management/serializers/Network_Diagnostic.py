@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import DiagnosticResult
+from network_management.models.Network_Diagnostic import DiagnosticResult
 
 class DiagnosticResultSerializer(serializers.ModelSerializer):
     """

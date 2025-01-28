@@ -1,7 +1,6 @@
-# views.py
 from rest_framework import viewsets
-from ...models import PlanAnalytics
-from ...serializers import PlanAnalyticsSerializer
+from internet_plans.models.plan_analytics import PlanAnalytics
+from internet_plans.serializers.plan_analytics import PlanAnalyticsSerializer
 
 class PlanAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
     """

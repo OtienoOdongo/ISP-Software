@@ -1,14 +1,17 @@
-from datetime import timezone
-from rest_framework import viewsets
-
-from Backend.user_management.models.user_profile import UserProfile
-from ...models import Plan
-from ...serializers import PlanSerializer
+from datetime import datetime, timezone
+from rest_framework import viewsets, status
+from rest_framework.response import Response
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from user_management.models.user_profile import UserProfile
+from user_management.models.plan_assignment import Plan, UserPlan
+from user_management.serializers.plan_assignment import PlanSerializer, UserPlanSerializer
+# import mpesa_integration  # Assuming you have this module for M-Pesa interactions
 
 class PlanViewSet(viewsets.ModelViewSet):
     """
     A viewset for managing plans. Provides standard actions like list,
-      create, retrieve, update, and destroy.
+    create, retrieve, update, and destroy.
 
     Attributes:
         queryset (QuerySet): All Plan objects.
@@ -19,15 +22,6 @@ class PlanViewSet(viewsets.ModelViewSet):
     """
     queryset = Plan.objects.all()
     serializer_class = PlanSerializer
-
-
-from rest_framework import viewsets, status
-from rest_framework.response import Response
-from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
-from ...models import UserPlan
-from ...serializers import UserPlanSerializer
-import mpesa_integration  # Assuming you have this module for M-Pesa interactions
 
 class UserPlanViewSet(viewsets.ModelViewSet):
     queryset = UserPlan.objects.all()
@@ -90,14 +84,15 @@ class UserPlanViewSet(viewsets.ModelViewSet):
                     device_mac_address=device_mac_address,
                     defaults={
                         'plan': plan,
-                        'assigned_date': timezone.now(),
+                        'assigned_date': datetime.now(timezone.utc),  # Use UTC time for consistency
                         'payment_status': 'Completed',
                         'transaction_id': transaction_id
                     }
                 )
-                return Response({'status': 'Plan assigned successfully', 
-                                 'user_plan': UserPlanSerializer(user_plan).data}, 
-                                 status=status.HTTP_200_OK)
+                return Response({
+                    'status': 'Plan assigned successfully', 
+                    'user_plan': UserPlanSerializer(user_plan).data
+                }, status=status.HTTP_200_OK)
             except (Plan.DoesNotExist, UserProfile.DoesNotExist):
                 return Response({'error': 'Plan or User not found'}, status=status.HTTP_404_NOT_FOUND)
         return Response({'status': 'Payment confirmation failed'}, status=status.HTTP_400_BAD_REQUEST)

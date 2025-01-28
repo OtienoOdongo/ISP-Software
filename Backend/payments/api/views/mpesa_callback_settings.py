@@ -1,8 +1,8 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from payments.models import MpesaCallback
-from payments.serializers import MpesaCallbackSerializer
+from payments.models.mpesa_callback_settings import MpesaCallback
+from payments.serializers.mpesa_callback_settings import MpesaCallbackSerializer
 from django.db.models import Q
 
 class MpesaCallbackViewSet(viewsets.ModelViewSet):

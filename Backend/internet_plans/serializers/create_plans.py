@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import InternetPlan
+from internet_plans.models.create_plans import InternetPlan
 
 class InternetPlanSerializer(serializers.ModelSerializer):
     """

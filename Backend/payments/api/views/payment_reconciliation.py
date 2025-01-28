@@ -1,8 +1,8 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from payments.models import PaymentTransaction
-from payments.serializers import PaymentTransactionSerializer
+from payments.models.payment_reconciliation import PaymentTransaction
+from payments.serializers.payment_reconciliation import PaymentTransactionSerializer
 from django.db.models import Q
 from django.utils import timezone
 import csv

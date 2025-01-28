@@ -1,8 +1,8 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from payments.models import MpesaConfig
-from payments.serializers import MpesaConfigSerializer
+from payments.models.mpesa_configuration import MpesaConfig
+from payments.serializers.mpesa_configuration import MpesaConfigSerializer
 from django.core.exceptions import ObjectDoesNotExist
 
 class MpesaConfigViewSet(viewsets.ModelViewSet):

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from reporting.models import MonthlyFinancial
+from reporting.models.financial_report import MonthlyFinancial
 
 class MonthlyFinancialSerializer(serializers.ModelSerializer):
     """

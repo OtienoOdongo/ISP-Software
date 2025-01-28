@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from ..models import Plan
+from user_management.models.plan_assignment import Plan
+from user_management.models.plan_assignment import UserPlan
+
 
 class PlanSerializer(serializers.ModelSerializer):
     """
@@ -14,10 +16,6 @@ class PlanSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'validity', 'data', 'price']
 
 
-from rest_framework import serializers
-from ..models import UserPlan
-from . import PlanSerializer
-
 class UserPlanSerializer(serializers.ModelSerializer):
     """
     Serializer for the UserPlan model. Includes nested serialization of the Plan.
@@ -30,4 +28,5 @@ class UserPlanSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserPlan
-        fields = ['id', 'user', 'plan', 'assigned_date', 'device_mac_address', 'payment_status', 'transaction_id']
+        fields = ['id', 'user', 'plan', 'assigned_date', 'device_mac_address',
+                   'payment_status', 'transaction_id']

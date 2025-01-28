@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     # Apps created for the project
     'authentication',
     'user_management',
-    'dashboard',
     'internet_plans',
     'network_management',
     'payments',

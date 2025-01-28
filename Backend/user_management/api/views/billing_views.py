@@ -1,6 +1,11 @@
 from rest_framework import viewsets
-from ...models import UserBilling
-from ...serializers import UserBillingSerializer
+from user_management.models.billing_payment import UserBilling
+from user_management.serializers.billing_payment import UserBillingSerializer
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from user_management.models.billing_payment import Payment
+from user_management.serializers.billing_payment import PaymentSerializer
+
 
 class UserBillingViewSet(viewsets.ModelViewSet):
     """
@@ -18,12 +23,6 @@ class UserBillingViewSet(viewsets.ModelViewSet):
     serializer_class = UserBillingSerializer
 
 
-
-from rest_framework import viewsets
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from ...models import Payment
-from ...serializers import PaymentSerializer
 
 class PaymentViewSet(viewsets.ModelViewSet):
     """

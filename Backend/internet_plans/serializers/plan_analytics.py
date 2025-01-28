@@ -1,6 +1,5 @@
-# serializers.py
 from rest_framework import serializers
-from ..models import PlanAnalytics, UserFeedback
+from internet_plans.models.plan_analytics import PlanAnalytics, UserFeedback
 
 class UserFeedbackSerializer(serializers.ModelSerializer):
     """

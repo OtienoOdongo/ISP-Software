@@ -2,8 +2,8 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.db.models import Q
-from network_management.models import IPAddress, Subnet 
-from network_management.serializers import IPAddressSerializer, SubnetSerializer
+from network_management.models.IP_Address_Management import IPAddress, Subnet 
+from network_management.serializers.IP_Address_Management import IPAddressSerializer, SubnetSerializer
 
 class IPAddressViewSet(viewsets.ModelViewSet):
     """

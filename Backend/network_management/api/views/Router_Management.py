@@ -3,8 +3,8 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
-from network_management.models import Router
-from network_management.serializers import RouterSerializer
+from network_management.models.Router_Management import Router
+from network_management.serializers.Router_Management import RouterSerializer
 from librouteros import connect
 import paramiko
 import logging

@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
-from reporting.models import MonthlyFinancial
-from reporting.serializers import MonthlyFinancialSerializer
+from reporting.models.financial_report import MonthlyFinancial
+from reporting.serializers.financial_report import MonthlyFinancialSerializer
 
 class FinancialReportsViewSet(viewsets.ReadOnlyModelViewSet):
     """

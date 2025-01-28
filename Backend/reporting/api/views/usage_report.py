@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
-from reporting.models import UsageReport
-from reporting.serializers import UsageReportSerializer
+from reporting.models.usage_report import UsageReport
+from reporting.serializers.usage_report import UsageReportSerializer
 
 class UsageReportViewSet(viewsets.ReadOnlyModelViewSet):
     """

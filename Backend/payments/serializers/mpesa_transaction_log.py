@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from payments.models import MpesaTransaction
+from payments.models.mpesa_transaction_log import MpesaTransaction
 
 class MpesaTransactionSerializer(serializers.ModelSerializer):
     """

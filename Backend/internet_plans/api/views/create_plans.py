@@ -1,8 +1,8 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from django.db import IntegrityError
-from ...models import InternetPlan
-from ...serializers import InternetPlanSerializer
+from internet_plans.models.create_plans import InternetPlan
+from internet_plans.serializers.create_plans import InternetPlanSerializer
 from rest_framework.pagination import PageNumberPagination
 
 class StandardResultsSetPagination(PageNumberPagination):
