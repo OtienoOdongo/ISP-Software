@@ -4,8 +4,8 @@ import { TfiWorld } from "react-icons/tfi";
 import { RiSecurePaymentLine } from "react-icons/ri";
 import { HiDocumentReport } from "react-icons/hi";
 import { FcSupport } from "react-icons/fc";
-import { TbSettingsAutomation } from "react-icons/tb";
-import { Settings } from 'lucide-react';
+import { Settings, Space } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import ActiveUsers  from "../assets/ActiveUsers.png"
 import WifiSignal from "../assets/WifiSignal.png"
 import customers from  "../assets/customers.png"
@@ -84,9 +84,11 @@ export const menuItems = [
       { title: "Knowledge Base" },
       
     ],
+    
+    
   },
  
-
+  
 
   {
     title: "Account",
@@ -97,6 +99,13 @@ export const menuItems = [
       { title: "Admin Profile" },
       { title: "Settings" },
     ],
+    
+  },
+  {
+    title: "LogOut",
+    icon: <LogOut className="h-8 w-8 text-slate-500" />,
+    submenu: false,
+    action: "LogOut"
   },
 ];
 

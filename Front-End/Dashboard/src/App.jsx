@@ -30,22 +30,21 @@ import MpesaConfiguration from './Pages/PaymentProcessing/MpesaConfiguration';
 import MpesaCallbackSettings from './Pages/PaymentProcessing/MpesaCallbackSettings';
 import PaymentReconciliation from './Pages/PaymentProcessing/PaymentReconciliation';
 
-
 // Reporting & Analytics Routes
 import UsageReports from './Pages/ReportingAnalytics/UsageReports';
 import FinancialReports from './Pages/ReportingAnalytics/FinancialReports';
-
 
 // Support & Maintenance Routes
 import UserSupportTickets from './Pages/SupportMaintenance/UserSupportTickets';
 import KnowledgeBase from './Pages/SupportMaintenance/KnowledgeBase';
 
-
-
-
 // account and admin profile
 import AdminProfile from './Pages/Account/AdminProfile';
 import AccountSettings from './Pages/Account/AccountSettings';
+
+// Signup
+import LogIn from './Pages/SignUp/LogIn';
+import LogOut from './Pages/SignUp/LogOut';
 
 // Page Not Found
 import NoMatch from './Pages/NotFound/NoMatch';
@@ -107,6 +106,10 @@ const App = () => {
         {/*Admin profile and account settings*/}
         <Route path="account/admin-profile" element={<AdminProfile />} />
         <Route path="account/settings" element={<AccountSettings />} />
+
+        {/*Signup */}
+        <Route path="login" element={<LogIn />} />
+        <Route path="logout" element={<LogOut />} />
 
         {/* Page Not Found */}
         <Route path="*" element={<NoMatch />} />

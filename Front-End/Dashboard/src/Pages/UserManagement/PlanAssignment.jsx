@@ -23,13 +23,15 @@ const mockUsers = [
   {
     id: 1,
     name: "Jane Doe",
-    currentPlan: { id: 3, name: "Premium", validity: "30 days", data: "100GB", price: 30, assignedDate: "2025-01-12", deviceId: "AA:BB:CC:DD:EE:FF" },
+    currentPlan: { id: 3, name: "Premium", validity: "30 days", data: "100GB", 
+      price: 30, assignedDate: "2025-01-12", deviceId: "AA:BB:CC:DD:EE:FF" },
     lastLogin: "2025-01-12T14:30:00Z"
   },
   {
     id: 2,
     name: "John Smith",
-    currentPlan: { id: 2, name: "Plus", validity: "7 days", data: "10GB", price: 7, assignedDate: "2025-01-11", deviceId: "11:22:33:44:55:66" },
+    currentPlan: { id: 2, name: "Plus", validity: "7 days", data: "10GB",
+       price: 7, assignedDate: "2025-01-11", deviceId: "11:22:33:44:55:66" },
     lastLogin: "2025-01-11T12:00:00Z"
   },
   { id: 3, name: "Alice Johnson", currentPlan: null, lastLogin: "2025-01-10T08:00:00Z" }, // Example of a user without a plan
@@ -112,7 +114,8 @@ const PlanAssignment = () => {
     }));
     setUsers(prevUsers =>
       prevUsers.map(user =>
-        user.id === selectedUser.id ? { ...user, currentPlan: { ...newPlan, assignedDate: new Date().toISOString() } } : user
+        user.id === selectedUser.id ? { ...user, currentPlan: { ...newPlan, 
+          assignedDate: new Date().toISOString() } } : user
       )
     );
   };
@@ -133,7 +136,8 @@ const PlanAssignment = () => {
   return (
     <div className="min-h-screen bg-gradient-to-r from-gray-50 to-blue-50 p-6">
       <div className="max-w-7xl mx-auto bg-white rounded-3xl shadow-2xl p-8 space-y-8">
-        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500 mb-6 flex items-center">
+        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r
+         from-blue-500 to-purple-500 mb-6 flex items-center">
           <Users className="mr-2 text-blue-500" /> Plan Management 
         </h1>
 
@@ -142,7 +146,8 @@ const PlanAssignment = () => {
           <select
             onChange={(e) => handleUserSelect(Number(e.target.value))}
             value={selectedUser.id}
-            className="w-full px-4 py-3 border border-blue-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300 bg-white text-gray-800"
+            className="w-full px-4 py-3 border border-blue-300 rounded-lg focus:outline-none
+             focus:ring focus:ring-blue-300 bg-white text-gray-800"
           >
             {users.map(user => (
               <option key={user.id} value={user.id}>
@@ -168,7 +173,8 @@ const PlanAssignment = () => {
               </button>
               <button
                 onClick={() => setAutoAssign(!autoAssign)}
-                className={`px-4 py-2 rounded-full text-white ${autoAssign ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-400 hover:bg-gray-500'}`}
+                className={`px-4 py-2 rounded-full text-white ${autoAssign ? 'bg-green-500 hover:bg-green-600' 
+                  : 'bg-gray-400 hover:bg-gray-500'}`}
                 title={autoAssign ? "Disable Auto-Assignment" : "Enable Auto-Assignment"}
               >
                 <RefreshCcw size={18} />
@@ -183,7 +189,7 @@ const PlanAssignment = () => {
               <h3 className="text-lg font-semibold">{selectedUser.currentPlan ? selectedUser.currentPlan.name : "No Plan"}</h3>
               <p className="text-sm text-gray-600">
                 {selectedUser.currentPlan
-                  ? `${selectedUser.currentPlan.data} - Valid for ${selectedUser.currentPlan.validity} - $${selectedUser.currentPlan.price}`
+                  ? `${selectedUser.currentPlan.data} - Valid for ${selectedUser.currentPlan.validity} - KES ${selectedUser.currentPlan.price}`
                   : "No Plan Assigned"}
               </p>
             </div>
@@ -197,7 +203,7 @@ const PlanAssignment = () => {
               >
                 {plans.map(plan => (
                   <option key={plan.id} value={plan.id}>
-                    {plan.name} - {plan.data} for {plan.validity} - ${plan.price}
+                    {plan.name} - {plan.data} for {plan.validity} - KES {plan.price}
                   </option>
                 ))}
               </select>
@@ -213,7 +219,7 @@ const PlanAssignment = () => {
               <div className="bg-white p-4 rounded-lg shadow-sm flex justify-between items-center">
                 <div>
                   <h3 className="text-lg font-semibold">{suggestedPlan.name}</h3>
-                  <p className="text-sm text-gray-600">{suggestedPlan.data} - Valid for {suggestedPlan.validity} - ${suggestedPlan.price}</p>
+                  <p className="text-sm text-gray-600">{suggestedPlan.data} - Valid for {suggestedPlan.validity} - KES {suggestedPlan.price}</p>
                 </div>
                 <CheckCircle className="w-6 h-6 text-green-500" />
               </div>
@@ -240,7 +246,7 @@ const PlanAssignment = () => {
                 <h3 className="text-xl font-bold text-gray-800">{plan.name}</h3>
                 <p className="text-sm text-gray-600">{plan.data}</p>
                 <p className="text-sm text-gray-600">Valid for {plan.validity}</p>
-                <p className="text-lg font-bold text-blue-600">${plan.price}</p>
+                <p className="text-lg font-bold text-blue-600">KES {plan.price}</p>
                 <div className="mt-2 flex justify-between items-center">
                   <button
                     onClick={() => handlePlanChange(plan.id)}
@@ -249,7 +255,7 @@ const PlanAssignment = () => {
                     Assign
                   </button>
                   <CheckCircle
-                    className={`w-6 h-6 ${plan.id === selectedUser.currentPlan?.id ? 'text-green-500' : 'text-gray-300'}`}
+                    className={`w-6 h-6 KES {plan.id === selectedUser.currentPlan?.id ? 'text-green-500' : 'text-gray-300'}`}
                   />
                 </div>
               </div>
