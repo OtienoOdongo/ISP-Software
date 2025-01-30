@@ -48,6 +48,9 @@ INSTALLED_APPS = [
     'payments',
     'reporting',
     'support',
+    # 'account',
+    'dashboard',
+   
   
 
 
