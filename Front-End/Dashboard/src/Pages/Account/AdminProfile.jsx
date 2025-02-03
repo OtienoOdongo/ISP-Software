@@ -1,27 +1,20 @@
-
-
-import React, { useState } from "react";
-import {
-    Users,
-    Gauge,
-    DollarSign,
-    WifiHigh,
-    TrendingUp,
-    CameraIcon,
-} from "lucide-react";
+import React, { useState, useCallback } from "react";
+import { Users, Gauge, WifiHigh, TrendingUp, CameraIcon } from "lucide-react";
 import avatar from "../../assets/avatar.png";
 
-const AdminProfile = () => {
+const AdminProfile = ({ onOpenSettings }) => {
     const [profile, setProfile] = useState({
         name: "Clinton Odongo",
         email: "admin@interlink.com",
-        phone: "+254 700 123 456",
         role: "Admin",
         clients: 25,
         activeClients: 18,
         subscriptions: 50,
         profilePic: "",
     });
+
+    const [isEditing, setIsEditing] = useState(false); // State to toggle edit mode
+    const [tempProfile, setTempProfile] = useState({ ...profile }); // Temporary state for editing
 
     const [recentActivities, setRecentActivities] = useState([
         { description: "New client registered: Acme Corp" },
@@ -41,217 +34,196 @@ const AdminProfile = () => {
         { name: "Router 1", status: "Online", color: "green" },
     ]);
 
-    const [isChangingPassword, setIsChangingPassword] = useState(false);
-    const [passwordForm, setPasswordForm] = useState({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-    });
-
-    const [isUpdatingPhone, setIsUpdatingPhone] = useState(false);
-    const [newPhoneNumber, setNewPhoneNumber] = useState("");
-
-    const handlePasswordChange = () => {
-        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-            alert("Passwords do not match!");
-            return;
-        }
-        console.log("Password changed:", passwordForm);
-        setIsChangingPassword(false);
-        // Implement actual password change API call
-    };
-
-    const handlePhoneNumberUpdate = () => {
-        if (!newPhoneNumber) {
-            alert("Please enter a valid phone number.");
-            return;
-        }
-        setProfile({ ...profile, phone: newPhoneNumber });
-        console.log("Phone number updated:", newPhoneNumber);
-        setIsUpdatingPhone(false);
-        // Implement actual phone number update API call
-    };
-
-    const handleFileUpload = (e) => {
+    const handleFileUpload = useCallback((e) => {
         const file = e.target.files[0];
         if (file) {
-            setProfile({ ...profile, profilePic: URL.createObjectURL(file) });
-            // Upload file to server
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setProfile(prev => ({ ...prev, profilePic: reader.result }));
+            };
+            reader.onerror = () => {
+                console.error("Error reading file");
+            };
+            reader.readAsDataURL(file);
         }
+    }, []);
+
+    const handleEditProfile = () => {
+        setIsEditing(true); // Enter edit mode
+        setTempProfile({ ...profile }); // Copy current profile data to temporary state
+    };
+
+    const handleSaveProfile = () => {
+        setProfile({ ...tempProfile }); // Save changes from temporary state to profile
+        setIsEditing(false); // Exit edit mode
+    };
+
+    const handleCancelEdit = () => {
+        setIsEditing(false); // Exit edit mode without saving
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setTempProfile(prev => ({ ...prev, [name]: value })); // Update temporary state
     };
 
     return (
         <div className="min-h-screen p-6 bg-gray-100">
-            {/* Main Content */}
-            <main className="bg-white shadow-lg rounded-lg p-6 space-y-6">
-                {/* Header */}
-                <header className="flex justify-between items-center mb-6">
-                    <div className="flex items-center space-x-4">
-                        <div className="relative w-20 h-20">
-                            <img
-                                src={profile.profilePic || avatar}
-                                alt="Profile"
-                                className="w-full h-full object-cover rounded-full border-2 border-gray-300"
-                            />
-                            <label
-                                htmlFor="profile-pic-upload"
-                                className="absolute bottom-0 right-0 bg-blue-500 text-white p-2 rounded-full cursor-pointer"
-                                title="Change Profile Picture"
-                            >
-                                <CameraIcon size={16} />
-                            </label>
-                            <input
-                                type="file"
-                                id="profile-pic-upload"
-                                className="hidden"
-                                onChange={handleFileUpload}
-                                accept="image/*"
-                            />
-                        </div>
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-800">Welcome, {profile.name}</h1>
-                            <p className="text-sm text-gray-500">{profile.role}</p>
-                        </div>
-                    </div>
-                    <div className="flex space-x-4">
-                        <button
-                            onClick={() => setIsChangingPassword(!isChangingPassword)}
-                            className="bg-indigo-500 text-white px-6 py-3 rounded-lg hover:bg-indigo-600 shadow-md transition-colors"
-                        >
-                            Change Password
-                        </button>
-                        <button
-                            onClick={() => setIsUpdatingPhone(!isUpdatingPhone)}
-                            className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 shadow-md transition-colors"
-                        >
-                            Update Phone Number
-                        </button>
-                    </div>
+            <main className="bg-white shadow-lg rounded-lg p-6 max-w-6xl mx-auto">
+                <header className="mb-8 text-center">
+                    <h1 className="text-4xl font-bold text-gray-800 mb-2">Admin Profile</h1>
+                    <p className="text-sm text-gray-500">Welcome to your admin dashboard.</p>
                 </header>
 
-                {/* Quick Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    {[
-                        { title: "Clients", value: profile.clients, icon: Users, color: "blue" },
-                        { title: "Active Connections", value: profile.activeClients, icon: WifiHigh, color: "green" },
-                        { title: "Total Subscriptions", value: profile.subscriptions, icon: TrendingUp, color: "purple" },
-                        { title: "Network Uptime", value: "99.9%", icon: Gauge, color: "yellow" },
-                    ].map(({ title, value, icon: Icon, color }) => (
-                        <div key={title} className={`bg-${color}-100 p-6 rounded-lg shadow-md flex items-center space-x-4`}>
-                            <Icon className={`w-10 h-10 text-${color}-600`} />
+                <div className="space-y-8">
+                    {/* Personal Information */}
+                    <section className="bg-white rounded-lg shadow p-6">
+                        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-blue-600">
+                            <Users className="w-6 h-6" />
+                            Personal Information
+                        </h2>
+                        <div className="flex items-center justify-center mb-6">
+                            <div className="relative w-32 h-32">
+                                <img
+                                    src={profile.profilePic || avatar}
+                                    alt="Profile"
+                                    className="w-full h-full object-cover rounded-full border-2 border-gray-300"
+                                />
+                                <label
+                                    htmlFor="profile-pic-upload"
+                                    className="absolute bottom-2 right-2 bg-blue-600 text-white p-2 rounded-full cursor-pointer"
+                                    title="Change Profile Picture"
+                                >
+                                    <CameraIcon className="w-4 h-4" />
+                                </label>
+                                <input
+                                    type="file"
+                                    id="profile-pic-upload"
+                                    className="hidden"
+                                    onChange={handleFileUpload}
+                                    accept="image/*"
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-4">
                             <div>
-                                <h3 className="text-sm text-gray-600">{title}</h3>
-                                <p className={`text-lg font-bold text-${color}-800`}>{value}</p>
+                                <label className="block text-sm font-medium mb-1">Full Name</label>
+                                {isEditing ? (
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        value={tempProfile.name}
+                                        onChange={handleInputChange}
+                                        className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                ) : (
+                                    <p className="w-full p-3 border rounded-lg bg-gray-200">{profile.name}</p>
+                                )}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Email Address</label>
+                                {isEditing ? (
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        value={tempProfile.email}
+                                        onChange={handleInputChange}
+                                        className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                ) : (
+                                    <p className="w-full p-3 border rounded-lg bg-gray-200">{profile.email}</p>
+                                )}
+                            </div>
+                            <div className="flex justify-end space-x-4">
+                                {isEditing ? (
+                                    <>
+                                        <button
+                                            onClick={handleSaveProfile}
+                                            className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-200"
+                                        >
+                                            Save Changes
+                                        </button>
+                                        <button
+                                            onClick={handleCancelEdit}
+                                            className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-200"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </>
+                                ) : (
+                                    <button
+                                        onClick={handleEditProfile}
+                                        className="bg-indigo-500 text-white px-6 py-3 rounded-lg hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                                    >
+                                        Edit Profile
+                                    </button>
+                                )}
                             </div>
                         </div>
-                    ))}
-                </div>
+                    </section>
 
-                {/* Recent Activities */}
-                <section className="space-y-4">
-                    <h2 className="text-xl font-semibold">Recent Activities</h2>
-                    <ul className="space-y-2">
-                        {recentActivities.map((activity, index) => (
-                            <li key={index} className="p-4 bg-white rounded-lg shadow-sm">
-                                <span className="text-sm text-gray-600">{activity.description}</span>
-                            </li>
+                    {/* Quick Stats */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {[
+                            { title: "Clients", value: profile.clients, icon: Users, color: "blue" },
+                            { title: "Active Connections", value: profile.activeClients, icon: WifiHigh, color: "green" },
+                            { title: "Total Subscriptions", value: profile.subscriptions, icon: TrendingUp, color: "purple" },
+                            { title: "Network Uptime", value: "99.9%", icon: Gauge, color: "yellow" },
+                        ].map(({ title, value, icon: Icon, color }) => (
+                            <div key={title} className={`bg-${color}-100 p-6 rounded-lg shadow-md flex items-center space-x-4`}>
+                                <Icon className={`w-10 h-10 text-${color}-600`} />
+                                <div>
+                                    <h3 className="text-sm text-gray-600">{title}</h3>
+                                    <p className={`text-lg font-bold text-${color}-800`}>{value}</p>
+                                </div>
+                            </div>
                         ))}
-                    </ul>
-                </section>
-
-                {/* System Health */}
-                <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-white rounded-lg shadow-md p-6">
-                        <h3 className="text-lg font-semibold mb-4">Network Health</h3>
-                        <div className="flex items-center space-x-4">
-                            <div className="flex-grow">
-                                <p className="text-sm text-gray-600">Latency</p>
-                                <div className="h-2 bg-green-500 rounded-full w-3/4"></div>
-                            </div>
-                            <span className="text-sm text-gray-600">{networkHealth.latency}</span>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                            <div className="flex-grow">
-                                <p className="text-sm text-gray-600">Bandwidth Usage</p>
-                                <div className="h-2 bg-yellow-400 rounded-full" style={{ width: networkHealth.bandwidthUsage }}></div>
-                            </div>
-                            <span className="text-sm text-gray-600">{networkHealth.bandwidthUsage}</span>
-                        </div>
                     </div>
-                    <div className="bg-white rounded-lg shadow-md p-6">
-                        <h3 className="text-lg font-semibold mb-4">Server Status</h3>
+
+                    {/* Recent Activities */}
+                    <section className="space-y-4">
+                        <h2 className="text-xl font-semibold">Recent Activities</h2>
                         <ul className="space-y-2">
-                            {serverStatus.map(({ name, status, color }) => (
-                                <li key={name} className="flex items-center justify-between">
-                                    <span className="text-gray-600">{name}</span>
-                                    <span className={`text-${color}-600 font-medium`}>{status}</span>
+                            {recentActivities.map((activity, index) => (
+                                <li key={index} className="p-4 bg-white rounded-lg shadow-sm">
+                                    <span className="text-sm text-gray-600">{activity.description}</span>
                                 </li>
                             ))}
                         </ul>
-                    </div>
-                </section>
+                    </section>
 
-                {/* Password Change Modal */}
-                {isChangingPassword && (
-                    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                            <h3 className="text-lg font-semibold mb-4">Change Password</h3>
-                            {["currentPassword", "newPassword", "confirmPassword"].map((field) => (
-                                <div key={field} className="mb-4">
-                                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor={field}>
-                                        {field.replace(/([A-Z])/g, ' $1').trim()}
-                                    </label>
-                                    <input
-                                        type="password"
-                                        id={field}
-                                        name={field}
-                                        value={passwordForm[field]}
-                                        onChange={(e) => setPasswordForm({ ...passwordForm, [field]: e.target.value })}
-                                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                    />
+                    {/* System Health */}
+                    <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="bg-white rounded-lg shadow-md p-6">
+                            <h3 className="text-lg font-semibold mb-4">Network Health</h3>
+                            <div className="flex items-center space-x-4">
+                                <div className="flex-grow">
+                                    <p className="text-sm text-gray-600">Latency</p>
+                                    <div className="h-2 bg-green-500 rounded-full w-3/4"></div>
                                 </div>
-                            ))}
-                            <div className="flex justify-end">
-                                <button
-                                    onClick={handlePasswordChange}
-                                    className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
-                                >
-                                    Update Password
-                                </button>
+                                <span className="text-sm text-gray-600">{networkHealth.latency}</span>
+                            </div>
+                            <div className="flex items-center space-x-4">
+                                <div className="flex-grow">
+                                    <p className="text-sm text-gray-600">Bandwidth Usage</p>
+                                    <div className="h-2 bg-yellow-400 rounded-full" style={{ width: networkHealth.bandwidthUsage }}></div>
+                                </div>
+                                <span className="text-sm text-gray-600">{networkHealth.bandwidthUsage}</span>
                             </div>
                         </div>
-                    </div>
-                )}
-
-                {/* Phone Number Update Modal */}
-                {isUpdatingPhone && (
-                    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                            <h3 className="text-lg font-semibold mb-4">Update Phone Number</h3>
-                            <div className="mb-4">
-                                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="newPhoneNumber">
-                                    New Phone Number
-                                </label>
-                                <input
-                                    type="text"
-                                    id="newPhoneNumber"
-                                    value={newPhoneNumber}
-                                    onChange={(e) => setNewPhoneNumber(e.target.value)}
-                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                    placeholder="Enter new phone number"
-                                />
-                            </div>
-                            <div className="flex justify-end">
-                                <button
-                                    onClick={handlePhoneNumberUpdate}
-                                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-                                >
-                                    Update Phone Number
-                                </button>
-                            </div>
+                        <div className="bg-white rounded-lg shadow-md p-6">
+                            <h3 className="text-lg font-semibold mb-4">Server Status</h3>
+                            <ul className="space-y-2">
+                                {serverStatus.map(({ name, status, color }) => (
+                                    <li key={name} className="flex items-center justify-between">
+                                        <span className="text-gray-600">{name}</span>
+                                        <span className={`text-${color}-600 font-medium`}>{status}</span>
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
-                    </div>
-                )}
+                    </section>
+                </div>
             </main>
         </div>
     );
