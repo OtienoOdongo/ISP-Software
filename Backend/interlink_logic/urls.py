@@ -22,8 +22,8 @@ urlpatterns = [
     # Internet Plans URLs
     path('api/internet_plans/', include('internet_plans.api.urls')),
 
-    # # account
-    # path('api/account/', include('account.api.urls'))
+    # account
+    path('api/account/', include('account.api.urls')),
 
-    path('api/dashboard/', include('dashboard.urls'))
+    path('api/dashboard/', include('dashboard.urls')),
 ]

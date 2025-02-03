@@ -3,15 +3,13 @@ from django.contrib.auth.models import User
 
 class AdminProfile(models.Model):
     """
-    Represents the profile details of an admin user, including contact information and profile image.
+    Represents the profile details of an admin user.
 
     Attributes:
         user (ForeignKey): One-to-one relationship with User model.
-        phone (CharField): Phone number of the admin.
         profile_pic (ImageField): Profile picture of the admin, stored in 'profile_pics/' directory.
     """
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    phone = models.CharField(max_length=20, null=True, blank=True)
     profile_pic = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
 
 class RecentActivity(models.Model):

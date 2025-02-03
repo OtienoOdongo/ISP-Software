@@ -1,28 +1,23 @@
+
 from django.db import models
 from django.contrib.auth.models import User
 
-class Profile(models.Model):
+class UserProfile(models.Model):
     """
-    Represents user profile information.
+    Represents user profile details.
 
     Attributes:
         user (ForeignKey): One-to-one relationship with User model.
-        name (CharField): Full name of the user.
-        email (EmailField): Email address of the user.
-        phone (CharField): Phone number of the user.
-        profile_pic (ImageField): Profile picture of the user, stored in 'profile_pics/' directory.
-        role (CharField): Role of the user, like 'Admin'.
+        phone (CharField): User's phone number.
+        profile_pic (ImageField): User's profile picture.
     """
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    name = models.CharField(max_length=200)
-    email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=20, blank=True)
-    profile_pic = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
-    role = models.CharField(max_length=50)
+    phone = models.CharField(max_length=20, null=True, blank=True)
+    profile_pic = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
 
 class SecuritySettings(models.Model):
     """
-    Stores security-related settings for a user.
+    Represents security settings for a user.
 
     Attributes:
         user (ForeignKey): One-to-one relationship with User model.
@@ -31,26 +26,20 @@ class SecuritySettings(models.Model):
     """
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     two_factor_auth = models.BooleanField(default=False)
-    password_last_changed = models.DateField()
+    password_last_changed = models.DateField(null=True, blank=True)
 
 class NotificationSettings(models.Model):
     """
-    Represents notification preferences for different types of alerts.
+    Represents notification preferences for a user.
 
     Attributes:
         user (ForeignKey): One-to-one relationship with User model.
-        notification_type (CharField): Type of notification (e.g., 'internetUsageAlerts').
-        active (BooleanField): Whether this notification type is active.
-        threshold (CharField): Usage threshold for internet alerts.
-        days_before (IntegerField): Days before event for subscription reminders.
-        frequency (CharField): How often notifications should be sent.
+        Various fields for different notification types with their settings.
     """
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    notification_type = models.CharField(max_length=50)
-    active = models.BooleanField(default=True)
-    threshold = models.CharField(max_length=10, blank=True, null=True)
-    days_before = models.IntegerField(blank=True, null=True)
-    frequency = models.CharField(max_length=20)
-
-    class Meta:
-        unique_together = ('user', 'notification_type')  # Ensures only one setting per type per user
+    internet_usage_alerts = models.BooleanField(default=True)
+    usage_threshold = models.CharField(max_length=10, default='80%')
+    subscription_reminders = models.BooleanField(default=True)
+    days_before_reminder = models.IntegerField(default=3)
+    system_updates = models.BooleanField(default=True)
+    notification_frequency = models.CharField(max_length=20, default='daily')
