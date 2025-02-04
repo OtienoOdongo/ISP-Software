@@ -2,74 +2,134 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from django.contrib.auth import get_user_model
-from django.utils import timezone
-from django.contrib.auth import authenticate, login
-from django.contrib.sessions.models import Session
-from account.models.settings import UserProfile, SecuritySettings, NotificationSettings
-from account.serializers.settings import UserSerializer, UserProfileSerializer, \
-SecuritySettingsSerializer, NotificationSettingsSerializer
+from authentication.models import User
+from account.models import UserProfile, SecuritySettings, NotificationSettings
+from account.serializers import UserProfileSerializer, SecuritySettingsSerializer, \
+NotificationSettingsSerializer
 
-User = get_user_model()
-
-class AccountSettingsViewSet(viewsets.ModelViewSet):
+class UserProfileViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for managing account settings including profile, security, and notifications.
-    Uses JWT and session authentication for consistency with admin views.
+    ViewSet for managing user profiles.
+
+    Permissions:
+        - Only authenticated users can manage their own profile data.
     """
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    authentication_classes = [JWTAuthentication]  
-    permission_classes = [IsAuthenticated]  # Ensures only authenticated users can access
+    queryset = UserProfile.objects.all()
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
 
-    def get_object(self):
-        return self.request.user
+    def get_queryset(self):
+        return super().get_queryset().filter(user=self.request.user)
 
-    @action(detail=False, methods=['put'], name='Update Profile')
-    def update_profile(self, request):
-        user = self.get_object()
-        profile = user.userprofile
-        serializer = UserProfileSerializer(profile, data=request.data, partial=True)
+    @action(detail=True, methods=['put'], name='Update User Profile')
+    def update_profile(self, request, pk=None):
+        """
+        Update the user's profile, including the profile picture.
+
+        Args:
+            request (Request): Contains the updated profile data.
+            pk (int): The primary key of the profile to update.
+
+        Returns:
+            Response: Serialized profile data if successful, error messages otherwise.
+        """
+        profile = self.get_object()
+        if profile.user != request.user:
+            return Response({"detail": "You do not have permission to update this profile."}, 
+                            status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = self.get_serializer(profile, data=request.data, partial=True)
         if serializer.is_valid():
+            # Handle file upload for profile picture
+            if 'profile_pic' in request.data:
+                profile.profile_pic = request.data['profile_pic']
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['put'], name='Change Password')
-    def change_password(self, request):
-        user = self.get_object()
-        current_password = request.data.get('current_password')
-        new_password = request.data.get('new_password')
-        if not user.check_password(current_password):
-            return Response({"detail": "Current password is incorrect."}, 
-                            status=status.HTTP_401_UNAUTHORIZED)
-        user.set_password(new_password)
-        user.save()
-        # Update last changed date in SecuritySettings
-        security = SecuritySettings.objects.get(user=user)
-        security.password_last_changed = timezone.now().date()
-        security.save()
-        # Invalidate all previous sessions for security
-        Session.objects.filter(expire_date__gte=timezone.now()).delete()
-        return Response({"detail": "Password updated successfully."})
+class SecuritySettingsViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing security settings.
 
-    @action(detail=False, methods=['put'], name='Update Security')
-    def update_security(self, request):
-        user = self.get_object()
-        security = SecuritySettings.objects.get(user=user)
-        serializer = SecuritySettingsSerializer(security, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    Permissions:
+        - Only authenticated users can manage their own security settings.
+    """
+    queryset = SecuritySettings.objects.all()
+    serializer_class = SecuritySettingsSerializer
+    permission_classes = [IsAuthenticated]
 
-    @action(detail=False, methods=['put'], name='Update Notifications')
-    def update_notifications(self, request):
-        user = self.get_object()
-        notifications = NotificationSettings.objects.get(user=user)
-        serializer = NotificationSettingsSerializer(notifications, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get_queryset(self):
+        return super().get_queryset().filter(user=self.request.user)
+
+class NotificationSettingsViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing notification settings.
+
+    Permissions:
+        - Only authenticated users can manage their own notification settings.
+    """
+    queryset = NotificationSettings.objects.all()
+    serializer_class = NotificationSettingsSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return super().get_queryset().filter(user=self.request.user)
+
+class SettingsViewSet(viewsets.ViewSet):
+    """
+    A viewset for handling all settings related operations for a user.
+    This is a custom ViewSet to manage multiple settings models at once.
+
+    Permissions:
+        - Only authenticated users can access their own settings.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request):
+        """
+        Retrieve all settings for the authenticated user.
+
+        Returns:
+            Response: A dictionary containing both security and notification settings.
+        """
+        user = request.user
+        security_settings = SecuritySettings.objects.get(user=user)
+        notification_settings = NotificationSettings.objects.get(user=user)
+
+        return Response({
+            'security': SecuritySettingsSerializer(security_settings).data,
+            'notifications': NotificationSettingsSerializer(notification_settings).data
+        })
+
+    def partial_update(self, request):
+        """
+        Partially update settings for the authenticated user.
+
+        Args:
+            request (Request): Contains the data to update settings.
+
+        Returns:
+            Response: Updated settings data, or error messages.
+        """
+        user = request.user
+        security_settings = SecuritySettings.objects.get(user=user)
+        notification_settings = NotificationSettings.objects.get(user=user)
+
+        # Update security settings if data is provided
+        security_data = request.data.get('security', {})
+        if security_data:
+            for key, value in security_data.items():
+                setattr(security_settings, key, value)
+            security_settings.save()
+
+        # Update notification settings if data is provided
+        notification_data = request.data.get('notifications', {})
+        if notification_data:
+            for key, value in notification_data.items():
+                setattr(notification_settings, key, value)
+            notification_settings.save()
+
+        return Response({
+            'security': SecuritySettingsSerializer(security_settings).data,
+            'notifications': NotificationSettingsSerializer(notification_settings).data
+        })
