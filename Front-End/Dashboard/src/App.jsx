@@ -122,7 +122,7 @@
 
 
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './Pages/Layout/Layout';
 
@@ -164,59 +164,42 @@ import KnowledgeBase from './Pages/SupportMaintenance/KnowledgeBase';
 import AdminProfile from './Pages/Account/AdminProfile';
 import AccountSettings from './Pages/Account/AccountSettings';
 
-// Authentication Components
-import LoginSignup from './Pages/SignUp/LoginSignup';
-
-// Logout
-import LogOut from './Pages/SignUp/LogOut';
+// authentication
+import LoginPage from './Pages/SignUp/LoginPage'
 
 // Page Not Found
 import NoMatch from './Pages/NotFound/NoMatch';
 
-/**
- * App Component
- * Defines all application routes and ensures that all routes except login are protected
- */
-
 const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    localStorage.getItem('isAuthenticated') === 'true'
+  );
 
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-  };
+  useEffect(() => {
+    localStorage.setItem('isAuthenticated', isAuthenticated);
+  }, [isAuthenticated]);
 
+  const handleLogin = () => setIsAuthenticated(true);
   const handleLogout = () => {
     setIsAuthenticated(false);
+    localStorage.removeItem('isAuthenticated');
   };
 
-  // ProtectedRoute component to wrap routes that require authentication
   const ProtectedRoute = ({ children }) => {
-    if (!isAuthenticated) {
-      return <Navigate to="/login" replace />;
-    }
-    return children;
+    return isAuthenticated ? children : <Navigate to="/login" replace />;
   };
 
   return (
     <Routes>
-      {/* Public route for login */}
-      <Route path="/login" element={<LoginSignup handleLogin={handleLogin} />} />
+      <Route path="/login" element={<LoginPage handleLogin={handleLogin} />} />
 
-      {/* Protected routes */}
-      <Route
-        path="/*"
-        element={
-          <ProtectedRoute>
-            <Layout />
-          </ProtectedRoute>
-        }
-      >
+      <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<DashboardOverview />} />
 
         {/* User Management Routes */}
         <Route path="user-management/user-activity-log" element={<UserActivityLog />} />
         <Route path="user-management/plan-assignment" element={<PlanAssignment />} />
-        <Route path="user-management/billing-&-payment-history" element={<PaymentHistory />} />
+        <Route path="user-management/billing-payment-history" element={<PaymentHistory />} />
         <Route path="user-management/user-profile" element={<UserProfile />} />
 
         {/* Internet Plans Routes */}
@@ -231,25 +214,25 @@ const App = () => {
         <Route path="network-management/router-management" element={<RouterManagement />} />
 
         {/* Payment Processing Routes */}
-        <Route path="payment-processing/m-pesa-transaction-log" element={<MpesaTransactionLog />} />
-        <Route path="payment-processing/m-pesa-configuration" element={<MpesaConfiguration />} />
-        <Route path="payment-processing/m-pesa-callback-settings" element={<MpesaCallbackSettings />} />
+        <Route path="payment-processing/mpesa-transaction-log" element={<MpesaTransactionLog />} />
+        <Route path="payment-processing/mpesa-configuration" element={<MpesaConfiguration />} />
+        <Route path="payment-processing/mpesa-callback-settings" element={<MpesaCallbackSettings />} />
         <Route path="payment-processing/payment-reconciliation" element={<PaymentReconciliation />} />
 
         {/* Reporting & Analytics Routes */}
-        <Route path="reporting-&-analytics/usage-reports" element={<UsageReports />} />
-        <Route path="reporting-&-analytics/financial-reports" element={<FinancialReports />} />
+        <Route path="reporting-analytics/usage-reports" element={<UsageReports />} />
+        <Route path="reporting-analytics/financial-reports" element={<FinancialReports />} />
 
         {/* Support & Maintenance Routes */}
-        <Route path="support-&-maintenance/user-support-tickets" element={<UserSupportTickets />} />
-        <Route path="support-&-maintenance/knowledge-base" element={<KnowledgeBase />} />
+        <Route path="support-maintenance/user-support-tickets" element={<UserSupportTickets />} />
+        <Route path="support-maintenance/knowledge-base" element={<KnowledgeBase />} />
 
         {/* Admin Profile and Account Settings */}
         <Route path="account/admin-profile" element={<AdminProfile />} />
         <Route path="account/settings" element={<AccountSettings />} />
 
         {/* Logout */}
-        <Route path="logout" element={<LogOut handleLogout={handleLogout} />} />
+        {/* <Route path="logout" element={<LogOut handleLogout={handleLogout} />} /> */}
 
         {/* Catch all for protected routes */}
         <Route path="*" element={<NoMatch />} />

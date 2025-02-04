@@ -1,118 +1,256 @@
-// LoginSignup.js
-
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { FaEnvelope, FaLock, FaUser, FaEye, FaEyeSlash, FaGoogle, FaSpinner } from "react-icons/fa";
 
 const LoginSignup = () => {
     const [formState, setFormState] = useState({
         isLogin: true,
-        email: '',
-        password: '',
-        name: '',
+        email: "",
+        password: "",
+        confirmPassword: "", // New field for confirming password
+        name: "",
+        rememberMe: false,
     });
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false); // New state for confirm password visibility
+    const navigate = useNavigate();
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormState(prev => ({ ...prev, [name]: value }));
-    };
+    const handleChange = useCallback((e) => {
+        const { name, value, type, checked } = e.target;
+        setFormState((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+    }, []);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const { email, password, name } = formState;
-        try {
-            if (formState.isLogin) {
-                // Mock login API call
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email, password }),
-                });
-                if (!response.ok) throw new Error('Login failed');
-                console.log('Logged in successfully');
-            } else {
-                // Mock signup API call
-                const response = await fetch('/api/signup', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ name, email, password }),
-                });
-                if (!response.ok) throw new Error('Signup failed');
-                console.log('Signed up successfully');
+    const handleSubmit = useCallback(
+        async (e) => {
+            e.preventDefault();
+            setLoading(true);
+            setError("");
+
+            // Validate passwords match during signup
+            if (!formState.isLogin && formState.password !== formState.confirmPassword) {
+                setError("Passwords do not match");
+                setLoading(false);
+                return;
             }
-            // Clear form
-            setFormState({ isLogin: true, email: '', password: '', name: '' });
-        } catch (error) {
-            console.error('An error occurred:', error.message);
-            // Here you would typically show feedback to the user about the error
-        }
-    };
 
-    const toggleForm = () => {
-        setFormState(prev => ({ ...prev, isLogin: !prev.isLogin }));
-    };
+            const { email, password, name, rememberMe } = formState;
+            try {
+                const apiEndpoint = formState.isLogin ? "/api/login" : "/api/signup";
+                const response = await fetch(apiEndpoint, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        name: formState.isLogin ? undefined : name,
+                        rememberMe,
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || "An error occurred");
+                }
+
+                console.log(formState.isLogin ? "Logged in successfully" : "Signed up successfully");
+                if (rememberMe) {
+                    localStorage.setItem('rememberMe', 'true');
+                }
+                navigate("/dashboard", { replace: true });
+            } catch (error) {
+                setError(error.message);
+            } finally {
+                setLoading(false);
+            }
+        },
+        [formState, navigate]
+    );
+
+    const toggleForm = useCallback(() => {
+        setFormState((prev) => ({
+            ...prev,
+            isLogin: !prev.isLogin,
+            name: "",
+            email: "",
+            password: "",
+            confirmPassword: "", // Reset confirm password on form toggle
+            rememberMe: false,
+        }));
+        setError(""); // Clear errors on form toggle
+    }, []);
+
+    const togglePasswordVisibility = useCallback(() => {
+        setShowPassword(!showPassword);
+    }, [showPassword]);
+
+    const toggleConfirmPasswordVisibility = useCallback(() => {
+        setShowConfirmPassword(!showConfirmPassword);
+    }, [showConfirmPassword]);
+
+    const handleForgotPassword = useCallback(() => {
+        console.log("Forgot Password clicked");
+        navigate("/forgot-password");
+    }, [navigate]);
+
+    const handleGoogleLogin = useCallback(() => {
+        console.log("Google Login clicked");
+        // Implement Google OAuth logic here
+    }, []);
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            navigate("/dashboard", { replace: true });
+        }
+        // Check if "Remember Me" was checked in the last session
+        if (localStorage.getItem('rememberMe') === 'true') {
+            setFormState(prev => ({ ...prev, rememberMe: true }));
+        }
+    }, [navigate]);
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-                <h2 className="text-2xl mb-6 text-center font-semibold">{formState.isLogin ? 'Login' : 'Sign Up'}</h2>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black to-blue-900">
+            <div className="bg-gray-800 p-8 rounded-lg shadow-2xl w-full max-w-md transform transition-all ease-in-out duration-500 hover:shadow-3xl hover:-translate-y-1">
+                <h2 className="text-4xl font-extrabold text-center text-white mb-8">
+                    {formState.isLogin ? "Login" : "Sign Up"}
+                </h2>
+
                 <form onSubmit={handleSubmit}>
                     {!formState.isLogin && (
-                        <div className="mb-4">
-                            <label htmlFor="name" className="block text-gray-700 text-sm font-bold mb-2">Name</label>
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-gray-400 mb-2">Full Name</label>
+                            <div className="relative">
+                                <FaUser className="absolute left-3 top-3 text-gray-500" />
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={formState.name}
+                                    onChange={handleChange}
+                                    className="pl-10 pr-4 shadow appearance-none border border-gray-600 rounded-lg w-full py-3 px-3 text-white bg-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="James Kirwa"
+                                    required
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Email</label>
+                        <div className="relative">
+                            <FaEnvelope className="absolute left-3 top-3 text-gray-500" />
                             <input
-                                type="text"
-                                id="name"
-                                name="name"
-                                value={formState.name}
+                                type="email"
+                                name="email"
+                                value={formState.email}
                                 onChange={handleChange}
-                                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                placeholder="Your Name"
+                                className="pl-10 pr-4 shadow appearance-none border border-gray-600 rounded-lg w-full py-3 px-3 text-white bg-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="example@mail.com"
                                 required
                             />
                         </div>
-                    )}
-                    <div className="mb-4">
-                        <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">Email</label>
-                        <input
-                            type="email"
-                            id="email"
-                            name="email"
-                            value={formState.email}
-                            onChange={handleChange}
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                            placeholder="Email"
-                            required
-                        />
                     </div>
+
                     <div className="mb-6">
-                        <label htmlFor="password" className="block text-gray-700 text-sm font-bold mb-2">Password</label>
-                        <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            value={formState.password}
-                            onChange={handleChange}
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-                            placeholder="******************"
-                            required
-                        />
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Password</label>
+                        <div className="relative">
+                            <FaLock className="absolute left-3 top-3 text-gray-500" />
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                name="password"
+                                value={formState.password}
+                                onChange={handleChange}
+                                className="pl-10 pr-10 shadow appearance-none border border-gray-600 rounded-lg w-full py-3 px-3 text-white bg-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="**********"
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={togglePasswordVisibility}
+                                className="absolute right-3 top-3 text-gray-500 hover:text-gray-300"
+                            >
+                                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                            </button>
+                        </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                        <button
-                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                            type="submit"
-                        >
-                            {formState.isLogin ? 'Sign In' : 'Sign Up'}
-                        </button>
+
+                    {!formState.isLogin && (
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-gray-400 mb-2">Confirm Password</label>
+                            <div className="relative">
+                                <FaLock className="absolute left-3 top-3 text-gray-500" />
+                                <input
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    name="confirmPassword"
+                                    value={formState.confirmPassword}
+                                    onChange={handleChange}
+                                    className="pl-10 pr-10 shadow appearance-none border border-gray-600 rounded-lg w-full py-3 px-3 text-white bg-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="**********"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={toggleConfirmPasswordVisibility}
+                                    className="absolute right-3 top-3 text-gray-500 hover:text-gray-300"
+                                >
+                                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {formState.isLogin && (
+                        <div className="flex items-center mb-6">
+                            <input
+                                type="checkbox"
+                                name="rememberMe"
+                                checked={formState.rememberMe}
+                                onChange={handleChange}
+                                className="mr-2 leading-tight text-blue-500"
+                            />
+                            <label className="text-sm text-gray-400">Remember Me</label>
+                            <button
+                                type="button"
+                                onClick={handleForgotPassword}
+                                className="ml-auto text-sm text-blue-400 hover:underline"
+                            >
+                                Forgot Password?
+                            </button>
+                        </div>
+                    )}
+
+                    {error && <p className="text-red-500 text-xs italic mb-4 text-center">{error}</p>}
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300 flex items-center justify-center"
+                    >
+                        {loading ? <FaSpinner className="animate-spin mr-2" /> : null}
+                        {formState.isLogin ? "Login" : "Sign Up"}
+                    </button>
+
+                    <div className="flex items-center justify-between mt-6">
                         <button
                             type="button"
                             onClick={toggleForm}
-                            className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
+                            className="text-blue-400 hover:underline text-sm"
                         >
-                            {formState.isLogin ? 'Need an account? Sign Up' : 'Already have an account? Login'}
+                            {formState.isLogin ? "Need an account? Sign Up" : "Already have an account? Login"}
+                        </button>
+                    </div>
+
+                    <div className="mt-6 text-center">
+                        <p className="text-gray-500 text-sm">Or continue with</p>
+                        <button
+                            type="button"
+                            onClick={handleGoogleLogin}
+                            className="mt-2 flex items-center justify-center gap-2 w-full bg-slate-100 border border-gray-300 text-blue-700 font-bold py-2 px-4 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-300 transition duration-300"
+                        >
+                            <FaGoogle /> Google
                         </button>
                     </div>
                 </form>
