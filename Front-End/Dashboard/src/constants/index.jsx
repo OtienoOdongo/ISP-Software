@@ -150,5 +150,11 @@ export const gridData = [
 
 
 
+//using local stoarge to store the access token and refresg token in the brwowser
+
+export const ACCESS_TOKEN = "access";
+export const REFRESH_TOKEN = "refresh"
+
+
 
 
