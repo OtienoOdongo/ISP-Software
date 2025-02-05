@@ -11,7 +11,7 @@ urlpatterns = [
     path('api/support/', include('support.urls')),
 
     # Reporting URLs
-    path('/apireporting/', include('reporting.api.urls')),
+    path('/api/reporting/', include('reporting.api.urls')),
 
     # Payments URLs
     path('api/payments/', include('payments.api.urls')),

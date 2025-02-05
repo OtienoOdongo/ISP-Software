@@ -65,27 +65,56 @@
 
 
 from rest_framework import serializers
-from account.models.admin_profile import AdminProfile, UserProfile, \
-SecuritySettings, NotificationSettings
+from account.models.admin_profile import AdminProfile, RecentActivity, NetworkHealth, ServerStatus
 
 class AdminProfileSerializer(serializers.ModelSerializer):
+    """
+    Serializer for AdminProfile model.
+
+    Attributes:
+        Meta:
+            model (Model): The AdminProfile model.
+            fields (list): Fields to be serialized.
+    """
     class Meta:
         model = AdminProfile
         fields = ['id', 'user', 'profile_pic']
 
-class UserProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserProfile
-        fields = ['id', 'user', 'phone', 'profile_pic']
+class RecentActivitySerializer(serializers.ModelSerializer):
+    """
+    Serializer for RecentActivity model.
 
-class SecuritySettingsSerializer(serializers.ModelSerializer):
+    Attributes:
+        Meta:
+            model (Model): The RecentActivity model.
+            fields (list): Fields to be serialized.
+    """
     class Meta:
-        model = SecuritySettings
-        fields = ['id', 'user', 'two_factor_auth', 'password_last_changed']
+        model = RecentActivity
+        fields = ['id', 'user', 'description', 'timestamp']
 
-class NotificationSettingsSerializer(serializers.ModelSerializer):
+class NetworkHealthSerializer(serializers.ModelSerializer):
+    """
+    Serializer for NetworkHealth model.
+
+    Attributes:
+        Meta:
+            model (Model): The NetworkHealth model.
+            fields (list): Fields to be serialized.
+    """
     class Meta:
-        model = NotificationSettings
-        fields = ['id', 'user', 'internet_usage_alerts', 'usage_threshold', 
-                  'subscription_reminders', 'days_before_reminder', 
-                  'system_updates', 'notification_frequency']
+        model = NetworkHealth
+        fields = ['id', 'user', 'latency', 'bandwidth_usage']
+
+class ServerStatusSerializer(serializers.ModelSerializer):
+    """
+    Serializer for ServerStatus model.
+
+    Attributes:
+        Meta:
+            model (Model): The ServerStatus model.
+            fields (list): Fields to be serialized.
+    """
+    class Meta:
+        model = ServerStatus
+        fields = ['id', 'user', 'name', 'status', 'color']
