@@ -1,69 +1,8 @@
 {
-  "node_modules/canvg/lib/index.es.js": {
-    "file": "static/index.es-BqZxIMU1.js",
-    "name": "index.es",
-    "src": "node_modules/canvg/lib/index.es.js",
-    "isDynamicEntry": true,
-    "imports": [
-      "src/main.jsx"
-    ]
-  },
-  "node_modules/dompurify/dist/purify.es.js": {
-    "file": "static/purify.es-a-CayzAK.js",
-    "name": "purify.es",
-    "src": "node_modules/dompurify/dist/purify.es.js",
-    "isDynamicEntry": true
-  },
-  "node_modules/html2canvas/dist/html2canvas.esm.js": {
-    "file": "static/html2canvas.esm-CBrSDip1.js",
-    "name": "html2canvas.esm",
-    "src": "node_modules/html2canvas/dist/html2canvas.esm.js",
-    "isDynamicEntry": true
-  },
-  "src/assets/ActiveUsers.png": {
-    "file": "static/ActiveUsers-DP4ZCZWH.png",
-    "src": "src/assets/ActiveUsers.png"
-  },
-  "src/assets/WifiSignal.png": {
-    "file": "static/WifiSignal-CWq_wleM.png",
-    "src": "src/assets/WifiSignal.png"
-  },
-  "src/assets/avatar.png": {
-    "file": "static/avatar-UiIKlyka.png",
-    "src": "src/assets/avatar.png"
-  },
-  "src/assets/customers.png": {
-    "file": "static/customers-DJCJ6AlO.png",
-    "src": "src/assets/customers.png"
-  },
-  "src/assets/customersGroup.png": {
-    "file": "static/customersGroup-C1A_3jf3.png",
-    "src": "src/assets/customersGroup.png"
-  },
-  "src/assets/income.png": {
-    "file": "static/income-COHK-JQX.png",
-    "src": "src/assets/income.png"
-  },
-  "src/assets/logo.png": {
-    "file": "static/logo-CynmrFJ9.png",
-    "src": "src/assets/logo.png"
-  },
-  "src/assets/networking.png": {
-    "file": "static/networking-yvqMQCWo.png",
-    "src": "src/assets/networking.png"
-  },
-  "src/assets/networth.png": {
-    "file": "static/networth-D8QBRxdn.png",
-    "src": "src/assets/networth.png"
-  },
-  "src/assets/wifiRouter.png": {
-    "file": "static/wifiRouter-BpeTVA6N.png",
-    "src": "src/assets/wifiRouter.png"
-  },
-  "src/main.jsx": {
-    "file": "static/main-bdRdxmDx.js",
-    "name": "main",
-    "src": "src/main.jsx",
+  "index.html": {
+    "file": "index-IUBQ2D2g.js",
+    "name": "index",
+    "src": "index.html",
     "isEntry": true,
     "dynamicImports": [
       "node_modules/html2canvas/dist/html2canvas.esm.js",
@@ -71,19 +10,80 @@
       "node_modules/canvg/lib/index.es.js"
     ],
     "css": [
-      "static/main-lCRiOLF-.css"
+      "index-lCRiOLF-.css"
     ],
     "assets": [
-      "static/ActiveUsers-DP4ZCZWH.png",
-      "static/WifiSignal-CWq_wleM.png",
-      "static/customers-DJCJ6AlO.png",
-      "static/customersGroup-C1A_3jf3.png",
-      "static/income-COHK-JQX.png",
-      "static/networth-D8QBRxdn.png",
-      "static/wifiRouter-BpeTVA6N.png",
-      "static/networking-yvqMQCWo.png",
-      "static/avatar-UiIKlyka.png",
-      "static/logo-CynmrFJ9.png"
+      "ActiveUsers-DP4ZCZWH.png",
+      "WifiSignal-CWq_wleM.png",
+      "customers-DJCJ6AlO.png",
+      "customersGroup-C1A_3jf3.png",
+      "income-COHK-JQX.png",
+      "networth-D8QBRxdn.png",
+      "wifiRouter-BpeTVA6N.png",
+      "networking-yvqMQCWo.png",
+      "avatar-UiIKlyka.png",
+      "logo-CynmrFJ9.png"
     ]
+  },
+  "node_modules/canvg/lib/index.es.js": {
+    "file": "index.es-BYU-k9sY.js",
+    "name": "index.es",
+    "src": "node_modules/canvg/lib/index.es.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html"
+    ]
+  },
+  "node_modules/dompurify/dist/purify.es.js": {
+    "file": "purify.es-a-CayzAK.js",
+    "name": "purify.es",
+    "src": "node_modules/dompurify/dist/purify.es.js",
+    "isDynamicEntry": true
+  },
+  "node_modules/html2canvas/dist/html2canvas.esm.js": {
+    "file": "html2canvas.esm-CBrSDip1.js",
+    "name": "html2canvas.esm",
+    "src": "node_modules/html2canvas/dist/html2canvas.esm.js",
+    "isDynamicEntry": true
+  },
+  "src/assets/ActiveUsers.png": {
+    "file": "ActiveUsers-DP4ZCZWH.png",
+    "src": "src/assets/ActiveUsers.png"
+  },
+  "src/assets/WifiSignal.png": {
+    "file": "WifiSignal-CWq_wleM.png",
+    "src": "src/assets/WifiSignal.png"
+  },
+  "src/assets/avatar.png": {
+    "file": "avatar-UiIKlyka.png",
+    "src": "src/assets/avatar.png"
+  },
+  "src/assets/customers.png": {
+    "file": "customers-DJCJ6AlO.png",
+    "src": "src/assets/customers.png"
+  },
+  "src/assets/customersGroup.png": {
+    "file": "customersGroup-C1A_3jf3.png",
+    "src": "src/assets/customersGroup.png"
+  },
+  "src/assets/income.png": {
+    "file": "income-COHK-JQX.png",
+    "src": "src/assets/income.png"
+  },
+  "src/assets/logo.png": {
+    "file": "logo-CynmrFJ9.png",
+    "src": "src/assets/logo.png"
+  },
+  "src/assets/networking.png": {
+    "file": "networking-yvqMQCWo.png",
+    "src": "src/assets/networking.png"
+  },
+  "src/assets/networth.png": {
+    "file": "networth-D8QBRxdn.png",
+    "src": "src/assets/networth.png"
+  },
+  "src/assets/wifiRouter.png": {
+    "file": "wifiRouter-BpeTVA6N.png",
+    "src": "src/assets/wifiRouter.png"
   }
 }

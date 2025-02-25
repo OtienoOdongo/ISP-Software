@@ -18,7 +18,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool, default=False)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 # Application definition
 
@@ -71,15 +71,19 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',  
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
-    
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Fixed to use JWT
     ),
 }
 
-SIMPLE_JWT = {
-   'AUTH_HEADER_TYPES': ('JWT',),
-}
 
+# SimpleJWT settings
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+}
 
 DJOSER = { 
     'LOGIN_FIELD': 'email',
@@ -96,7 +100,8 @@ DJOSER = {
     'SERIALIZERS': {
         'user_create': 'authentication.serializers.UserCreateSerializer',
         'user': 'authentication.serializers.UserCreateSerializer',
-        'user_delete': 'djoser.serializers.UserDeleteSerializer'
+        'user_delete': 'djoser.serializers.UserDeleteSerializer',
+        'current_user': 'authentication.serializers.UserCreateSerializer',
     },
     
 
@@ -104,24 +109,25 @@ DJOSER = {
 
 
 
-SITE_DOMAIN = "localhost:5173"
+SITE_DOMAIN = "localhost:8000"
 BASE_URL = f"http://{SITE_DOMAIN}"
-
 
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',  
+    "http://localhost:8000",  # Frontend served by Django
+    "http://127.0.0.1:8000",  # Backend (optional, for consistency)
 ]
 
 ROOT_URLCONF = 'interlink_logic.urls'
@@ -217,3 +223,9 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # For collected static file
 
 
 
+CORS_ALLOW_HEADERS = [
+    "authorization",
+    "content-type",
+]
+CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+CORS_ORIGIN_ALLOW_ALL = True  # For dev only, restrict in production
