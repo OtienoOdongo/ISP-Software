@@ -31,7 +31,7 @@ export const menuItems = [
       { title: "User Profile" },
       { title: "User Activity Log" },
       { title: "Plan Assignment" },
-      { title: "Billing & Payment History" },
+      { title: "Billing and Payment History" },
     ],
   },
   {
@@ -60,14 +60,14 @@ export const menuItems = [
     icon: <RiSecurePaymentLine className="h-8 w-8 text-slate-500" />,
     submenu: true,
     submenuItems: [
-      { title: "M-Pesa Transaction Log" },
-      { title: "M-Pesa Configuration" },
-      { title: "M-Pesa Callback Settings" },
+      { title: "MPesa Transaction Log" },
+      { title: "MPesa Configuration" },
+      { title: "MPesa Callback Settings" },
       { title: "Payment Reconciliation" },
     ],
   },
   {
-    title: "Reporting & Analytics",
+    title: "Reporting and Analytics",
     icon: <HiDocumentReport className="h-8 w-8 text-slate-500" />,
     submenu: true,
     submenuItems: [
@@ -76,7 +76,7 @@ export const menuItems = [
     ],
   },
   {
-    title: "Support & Maintenance",
+    title: "Support and Maintenance",
     icon: <FcSupport className="h-8 w-8 text-slate-500" />,
     submenu: true,
     submenuItems: [
