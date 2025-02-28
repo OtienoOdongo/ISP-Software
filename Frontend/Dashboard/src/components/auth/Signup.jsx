@@ -1,13 +1,8 @@
-
-
-
-
-
 // import React, { useState, useCallback, useEffect } from "react";
 // import { useNavigate } from "react-router-dom";
 // import { FaEnvelope, FaLock, FaUser, FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa";
 // import api from "../../../api";
-// import { useAuth } from "../../context/AuthContext"; // Import for consistency, not used yet
+// import { useAuth } from "../../context/AuthContext";
 
 // const Signup = () => {
 //     const [formState, setFormState] = useState({
@@ -21,7 +16,7 @@
 //     const [showPassword, setShowPassword] = useState(false);
 //     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 //     const navigate = useNavigate();
-//     const { isAuthenticated } = useAuth(); // Optional: redirect if already logged in
+//     const { isAuthenticated } = useAuth();
 
 //     const handleChange = useCallback((e) => {
 //         const { name, value } = e.target;
@@ -65,7 +60,6 @@
 //         setShowConfirmPassword(!showConfirmPassword);
 //     }, [showConfirmPassword]);
 
-//     // Optional: Redirect if already authenticated
 //     useEffect(() => {
 //         if (isAuthenticated) {
 //             navigate("/dashboard", { replace: true });
@@ -186,7 +180,6 @@
 // export default Signup;
 
 
-
 import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEnvelope, FaLock, FaUser, FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa";
@@ -231,7 +224,8 @@ const Signup = () => {
                     re_password: formState.confirmPassword,
                     name: formState.name,
                 });
-                navigate("/login", { replace: true });
+                // Pass the email in the navigation state
+                navigate("/verify-email", { replace: true, state: { email: formState.email } });
             } catch (error) {
                 setError(error.response?.data?.email?.[0] || "Signup failed.");
             } finally {
@@ -255,11 +249,13 @@ const Signup = () => {
         }
     }, [isAuthenticated, navigate]);
 
+    // Rest of the component (form JSX) remains unchanged
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black to-blue-900">
             <div className="bg-gray-800 p-8 rounded-lg shadow-2xl w-full max-w-md transform transition-all ease-in-out duration-500 hover:shadow-3xl hover:-translate-y-1">
                 <h2 className="text-4xl font-extrabold text-center text-white mb-8">Sign Up</h2>
                 <form onSubmit={handleSubmit}>
+                    {/* ... Existing form fields ... */}
                     <div className="mb-6">
                         <label className="block text-sm font-medium text-gray-400 mb-2">Full Name</label>
                         <div className="relative">
