@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'payments',
     'reporting',
     'support',
-    # 'account',
+    'account',
     'dashboard',
 
     'rest_framework',
@@ -71,7 +71,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',  
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Fixed to use JWT
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  
     ),
 }
 
@@ -207,7 +207,8 @@ LOGGING = {
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 
 # Static files (CSS, JavaScript, Images)

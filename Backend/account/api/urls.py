@@ -1,14 +1,12 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views.admin_profile import AdminProfileViewSet, RecentActivityViewSet, \
-NetworkHealthViewSet, ServerStatusViewSet
+from django.urls import path
+from account.api.views.admin_view import AdminProfileView
+from account.api.views.settings_view import AccountSettingsView
 
-router = DefaultRouter()
-router.register(r'admin-profiles', AdminProfileViewSet)
-router.register(r'recent-activities', RecentActivityViewSet)
-router.register(r'network-health', NetworkHealthViewSet)
-router.register(r'server-status', ServerStatusViewSet)
+
+app_name = 'account'  
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('profile', AdminProfileView.as_view(), name='admin-profile'),
+    path('settings', AccountSettingsView.as_view(), name='account-settings'),
+    
 ]

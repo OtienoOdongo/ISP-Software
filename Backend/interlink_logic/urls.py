@@ -17,6 +17,7 @@ urlpatterns = [
     path('api/network_management/', include('network_management.api.urls')),
     path('api/internet_plans/', include('internet_plans.api.urls')),
     path('api/dashboard/', include('dashboard.urls')),
+    path('api/account/', include('account.api.urls')),
 ]
 
 # Serve static files in development
