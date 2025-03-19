@@ -1,61 +1,69 @@
+# account/serializers/admin_serializer.py
 from rest_framework import serializers
-from authentication.models import UserAccount
+from django.core.files.images import get_image_dimensions
+from django.core.exceptions import ValidationError
 from account.models.admin_model import Client, Subscription, Payment, ActivityLog, Router
+from django.contrib.auth import get_user_model
 
-# Client Serializer
+User = get_user_model()
+
+class AdminProfileSerializer(serializers.ModelSerializer):
+    profile_pic = serializers.ImageField(max_length=None, use_url=True, allow_null=True, required=False)
+
+    def validate_profile_pic(self, value):
+        if value:
+            # Validate file size (5MB limit)
+            if value.size > 5 * 1024 * 1024:
+                raise ValidationError("File size must be less than 5MB.")
+            # Validate file type
+            if not value.content_type.startswith('image/'):
+                raise ValidationError("Please upload an image file.")
+        return value
+
+    class Meta:
+        model = User
+        fields = ('name', 'email', 'profile_pic')
+        read_only_fields = ('email',)
+
 class ClientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Client
-        fields = ['id', 'created_at', 'is_active']
+        fields = ('id', 'name', 'email', 'created_at')
 
-# Subscription Serializer
 class SubscriptionSerializer(serializers.ModelSerializer):
+    client = ClientSerializer(read_only=True)  # Nested client info
+
     class Meta:
         model = Subscription
-        fields = ['id', 'client', 'plan_type', 'start_date', 'end_date', 'is_active']
+        fields = ('id', 'client', 'is_active', 'start_date', 'end_date')
 
-# Payment Serializer
 class PaymentSerializer(serializers.ModelSerializer):
+    client = ClientSerializer(read_only=True)  # Nested client info
+
     class Meta:
         model = Payment
-        fields = ['id', 'client', 'amount', 'transaction_id', 'timestamp', 'subscription']
+        fields = ('id', 'client', 'amount', 'timestamp')
 
-# Admin Profile Serializer
-class AdminProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserAccount
-        fields = ['name', 'email', 'profile_pic']
-        read_only_fields = ['email']
-
-    profile_pic = serializers.ImageField(required=False, allow_null=True)
-
-# Stats Serializer
 class StatsSerializer(serializers.Serializer):
     clients = serializers.IntegerField()
     active_clients = serializers.IntegerField()
-    revenue = serializers.DecimalField(max_digits=10, decimal_places=2)
+    revenue = serializers.FloatField()
     uptime = serializers.CharField()
 
-# ActivityLog Serializer
 class ActivityLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivityLog
-        fields = ['description']
+        fields = ('description',)
 
-# NetworkHealth Serializer
 class NetworkHealthSerializer(serializers.Serializer):
     latency = serializers.CharField()
     bandwidth = serializers.CharField()
 
-# Router Serializer
 class RouterSerializer(serializers.ModelSerializer):
-    color = serializers.SerializerMethodField()
-
     class Meta:
         model = Router
-        fields = ['name', 'status', 'color']
+        fields = ('name', 'status', 'color')
 
-    def get_color(self, obj):
-        return 'green' if obj.status == 'Online' else 'red'
+
 
 
