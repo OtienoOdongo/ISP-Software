@@ -1,501 +1,512 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Lock, Bell, Key, Users, Copy, Loader, Shield, Clock } from "lucide-react";
+// AccountSettings.jsx
+import React, { useState, useEffect } from "react";
+import {
+    Lock, Bell, Key, LogOut, Copy, Loader, Trash, Download, Eye, EyeOff
+} from "lucide-react";
 import api from "../../../api";
 import { useAuth } from "../../context/AuthContext";
-import avatar from "../../assets/avatar.png";
+
+// Reusable Section Component
+const Section = ({ title, icon: Icon, children }) => (
+    <section className="p-6 bg-white rounded-lg shadow-md mb-6">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <Icon className="w-5 h-5 text-indigo-600" /> {title}
+        </h2>
+        <div className="space-y-4">{children}</div>
+    </section>
+);
+
+// Reusable Checkbox Component
+const Checkbox = ({ label, name, checked, onChange, disabled }) => (
+    <div className="flex items-center gap-2">
+        <input
+            type="checkbox"
+            name={name}
+            checked={checked}
+            onChange={onChange}
+            disabled={disabled}
+            className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 rounded"
+        />
+        <label className="text-sm font-medium text-gray-700">{label}</label>
+    </div>
+);
 
 const AccountSettings = () => {
-    const { isAuthenticated, userDetails, updateUserDetails } = useAuth();
-    const [profile, setProfile] = useState({
-        name: userDetails.name || "",
-        email: userDetails.email || "",
-        profilePic: userDetails.profilePic || "",
+    const { isAuthenticated, userDetails, logout } = useAuth();
+    const [state, setState] = useState({
+        notifications: {
+            emailAlerts: true,
+            paymentAlerts: true,
+            systemAlerts: false,
+            securityAlerts: true,
+            priorityOnly: false,
+            digestFrequency: "daily",
+        },
+        security: {
+            twoFactorEnabled: false,
+            sessionTimeout: 30,
+            ipWhitelist: "",
+            qrCodeUrl: "",
+            backupCodes: [],
+        },
+        apiKey: "",
+        activeSessions: [],
+        privacy: {
+            profileVisible: true,
+            optOutAnalytics: false,
+        },
     });
-    const [notifications, setNotifications] = useState({
-        emailAlerts: true,
-        paymentAlerts: true,
-        systemAlerts: false,
-        securityAlerts: true,
-        priorityOnly: false,
-        digestFrequency: "daily",
+    const [loading, setLoading] = useState({
+        fetch: false,
+        notifications: false,
+        security: false,
+        apiKey: false,
+        sessions: false,
+        delete: false,
     });
-    const [securitySettings, setSecuritySettings] = useState({
-        twoFactorEnabled: false,
-        sessionTimeout: 30,
-        ipWhitelist: "",
-    });
-    const [apiKey, setApiKey] = useState("");
-    const [isEditingProfile, setIsEditingProfile] = useState(false);
-    const [tempProfile, setTempProfile] = useState({ ...profile });
-    const [previewImage, setPreviewImage] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
 
     useEffect(() => {
         const fetchSettings = async () => {
-            if (!isAuthenticated) {
-                console.log("Not authenticated, skipping fetch");
-                return;
-            }
-            setIsLoading(true);
+            if (!isAuthenticated) return;
+            setLoading((prev) => ({ ...prev, fetch: true }));
             try {
-                console.log("Fetching settings from /api/account/settings/");
                 const response = await api.get("/api/account/settings/");
-                console.log("Settings response:", response.data);
-                setNotifications({
-                    emailAlerts: response.data.email_alerts || false,
-                    paymentAlerts: response.data.payment_alerts || false,
-                    systemAlerts: response.data.system_alerts || false,
-                    securityAlerts: response.data.security_alerts || false,
-                    priorityOnly: response.data.priority_only || false,
-                    digestFrequency: response.data.digest_frequency || "daily",
-                });
-                setSecuritySettings({
-                    twoFactorEnabled: response.data.two_factor_enabled || false,
-                    sessionTimeout: response.data.session_timeout || 30,
-                    ipWhitelist: response.data.ip_whitelist || "",
-                });
-                setApiKey(response.data.api_key || "");
-                setProfile({
-                    name: userDetails.name || "",
-                    email: userDetails.email || "",
-                    profilePic: userDetails.profilePic || "",
-                });
+                setState((prev) => ({
+                    ...prev,
+                    notifications: {
+                        emailAlerts: response.data.email_alerts ?? true,
+                        paymentAlerts: response.data.payment_alerts ?? true,
+                        systemAlerts: response.data.system_alerts ?? false,
+                        securityAlerts: response.data.security_alerts ?? true,
+                        priorityOnly: response.data.priority_only ?? false,
+                        digestFrequency: response.data.digest_frequency ?? "daily",
+                    },
+                    security: {
+                        ...prev.security,
+                        twoFactorEnabled: response.data.two_factor_enabled ?? false,
+                        sessionTimeout: response.data.session_timeout ?? 30,
+                        ipWhitelist: response.data.ip_whitelist ?? "",
+                    },
+                    apiKey: response.data.api_key ?? "",
+                    activeSessions: response.data.active_sessions ?? [],
+                    privacy: {
+                        profileVisible: response.data.profile_visible ?? true,
+                        optOutAnalytics: response.data.opt_out_analytics ?? false,
+                    },
+                }));
                 setError("");
             } catch (err) {
-                console.error("Fetch error:", err.message, err.response?.status, err.response?.data);
                 setError(
                     err.response?.status === 403
-                        ? "Forbidden: Ensure you have admin privileges."
+                        ? "Forbidden: Admin privileges required."
                         : err.response?.status === 401
                             ? "Unauthorized: Please log in again."
-                            : "Failed to load settings. Please try again."
+                            : "Failed to load settings."
                 );
             } finally {
-                setIsLoading(false);
+                setLoading((prev) => ({ ...prev, fetch: false }));
             }
         };
         fetchSettings();
-    }, [isAuthenticated, userDetails]);
+    }, [isAuthenticated]);
 
-    const handleFileUpload = useCallback((e) => {
-        const file = e.target.files[0];
-        if (file) {
-            if (!file.type.startsWith("image/")) {
-                setError("Please upload an image file.");
-                return;
-            }
-            if (file.size > 5 * 1024 * 1024) {
-                setError("File size must be less than 5MB.");
-                return;
-            }
-            setTempProfile((prev) => ({ ...prev, profilePic: file }));
-            setPreviewImage(URL.createObjectURL(file));
-        }
-    }, []);
-
-    const handleEditProfileToggle = () => {
-        setIsEditingProfile(!isEditingProfile);
-        if (!isEditingProfile) {
-            setTempProfile({ ...profile });
-            setPreviewImage(null);
-        }
-    };
-
-    const handleSaveProfile = async () => {
-        setIsLoading(true);
-        setError("");
-        try {
-            const formData = new FormData();
-            formData.append("name", tempProfile.name || profile.name);
-            if (tempProfile.profilePic instanceof File) {
-                formData.append("profile_pic", tempProfile.profilePic);
-            }
-
-            const response = await api.put("/api/account/profile/", formData, {
-                headers: { "Content-Type": "multipart/form-data" },
-            });
-            console.log("Profile save response:", response.data);
-
-            const updatedProfile = {
-                name: response.data.name || "",
-                email: response.data.email || "",
-                profilePic: response.data.profile_pic || "",
-            };
-            setProfile(updatedProfile);
-            updateUserDetails(updatedProfile);
-            setPreviewImage(null);
-            setIsEditingProfile(false);
-            alert("Profile updated successfully!");
-        } catch (err) {
-            setError(err.response?.data?.error || "Failed to update profile.");
-            console.error("Save error:", err);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleProfileChange = (e) => {
-        const { name, value } = e.target;
-        setTempProfile((prev) => ({ ...prev, [name]: value }));
-    };
-
-    const handleNotificationChange = (e) => {
-        const { name, checked, value } = e.target;
-        setNotifications((prev) => ({
+    const handleChange = (section, key, value) => {
+        setState((prev) => ({
             ...prev,
-            [name]: name === "digestFrequency" ? value : checked,
+            [section]: { ...prev[section], [key]: value },
         }));
     };
 
     const handleSaveNotifications = async () => {
-        setIsLoading(true);
+        setLoading((prev) => ({ ...prev, notifications: true }));
         setError("");
         try {
-            const response = await api.put("/api/account/settings/", {
-                email_alerts: notifications.emailAlerts,
-                payment_alerts: notifications.paymentAlerts,
-                system_alerts: notifications.systemAlerts,
-                security_alerts: notifications.securityAlerts,
-                priority_only: notifications.priorityOnly,
-                digest_frequency: notifications.digestFrequency,
+            await api.put("/api/account/settings/", {
+                email_alerts: state.notifications.emailAlerts,
+                payment_alerts: state.notifications.paymentAlerts,
+                system_alerts: state.notifications.systemAlerts,
+                security_alerts: state.notifications.securityAlerts,
+                priority_only: state.notifications.priorityOnly,
+                digest_frequency: state.notifications.digestFrequency,
             });
-            console.log("Notification settings saved:", response.data);
+            setError("");
             alert("Notification settings updated!");
         } catch (err) {
             setError(err.response?.data?.error || "Failed to save notification settings.");
-            console.error("Save error:", err);
         } finally {
-            setIsLoading(false);
+            setLoading((prev) => ({ ...prev, notifications: false }));
         }
     };
 
-    const handleSecurityChange = (e) => {
-        const { name, value, checked } = e.target;
-        setSecuritySettings((prev) => ({
-            ...prev,
-            [name]: name === "twoFactorEnabled" ? checked : value,
-        }));
-    };
-
     const handleSaveSecurity = async () => {
-        setIsLoading(true);
+        setLoading((prev) => ({ ...prev, security: true }));
         setError("");
         try {
-            const response = await api.put("/api/account/settings/", {
-                two_factor_enabled: securitySettings.twoFactorEnabled,
-                session_timeout: parseInt(securitySettings.sessionTimeout, 10),
-                ip_whitelist: securitySettings.ipWhitelist,
+            await api.put("/api/account/settings/", {
+                two_factor_enabled: state.security.twoFactorEnabled,
+                session_timeout: parseInt(state.security.sessionTimeout, 10),
+                ip_whitelist: state.security.ipWhitelist,
             });
-            console.log("Security settings saved:", response.data);
+            if (state.security.twoFactorEnabled && !state.security.qrCodeUrl) {
+                const { qr_code_url, backup_codes } = await api.get("/api/account/2fa/setup/");
+                setState((prev) => ({
+                    ...prev,
+                    security: { ...prev.security, qrCodeUrl: qr_code_url, backupCodes: backup_codes },
+                }));
+            } else if (!state.security.twoFactorEnabled) {
+                setState((prev) => ({
+                    ...prev,
+                    security: { ...prev.security, qrCodeUrl: "", backupCodes: [] },
+                }));
+            }
+            setError("");
             alert("Security settings updated!");
         } catch (err) {
             setError(err.response?.data?.error || "Failed to save security settings.");
-            console.error("Save error:", err);
         } finally {
-            setIsLoading(false);
+            setLoading((prev) => ({ ...prev, security: false }));
         }
     };
 
     const handleGenerateApiKey = async () => {
         if (!window.confirm("Generating a new API key will invalidate the current one. Continue?")) return;
-        setIsLoading(true);
+        setLoading((prev) => ({ ...prev, apiKey: true }));
         setError("");
         try {
             const response = await api.post("/api/account/generate-api-key/");
-            setApiKey(response.data.api_key);
+            setState((prev) => ({ ...prev, apiKey: response.data.api_key }));
             alert("New API key generated!");
         } catch (err) {
             setError(err.response?.data?.error || "Failed to generate API key.");
-            console.error("Generate error:", err);
         } finally {
-            setIsLoading(false);
+            setLoading((prev) => ({ ...prev, apiKey: false }));
         }
     };
 
     const handleCopyApiKey = () => {
-        navigator.clipboard.writeText(apiKey);
+        navigator.clipboard.writeText(state.apiKey);
         alert("API key copied to clipboard!");
     };
 
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
-            <main className="max-w-4xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
-                <header className="bg-gradient-to-r from-indigo-600 to-blue-600 p-8 text-white">
-                    <h1 className="text-3xl font-bold">Account Settings</h1>
-                    <p className="text-gray-200 mt-2">Secure and customize your dashboard experience</p>
-                </header>
+    const handleLogoutSession = async (sessionId) => {
+        setLoading((prev) => ({ ...prev, sessions: true }));
+        try {
+            await api.post("/api/account/sessions/logout/", { session_id: sessionId });
+            setState((prev) => ({
+                ...prev,
+                activeSessions: prev.activeSessions.filter((s) => s.id !== sessionId),
+            }));
+        } catch (err) {
+            setError(err.response?.data?.error || "Failed to log out session.");
+        } finally {
+            setLoading((prev) => ({ ...prev, sessions: false }));
+        }
+    };
 
+    const handleLogoutAllSessions = async () => {
+        if (!window.confirm("This will log you out of all sessions. Continue?")) return;
+        setLoading((prev) => ({ ...prev, sessions: true }));
+        try {
+            await api.post("/api/account/sessions/logout-all/");
+            logout();
+        } catch (err) {
+            setError(err.response?.data?.error || "Failed to log out all sessions.");
+        } finally {
+            setLoading((prev) => ({ ...prev, sessions: false }));
+        }
+    };
+
+    const handleExportData = async () => {
+        setLoading((prev) => ({ ...prev, fetch: true }));
+        try {
+            const response = await api.get("/api/account/data-export/", { responseType: "blob" });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", "account_data.zip");
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (err) {
+            setError(err.response?.data?.error || "Failed to export data.");
+        } finally {
+            setLoading((prev) => ({ ...prev, fetch: false }));
+        }
+    };
+
+    const handleSavePrivacy = async () => {
+        setLoading((prev) => ({ ...prev, security: true }));
+        try {
+            await api.put("/api/account/settings/", {
+                profile_visible: state.privacy.profileVisible,
+                opt_out_analytics: state.privacy.optOutAnalytics,
+            });
+            alert("Privacy settings updated!");
+        } catch (err) {
+            setError(err.response?.data?.error || "Failed to save privacy settings.");
+        } finally {
+            setLoading((prev) => ({ ...prev, security: false }));
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        if (!window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) return;
+        setLoading((prev) => ({ ...prev, delete: true }));
+        setError("");
+        try {
+            await api.delete("/api/account/delete/");
+            alert("Account deleted successfully!");
+            logout();
+        } catch (err) {
+            setError(err.response?.data?.error || "Failed to delete account.");
+        } finally {
+            setLoading((prev) => ({ ...prev, delete: false }));
+        }
+    };
+
+    if (loading.fetch) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-100">
+                <Loader className="w-8 h-8 text-indigo-600 animate-spin" />
+            </div>
+        );
+    }
+
+    if (!isAuthenticated) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-100">
+                <p className="text-red-500">Please log in to access settings.</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-gray-100 p-6">
+            <main className="max-w-4xl mx-auto space-y-6">
                 {error && (
-                    <div className="bg-red-500 text-white p-4 text-center">
-                        {error}
-                    </div>
+                    <div className="bg-red-100 text-red-700 p-4 rounded-lg text-center">{error}</div>
                 )}
 
-                {/* Profile Section */}
-                <section className="p-8">
-                    <h2 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
-                        <Users className="w-6 h-6 text-indigo-600" /> Personal Information
-                    </h2>
-                    <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-                        <div className="flex flex-col sm:flex-row items-center gap-6">
-                            <div className="relative w-24 h-24">
-                                <img
-                                    src={
-                                        isEditingProfile && previewImage
-                                            ? previewImage
-                                            : profile.profilePic
-                                                ? `${import.meta.env.VITE_API_URL}${profile.profilePic}`
-                                                : avatar
-                                    }
-                                    alt="Profile"
-                                    className="w-full h-full rounded-full object-cover border-4 border-indigo-100"
-                                />
-                                {isEditingProfile && (
-                                    <label
-                                        htmlFor="profile-pic-upload"
-                                        className="absolute bottom-0 right-0 bg-indigo-600 text-white p-1.5 rounded-full cursor-pointer hover:bg-indigo-700"
-                                    >
-                                        <Key className="w-4 h-4" />
-                                        <input
-                                            type="file"
-                                            id="profile-pic-upload"
-                                            className="hidden"
-                                            onChange={handleFileUpload}
-                                            accept="image/*"
-                                        />
-                                    </label>
-                                )}
-                            </div>
-                            <div className="flex-1 space-y-4">
-                                {isEditingProfile ? (
-                                    <>
-                                        <input
-                                            type="text"
-                                            name="name"
-                                            value={tempProfile.name}
-                                            onChange={handleProfileChange}
-                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                                            placeholder="Full Name"
-                                        />
-                                        <input
-                                            type="email"
-                                            name="email"
-                                            value={tempProfile.email}
-                                            disabled
-                                            className="w-full p-2 border rounded-lg bg-gray-200 text-gray-500"
-                                            placeholder="Email Address"
-                                        />
-                                    </>
-                                ) : (
-                                    <>
-                                        <p className="text-lg font-medium text-gray-800">{profile.name}</p>
-                                        <p className="text-gray-600">{profile.email}</p>
-                                    </>
-                                )}
-                                <div className="flex gap-4">
-                                    {isEditingProfile ? (
-                                        <>
-                                            <button
-                                                onClick={handleSaveProfile}
-                                                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
-                                                disabled={isLoading}
-                                            >
-                                                {isLoading ? <Loader className="w-5 h-5 animate-spin" /> : "Save"}
-                                            </button>
-                                            <button
-                                                onClick={handleEditProfileToggle}
-                                                className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
-                                                disabled={isLoading}
-                                            >
-                                                Cancel
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <button
-                                            onClick={handleEditProfileToggle}
-                                            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
-                                        >
-                                            Edit Profile
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Security Settings */}
-                <section className="p-8 bg-gray-50">
-                    <h2 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
-                        <Shield className="w-6 h-6 text-red-600" /> Security
-                    </h2>
-                    <div className="space-y-6">
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                name="twoFactorEnabled"
-                                checked={securitySettings.twoFactorEnabled}
-                                onChange={handleSecurityChange}
-                                className="w-4 h-4 text-red-600 focus:ring-red-500"
-                            />
-                            <label className="text-sm font-medium text-gray-700">Enable Two-Factor Authentication (2FA)</label>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Session Timeout (minutes)</label>
-                            <input
-                                type="number"
-                                name="sessionTimeout"
-                                value={securitySettings.sessionTimeout}
-                                onChange={handleSecurityChange}
-                                min="5"
-                                max="1440"
-                                className="w-full sm:w-24 p-2 border rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
-                            />
-                            <p className="text-sm text-gray-500 mt-1">Auto-logout after inactivity (5-1440 minutes).</p>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">IP Whitelist (comma-separated)</label>
-                            <input
-                                type="text"
-                                name="ipWhitelist"
-                                value={securitySettings.ipWhitelist}
-                                onChange={handleSecurityChange}
-                                placeholder="e.g., 192.168.1.1, 10.0.0.2"
-                                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
-                            />
-                            <p className="text-sm text-gray-500 mt-1">Restrict dashboard access to these IPs.</p>
-                        </div>
-                        <button
-                            onClick={handleSaveSecurity}
-                            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center gap-2"
-                            disabled={isLoading}
+                {/* Notifications */}
+                <Section title="Notifications" icon={Bell}>
+                    <Checkbox
+                        label="Email Alerts (General Updates)"
+                        name="emailAlerts"
+                        checked={state.notifications.emailAlerts}
+                        onChange={(e) => handleChange("notifications", "emailAlerts", e.target.checked)}
+                    />
+                    <Checkbox
+                        label="Payment Alerts"
+                        name="paymentAlerts"
+                        checked={state.notifications.paymentAlerts}
+                        onChange={(e) => handleChange("notifications", "paymentAlerts", e.target.checked)}
+                    />
+                    <Checkbox
+                        label="System Alerts (e.g., Router Status)"
+                        name="systemAlerts"
+                        checked={state.notifications.systemAlerts}
+                        onChange={(e) => handleChange("notifications", "systemAlerts", e.target.checked)}
+                    />
+                    <Checkbox
+                        label="Security Alerts (e.g., Login Attempts)"
+                        name="securityAlerts"
+                        checked={state.notifications.securityAlerts}
+                        onChange={(e) => handleChange("notifications", "securityAlerts", e.target.checked)}
+                    />
+                    <Checkbox
+                        label="High-Priority Only"
+                        name="priorityOnly"
+                        checked={state.notifications.priorityOnly}
+                        onChange={(e) => handleChange("notifications", "priorityOnly", e.target.checked)}
+                    />
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Notification Digest Frequency</label>
+                        <select
+                            name="digestFrequency"
+                            value={state.notifications.digestFrequency}
+                            onChange={(e) => handleChange("notifications", "digestFrequency", e.target.value)}
+                            className="mt-1 w-full sm:w-32 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
                         >
-                            {isLoading ? <Loader className="w-5 h-5 animate-spin" /> : "Save Security Settings"}
-                        </button>
+                            <option value="immediate">Immediate</option>
+                            <option value="hourly">Hourly</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                        </select>
+                        <p className="text-sm text-gray-500 mt-1">Control when non-priority notifications are sent.</p>
                     </div>
-                </section>
+                    <button
+                        onClick={handleSaveNotifications}
+                        className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center gap-2"
+                        disabled={loading.notifications}
+                    >
+                        {loading.notifications ? <Loader className="w-5 h-5 animate-spin" /> : "Save"}
+                    </button>
+                </Section>
 
-                {/* Notification Preferences */}
-                <section className="p-8">
-                    <h2 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
-                        <Bell className="w-6 h-6 text-blue-600" /> Notifications
-                    </h2>
-                    <div className="space-y-6">
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                name="emailAlerts"
-                                checked={notifications.emailAlerts}
-                                onChange={handleNotificationChange}
-                                className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                            />
-                            <label className="text-sm font-medium text-gray-700">Email Alerts (General Updates)</label>
+                {/* Security */}
+                <Section title="Security" icon={Lock}>
+                    <Checkbox
+                        label="Enable Two-Factor Authentication (2FA)"
+                        name="twoFactorEnabled"
+                        checked={state.security.twoFactorEnabled}
+                        onChange={(e) => handleChange("security", "twoFactorEnabled", e.target.checked)}
+                    />
+                    {state.security.twoFactorEnabled && state.security.qrCodeUrl && (
+                        <div className="space-y-2">
+                            <p className="text-sm text-gray-600">Scan this QR code with your authenticator app:</p>
+                            <img src={state.security.qrCodeUrl} alt="2FA QR Code" className="w-32 h-32" />
+                            <p className="text-sm text-gray-600">Backup Codes:</p>
+                            <ul className="list-disc pl-5">
+                                {state.security.backupCodes.map((code, index) => (
+                                    <li key={index} className="text-sm">{code}</li>
+                                ))}
+                            </ul>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                name="paymentAlerts"
-                                checked={notifications.paymentAlerts}
-                                onChange={handleNotificationChange}
-                                className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                            />
-                            <label className="text-sm font-medium text-gray-700">Payment Alerts</label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                name="systemAlerts"
-                                checked={notifications.systemAlerts}
-                                onChange={handleNotificationChange}
-                                className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                            />
-                            <label className="text-sm font-medium text-gray-700">System Alerts (e.g., Router Status)</label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                name="securityAlerts"
-                                checked={notifications.securityAlerts}
-                                onChange={handleNotificationChange}
-                                className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                            />
-                            <label className="text-sm font-medium text-gray-700">Security Alerts (e.g., Login Attempts)</label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                name="priorityOnly"
-                                checked={notifications.priorityOnly}
-                                onChange={handleNotificationChange}
-                                className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                            />
-                            <label className="text-sm font-medium text-gray-700">High-Priority Only</label>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Notification Digest Frequency</label>
-                            <select
-                                name="digestFrequency"
-                                value={notifications.digestFrequency}
-                                onChange={handleNotificationChange}
-                                className="w-full sm:w-32 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                            >
-                                <option value="immediate">Immediate</option>
-                                <option value="hourly">Hourly</option>
-                                <option value="daily">Daily</option>
-                                <option value="weekly">Weekly</option>
-                            </select>
-                            <p className="text-sm text-gray-500 mt-1">Control when non-priority notifications are sent.</p>
-                        </div>
-                        <button
-                            onClick={handleSaveNotifications}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-                            disabled={isLoading}
-                        >
-                            {isLoading ? <Loader className="w-5 h-5 animate-spin" /> : "Save Notification Settings"}
-                        </button>
+                    )}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Session Timeout (minutes)</label>
+                        <input
+                            type="number"
+                            name="sessionTimeout"
+                            value={state.security.sessionTimeout}
+                            onChange={(e) => handleChange("security", "sessionTimeout", e.target.value)}
+                            min="5"
+                            max="1440"
+                            className="mt-1 w-full sm:w-24 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                        />
                     </div>
-                </section>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">IP Whitelist (comma-separated)</label>
+                        <input
+                            type="text"
+                            name="ipWhitelist"
+                            value={state.security.ipWhitelist}
+                            onChange={(e) => handleChange("security", "ipWhitelist", e.target.value)}
+                            placeholder="e.g., 192.168.1.1, 10.0.0.2"
+                            className="mt-1 w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                        />
+                    </div>
+                    <button
+                        onClick={handleSaveSecurity}
+                        className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center gap-2"
+                        disabled={loading.security}
+                    >
+                        {loading.security ? <Loader className="w-5 h-5 animate-spin" /> : "Save"}
+                    </button>
+                </Section>
 
                 {/* API Key Management */}
-                <section className="p-8 bg-gray-50">
-                    <h2 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
-                        <Key className="w-6 h-6 text-green-600" /> API Key
-                    </h2>
-                    <div className="space-y-4">
-                        <div className="flex flex-col sm:flex-row items-center gap-4">
-                            <input
-                                type="text"
-                                value={apiKey}
-                                readOnly
-                                className="w-full sm:flex-1 p-2 border rounded-lg bg-gray-200 text-gray-700"
-                            />
-                            <div className="flex gap-4 w-full sm:w-auto">
-                                <button
-                                    onClick={handleCopyApiKey}
-                                    className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 flex items-center gap-2"
-                                >
-                                    <Copy className="w-5 h-5" /> Copy
-                                </button>
-                                <button
-                                    onClick={handleGenerateApiKey}
-                                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
-                                    disabled={isLoading}
-                                >
-                                    {isLoading ? <Loader className="w-5 h-5 animate-spin" /> : "Generate New Key"}
-                                </button>
-                            </div>
+                <Section title="API Key" icon={Key}>
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                        <input
+                            type="text"
+                            value={state.apiKey}
+                            readOnly
+                            className="w-full sm:flex-1 p-2 border rounded-lg bg-gray-200 text-gray-700"
+                        />
+                        <div className="flex gap-4 w-full sm:w-auto">
+                            <button
+                                onClick={handleCopyApiKey}
+                                className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 flex items-center gap-2"
+                            >
+                                <Copy className="w-5 h-5" /> Copy
+                            </button>
+                            <button
+                                onClick={handleGenerateApiKey}
+                                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
+                                disabled={loading.apiKey}
+                            >
+                                {loading.apiKey ? <Loader className="w-5 h-5 animate-spin" /> : "Generate"}
+                            </button>
                         </div>
-                        <p className="text-sm text-gray-500 mt-2">
-                            Use this key for secure API integrations (e.g., Mikrotik, MPesa).
-                        </p>
                     </div>
-                </section>
+                    <p className="text-sm text-gray-500">Use this key for secure API integrations.</p>
+                </Section>
+
+                {/* Active Sessions */}
+                <Section title="Active Sessions" icon={LogOut}>
+                    {state.activeSessions.length > 0 ? (
+                        <>
+                            {state.activeSessions.map((session) => (
+                                <div key={session.id} className="flex justify-between items-center">
+                                    <div>
+                                        <p className="text-sm font-medium">{session.device}</p>
+                                        <p className="text-xs text-gray-500">Last active: {new Date(session.last_active).toLocaleString()}</p>
+                                    </div>
+                                    <button
+                                        onClick={() => handleLogoutSession(session.id)}
+                                        className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700"
+                                        disabled={loading.sessions}
+                                    >
+                                        Log Out
+                                    </button>
+                                </div>
+                            ))}
+                            <button
+                                onClick={handleLogoutAllSessions}
+                                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center gap-2 mt-4"
+                                disabled={loading.sessions}
+                            >
+                                {loading.sessions ? <Loader className="w-5 h-5 animate-spin" /> : "Log Out All"}
+                            </button>
+                        </>
+                    ) : (
+                        <p className="text-sm text-gray-500">No active sessions found.</p>
+                    )}
+                </Section>
+
+                {/* Data Export */}
+                <Section title="Data Export" icon={Download}>
+                    <p className="text-sm text-gray-600">Export all your account data as a ZIP file.</p>
+                    <button
+                        onClick={handleExportData}
+                        className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center gap-2"
+                        disabled={loading.fetch}
+                    >
+                        {loading.fetch ? <Loader className="w-5 h-5 animate-spin" /> : "Export Data"}
+                    </button>
+                </Section>
+
+                {/* Privacy Settings */}
+                <Section title="Privacy Settings" icon={Eye}>
+                    <Checkbox
+                        label="Profile visible to others"
+                        name="profileVisible"
+                        checked={state.privacy.profileVisible}
+                        onChange={(e) => handleChange("privacy", "profileVisible", e.target.checked)}
+                    />
+                    <Checkbox
+                        label="Opt out of analytics"
+                        name="optOutAnalytics"
+                        checked={state.privacy.optOutAnalytics}
+                        onChange={(e) => handleChange("privacy", "optOutAnalytics", e.target.checked)}
+                    />
+                    <button
+                        onClick={handleSavePrivacy}
+                        className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center gap-2"
+                        disabled={loading.security}
+                    >
+                        {loading.security ? <Loader className="w-5 h-5 animate-spin" /> : "Save"}
+                    </button>
+                </Section>
+
+                {/* Delete Account */}
+                <Section title="Delete Account" icon={Trash}>
+                    <p className="text-sm text-gray-600">
+                        Permanently remove all your data. This action cannot be undone.
+                    </p>
+                    <button
+                        onClick={handleDeleteAccount}
+                        className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center gap-2"
+                        disabled={loading.delete}
+                    >
+                        {loading.delete ? <Loader className="w-5 h-5 animate-spin" /> : "Delete Account"}
+                    </button>
+                </Section>
             </main>
         </div>
     );
 };
 
 export default AccountSettings;
-
-

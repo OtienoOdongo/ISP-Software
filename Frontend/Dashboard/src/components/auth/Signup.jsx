@@ -249,7 +249,7 @@ const Signup = () => {
         }
     }, [isAuthenticated, navigate]);
 
-    // Rest of the component (form JSX) remains unchanged
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black to-blue-900">
             <div className="bg-gray-800 p-8 rounded-lg shadow-2xl w-full max-w-md transform transition-all ease-in-out duration-500 hover:shadow-3xl hover:-translate-y-1">
@@ -363,3 +363,5 @@ const Signup = () => {
 };
 
 export default Signup;
+
+

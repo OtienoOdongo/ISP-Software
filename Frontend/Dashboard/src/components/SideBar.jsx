@@ -249,7 +249,7 @@ const SideBar = () => {
             className={`text-2xl text-black tracking-tight duration-300 font-semibold ${!isExpanded && "scale-0"
               }`}
           >
-            InterLink
+            SurfZone
           </span>
         </div>
 
