@@ -1,59 +1,142 @@
-from rest_framework import viewsets
-from user_management.models.billing_payment import UserBilling
-from user_management.serializers.billing_payment import UserBillingSerializer
-from rest_framework.decorators import action
+# from rest_framework.views import APIView
+# from rest_framework.response import Response
+# from rest_framework import status, permissions
+# import logging
+# from user_management.models.billing_payment import UserBilling, Payment
+# from user_management.serializers.billing_payment import UserBillingSerializer, PaymentSerializer
+
+# logger = logging.getLogger(__name__)
+
+# class UserBillingAPIView(APIView):
+#     permission_classes = [permissions.IsAuthenticated]  # Only authenticated users
+
+#     def get(self, request, pk=None):
+#         """
+#         Retrieve user billing information (list or detail).
+#         Accessible to any authenticated user.
+#         """
+#         try:
+#             if pk:
+#                 user_billing = UserBilling.objects.get(pk=pk)
+#                 serializer = UserBillingSerializer(user_billing)
+#                 return Response(serializer.data, status=status.HTTP_200_OK)
+#             else:
+#                 user_billings = UserBilling.objects.all()
+#                 serializer = UserBillingSerializer(user_billings, many=True)
+#                 return Response(serializer.data, status=status.HTTP_200_OK)
+#         except UserBilling.DoesNotExist:
+#             return Response(
+#                 {"error": "User billing information not found."},
+#                 status=status.HTTP_404_NOT_FOUND
+#             )
+#         except Exception as e:
+#             logger.error(f"Error in UserBillingAPIView GET: {str(e)}")
+#             return Response(
+#                 {"error": "An error occurred while fetching user billing information."},
+#                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
+#             )
+
+
+# class PaymentAPIView(APIView):
+#     permission_classes = [permissions.IsAuthenticated]  # Only authenticated users
+
+#     def get(self, request, pk=None):
+#         """
+#         Retrieve payments (list or detail).
+#         Accessible to any authenticated user.
+#         """
+#         try:
+#             if pk:
+#                 payment = Payment.objects.get(pk=pk)
+#                 serializer = PaymentSerializer(payment)
+#                 return Response(serializer.data, status=status.HTTP_200_OK)
+#             else:
+#                 user_id = request.query_params.get('user_id')
+#                 status_filter = request.query_params.get('status')
+#                 queryset = Payment.objects.all()
+
+#                 if user_id:
+#                     queryset = queryset.filter(user_id=user_id)
+#                 if status_filter:
+#                     queryset = queryset.filter(status=status_filter)
+
+#                 serializer = PaymentSerializer(queryset, many=True)
+#                 return Response(serializer.data, status=status.HTTP_200_OK)
+#         except Payment.DoesNotExist:
+#             return Response(
+#                 {"message": "No payments found."},
+#                 status=status.HTTP_200_OK  # Return 200 with empty list
+#             )
+#         except Exception as e:
+#             logger.error(f"Error in PaymentAPIView GET: {str(e)}")
+#             return Response(
+#                 {"error": "An error occurred while fetching payments."},
+#                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
+#             )
+
+
+
+
+
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from user_management.models.billing_payment import Payment
-from user_management.serializers.billing_payment import PaymentSerializer
+from rest_framework import status, permissions
+import logging
+from user_management.models.billing_payment import UserBilling, Payment
+from user_management.serializers.billing_payment import UserBillingSerializer, PaymentSerializer
 
+logger = logging.getLogger(__name__)
 
-class UserBillingViewSet(viewsets.ModelViewSet):
-    """
-    A viewset for managing user billing information. Provides standard actions
-    like list, create, retrieve, update, and destroy.
+class UserBillingAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
-    Attributes:
-        queryset (QuerySet): All UserBilling objects.
-        serializer_class (UserBillingSerializer): Serializer to use for the data.
-
-    Methods:
-        None specific, uses default ModelViewSet methods.
-    """
-    queryset = UserBilling.objects.all()
-    serializer_class = UserBillingSerializer
-
-
-
-class PaymentViewSet(viewsets.ModelViewSet):
-    """
-    A viewset for managing payments. Provides actions for listing, creating, retrieving, 
-    updating, and deleting payments, along with custom actions.
-
-    Attributes:
-        queryset (QuerySet): All Payment objects.
-        serializer_class (PaymentSerializer): Serializer to use for the data.
-
-    Methods:
-        get_user_payments: Custom action to fetch payments for a specific user.
-    """
-    queryset = Payment.objects.all()
-    serializer_class = PaymentSerializer
-
-    @action(detail=False, methods=['get'])
-    def get_user_payments(self, request):
+    def get(self, request, pk=None):
         """
-        Fetch all payments for a given user.
-
-        Query Parameters:
-            user_id (int): The ID of the user whose payments are to be retrieved.
-
-        Returns:
-            Response: Serialized data of all payments for the specified user.
+        Retrieve user billing information (list or detail).
+        Accessible to any authenticated user.
         """
-        user_id = request.query_params.get('user_id')
-        if not user_id:
-            return Response({"error": "User ID is required"}, status=400)
+        try:
+            if pk:
+                user_billing = UserBilling.objects.get(pk=pk)
+                serializer = UserBillingSerializer(user_billing)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                user_billings = UserBilling.objects.all()
+                serializer = UserBillingSerializer(user_billings, many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+        except UserBilling.DoesNotExist:
+            return Response({"error": "User billing information not found."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"Error in UserBillingAPIView GET: {str(e)}")
+            return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        payments = Payment.objects.filter(user_id=user_id)
-        serializer = self.get_serializer(payments, many=True)
-        return Response(serializer.data)
+class PaymentAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk=None):
+        """
+        Retrieve payments (list or detail).
+        Accessible to any authenticated user.
+        """
+        try:
+            if pk:
+                payment = Payment.objects.get(pk=pk)
+                serializer = PaymentSerializer(payment)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                user_id = request.query_params.get('user_id')
+                status_filter = request.query_params.get('status')
+                queryset = Payment.objects.all()
+
+                if user_id:
+                    queryset = queryset.filter(user_id=user_id)
+                if status_filter:
+                    queryset = queryset.filter(status=status_filter)
+
+                serializer = PaymentSerializer(queryset, many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+        except Payment.DoesNotExist:
+            return Response({"error": "No payments found."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"Error in PaymentAPIView GET: {str(e)}")
+            return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

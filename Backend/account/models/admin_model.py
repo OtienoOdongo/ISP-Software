@@ -1,16 +1,20 @@
 # account/models/admin_model.py
 from django.db import models
 from django.contrib.auth import get_user_model
+from phonenumber_field.modelfields import PhoneNumberField
 
 User = get_user_model()  # Admin user (UserAccount)
 
+
 class Client(models.Model):
-    name = models.CharField(max_length=255)
-    email = models.EmailField(unique=True)  # Distinct from admin email
+    # represents the client user or end-users of the system who are managed by the admin users.
+    full_name = models.CharField(max_length=255)
+    phonenumber = PhoneNumberField(unique=True)  
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.email
+        return f"{self.first_name} {self.last_name} ({self.phonenumber})"
+
 
 class Subscription(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE)

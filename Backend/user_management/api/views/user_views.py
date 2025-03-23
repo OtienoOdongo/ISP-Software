@@ -1,115 +1,241 @@
-# from rest_framework import viewsets, permissions, status
+# from rest_framework.views import APIView
 # from rest_framework.response import Response
-# from django.db import transaction
+# from rest_framework import status, permissions
+# from django.db.models import Q
 # import logging
-
 # from user_management.models.user_profile import UserProfile
 # from user_management.serializers.user_profile import UserProfileSerializer
+# from account.models.admin_model import ActivityLog
 
 # logger = logging.getLogger(__name__)
 
-# class UserProfileViewSet(viewsets.ModelViewSet):
-#     """
-#     A viewset for viewing and editing user profiles. Provides standard actions
-#     like list, create, retrieve, update, and destroy.
+# class UserProfileAPIView(APIView):
+#     permission_classes = [permissions.IsAuthenticated]  # Only authenticated users
 
-#     Attributes:
-#         queryset (QuerySet): All UserProfile objects.
-#         serializer_class (UserProfileSerializer): Serializer to use for the data.
-#         permission_classes (list): List of permission classes for this viewset.
-
-#     Methods:
-#         update: Overrides the default update method to handle suspending/un-suspending users.
-#     """
-#     queryset = UserProfile.objects.all()
-#     serializer_class = UserProfileSerializer
-#     permission_classes = [permissions.IsAdminUser]
-
-#     @transaction.atomic
-#     def update(self, request, *args, **kwargs):
+#     def get(self, request, pk=None):
 #         """
-#         Updates the user profile, specifically handling the suspend functionality
-#         by toggling the 'active' status of the user.
-
-#         Args:
-#             request: The HTTP request object.
-#             *args: Additional positional arguments.
-#             **kwargs: Additional keyword arguments.
-
-#         Returns:
-#             Response: Serialized data of the updated user profile with updated status message.
+#         Retrieve user profiles (list or detail).
+#         Accessible to any authenticated user.
 #         """
-#         instance = self.get_object()
-#         original_status = instance.active
-#         instance.active = not instance.active
-
 #         try:
-#             instance.save()
-#             logger.info(f"User {instance.id}'s status changed from {original_status} to {instance.active}")
-
-#             serializer = self.get_serializer(instance, data=request.data, partial=True)
-#             serializer.is_valid(raise_exception=True)
-#             self.perform_update(serializer)
-
-#             return Response({
-#                 "message": f"User status updated to {'active' if instance.active else 'suspended'}",
-#                 "data": serializer.data
-#             }, status=status.HTTP_200_OK)
-
+#             if pk:
+#                 profile = UserProfile.objects.get(pk=pk)
+#                 serializer = UserProfileSerializer(profile)
+#                 return Response(serializer.data, status=status.HTTP_200_OK)
+#             else:
+#                 search_query = request.query_params.get('search', None)
+#                 queryset = UserProfile.objects.all()
+#                 if search_query:
+#                     queryset = queryset.filter(Q(client__full_name__icontains=search_query))
+#                 serializer = UserProfileSerializer(queryset, many=True)
+#                 return Response(serializer.data, status=status.HTTP_200_OK)
+#         except UserProfile.DoesNotExist:
+#             return Response({"error": "User profile not found."}, status=status.HTTP_404_NOT_FOUND)
 #         except Exception as e:
-#             logger.error(f"Error updating user profile: {e}")
-#             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+#             logger.error(f"Error in UserProfileAPIView GET: {str(e)}")
+#             return Response({"error": "An error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+#     def post(self, request, pk=None):
+#         """
+#         Toggle user profile status.
+#         Accessible to any authenticated user (no admin restriction).
+#         """
+#         try:
+#             if not pk or 'toggle-status' not in request.path:
+#                 return Response({"error": "Invalid request."}, status=status.HTTP_400_BAD_REQUEST)
+
+#             profile = UserProfile.objects.get(pk=pk)
+#             profile.active = not profile.active
+#             profile.save()
+#             ActivityLog.objects.create(
+#                 user=request.user,
+#                 description=f"User {request.user.username} toggled status of client {profile.client.full_name} to {'active' if profile.active else 'suspended'}"
+#             )
+#             serializer = UserProfileSerializer(profile)
+#             return Response(serializer.data, status=status.HTTP_200_OK)
+
+#         except UserProfile.DoesNotExist:
+#             return Response({"error": "User profile not found."}, status=status.HTTP_404_NOT_FOUND)
+#         except Exception as e:
+#             logger.error(f"Error in UserProfileAPIView POST: {str(e)}")
+#             return Response({"error": "An error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-from rest_framework import viewsets, permissions, status
+
+
+
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.decorators import action
-from django.db import transaction
+from rest_framework import status, permissions
+from django.db.models import Q
 import logging
 from user_management.models.user_profile import UserProfile
 from user_management.serializers.user_profile import UserProfileSerializer
+from account.models.admin_model import ActivityLog
 
 logger = logging.getLogger(__name__)
 
-class UserProfileViewSet(viewsets.ModelViewSet):
-    """
-    A viewset for managing user profiles.
-    Provides standard actions: list, create, retrieve, update, and delete.
-    """
+class UserProfileAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
-    queryset = UserProfile.objects.all()
-    serializer_class = UserProfileSerializer
-    permission_classes = [permissions.IsAuthenticated]  # Clients should access their own profiles
-
-    def get_permissions(self):
+    def get(self, request, pk=None):
         """
-        Customize permissions: 
-        - Admins can access all user profiles.
-        - Clients can only retrieve/update their own profiles.
+        Retrieve user profiles (list or detail).
+        - Without pk: Returns a list of profiles, optionally filtered by search query.
+        - With pk: Returns a single profile.
+        Accessible to any authenticated user.
         """
-        if self.action in ['list', 'destroy']:
-            self.permission_classes = [permissions.IsAdminUser]
-        elif self.action in ['retrieve', 'update', 'partial_update']:
-            self.permission_classes = [permissions.IsAuthenticated]
-        return super().get_permissions()
-
-    @transaction.atomic
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
-    def toggle_status(self, request, pk=None):
-        """
-        Admin-only action to suspend or activate a user account.
-        """
-        instance = self.get_object()
-        original_status = instance.active
-        instance.active = not instance.active
-
         try:
-            instance.save()
-            logger.info(f"User {instance.id} status changed from {original_status} to {instance.active}")
+            if pk:
+                if not pk or str(pk).lower() == "undefined":
+                    logger.warning(f"Invalid user profile ID received: {pk}")
+                    return Response(
+                        {"error": "Invalid user profile ID."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                profile = UserProfile.objects.get(pk=pk)
+                serializer = UserProfileSerializer(profile)
+                logger.info(f"Successfully retrieved profile for pk={pk}")
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                search_query = request.query_params.get('search', '')
+                logger.info(f"Received search query: '{search_query}'")
+                queryset = UserProfile.objects.select_related('client').all()
+                if search_query.strip():
+                    queryset = queryset.filter(Q(client__full_name__icontains=search_query))
+                    logger.info(f"Applied search filter: '{search_query}', found {queryset.count()} profiles")
+                serializer = UserProfileSerializer(queryset, many=True)
+                logger.info(f"Returning {len(serializer.data)} profiles")
+                return Response(serializer.data, status=status.HTTP_200_OK)
+        except UserProfile.DoesNotExist:
+            logger.warning(f"User profile not found for pk={pk}")
             return Response(
-                {"message": f"User status updated to {'active' if instance.active else 'suspended'}"},
-                status=status.HTTP_200_OK
+                {"error": "User profile not found."},
+                status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
-            logger.error(f"Error updating user profile: {e}")
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.error(f"Error in UserProfileAPIView GET: {str(e)}", exc_info=True)
+            return Response(
+                {"error": f"An error occurred: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def post(self, request, pk=None):
+        """
+        Toggle user profile status via POST to /<pk>/toggle-status/.
+        Accessible to any authenticated user.
+        """
+        try:
+            if not pk or 'toggle-status' not in request.path:
+                logger.warning("Invalid toggle-status request: missing pk or incorrect path")
+                return Response(
+                    {"error": "Invalid request. Use POST to /<pk>/toggle-status/."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            profile = UserProfile.objects.get(pk=pk)
+            profile.active = not profile.active
+            profile.save()
+
+            # Handle case where client might be None
+            client_name = profile.client.full_name if profile.client else "Unknown Client"
+            ActivityLog.objects.create(
+                user=request.user,
+                description=f"User {request.user.username} toggled status of client {client_name} to {'active' if profile.active else 'suspended'}"
+            )
+            serializer = UserProfileSerializer(profile)
+            logger.info(f"Toggled status for profile pk={pk} to {profile.active}")
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except UserProfile.DoesNotExist:
+            logger.warning(f"User profile not found for pk={pk}")
+            return Response(
+                {"error": "User profile not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            logger.error(f"Error in UserProfileAPIView POST: {str(e)}", exc_info=True)
+            return Response(
+                {"error": f"An error occurred: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def put(self, request, pk=None):
+        """
+        Update a user profile's details.
+        Requires pk and accessible to authenticated users.
+        """
+        try:
+            if not pk:
+                logger.warning("Missing pk for PUT request")
+                return Response(
+                    {"error": "User profile ID is required."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            profile = UserProfile.objects.get(pk=pk)
+            serializer = UserProfileSerializer(profile, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                # Log the update action
+                client_name = profile.client.full_name if profile.client else "Unknown Client"
+                ActivityLog.objects.create(
+                    user=request.user,
+                    description=f"User {request.user.username} updated profile of client {client_name}"
+                )
+                logger.info(f"Updated profile for pk={pk}")
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            logger.warning(f"Invalid data for profile pk={pk}: {serializer.errors}")
+            return Response(
+                {"error": "Invalid data provided.", "details": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except UserProfile.DoesNotExist:
+            logger.warning(f"User profile not found for pk={pk}")
+            return Response(
+                {"error": "User profile not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            logger.error(f"Error in UserProfileAPIView PUT: {str(e)}", exc_info=True)
+            return Response(
+                {"error": f"An error occurred: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def delete(self, request, pk=None):
+        """
+        Delete a user profile.
+        Requires pk and accessible to authenticated users.
+        """
+        try:
+            if not pk:
+                logger.warning("Missing pk for DELETE request")
+                return Response(
+                    {"error": "User profile ID is required."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            profile = UserProfile.objects.get(pk=pk)
+            client_name = profile.client.full_name if profile.client else "Unknown Client"
+            profile.delete()
+            ActivityLog.objects.create(
+                user=request.user,
+                description=f"User {request.user.username} deleted profile of client {client_name}"
+            )
+            logger.info(f"Deleted profile for pk={pk}")
+            return Response(
+                {"message": "User profile deleted successfully."},
+                status=status.HTTP_204_NO_CONTENT
+            )
+        except UserProfile.DoesNotExist:
+            logger.warning(f"User profile not found for pk={pk}")
+            return Response(
+                {"error": "User profile not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            logger.error(f"Error in UserProfileAPIView DELETE: {str(e)}", exc_info=True)
+            return Response(
+                {"error": f"An error occurred: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

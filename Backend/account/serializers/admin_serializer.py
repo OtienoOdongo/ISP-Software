@@ -28,7 +28,7 @@ class AdminProfileSerializer(serializers.ModelSerializer):
 class ClientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Client
-        fields = ('id', 'name', 'email', 'created_at')
+        fields = ('id', 'full_name', 'phonenumber', 'created_at')
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     client = ClientSerializer(read_only=True)  # Nested client info
