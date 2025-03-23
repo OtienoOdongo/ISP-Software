@@ -1,104 +1,177 @@
-import React, { useState } from 'react';
-import Chart from 'react-apexcharts';
+// import React, { useState } from 'react';
+// import Chart from 'react-apexcharts';
 
-function RevenueChart() {
+// function RevenueChart() {
 
-  const [options, setOptions] = useState({
-    chart: {
-      id: 'Spline Area',
-      height: '100%',
-      type: 'area',
+//   const [options, setOptions] = useState({
+//     chart: {
+//       id: 'Spline Area',
+//       height: '100%',
+//       type: 'area',
       
-    },
-    dataLabels: {
-      enabled: false,
-      style: {
-          fontSize: '12px',
-          fontWeight: 'bold',
-        },
-    },
-    stroke: {
-      curve: 'smooth',
-      width: [2, 2],
-      dashArray: [0, 5]
-    },
-    xaxis: {
-      categories: [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-         "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"
-        ],
-    },
+//     },
+//     dataLabels: {
+//       enabled: false,
+//       style: {
+//           fontSize: '12px',
+//           fontWeight: 'bold',
+//         },
+//     },
+//     stroke: {
+//       curve: 'smooth',
+//       width: [2, 2],
+//       dashArray: [0, 5]
+//     },
+//     xaxis: {
+//       categories: [
+//         "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+//          "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"
+//         ],
+//     },
 
-    yaxis: {
-      title: {
-        text: 'Revenue (KES)',
-        style: {
-          fontSize: '15px',
-          fontWeight: 'bold',
-        },
-      },
-      labels: {
-        formatter: value => `KES ${value.toLocaleString()}`,
-      }
-    },
+//     yaxis: {
+//       title: {
+//         text: 'Revenue (KES)',
+//         style: {
+//           fontSize: '15px',
+//           fontWeight: 'bold',
+//         },
+//       },
+//       labels: {
+//         formatter: value => `KES ${value.toLocaleString()}`,
+//       }
+//     },
 
-    tooltip: {
-      shared: true,
-      y: {
-        formatter: value => `KES ${value.toLocaleString()}`
-      }
-    },
+//     tooltip: {
+//       shared: true,
+//       y: {
+//         formatter: value => `KES ${value.toLocaleString()}`
+//       }
+//     },
     
 
-    fill: {
-      type: 'gradient',
-      gradient: {
-        shadeIntensity: 1,
-        opacityFrom: 0.7,
-        opacityTo: 0.3,
-        stops: [0, 100]
-      }
-    },
-    // markers: {
-    //   size: [1, 1]
-    // },
+//     fill: {
+//       type: 'gradient',
+//       gradient: {
+//         shadeIntensity: 1,
+//         opacityFrom: 0.7,
+//         opacityTo: 0.3,
+//         stops: [0, 100]
+//       }
+//     },
+//     // markers: {
+//     //   size: [1, 1]
+//     // },
     
-    legend: {
-      position: 'bottom'
-    }
+//     legend: {
+//       position: 'bottom'
+//     }
 
     
 
        
-  })
+//   })
 
-  const [series, setSeries] = useState([
+//   const [series, setSeries] = useState([
 
-    {
-      name: 'Targeted Revenue',
-      data: [2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500]
+//     {
+//       name: 'Targeted Revenue',
+//       data: [2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500]
+//     },
+//     {
+//       name: 'Projected Revenue',
+//       data: [1800, 2300, 3200, 3300, 3800, 4200, 4800, 5200, 5700, 6200, 6800, 7400]
+//     },
+
+
+//   ])
+
+//   return (
+//     <div>
+//        <h2 className='flex justify-center text-slate-500 font-semibold'> Total Revenue</h2>
+//             <Chart 
+//                 options={options}
+//                 series={series}
+//                 type='area'
+               
+//             />
+
+//     </div>
+//   )
+
+// }
+// export default RevenueChart
+
+
+
+
+// components/RevenueChart.jsx
+import React, { useState, useEffect } from "react";
+import Chart from "react-apexcharts";
+import api from "../../api"; // Adjust path
+import { FaSpinner } from "react-icons/fa";
+
+function RevenueChart() {
+  const [options, setOptions] = useState({
+    chart: { id: "Spline Area", height: "100%", type: "area", fontFamily: "Inter, sans-serif" },
+    xaxis: {
+      categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"],
     },
-    {
-      name: 'Projected Revenue',
-      data: [1800, 2300, 3200, 3300, 3800, 4200, 4800, 5200, 5700, 6200, 6800, 7400]
+    yaxis: {
+      title: { text: "Revenue (KES)", style: { fontSize: "14px", fontWeight: "600" } },
+      labels: { formatter: (value) => `KES ${value.toLocaleString()}` },
     },
+    stroke: { curve: "smooth", width: [2, 2], dashArray: [0, 5] },
+    fill: { type: "gradient", gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.3, stops: [0, 100] } },
+    legend: { position: "bottom", fontSize: "12px" },
+    dataLabels: { enabled: false },
+    colors: ["#3B82F6", "#10B981"],
+  });
 
+  const [series, setSeries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  ])
+  useEffect(() => {
+    const fetchRevenueData = async () => {
+      try {
+        const response = await api.get("/api/dashboard/revenue-data/");
+        const data = response.data;
+        if (data.length === 0) {
+          setSeries([
+            { name: "Targeted Revenue", data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+            { name: "Projected Revenue", data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+          ]);
+        } else {
+          setSeries([
+            { name: "Targeted Revenue", data: data.map((item) => item.targeted_revenue) },
+            { name: "Projected Revenue", data: data.map((item) => item.projected_revenue) },
+          ]);
+        }
+        setLoading(false);
+      } catch (error) {
+        setError("Failed to load revenue insights.");
+        setLoading(false);
+      }
+    };
+    fetchRevenueData();
+  }, []);
 
   return (
     <div>
-       <h2 className='flex justify-center text-slate-500 font-semibold'> Total Revenue</h2>
-            <Chart 
-                options={options}
-                series={series}
-                type='area'
-               
-            />
-
+      <h2 className="text-xl font-semibold text-gray-800 text-center mb-4">Revenue Trends</h2>
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <FaSpinner className="animate-spin text-3xl text-blue-600" />
+          <span className="ml-2 text-gray-600 font-medium">Tracking Revenue...</span>
+        </div>
+      ) : error ? (
+        <p className="text-center text-red-600 font-medium">{error}</p>
+      ) : (
+        <Chart options={options} series={series} type="area" height="400" />
+      )}
     </div>
-  )
-
+  );
 }
-export default RevenueChart
 
+export default RevenueChart;
