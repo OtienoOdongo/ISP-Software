@@ -1,18 +1,13 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from internet_plans.api.views.create_plans import InternetPlanViewSet
-from internet_plans.api.views.plan_analytics import PlanAnalyticsViewSet
+from django.urls import path
+from internet_plans.api.views.create_plan_views import (
+    InternetPlanListCreateView,
+    InternetPlanDetailView
+)
+from internet_plans.api.views.plan_analytics_views import PlanAnalyticsView  
+app_name = 'internet_plans'
 
-
-router = DefaultRouter()
-router.register(r'plans', InternetPlanViewSet, basename='plans')  # For creating and managing plans
-router.register(r'plan_analytics', PlanAnalyticsViewSet, basename='plan-analytics')  # For plan analytics
-
-# URL patterns for internet plans API endpoints.
-# Uses a DefaultRouter to automatically generate RESTful URL routes for the ViewSets.
-# Patterns:
-# - /plans/ : Create and manage internet plans
-# - /plan_analytics/ : Retrieve analytics for plans
 urlpatterns = [
-    path('', include(router.urls)),
+    path('', InternetPlanListCreateView.as_view(), name='plan-list-create'),
+    path('<int:pk>/', InternetPlanDetailView.as_view(), name='plan-detail'),
+    path('plan_analytics/', PlanAnalyticsView.as_view(), name='plan_analytics'),
 ]
