@@ -65,11 +65,12 @@ urlpatterns = [
     path('api/user_management/', include('user_management.api.urls')),
     path('api/support/', include('support.urls')),
     # path('api/reporting/', include('reporting.api.urls')),
-    path('api/payments/', include('payments.api.urls')),
+    # path('api/payments/', include('payments.api.urls')),
     path('api/network_management/', include('network_management.api.urls')),
     path('api/internet_plans/', include('internet_plans.api.urls')),
     path('api/dashboard/', include('dashboard.urls')),  # Correct prefix for dashboard endpoints
     path('api/account/', include('account.api.urls')),
+    path('api/otp/', include('otp_auth.urls')),
 ]
 
 if settings.DEBUG:

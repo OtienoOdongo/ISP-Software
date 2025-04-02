@@ -1,33 +1,19 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from network_management.api.views.Bandwidth_Allocation import DeviceViewSet
-from network_management.api.views.IP_Address_Management import IPAddressViewSet, SubnetViewSet
-from network_management.api.views.Network_Diagnostic import NetworkDiagnosticsViewSet
-from network_management.api.views.Router_Management import RouterViewSet
-from network_management.api.views.Security_Settings import SecuritySettingsViewSet
+from django.urls import path
+from network_management.api.views.router_management_view import (
+    RouterListCreateView, RouterDetailView, RouterConnectView, RouterDisconnectView,
+    RouterStatusView, RouterFirmwareView, RouterShareInternetView, RouterExportView, RouterImportView
+)
 
-# Set up the DefaultRouter to handle standard CRUD operations for RouterViewSet
-router = DefaultRouter()
-router.register(r'routers', RouterViewSet)
-router.register(r'devices', DeviceViewSet)
-router.register(r'ip-addresses', IPAddressViewSet)
-router.register(r'subnets', SubnetViewSet)
-router.register(r'network-diagnostics', NetworkDiagnosticsViewSet)
-router.register(r'security-settings', SecuritySettingsViewSet, basename='security-settings')
+app_name = 'network_management'
 
-
-# Define additional custom routes for specific actions
 urlpatterns = [
-    path('', include(router.urls)),  # Include all routes from the DefaultRouter
-    path('routers/<int:pk>/fetch-status/', RouterViewSet.
-         as_view({'get': 'fetch_status'}), name='fetch-status'),
-    path('routers/<int:pk>/update-firmware/', RouterViewSet.
-         as_view({'post': 'update_firmware'}), name='update-firmware'),
-    path('routers/<int:pk>/share-internet/', RouterViewSet.
-         as_view({'post': 'share_internet'}), name='share-internet'),
-    path('routers/<int:pk>/update-status/', RouterViewSet.
-         as_view({'post': 'update_router_status'}), name='update-status'),
-    path('devices/<int:device_id>/update-bandwidth/', DeviceViewSet.
-         as_view({'post': 'update_bandwidth'}), name='update-bandwidth'),
-    
+    path('routers/', RouterListCreateView.as_view(), name='router-list-create'),
+    path('routers/<int:pk>/', RouterDetailView.as_view(), name='router-detail'),
+    path('routers/<int:pk>/connect/', RouterConnectView.as_view(), name='router-connect'),
+    path('routers/<int:pk>/disconnect/', RouterDisconnectView.as_view(), name='router-disconnect'),
+    path('routers/<int:pk>/status/', RouterStatusView.as_view(), name='router-status'),
+    path('routers/<int:pk>/firmware/', RouterFirmwareView.as_view(), name='router-firmware'),
+    path('routers/<int:pk>/share-internet/', RouterShareInternetView.as_view(), name='router-share-internet'),
+    path('routers/<int:pk>/export/', RouterExportView.as_view(), name='router-export'),
+    path('routers/<int:pk>/import/', RouterImportView.as_view(), name='router-import'),
 ]

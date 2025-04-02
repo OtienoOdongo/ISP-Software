@@ -17,3 +17,15 @@ urlpatterns = [
     path('data-export/', DataExportView.as_view(), name='data-export'),
     path('delete/', DeleteAccountView.as_view(), name='delete-account'),
 ]
+
+
+from django.urls import path
+from account.api.views.admin_view import AdminProfileView
+
+
+app_name = 'account'
+
+urlpatterns = [
+    path('profile/', AdminProfileView.as_view(), name='admin-profile'),  
+    
+]

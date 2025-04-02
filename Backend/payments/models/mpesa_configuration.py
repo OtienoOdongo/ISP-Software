@@ -1,23 +1,13 @@
 from django.db import models
 
-class MpesaConfig(models.Model):
-    """
-    Model to store M-Pesa configuration details.
-
-    Attributes:
-        apiKey (CharField): API key for M-Pesa services.
-        secretKey (CharField): Secret key for secure authentication.
-        shortCode (CharField): The business short code used for transactions.
-        passKey (CharField): Pass key used for generating security credentials.
-        callbackURL (URLField): URL where M-Pesa sends transaction status notifications.
-        validationURL (URLField): URL where M-Pesa sends transaction validation requests.
-    """
-    apiKey = models.CharField(max_length=255)
-    secretKey = models.CharField(max_length=255)
-    shortCode = models.CharField(max_length=10)
-    passKey = models.CharField(max_length=255)
-    callbackURL = models.URLField()
-    validationURL = models.URLField()
+class Transaction(models.Model):
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    checkout_id = models.CharField(max_length=100, unique=True)
+    mpesa_code = models.CharField(max_length=100, unique=True, blank=True, null=True)
+    phone_number = models.CharField(max_length=15)
+    status = models.CharField(max_length=20, choices=[("Pending", "Pending"), ("Success", "Success"), ("Failed", "Failed")], default="Pending")
+    timestamp = models.DateTimeField(auto_now_add=True)
+    plan = models.ForeignKey('internet_plans.InternetPlan', on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
-        return f"M-Pesa Configuration - Short Code: {self.shortCode}"
+        return f"{self.mpesa_code or 'Pending'} - {self.amount} KES"

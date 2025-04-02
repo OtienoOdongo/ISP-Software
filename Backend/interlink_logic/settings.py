@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'support',
     'account',
     'dashboard',
+    'otp_auth',
 
     'rest_framework',
     'djoser',

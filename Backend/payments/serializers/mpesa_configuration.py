@@ -1,10 +1,12 @@
 from rest_framework import serializers
-from payments.models.mpesa_configuration import MpesaConfig
+from payments.models.mpesa_configuration import Transaction
+from internet_plans.serializers.create_plan_serializers import InternetPlanSerializer
 
-class MpesaConfigSerializer(serializers.ModelSerializer):
-    """
-    Serializer for MpesaConfig model to convert model instances to/from native Python datatypes.
-    """
+class TransactionSerializer(serializers.ModelSerializer):
+    plan = InternetPlanSerializer(read_only=True)  # Nested plan info
+
     class Meta:
-        model = MpesaConfig
-        fields = ['apiKey', 'secretKey', 'shortCode', 'passKey', 'callbackURL', 'validationURL']
+        model = Transaction
+        fields = ('id', 'amount', 'checkout_id', 'mpesa_code', 'phone_number',
+                   'status', 'timestamp', 'plan')
+        read_only_fields = ('timestamp', 'checkout_id', 'mpesa_code', 'status')
