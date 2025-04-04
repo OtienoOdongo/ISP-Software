@@ -5,7 +5,7 @@ const Features = () => {
   return (
     <section className="py-16" id="features">
       <h2 className="text-4xl sm:text-5xl font-bold text-center text-white mb-12 animate-fade-in">
-        What Makes InterLink Shine
+        What Makes SurfZone Shine
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
         {features.map((feature, index) => (

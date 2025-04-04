@@ -211,23 +211,22 @@
 // export default MpesaConfiguration;
 
 
-
-
 import React, { useState, useEffect } from "react";
 import api from "../../../api";
 import { FaSave, FaSync, FaCheckCircle } from "react-icons/fa";
 import { FiEdit } from "react-icons/fi";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { ClipLoader } from "react-spinners"; 
 
 const MpesaConfiguration = () => {
   const [config, setConfig] = useState({
     apiKey: "",
     secretKey: "",
-    shortCode: "",
+    shortCodeTill: "",
+    shortCodeStore: "",
     passKey: "",
     callbackURL: "",
-    validationURL: "",
   });
   const [savedConfig, setSavedConfig] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -293,7 +292,10 @@ const MpesaConfiguration = () => {
           <h1 className="text-3xl font-bold text-indigo-800 mb-6 text-center">M-Pesa Configuration</h1>
 
           {loading ? (
-            <div className="text-center text-gray-500">Loading configuration...</div>
+            <div className="flex flex-col items-center justify-center">
+              <ClipLoader color="#4f46e5" loading={loading} size={50} /> {/* Spinner */}
+              <p className="mt-2 text-gray-600">Loading configuration...</p>
+            </div>
           ) : error ? (
             <div className="text-center text-red-500">{error}</div>
           ) : showEditForm ? (
@@ -302,10 +304,10 @@ const MpesaConfiguration = () => {
                 {[
                   { label: "API Key", name: "apiKey", type: "text" },
                   { label: "Secret Key", name: "secretKey", type: "password" },
-                  { label: "Short Code", name: "shortCode", type: "text" },
+                  { label: "Till Number", name: "shortCodeTill", type: "text" },
+                  { label: "Store Number", name: "shortCodeStore", type: "text" },
                   { label: "Pass Key", name: "passKey", type: "password" },
                   { label: "Callback URL", name: "callbackURL", type: "url" },
-                  { label: "Validation URL", name: "validationURL", type: "url" },
                 ].map(({ label, name, type }, index) => (
                   <div key={index}>
                     <label htmlFor={name} className="block text-sm font-medium text-gray-700">{label}</label>
@@ -362,16 +364,16 @@ const MpesaConfiguration = () => {
                       <span className="text-sm font-medium text-green-600 w-2/3">{savedConfig.apiKey.slice(0, 5)}...</span>
                     </li>
                     <li className="flex items-center">
-                      <span className="text-sm text-gray-700 w-1/3">Short Code:</span>
-                      <span className="text-sm font-medium text-green-600 w-2/3">{savedConfig.shortCode}</span>
+                      <span className="text-sm text-gray-700 w-1/3">Till Number:</span>
+                      <span className="text-sm font-medium text-green-600 w-2/3">{savedConfig.shortCodeTill}</span>
+                    </li>
+                    <li className="flex items-center">
+                      <span className="text-sm text-gray-700 w-1/3">Store Number:</span>
+                      <span className="text-sm font-medium text-green-600 w-2/3">{savedConfig.shortCodeStore}</span>
                     </li>
                     <li className="flex items-center">
                       <span className="text-sm text-gray-700 w-1/3">Callback URL:</span>
                       <span className="text-sm font-medium text-green-600 w-2/3">{savedConfig.callbackURL}</span>
-                    </li>
-                    <li className="flex items-center">
-                      <span className="text-sm text-gray-700 w-1/3">Validation URL:</span>
-                      <span className="text-sm font-medium text-green-600 w-2/3">{savedConfig.validationURL}</span>
                     </li>
                   </ul>
                 </div>

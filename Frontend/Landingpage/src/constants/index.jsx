@@ -50,46 +50,64 @@
 // ];
 
 
+// // Navigation items
+// export const navItems = [
+//   { label: "Plans", href: "#offers" },
+//   { label: "Benefits", href: "#features" },
+//   { label: "Help", href: "#support" },
+// ];
+
+// // Internet plans with varied validity and relatable details
+// export const offers = [
+//   {
+//     category: "Basic",
+//     description: "Great for quick browsing and chats.",
+//     plans: [
+//       { data: "50 MB", price: "KES 5", validity: "1 Hour", use: "Social Media" },
+//       { data: "200 MB", price: "KES 10", validity: "3 Hours", use: "Emails & Browsing" },
+//       { data: "500 MB", price: "KES 20", validity: "12 Hours", use: "Music Streaming" },
+//       { data: "1 GB", price: "KES 50", validity: "1 Day", use: "Video Calls" },
+      
+//     ],
+//   },
+//   {
+//     category: "Standard",
+//     description: "Perfect for regular use and small families.",
+//     plans: [
+//       { data: "1 GB", price: "KES 70", validity: "3 Days", use: "Daily Browsing" },
+//       { data: "2 GB", price: "KES 150", validity: "7 Days", use: "Streaming Shows" },
+//       { data: "5 GB", price: "KES 300", validity: "10 Days", use: "Work & Play" },
+//       { data: "10 GB", price: "KES 500", validity: "15 Days", use: "Family Sharing" },
+//     ],
+//   },
+//   {
+//     category: "Premium",
+//     description: "Best for heavy users and long-term needs.",
+//     plans: [
+//       { data: "5 GB", price: "KES 400", validity: "15 Days", use: "HD Streaming" },
+//       { data: "10 GB", price: "KES 700", validity: "30 Days", use: "Downloads" },
+//       { data: "20 GB", price: "KES 1000", validity: "30 Days", use: "Everything" },
+//       { data: "50 GB", price: "KES 2000", validity: "45 Days", use: "Non-Stop Use" },
+//     ],
+//   },
+// ];
+
+// // Features (simplified for non-tech-savvy users)
+// export const features = [
+//   { title: "Super Fast", description: "Stream and browse without waiting.", icon: "⚡" },
+//   { title: "Easy Pay", description: "Use M-Pesa to start right away.", icon: "💸" },
+//   { title: "No Hassle", description: "No forms, just connect.", icon: "✅" },
+//   { title: "Anytime Help", description: "We’re here if you need us.", icon: "📞" },
+// ];
+
+
+
+
 // Navigation items
 export const navItems = [
   { label: "Plans", href: "#offers" },
   { label: "Benefits", href: "#features" },
   { label: "Help", href: "#support" },
-];
-
-// Internet plans with varied validity and relatable details
-export const offers = [
-  {
-    category: "Basic",
-    description: "Great for quick browsing and chats.",
-    plans: [
-      { data: "50 MB", price: "KES 5", validity: "1 Hour", use: "Social Media" },
-      { data: "200 MB", price: "KES 10", validity: "3 Hours", use: "Emails & Browsing" },
-      { data: "500 MB", price: "KES 20", validity: "12 Hours", use: "Music Streaming" },
-      { data: "1 GB", price: "KES 50", validity: "1 Day", use: "Video Calls" },
-      
-    ],
-  },
-  {
-    category: "Standard",
-    description: "Perfect for regular use and small families.",
-    plans: [
-      { data: "1 GB", price: "KES 70", validity: "3 Days", use: "Daily Browsing" },
-      { data: "2 GB", price: "KES 150", validity: "7 Days", use: "Streaming Shows" },
-      { data: "5 GB", price: "KES 300", validity: "10 Days", use: "Work & Play" },
-      { data: "10 GB", price: "KES 500", validity: "15 Days", use: "Family Sharing" },
-    ],
-  },
-  {
-    category: "Premium",
-    description: "Best for heavy users and long-term needs.",
-    plans: [
-      { data: "5 GB", price: "KES 400", validity: "15 Days", use: "HD Streaming" },
-      { data: "10 GB", price: "KES 700", validity: "30 Days", use: "Downloads" },
-      { data: "20 GB", price: "KES 1000", validity: "30 Days", use: "Everything" },
-      { data: "50 GB", price: "KES 2000", validity: "45 Days", use: "Non-Stop Use" },
-    ],
-  },
 ];
 
 // Features (simplified for non-tech-savvy users)
