@@ -1,5 +1,5 @@
 from django.urls import path
-from account.api.views.admin_view import AdminProfileView
+from account.api.views.admin_view import AdminProfileView, ClientListView
 from account.api.views.settings_view import (
     AdminSettingsView, GenerateApiKeyView, TwoFactorSetupView,
     SessionLogoutView, SessionLogoutAllView, DataExportView, DeleteAccountView
@@ -9,6 +9,7 @@ app_name = 'account'
 
 urlpatterns = [
     path('profile/', AdminProfileView.as_view(), name='admin-profile'),  
+    path('clients/', ClientListView.as_view(), name='client-list'),
     path('settings/', AdminSettingsView.as_view(), name='account-settings'),
     path('generate-api-key/', GenerateApiKeyView.as_view(), name='generate-api-key'),
     path('2fa/setup/', TwoFactorSetupView.as_view(), name='2fa-setup'),
@@ -19,13 +20,3 @@ urlpatterns = [
 ]
 
 
-from django.urls import path
-from account.api.views.admin_view import AdminProfileView
-
-
-app_name = 'account'
-
-urlpatterns = [
-    path('profile/', AdminProfileView.as_view(), name='admin-profile'),  
-    
-]

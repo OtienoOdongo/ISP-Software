@@ -18,7 +18,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool, default=False)
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
 
 # Application definition
 
@@ -36,7 +36,7 @@ INSTALLED_APPS = [
     'internet_plans',
     'network_management',
     'payments',
-    'reporting',
+    # 'reporting',
     'support',
     'account',
     'dashboard',
@@ -215,16 +215,35 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+STATICFILES_FINDERS = []  # Disable default static file finders
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 
 # Directories where Django will look for static files
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),  # Point to Backend/static
+    os.path.join(BASE_DIR, 'static/dashboard'),  # Dashboard static files
+    os.path.join(BASE_DIR, 'static/landing'),    # LandingPage static files
 ]
 
 # The absolute path to the directory where collectstatic will collect static files for deployment
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # For collected static files
+
+
+if DEBUG:
+    print("\n=== Static Files Verification ===")
+    print(f"BASE_DIR: {BASE_DIR}")
+    print(f"STATIC_ROOT: {STATIC_ROOT}")
+    print("STATICFILES_DIRS:")
+    for static_dir in STATICFILES_DIRS:
+        print(f" - {static_dir}")
+        if os.path.exists(static_dir):
+            print(f"   Contents: {os.listdir(static_dir)}")
+            if os.path.exists(os.path.join(static_dir, 'assets')):
+                print(f"   Assets: {os.listdir(os.path.join(static_dir, 'assets'))}")
+        else:
+            print("   ⚠️ Directory does not exist!")
 
 
 
