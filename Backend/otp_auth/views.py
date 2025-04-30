@@ -546,6 +546,96 @@
 
 
 
+# from rest_framework.views import APIView
+# from rest_framework.response import Response
+# from rest_framework.permissions import AllowAny
+# from .models import OTP
+# from .serializers import GenerateOTPSerializer, VerifyOTPSerializer
+# import logging
+# import os
+# from twilio.rest import Client
+# from twilio.base.exceptions import TwilioRestException
+
+# logger = logging.getLogger(__name__)
+
+# # Twilio credentials from environment variables 
+# TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+# TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+# TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")  
+# OTP_EXPIRY_MINUTES = 10
+
+# class GenerateOTPView(APIView):
+#     permission_classes = [AllowAny]
+
+#     def post(self, request):
+#         logger.debug(f"Received POST data: {request.data}")
+#         serializer = GenerateOTPSerializer(data=request.data)
+#         if not serializer.is_valid():
+#             logger.error(f"Serializer validation failed: {serializer.errors}")
+#             return Response(serializer.errors, status=400)
+
+#         phone_number = serializer.validated_data['phone_number']
+#         otp = OTP.create_or_update(phone_number)
+#         logger.info(f"Generated OTP for {otp.phone_number} (Expires: {otp.expires_at})")
+
+#         # Initialize Twilio client
+#         try:
+#             client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+#             message = client.messages.create(
+#                 body=f"Your OTP is {otp.otp_code}. Valid for {OTP_EXPIRY_MINUTES} minutes.",
+#                 from_=TWILIO_PHONE_NUMBER,
+#                 to=phone_number
+#             )
+#             logger.info(f"OTP sent successfully to {otp.phone_number}. Twilio SID: {message.sid}")
+#             return Response({
+#                 "message": "OTP sent successfully",
+#                 "expires_at": otp.expires_at
+#             }, status=200)
+#         except TwilioRestException as e:
+#             logger.error(f"Failed to send OTP via Twilio: {str(e)}")
+#             return Response({"error": f"Failed to send OTP: {str(e)}"}, status=500)
+#         except Exception as e:
+#             logger.error(f"Unexpected error in GenerateOTPView: {str(e)}")
+#             return Response({"error": "Internal server error"}, status=500)
+
+# class VerifyOTPView(APIView):
+#     permission_classes = [AllowAny]
+
+#     def post(self, request):
+#         logger.debug(f"Received POST data: {request.data}")
+#         serializer = VerifyOTPSerializer(data=request.data)
+#         if not serializer.is_valid():
+#             logger.error(f"Serializer validation failed: {serializer.errors}")
+#             return Response(serializer.errors, status=400)
+
+#         phone_number = serializer.validated_data['phone_number']
+#         try:
+#             otp = OTP.objects.get(phone_number=phone_number)
+            
+#             if not otp.is_valid():
+#                 otp.increment_attempts()
+#                 logger.warning(f"Invalid OTP attempt for {otp.phone_number}: Expired or too many attempts")
+#                 return Response({"error": "OTP has expired or maximum attempts exceeded"}, status=400)
+                
+#             if otp.otp_code != serializer.validated_data['otp_code']:
+#                 otp.increment_attempts()
+#                 logger.warning(f"Invalid OTP code attempt for {otp.phone_number}")
+#                 return Response({"error": "Invalid OTP code"}, status=400)
+                
+#             otp.mark_verified()
+#             logger.info(f"Successful OTP verification for {otp.phone_number}")
+#             return Response({
+#                 "message": "OTP verified successfully",
+#                 "verified": True
+#             }, status=200)
+
+#         except OTP.DoesNotExist:
+#             logger.warning(f"OTP not found for {phone_number}")
+#             return Response({"error": "OTP not found. Please request a new OTP"}, status=404)
+#         except Exception as e:
+#             logger.error(f"Error in VerifyOTPView: {str(e)}")
+#             return Response({"error": "Internal server error"}, status=500)
+
 
 
 from rest_framework.views import APIView
@@ -553,18 +643,18 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from .models import OTP
 from .serializers import GenerateOTPSerializer, VerifyOTPSerializer
-from django.utils import timezone
-import requests
 import logging
 import os
+import requests
+import base64
 
 logger = logging.getLogger(__name__)
 
-# Move API key to environment variable (set this in your .env or settings)
-INFOBIP_API_KEY = os.getenv("INFOBIP_API_KEY", "a75c79215e3471ed7112c8b3d3edf513-44181a17-db90-48c5-875a-1abdfbf9a334")
-INFOBIP_BASE_URL = "https://d9z3qr.api.infobip.com"
-INFOBIP_SMS_ENDPOINT = f"{INFOBIP_BASE_URL}/sms/2/text/advanced"
-SENDER_ID = "+447491163443"
+# SMSLeopard credentials from environment variables
+SMSLEOPARD_API_KEY = os.getenv("SMSLEOPARD_API_KEY")
+SMSLEOPARD_API_SECRET = os.getenv("SMSLEOPARD_API_SECRET")
+SMSLEOPARD_ACCESS_TOKEN = os.getenv("SMSLEOPARD_ACCESS_TOKEN")  # Unused but kept
+SMSLEOPARD_SMS_URL = "https://api.smsleopard.com/v1/sms/send"
 OTP_EXPIRY_MINUTES = 10
 
 class GenerateOTPView(APIView):
@@ -581,31 +671,39 @@ class GenerateOTPView(APIView):
         otp = OTP.create_or_update(phone_number)
         logger.info(f"Generated OTP for {otp.phone_number} (Expires: {otp.expires_at})")
 
-        headers = {
-            "Authorization": f"App {INFOBIP_API_KEY}",
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        }
-        payload = {
-            "messages": [{
-                "from": SENDER_ID,
-                "destinations": [{"to": str(otp.phone_number)}],
-                "text": f"Your OTP is {otp.otp_code}. Valid for {OTP_EXPIRY_MINUTES} minutes."
-            }]
-        }
-
+        # Send OTP via SMSLeopard with Basic Auth (POST)
         try:
-            response = requests.post(INFOBIP_SMS_ENDPOINT, json=payload, headers=headers)
+            # Create Base64-encoded credentials
+            credentials = f"{SMSLEOPARD_API_KEY}:{SMSLEOPARD_API_SECRET}"
+            base64_credentials = base64.b64encode(credentials.encode()).decode()
+
+            headers = {
+                "Authorization": f"Basic {base64_credentials}",
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+            payload = {
+                "message": f"Your OTP is {otp.otp_code}. Valid for {OTP_EXPIRY_MINUTES} minutes.",
+                "source": "SMS_Leopard",
+                "destination": [{"number": phone_number.replace('+', '')}]
+            }
+            logger.debug(f"Sending to SMSLeopard - Headers: {headers}")
+            logger.debug(f"Sending to SMSLeopard - Payload: {payload}")
+            response = requests.post(SMSLEOPARD_SMS_URL, json=payload, headers=headers)
             response.raise_for_status()
-            logger.info(f"OTP sent successfully to {otp.phone_number}")
+            response_data = response.json()
+            logger.info(f"OTP sent successfully to {otp.phone_number}. SMSLeopard Response: {response_data}")
             return Response({
                 "message": "OTP sent successfully",
                 "expires_at": otp.expires_at
             }, status=200)
         except requests.RequestException as e:
-            error_msg = getattr(e.response, 'text', str(e)) if hasattr(e, 'response') else str(e)
-            logger.error(f"Failed to send OTP via Infobip: {error_msg}")
+            error_msg = e.response.text if e.response else str(e)
+            logger.error(f"Failed to send OTP via SMSLeopard: {error_msg}")
             return Response({"error": f"Failed to send OTP: {error_msg}"}, status=500)
+        except Exception as e:
+            logger.error(f"Unexpected error in GenerateOTPView: {str(e)}")
+            return Response({"error": "Internal server error"}, status=500)
 
 class VerifyOTPView(APIView):
     permission_classes = [AllowAny]
@@ -620,24 +718,20 @@ class VerifyOTPView(APIView):
         phone_number = serializer.validated_data['phone_number']
         try:
             otp = OTP.objects.get(phone_number=phone_number)
-            
             if not otp.is_valid():
                 otp.increment_attempts()
                 logger.warning(f"Invalid OTP attempt for {otp.phone_number}: Expired or too many attempts")
                 return Response({"error": "OTP has expired or maximum attempts exceeded"}, status=400)
-                
             if otp.otp_code != serializer.validated_data['otp_code']:
                 otp.increment_attempts()
                 logger.warning(f"Invalid OTP code attempt for {otp.phone_number}")
                 return Response({"error": "Invalid OTP code"}, status=400)
-                
             otp.mark_verified()
             logger.info(f"Successful OTP verification for {otp.phone_number}")
             return Response({
                 "message": "OTP verified successfully",
                 "verified": True
             }, status=200)
-
         except OTP.DoesNotExist:
             logger.warning(f"OTP not found for {phone_number}")
             return Response({"error": "OTP not found. Please request a new OTP"}, status=404)

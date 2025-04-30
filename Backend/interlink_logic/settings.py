@@ -1,5 +1,6 @@
 from pathlib import Path
 from decouple import config
+from celery.schedules import crontab
 from datetime import timedelta
 from dotenv import load_dotenv
 load_dotenv()
@@ -30,6 +31,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    'django_crontab',
 
     'authentication',
     'user_management',
@@ -107,6 +109,26 @@ DJOSER = {
     },
     
 
+}
+
+
+AFRICAS_TALKING_USERNAME = 'your_username'
+AFRICAS_TALKING_API_KEY = 'your_api_key'
+
+# Celery configuration for scheduled tasks
+CELERY_BEAT_SCHEDULE = {
+    'check-data-usage-and-notify': {
+        'task': 'analytics.tasks.check_data_usage_and_notify',
+        'schedule': timedelta(hours=1),  # Run hourly
+    },
+    'create-daily-analytics-snapshot': {
+        'task': 'analytics.tasks.create_daily_analytics_snapshot',
+        'schedule': crontab(hour=0, minute=0),  # Run daily at midnight
+    },
+    'send-payment-reminders': {
+        'task': 'analytics.tasks.send_payment_reminders',
+        'schedule': crontab(hour=9, minute=0),  # Run daily at 9 AM
+    },
 }
 
 

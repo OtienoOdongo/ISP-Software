@@ -776,6 +776,7 @@ CONSUMER_SECRET = os.getenv("CONSUMER_SECRET")
 MPESA_PASSKEY = os.getenv("MPESA_PASSKEY")
 MPESA_SHORTCODE_TILL = os.getenv("MPESA_SHORTCODE_TILL")  # Till Number
 MPESA_SHORTCODE_STORE = os.getenv("MPESA_SHORTCODE_STORE")  # Store/Head Office Number
+MPESA_SHORTCODE = os.getenv("MPESA_SHORTCODE")
 CALLBACK_URL = os.getenv("CALLBACK_URL")
 MPESA_BASE_URL = os.getenv("MPESA_BASE_URL", "https://sandbox.safaricom.co.ke")
 
@@ -811,18 +812,18 @@ def initiate_stk_push(phone, amount, plan_id):
         headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
         stk_password = base64.b64encode(
-            (MPESA_SHORTCODE_STORE + MPESA_PASSKEY + timestamp).encode()
+            (MPESA_SHORTCODE + MPESA_PASSKEY + timestamp).encode()
         ).decode()
 
         request_body = {
-            "BusinessShortCode": MPESA_SHORTCODE_STORE,  # Store/Head Office Number
+            "BusinessShortCode": MPESA_SHORTCODE_STORE,  
             "Password": stk_password,
             "Timestamp": timestamp,
-            "TransactionType": "CustomerBuyGoodsOnline",  # Changed to Till Number transaction
+            "TransactionType": "CustomerBuyGoodsOnline",  
             "Amount": str(amount),
-            "PartyA": phone,  # Customer's phone number
-            "PartyB": MPESA_SHORTCODE_TILL,  # Till Number
-            "PhoneNumber": phone,  # Customer's phone number (for STK prompt)
+            "PartyA": phone, 
+            "PartyB": MPESA_SHORTCODE_TILL,  
+            "PhoneNumber": phone, 
             "CallBackURL": CALLBACK_URL,
             "AccountReference": f"Plan_{plan_id}",
             "TransactionDesc": "Internet Plan Purchase",
@@ -847,7 +848,7 @@ def query_stk_push(checkout_request_id):
         headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
         password = base64.b64encode(
-            (MPESA_SHORTCODE_STORE + MPESA_PASSKEY + timestamp).encode()
+            (MPESA_SHORTCODE + MPESA_PASSKEY + timestamp).encode()
         ).decode()
 
         request_body = {
@@ -1011,3 +1012,6 @@ def payment_callback(request):
         return HttpResponseBadRequest(f"Transaction with checkout_id {checkout_id} not found")
     except Exception as e:
         return HttpResponseBadRequest(f"Callback processing failed: {str(e)}")
+
+
+

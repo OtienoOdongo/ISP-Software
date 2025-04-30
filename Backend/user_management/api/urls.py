@@ -1,25 +1,26 @@
-# user_management/api/urls.py
 from django.urls import path
-from user_management.api.views.user_views import UserProfileAPIView
-from user_management.api.views.activity_views import UserActivityAPIView
-from user_management.api.views.plan_views import PlanAPIView, UserPlanAPIView
-from user_management.api.views.billing_views import PaymentAPIView
+from user_management.api.views.user_views import UserProfileListView, UserProfileDetailView
+from user_management.api.views.plan_views import (
+    PlanAnalyticsDashboardView,
+    SMSServiceView,
+    SMSHistoryView,
+    DataUsageThresholdView,
+    ExportReportView,
+    UpdatePaymentStatusView,
+    MarkNotificationReadView
+)
+
+app_name = 'user_management'
 
 urlpatterns = [
-    # List all profiles or create a new profile
-    path('user-profiles/', UserProfileAPIView.as_view(), name='user-profiles-list'),
-    # Retrieve, update, or delete a specific profile
-    path('user-profiles/<int:pk>/', UserProfileAPIView.as_view(), name='user-profiles-detail'),
-    # Toggle status of a specific profile
-    path('user-profiles/<int:pk>/toggle-status/', UserProfileAPIView.as_view(), name='user-profiles-toggle'),
-
-    # User Activity Log
-    path('user-activities/', UserActivityAPIView.as_view(), name='user-activities'),
-
-    # Plan Assignment
-    path('plans/', PlanAPIView.as_view(), name='plans'),
-    path('user-plans/', UserPlanAPIView.as_view(), name='user-plans'),
-
-    # Payment History
-    path('payments/', PaymentAPIView.as_view(), name='payments'),
+    path('profiles/', UserProfileListView.as_view(), name='user-profile-list'),
+    path('profiles/<int:pk>/', UserProfileDetailView.as_view(), name='user-profile-detail'),
+    path('dashboard/', PlanAnalyticsDashboardView.as_view(), name='plan-analytics-dashboard'),
+    path('send-sms/', SMSServiceView.as_view(), name='send-sms'),
+    path('sms-history/', SMSHistoryView.as_view(), name='sms-history'),
+    path('thresholds/', DataUsageThresholdView.as_view(), name='data-usage-thresholds'),
+    path('thresholds/<int:pk>/', DataUsageThresholdView.as_view(), name='data-usage-threshold-detail'),
+    path('export-report/', ExportReportView.as_view(), name='export-report'),
+    path('update-payment-status/<int:client_id>/', UpdatePaymentStatusView.as_view(), name='update-payment-status'),
+    path('mark-notification-read/<int:notification_id>/', MarkNotificationReadView.as_view(), name='mark-notification-read'),
 ]

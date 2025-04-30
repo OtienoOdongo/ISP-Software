@@ -1,19 +1,22 @@
 from django.urls import path
 from network_management.api.views.router_management_view import (
-    RouterListCreateView, RouterDetailView, RouterConnectView, RouterDisconnectView,
-    RouterStatusView, RouterFirmwareView, RouterShareInternetView, RouterExportView, RouterImportView
+    RouterDetailView,
+    RouterListView,
+    RouterStatsView,
+    RouterRebootView,
+    HotspotConfigView,
+    HotspotUserDetailView,
+    HotspotUsersView,
+    BulkActionView
 )
 
-app_name = 'network_management'
-
 urlpatterns = [
-    path('routers/', RouterListCreateView.as_view(), name='router-list-create'),
-    path('routers/<int:pk>/', RouterDetailView.as_view(), name='router-detail'),
-    path('routers/<int:pk>/connect/', RouterConnectView.as_view(), name='router-connect'),
-    path('routers/<int:pk>/disconnect/', RouterDisconnectView.as_view(), name='router-disconnect'),
-    path('routers/<int:pk>/status/', RouterStatusView.as_view(), name='router-status'),
-    path('routers/<int:pk>/firmware/', RouterFirmwareView.as_view(), name='router-firmware'),
-    path('routers/<int:pk>/share-internet/', RouterShareInternetView.as_view(), name='router-share-internet'),
-    path('routers/<int:pk>/export/', RouterExportView.as_view(), name='router-export'),
-    path('routers/<int:pk>/import/', RouterImportView.as_view(), name='router-import'),
+    path("routers/", RouterListView.as_view(), name="router-list"),
+    path("routers/<int:pk>/", RouterDetailView.as_view(), name="router-detail"),
+    path("routers/<int:pk>/stats/", RouterStatsView.as_view(), name="router-stats"),
+    path("routers/<int:pk>/reboot/", RouterRebootView.as_view(), name="router-reboot"),
+    path("routers/<int:pk>/hotspot-users/", HotspotUsersView.as_view(), name="hotspot-users"),
+    path("hotspot-users/<int:pk>/", HotspotUserDetailView.as_view(), name="hotspot-user-detail"),
+    path("routers/<int:pk>/hotspot-config/", HotspotConfigView.as_view(), name="hotspot-config"),
+    path("routers/bulk-action/", BulkActionView.as_view(), name="bulk-action"),
 ]

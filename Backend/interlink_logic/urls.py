@@ -144,7 +144,7 @@ urlpatterns = [
     # API Endpoints
     path('api/auth/', include('authentication.urls')),
     path('api/user_management/', include('user_management.api.urls')),
-    path('api/support/', include('support.urls')),
+    #path('api/support/', include('support.urls')),
     path('api/payments/', include('payments.api.urls')),
     path('api/network_management/', include('network_management.api.urls')),
     path('api/internet_plans/', include('internet_plans.api.urls')),

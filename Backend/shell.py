@@ -15,3 +15,8 @@ site.save()
 
 # Confirm the update
 print(Site.objects.all())  # Should now show localhost:8000
+
+
+# Reset the migrations (if needed)
+python3 manage.py migrate --fake user_management zero  # Unapply all migrations
+python3 manage.py migrate user_management             # Reapply fresh
