@@ -24,10 +24,10 @@ const Footer = () => {
         <p className="text-lg text-gray-200">
           Need help? Reach us at{' '}
           <a href="mailto:support@interlink.com" className="text-pink-300 hover:underline">
-            support@interlink.com
+            support@SurfZone.com
           </a>
         </p>
-        <p className="mt-2 text-sm text-gray-400">© 2025 InterLink. Built for the future.</p>
+        <p className="mt-2 text-sm text-gray-400">© 2025 SurfZone. Built for the future.</p>
       </div>
     </footer>
   );

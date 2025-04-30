@@ -152,27 +152,176 @@
 
 
 
-import React, { useState } from 'react';
-import { navItems } from '../constants';
-import { Menu, X } from 'lucide-react';
+// import React, { useState } from 'react';
+// import { navItems } from '../constants';
+// import { Menu, X } from 'lucide-react';
 
-const NavBar = ({ isLoggedIn, setIsLoggedIn }) => {
+// const NavBar = ({ isLoggedIn, setIsLoggedIn }) => {
+//   const [isOpen, setIsOpen] = useState(false);
+
+//   const handleLogout = () => {
+//     setIsLoggedIn(false);
+//     localStorage.removeItem('isLoggedIn');
+//     localStorage.removeItem('phoneNumber');
+//     setIsOpen(false);
+//   };
+
+//   return (
+//     <nav className="fixed top-0 left-0 w-full z-50 bg-indigo-900/80 backdrop-blur-md py-4 shadow-lg">
+//       <div className="container mx-auto px-4 flex items-center justify-between">
+//         <a href="/" className="text-3xl font-extrabold tracking-tight text-white hover:text-pink-300 transition-colors">
+//           SurfZone
+//         </a>
+//         <div className="hidden md:flex space-x-8">
+//           {navItems.map((item, index) => (
+//             <a
+//               key={index}
+//               href={item.href}
+//               className="text-white hover:text-pink-300 transition-colors duration-300 font-medium"
+//             >
+//               {item.label}
+//             </a>
+//           ))}
+//           {isLoggedIn && (
+//             <button
+//               onClick={handleLogout}
+//               className="text-white hover:text-pink-300 transition-colors font-medium"
+//             >
+//               Log Out
+//             </button>
+//           )}
+//         </div>
+//         <button className="md:hidden text-white" onClick={() => setIsOpen(!isOpen)}>
+//           {isOpen ? <X size={28} /> : <Menu size={28} />}
+//         </button>
+//       </div>
+//       {isOpen && (
+//         <div className="md:hidden bg-indigo-900/95 py-4">
+//           {navItems.map((item, index) => (
+//             <a
+//               key={index}
+//               href={item.href}
+//               className="block px-4 py-2 text-white hover:bg-pink-700/50 transition-colors"
+//               onClick={() => setIsOpen(false)}
+//             >
+//               {item.label}
+//             </a>
+//           ))}
+//           {isLoggedIn && (
+//             <button
+//               onClick={handleLogout}
+//               className="block px-4 py-2 text-white hover:bg-pink-700/50 transition-colors w-full text-left"
+//             >
+//               Log Out
+//             </button>
+//           )}
+//         </div>
+//       )}
+//     </nav>
+//   );
+// };
+
+// export default NavBar;
+
+
+
+// import React, { useState } from "react";
+// import { navItems } from "../constants";
+// import { Menu, X } from "lucide-react";
+
+// const NavBar = ({ isLoggedIn, setIsLoggedIn }) => {
+//   const [isOpen, setIsOpen] = useState(false);
+
+//   const handleLogout = () => {
+//     setIsLoggedIn(false);
+//     localStorage.removeItem("isLoggedIn");
+//     localStorage.removeItem("phoneNumber");
+//     localStorage.removeItem("fullName"); // Clear fullName too
+//     setIsOpen(false);
+//   };
+
+//   return (
+//     <nav className="fixed top-0 left-0 w-full z-50 bg-indigo-900/80 backdrop-blur-md py-4 shadow-lg">
+//       <div className="container mx-auto px-4 flex items-center justify-between">
+//         <a href="/" className="text-3xl font-extrabold tracking-tight text-white hover:text-pink-300 transition-colors">
+//           SurfZone
+//         </a>
+//         <div className="hidden md:flex space-x-8">
+//           {navItems.map((item, index) => (
+//             <a
+//               key={index}
+//               href={item.href}
+//               className="text-white hover:text-pink-300 transition-colors duration-300 font-medium"
+//             >
+//               {item.label}
+//             </a>
+//           ))}
+//           {isLoggedIn && (
+//             <button
+//               onClick={handleLogout}
+//               className="text-white hover:text-pink-300 transition-colors font-medium"
+//             >
+//               Log Out
+//             </button>
+//           )}
+//         </div>
+//         <button className="md:hidden text-white" onClick={() => setIsOpen(!isOpen)}>
+//           {isOpen ? <X size={28} /> : <Menu size={28} />}
+//         </button>
+//       </div>
+//       {isOpen && (
+//         <div className="md:hidden bg-indigo-900/95 py-4">
+//           {navItems.map((item, index) => (
+//             <a
+//               key={index}
+//               href={item.href}
+//               className="block px-4 py-2 text-white hover:bg-pink-700/50 transition-colors"
+//               onClick={() => setIsOpen(false)}
+//             >
+//               {item.label}
+//             </a>
+//           ))}
+//           {isLoggedIn && (
+//             <button
+//               onClick={handleLogout}
+//               className="block px-4 py-2 text-white hover:bg-pink-700/50 transition-colors w-full text-left"
+//             >
+//               Log Out
+//             </button>
+//           )}
+//         </div>
+//       )}
+//     </nav>
+//   );
+// };
+
+// export default NavBar;
+
+
+
+
+
+
+
+
+import React, { useState } from "react";
+import { navItems } from "../constants";
+import { Menu, X, LogOut } from "lucide-react";
+
+const NavBar = ({ isLoggedIn, setIsLoggedIn, fullName, onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('phoneNumber');
-    setIsOpen(false);
-  };
+  const displayName = fullName || "Guest";
 
   return (
     <nav className="fixed top-0 left-0 w-full z-50 bg-indigo-900/80 backdrop-blur-md py-4 shadow-lg">
       <div className="container mx-auto px-4 flex items-center justify-between">
-        <a href="/" className="text-3xl font-extrabold tracking-tight text-white hover:text-pink-300 transition-colors">
+        <a
+          href="/"
+          className="text-3xl font-extrabold tracking-tight text-white hover:text-pink-300 transition-colors duration-300"
+        >
           SurfZone
         </a>
-        <div className="hidden md:flex space-x-8">
+        <div className="hidden md:flex space-x-8 items-center">
           {navItems.map((item, index) => (
             <a
               key={index}
@@ -182,16 +331,22 @@ const NavBar = ({ isLoggedIn, setIsLoggedIn }) => {
               {item.label}
             </a>
           ))}
-          {isLoggedIn && (
+          {isLoggedIn ? (
             <button
-              onClick={handleLogout}
-              className="text-white hover:text-pink-300 transition-colors font-medium"
+              onClick={onLogout}
+              className="flex items-center text-white hover:text-pink-300 transition-colors font-medium bg-transparent border-2 border-pink-300 rounded-full px-4 py-1 hover:bg-pink-300 hover:text-indigo-900"
             >
+              <LogOut size={18} className="mr-2" />
               Log Out
             </button>
+          ) : (
+            <span className="text-gray-400 font-medium">Hello, {displayName}</span>
           )}
         </div>
-        <button className="md:hidden text-white" onClick={() => setIsOpen(!isOpen)}>
+        <button
+          className="md:hidden text-white focus:outline-none"
+          onClick={() => setIsOpen(!isOpen)}
+        >
           {isOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
       </div>
@@ -207,13 +362,16 @@ const NavBar = ({ isLoggedIn, setIsLoggedIn }) => {
               {item.label}
             </a>
           ))}
-          {isLoggedIn && (
+          {isLoggedIn ? (
             <button
-              onClick={handleLogout}
-              className="block px-4 py-2 text-white hover:bg-pink-700/50 transition-colors w-full text-left"
+              onClick={onLogout}
+              className="block px-4 py-2 text-white hover:bg-pink-700/50 transition-colors w-full text-left flex items-center"
             >
+              <LogOut size={18} className="mr-2" />
               Log Out
             </button>
+          ) : (
+            <span className="block px-4 py-2 text-gray-400">Hello, {displayName}</span>
           )}
         </div>
       )}
