@@ -29,9 +29,7 @@ export const menuItems = [
     submenu: true,
     submenuItems: [
       { title: "User Profile" },
-      { title: "User Activity Log" },
-      { title: "Plan Assignment" },
-      { title: "Billing and Payment History" },
+      { title: "Plan Overview" },
     ],
   },
   {

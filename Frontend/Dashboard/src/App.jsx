@@ -9,9 +9,7 @@ import VerifyEmail from "./components/auth/VerifyEmail";
 import ResetPassword from "./components/auth/ResetPassword";
 import ResetPasswordConfirm from "./components/auth/ResetPasswordConfirm";
 import DashboardOverview from "./Pages/DashBoard/DashboardOverview";
-import UserActivityLog from "./Pages/UserManagement/UserActivityLog";
-import PlanAssignment from "./Pages/UserManagement/PlanAssignment";
-import PaymentHistory from "./Pages/UserManagement/PaymentHistory";
+import PlanOverview from "./Pages/UserManagement/PlanOverview";
 import UserProfile from "./Pages/UserManagement/UserProfile";
 import CreatePlans from "./Pages/InternetPlans/CreatePlans";
 import PlanAnalytics from "./Pages/InternetPlans/PlanAnalytics";
@@ -57,9 +55,7 @@ const App = () => {
         >
           <Route index element={<DashboardOverview />} />
           <Route path="user-management">
-            <Route path="user-activity-log" element={<UserActivityLog />} />
-            <Route path="plan-assignment" element={<PlanAssignment />} />
-            <Route path="billing-and-payment-history" element={<PaymentHistory />} /> {/* Updated */}
+            <Route path="plan-overview" element={<PlanOverview />} />
             <Route path="user-profile" element={<UserProfile />} />
           </Route>
           <Route path="internet-plans">
