@@ -16,7 +16,6 @@ import PlanAnalytics from "./Pages/InternetPlans/PlanAnalytics";
 import BandwidthAllocation from "./Pages/NetworkManagement/BandwidthAllocation";
 import IPAddressManagement from "./Pages/NetworkManagement/IPAddressManagement";
 import NetworkDiagnostics from "./Pages/NetworkManagement/NetworkDiagnostics";
-import SecuritySettings from "./Pages/NetworkManagement/SecuritySettings";
 import RouterManagement from "./Pages/NetworkManagement/RouterManagement";
 import MpesaTransactionLog from "./Pages/PaymentProcessing/MpesaTransactionLog";
 import MpesaConfiguration from "./Pages/PaymentProcessing/MpesaConfiguration";
@@ -66,7 +65,6 @@ const App = () => {
             <Route path="bandwidth-allocation" element={<BandwidthAllocation />} />
             <Route path="ip-address-management" element={<IPAddressManagement />} />
             <Route path="network-diagnostics" element={<NetworkDiagnostics />} />
-            <Route path="security-settings" element={<SecuritySettings />} />
             <Route path="router-management" element={<RouterManagement />} />
           </Route>
           <Route path="payment-processing">

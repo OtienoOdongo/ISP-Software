@@ -50,7 +50,6 @@ export const menuItems = [
       { title: "Bandwidth Allocation" },
       { title: "IP Address Management" },
       { title: "Network Diagnostics" },
-      { title: "Security Settings" },
     ],
   },
   {
@@ -148,7 +147,7 @@ export const gridData = [
 
 
 
-//using local stoarge to store the access token and refresg token in the brwowser
+//using local stoarge to store the access token and refresg token in the browser
 
 export const ACCESS_TOKEN = "access";
 export const REFRESH_TOKEN = "refresh"
