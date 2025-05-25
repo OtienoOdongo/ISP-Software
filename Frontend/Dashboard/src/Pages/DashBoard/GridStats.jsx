@@ -1511,13 +1511,13 @@ import {
 } from "react-icons/fi";
 import { FaSpinner, FaUserCheck, FaCircle } from "react-icons/fa";
 import { IoMdAlert } from "react-icons/io";
-import SystemLoadMonitor from "../../components/SystemLoadMonitor.jsx";
-import SalesChart from "../../components/SalesChart.jsx";
-import RevenueChart from "../../components/RevenueChart.jsx";
-import FinancialBarChart from "../../components/FinancialBarChart.jsx";
-import VisitorAnalyticsChart from "../../components/VisitorAnalyticsChart.jsx";
-import PlanPerformanceChart from "../../components/PlanPerformanceChart.jsx";
-import NewSubscriptionsChart from "../../components/NewSubscriptionsChart.jsx";
+import SystemLoadMonitor from "../../components/DashboardComponents/SystemLoadMonitor.jsx";
+import SalesChart from "../../components/DashboardComponents/SalesChart.jsx";
+import RevenueChart from "../../components/DashboardComponents/RevenueChart.jsx";
+import FinancialBarChart from "../../components/DashboardComponents/FinancialBarChart.jsx";
+import VisitorAnalyticsChart from "../../components/DashboardComponents/VisitorAnalyticsChart.jsx";
+import PlanPerformanceChart from "../../components/DashboardComponents/PlanPerformanceChart.jsx";
+import NewSubscriptionsChart from "../../components/DashboardComponents/NewSubscriptionsChart.jsx";
 
 const CURRENCY = "KES";
 
