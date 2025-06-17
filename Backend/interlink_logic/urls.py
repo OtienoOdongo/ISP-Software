@@ -100,3 +100,12 @@ if settings.DEBUG:
     logger.info("Registered URL patterns:")
     for pattern in urlpatterns:
         logger.info(f"  {pattern}")
+
+
+
+
+
+
+
+
+
