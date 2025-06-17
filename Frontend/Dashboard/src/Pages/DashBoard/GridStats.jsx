@@ -1513,7 +1513,7 @@ import { FaSpinner, FaUserCheck, FaCircle } from "react-icons/fa";
 import { IoMdAlert } from "react-icons/io";
 import SystemLoadMonitor from "../../components/DashboardComponents/SystemLoadMonitor.jsx";
 import SalesChart from "../../components/DashboardComponents/SalesChart.jsx";
-import RevenueChart from "../../components/DashboardComponents/RevenueChart.jsx";
+import RevenueChart from "../../components/DashboardComponents/RevenueChart.jsx"
 import FinancialBarChart from "../../components/DashboardComponents/FinancialBarChart.jsx";
 import VisitorAnalyticsChart from "../../components/DashboardComponents/VisitorAnalyticsChart.jsx";
 import PlanPerformanceChart from "../../components/DashboardComponents/PlanPerformanceChart.jsx";
@@ -1652,7 +1652,7 @@ const GridStats = () => {
     }
   }, []);
 
-  // ... rest of the component remains the same
+ 
   useEffect(() => {
     const controller = new AbortController();
     fetchData(controller.signal);

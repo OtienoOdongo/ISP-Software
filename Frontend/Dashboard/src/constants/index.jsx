@@ -64,15 +64,6 @@ export const menuItems = [
     ],
   },
   {
-    title: "Reporting and Analytics",
-    icon: <HiDocumentReport className="h-8 w-8 text-slate-500" />,
-    submenu: true,
-    submenuItems: [
-      { title: "Usage Reports" },
-      { title: "Financial Reports" },
-    ],
-  },
-  {
     title: "Support and Maintenance",
     icon: <FcSupport className="h-8 w-8 text-slate-500" />,
     submenu: true,

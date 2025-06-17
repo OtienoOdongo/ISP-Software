@@ -1,200 +1,14 @@
-// import React, { useState } from 'react';
-// import { FaPlug, FaSpinner, FaCheck, FaTimes } from 'react-icons/fa';
-// import { toast } from 'react-toastify';
-
-// const TestConnectionButton = ({ methodType, callbackUrl, fullWidth = false }) => {
-//   const [isTesting, setIsTesting] = useState(false);
-//   const [isSuccess, setIsSuccess] = useState(null);
-
-//   const testConnection = async () => {
-//     if (!callbackUrl) {
-//       toast.error('Please configure a callback URL first', {
-//         position: "top-right",
-//         autoClose: 5000,
-//       });
-//       return;
-//     }
-
-//     setIsTesting(true);
-//     setIsSuccess(null);
-
-//     // Simulate API test (replace with actual API call)
-//     try {
-//       await new Promise(resolve => setTimeout(resolve, 1500));
-      
-//       // Random success/failure for demo purposes
-//       const success = Math.random() > 0.3;
-//       setIsSuccess(success);
-      
-//       if (success) {
-//         toast.success(`${methodType} connection test successful!`, {
-//           position: "top-right",
-//           autoClose: 3000,
-//         });
-//       } else {
-//         toast.error(`${methodType} connection failed. Check your settings.`, {
-//           position: "top-right",
-//           autoClose: 5000,
-//         });
-//       }
-//     } catch (error) {
-//       setIsSuccess(false);
-//       toast.error('Connection test failed', {
-//         position: "top-right",
-//         autoClose: 5000,
-//       });
-//     } finally {
-//       setIsTesting(false);
-//     }
-//   };
-
-//   return (
-//     <button
-//       onClick={testConnection}
-//       disabled={isTesting}
-//       className={`inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
-//         isSuccess === null 
-//           ? 'bg-blue-600 hover:bg-blue-700' 
-//           : isSuccess 
-//             ? 'bg-green-600 hover:bg-green-700' 
-//             : 'bg-red-600 hover:bg-red-700'
-//       } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-//         fullWidth ? 'w-full' : ''
-//       } transition-colors duration-200`}
-//     >
-//       {isTesting ? (
-//         <>
-//           <FaSpinner className="animate-spin mr-2" />
-//           Testing...
-//         </>
-//       ) : isSuccess === null ? (
-//         <>
-//           <FaPlug className="mr-2" />
-//           Test Connection
-//         </>
-//       ) : isSuccess ? (
-//         <>
-//           <FaCheck className="mr-2" />
-//           Success
-//         </>
-//       ) : (
-//         <>
-//           <FaTimes className="mr-2" />
-//           Failed
-//         </>
-//       )}
-//     </button>
-//   );
-// };
-
-// export default TestConnectionButton;
 
 
 
 
 
 // import React, { useState } from 'react';
-// import { FiPlug, FiLoader, FiCheck, FiX } from 'react-icons/fi';
-// import { toast } from 'react-toastify';
-
-// const TestConnectionButton = ({ methodType, callbackUrl, fullWidth = false }) => {
-//   const [isTesting, setIsTesting] = useState(false);
-//   const [isSuccess, setIsSuccess] = useState(null);
-
-//   const testConnection = async () => {
-//     if (!callbackUrl) {
-//       toast.error('Please configure a callback URL first', {
-//         position: "top-right",
-//         autoClose: 5000,
-//       });
-//       return;
-//     }
-
-//     setIsTesting(true);
-//     setIsSuccess(null);
-
-//     // Simulate API test (replace with actual API call)
-//     try {
-//       await new Promise(resolve => setTimeout(resolve, 1500));
-      
-//       // Random success/failure for demo purposes
-//       const success = Math.random() > 0.3;
-//       setIsSuccess(success);
-      
-//       if (success) {
-//         toast.success(`${methodType} connection test successful!`, {
-//           position: "top-right",
-//           autoClose: 3000,
-//         });
-//       } else {
-//         toast.error(`${methodType} connection failed. Check your settings.`, {
-//           position: "top-right",
-//           autoClose: 5000,
-//         });
-//       }
-//     } catch (error) {
-//       setIsSuccess(false);
-//       toast.error('Connection test failed', {
-//         position: "top-right",
-//         autoClose: 5000,
-//       });
-//     } finally {
-//       setIsTesting(false);
-//     }
-//   };
-
-//   return (
-//     <button
-//       onClick={testConnection}
-//       disabled={isTesting}
-//       className={`inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
-//         isSuccess === null 
-//           ? 'bg-blue-600 hover:bg-blue-700' 
-//           : isSuccess 
-//             ? 'bg-green-600 hover:bg-green-700' 
-//             : 'bg-red-600 hover:bg-red-700'
-//       } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-//         fullWidth ? 'w-full' : ''
-//       } transition-colors duration-200`}
-//     >
-//       {isTesting ? (
-//         <>
-//           <FiLoader className="animate-spin mr-2" />
-//           Testing...
-//         </>
-//       ) : isSuccess === null ? (
-//         <>
-//           <FiPlug className="mr-2" />
-//           Test Connection
-//         </>
-//       ) : isSuccess ? (
-//         <>
-//           <FiCheck className="mr-2" />
-//           Success
-//         </>
-//       ) : (
-//         <>
-//           <FiX className="mr-2" />
-//           Failed
-//         </>
-//       )}
-//     </button>
-//   );
-// };
-
-// export default TestConnectionButton;
-
-
-
-
-
-// import React, { useState } from 'react';
-// import { FiPower, FiLoader, FiCheck, FiX } from 'react-icons/fi';
+// import { FiPower, FiLoader, FiCheck, FiX, FiAlertCircle } from 'react-icons/fi';
 // import { toast } from 'react-toastify';
 // import PropTypes from 'prop-types';
 
-// // TestConnectionButton component to test payment gateway connection
-// const TestConnectionButton = ({ config }) => {
+// export const TestConnectionButton = ({ methodType, callbackUrl, fullWidth = false }) => {
 //   const [isTesting, setIsTesting] = useState(false);
 //   const [testResult, setTestResult] = useState(null);
 
@@ -203,122 +17,232 @@
 //     setTestResult(null);
 
 //     try {
-//       // Simulate API call to test connection (replace with actual API call)
-//       await new Promise((resolve) => setTimeout(resolve, 1000));
+//       // Simulate API call to test connection
+//       await new Promise((resolve) => setTimeout(resolve, 1500));
       
-//       // Mock success/failure based on config (replace with real logic)
-//       if (config && config.apiKey && config.endpoint) {
+//       // Mock success (in real app, this would be an actual API call)
+//       if (callbackUrl) {
 //         setTestResult('success');
-//         toast.success('Connection test successful!');
+//         toast.success(`${methodType} connection test successful!`);
 //       } else {
-//         throw new Error('Invalid configuration');
+//         throw new Error('Callback URL not configured');
 //       }
 //     } catch (error) {
 //       setTestResult('error');
-//       toast.error(`Connection test failed: ${error.message}`);
+//       toast.error(`${methodType} connection failed: ${error.message}`);
 //     } finally {
 //       setIsTesting(false);
 //     }
 //   };
 
 //   return (
-//     <div className="flex items-center space-x-2">
+//     <div className={`flex ${fullWidth ? 'w-full' : ''}`}>
 //       <button
 //         onClick={handleTestConnection}
 //         disabled={isTesting}
-//         className={`flex items-center px-4 py-2 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors ${
-//           isTesting ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+//         className={`inline-flex items-center justify-center px-4 py-2 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors ${
+//           isTesting 
+//             ? 'bg-gray-400 cursor-not-allowed w-full' 
+//             : testResult === 'success' 
+//               ? 'bg-green-600 hover:bg-green-700 w-full'
+//               : testResult === 'error'
+//                 ? 'bg-red-600 hover:bg-red-700 w-full'
+//                 : 'bg-blue-600 hover:bg-blue-700 w-full'
 //         }`}
-//         aria-label="Test payment gateway connection"
 //       >
 //         {isTesting ? (
-//           <FiLoader className="animate-spin mr-2" />
+//           <>
+//             <FiLoader className="animate-spin mr-2" />
+//             Testing...
+//           </>
 //         ) : testResult === 'success' ? (
-//           <FiCheck className="mr-2" />
+//           <>
+//             <FiCheck className="mr-2" />
+//             Connection Verified
+//           </>
 //         ) : testResult === 'error' ? (
-//           <FiX className="mr-2" />
+//           <>
+//             <FiAlertCircle className="mr-2" />
+//             Connection Failed
+//           </>
 //         ) : (
-//           <FiPower className="mr-2" />
+//           <>
+//             <FiPower className="mr-2" />
+//             Test Connection
+//           </>
 //         )}
-//         {isTesting ? 'Testing...' : 'Test Connection'}
 //       </button>
-//       {testResult && (
-//         <span
-//           className={`text-sm ${
-//             testResult === 'success' ? 'text-green-600' : 'text-red-600'
-//           }`}
-//         >
-//           {testResult === 'success' ? 'Connected' : 'Failed'}
-//         </span>
-//       )}
 //     </div>
 //   );
 // };
 
 // TestConnectionButton.propTypes = {
-//   config: PropTypes.shape({
-//     apiKey: PropTypes.string,
-//     endpoint: PropTypes.string,
-//   }),
+//   methodType: PropTypes.string.isRequired,
+//   callbackUrl: PropTypes.string,
+//   fullWidth: PropTypes.bool
 // };
 
-// TestConnectionButton.defaultProps = {
-//   config: null,
+
+
+// import React, { useState, useEffect } from 'react';
+// import { FiLoader, FiCheck, FiPlus, FiAlertCircle } from 'react-icons/fi';
+// import { toast } from 'react-toastify';
+// import PropTypes from 'prop-types';
+// import api from '../../../api'
+
+// export const TestConnectionButton = ({ methodType, configId, fullWidth = false }) => {
+//   const [isTesting, setIsTesting] = useState(false);
+//   const [testResult, setTestResult] = useState(null);
+
+//   useEffect(() => {
+//     if (testResult) {
+//       const timer = setTimeout(() => setTestResult(null), 5000); // Reset after 5 seconds
+//       return () => clearTimeout(timer);
+//     }
+//   }, [testResult]);
+
+//   const handleTestConnection = async () => {
+//     if (!configId) {
+//       toast.error('Configuration ID is required');
+//       return;
+//     }
+
+//     setIsTesting(true);
+//     try {
+//       const response = await api.post(`/api/payments/config/${configId}/test/`);
+//       if (response.data.success) {
+//         setTestResult('success');
+//         toast.success(`${getMethodTypeLabel(methodType)} connection test successful!`);
+//       } else {
+//         throw new Error(response.data.message || 'Test failed');
+//       }
+//     } catch (error) {
+//       setTestResult('error');
+//       toast.error(`${getMethodTypeLabel(methodType)} connection test failed: ${error.response?.data?.error || error.message}`);
+//     } finally {
+//       setIsTesting(false);
+//     }
+//   };
+
+//   const getMethodTypeLabel = (methodType) => {
+//     const PAYMENT_METHODS = {
+//       mpesa_paybill: 'M-Pesa Paybill',
+//       mpesa_till: 'M-Pesa Till',
+//       paypal: 'PayPal',
+//       bank: 'Bank Transfer',
+//     };
+//     return PAYMENT_METHODS[methodType] || methodType;
+//   };
+
+//   return (
+//     <div className={fullWidth ? 'w-full' : ''}>
+//       <button
+//         onClick={handleTestConnection}
+//         disabled={isTesting}
+//         className={`inline-flex items-center px-4 py-2 rounded-md text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+//           isTesting
+//             ? 'bg-gray-400 cursor-not-allowed'
+//             : testResult === 'success'
+//             ? 'bg-green-600 hover:bg-green-700'
+//             : testResult === 'error'
+//             ? 'bg-red-600 hover:bg-red-700'
+//             : 'bg-blue-600 hover:bg-blue-800'
+//         } ${fullWidth ? 'w-full' : ''}`}
+//       >
+//         {isTesting ? (
+//           <>
+//             <FiLoader className="animate-spin mr-2" />
+//             Testing...
+//           </>
+//         ) : testResult === 'success' ? (
+//           <>
+//             <FiCheck className="mr-2" />
+//             Connection Verified
+//           </>
+//         ) : testResult === 'error' ? (
+//           <>
+//             <FiAlertCircle className="mr-2" />
+//             Connection Failed
+//           </>
+//         ) : (
+//           <>
+//             <FiPlus className="mr-2" />
+//             Test Connection
+//           </>
+//         )}
+//       </button>
+//     </div>
+//   );
 // };
 
-// export default TestConnectionButton;
+// TestConnectionButton.propTypes = {
+//   methodType: PropTypes.string.isRequired,
+//   configId: PropTypes.string.isRequired,
+//   fullWidth: PropTypes.bool,
+// };
 
 
 
 
 
-
-import React, { useState } from 'react';
-import { FiPower, FiLoader, FiCheck, FiX, FiAlertCircle } from 'react-icons/fi';
+import React, { useState, useEffect } from 'react';
+import { FiLoader, FiCheck, FiPlus, FiAlertCircle } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import PropTypes from 'prop-types';
+import api from '../../../api'
+import { getMethodLabel } from './Utils/paymentUtils'
 
-const TestConnectionButton = ({ methodType, callbackUrl, fullWidth = false }) => {
+/**
+ * Button to test payment method connection.
+ */
+const TestConnectionButton = ({ methodType, configId, fullWidth = false }) => {
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
 
-  const handleTestConnection = async () => {
-    setIsTesting(true);
-    setTestResult(null);
+  useEffect(() => {
+    if (testResult) {
+      const timer = setTimeout(() => setTestResult(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [testResult]);
 
+  const handleTestConnection = async () => {
+    if (!configId) {
+      toast.error('Configuration ID is required');
+      return;
+    }
+
+    setIsTesting(true);
     try {
-      // Simulate API call to test connection
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      
-      // Mock success (in real app, this would be an actual API call)
-      if (callbackUrl) {
+      const response = await api.post(`/api/payments/config/${configId}/test/`);
+      if (response.data.success) {
         setTestResult('success');
-        toast.success(`${methodType} connection test successful!`);
+        toast.success(`${getMethodLabel(methodType)} connection test successful!`);
       } else {
-        throw new Error('Callback URL not configured');
+        throw new Error(response.data.message || 'Test failed');
       }
     } catch (error) {
       setTestResult('error');
-      toast.error(`${methodType} connection failed: ${error.message}`);
+      toast.error(`${getMethodLabel(methodType)} connection test failed: ${error.response?.data?.error || error.message}`);
     } finally {
       setIsTesting(false);
     }
   };
 
   return (
-    <div className={`flex ${fullWidth ? 'w-full' : ''}`}>
+    <div className={fullWidth ? 'w-full' : ''}>
       <button
         onClick={handleTestConnection}
         disabled={isTesting}
-        className={`inline-flex items-center justify-center px-4 py-2 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors ${
-          isTesting 
-            ? 'bg-gray-400 cursor-not-allowed w-full' 
-            : testResult === 'success' 
-              ? 'bg-green-600 hover:bg-green-700 w-full'
-              : testResult === 'error'
-                ? 'bg-red-600 hover:bg-red-700 w-full'
-                : 'bg-blue-600 hover:bg-blue-700 w-full'
-        }`}
+        className={`inline-flex items-center px-4 py-2 rounded-md text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+          isTesting
+            ? 'bg-gray-400 cursor-not-allowed'
+            : testResult === 'success'
+            ? 'bg-green-600 hover:bg-green-700'
+            : testResult === 'error'
+            ? 'bg-red-600 hover:bg-red-700'
+            : 'bg-blue-600 hover:bg-blue-800'
+        } ${fullWidth ? 'w-full' : ''}`}
       >
         {isTesting ? (
           <>
@@ -337,7 +261,7 @@ const TestConnectionButton = ({ methodType, callbackUrl, fullWidth = false }) =>
           </>
         ) : (
           <>
-            <FiPower className="mr-2" />
+            <FiPlus className="mr-2" />
             Test Connection
           </>
         )}
@@ -348,8 +272,8 @@ const TestConnectionButton = ({ methodType, callbackUrl, fullWidth = false }) =>
 
 TestConnectionButton.propTypes = {
   methodType: PropTypes.string.isRequired,
-  callbackUrl: PropTypes.string,
-  fullWidth: PropTypes.bool
+  configId: PropTypes.string.isRequired,
+  fullWidth: PropTypes.bool,
 };
 
 export default TestConnectionButton;

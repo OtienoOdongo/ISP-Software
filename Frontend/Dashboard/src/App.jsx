@@ -21,8 +21,6 @@ import MpesaTransactionLog from "./Pages/PaymentProcessing/MpesaTransactionLog";
 import MpesaConfiguration from "./Pages/PaymentProcessing/MpesaConfiguration";
 import MpesaCallbackSettings from "./Pages/PaymentProcessing/MpesaCallbackSettings";
 import PaymentReconciliation from "./Pages/PaymentProcessing/PaymentReconciliation";
-import UsageReports from "./Pages/ReportingAnalytics/UsageReports";
-import FinancialReports from "./Pages/ReportingAnalytics/FinancialReports";
 import UserSupportTickets from "./Pages/SupportMaintenance/UserSupportTickets";
 import KnowledgeBase from "./Pages/SupportMaintenance/KnowledgeBase";
 import AdminProfile from "./Pages/Account/AdminProfile";
@@ -72,10 +70,6 @@ const App = () => {
             <Route path="mpesa-configuration" element={<MpesaConfiguration />} />
             <Route path="mpesa-callback-settings" element={<MpesaCallbackSettings />} />
             <Route path="payment-reconciliation" element={<PaymentReconciliation />} />
-          </Route>
-          <Route path="reporting-and-analytics">
-            <Route path="usage-reports" element={<UsageReports />} />
-            <Route path="financial-reports" element={<FinancialReports />} />
           </Route>
           <Route path="support-and-maintenance">
             <Route path="user-support-tickets" element={<UserSupportTickets />} /> {/* Updated */}
