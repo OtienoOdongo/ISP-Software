@@ -27,6 +27,10 @@ jobs:
           - service: landingpage
             context: ./Frontend/Landingpage  # Path to the directory containing the Dockerfile for the landing page
             image: codongo/interlink_landingpage  # Docker Hub image name for the landing page
+          # Configuration for the nginx service
+          - service: nginx
+            context: ./nginx  # Path to the directory containing the Dockerfile for nginx
+            image: codongo/interlink_nginx  # Docker Hub image name for nginx
     
     # Steps to execute for each matrix configuration
     steps:
