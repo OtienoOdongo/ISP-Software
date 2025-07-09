@@ -1,0 +1,60 @@
+# Name of the GitHub Actions workflow, displayed in the GitHub UI
+name: Build and Publish image to Docker Hub
+
+# Defines the events that trigger the workflow
+on:
+  push:
+    branches: ["main"]  # Workflow runs when code is pushed to the 'main' branch
+
+# Defines the jobs to be executed
+jobs:
+  build-and-push:  # Name of the job
+    runs-on: ubuntu-latest  # Specifies the runner environment (Ubuntu Linux)
+    # Matrix strategy allows running the job multiple times with different configurations
+    strategy:
+      matrix:
+        # 'include' defines the specific configurations for each job run
+        include:
+          # Configuration for the backend service
+          - service: backend
+            context: ./Backend  # Path to the directory containing the Dockerfile for the backend
+            image: codongo/interlink_backend  # Docker Hub image name for the backend
+          # Configuration for the dashboard service
+          - service: dashboard
+            context: ./Frontend/Dashboard  # Path to the directory containing the Dockerfile for the dashboard
+            image: codongo/interlink_dashboard  # Docker Hub image name for the dashboard
+          # Configuration for the landing page service
+          - service: landingpage
+            context: ./Frontend/Landingpage  # Path to the directory containing the Dockerfile for the landing page
+            image: codongo/interlink_landingpage  # Docker Hub image name for the landing page
+    
+    # Steps to execute for each matrix configuration
+    steps:
+      # Step 1: Check out the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4  # Uses the checkout action (version 4) to clone the repository to the runner
+
+      # Step 2: Set up Docker Buildx for advanced Docker build capabilities
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2  # Installs and configures Docker Buildx for multi-platform builds and caching
+
+      # Step 3: Log in to Docker Hub for pushing images
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2  # Uses the Docker login action (version 2) to authenticate with Docker Hub
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}  # Docker Hub username stored in GitHub Secrets
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}  # Docker Hub Personal Access Token stored in GitHub Secrets
+
+      # Step 4: Build and push the Docker image for the current matrix service
+      - name: Build and push ${{ matrix.service }}  # Dynamic step name based on the service (e.g., "Build and push backend")
+        run: |
+          # Ensure the script fails immediately if any command fails
+          set -e
+          # Build and push the Docker image using Buildx
+          docker buildx build \
+            --push \
+            --tag ${{ matrix.image }}:latest \
+            --tag ${{ matrix.image }}:${{ github.sha }} \
+            --cache-to type=gha \
+            --cache-from type=gha \
+            ${{ matrix.context }}

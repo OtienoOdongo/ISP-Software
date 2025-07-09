@@ -1,0 +1,52 @@
+# # Use a lightweight Node.js base image
+# FROM node:20-alpine
+
+# # Set working directory inside the container
+# WORKDIR /app
+
+# # Copy only dependency files first (enables better Docker cache)
+# COPY package.json package-lock.json ./
+
+# # Install dependencies
+# RUN npm install
+
+# # Copy the rest of the application code
+# COPY . .
+
+# # Build the React app (assumes Vite or CRA is configured)
+# RUN npm run build
+
+# # expose port only if serving in dev mode
+# EXPOSE 5173
+
+# # Default command (use yarn start or serve if in dev; in prod we use nginx)
+# CMD ["npm", "run", "start"]
+
+
+
+
+
+# Stage 1: Build dashboard app
+FROM node:20-slim AS builder
+
+WORKDIR /app
+
+# Only copy package files first for efficient caching
+COPY package.json package-lock.json ./
+RUN npm install
+
+# Copy the rest of the app and build it
+COPY . .
+RUN npm run build
+
+# Stage 2: Serve built files with nginx
+FROM nginx:alpine
+
+# Copy built dashboard to nginx public folder
+COPY --from=builder /app/dist /usr/share/nginx/html/dashboard
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+
+
+

@@ -1,0 +1,28 @@
+# Don't send node_modules (massive)
+node_modules
+npm-debug.log
+
+# Don't send local build artifacts
+dist
+build
+
+# Don't send environment-specific files
+.env
+.env.*.local
+
+# Vite / Tailwind caches
+.vite
+.cache
+.vscode
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Git files
+.git
+.gitignore
+
+# Docker itself
+docker-compose.yml
+Dockerfile

@@ -121,7 +121,7 @@
 
 // api.js
 import axios from "axios";
-import { ACCESS_TOKEN } from "../Dashboard/src/constants/index";
+import { ACCESS_TOKEN } from "./src/constants/index";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.trim().replace(/\/+$/, "") : "http://localhost:8000",

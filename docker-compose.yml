@@ -1,0 +1,342 @@
+# services:
+#   # Database
+#   db:
+#     image: mysql:8.0
+#     volumes:
+#       - db_data:/var/lib/mysql
+#       - /etc/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+#     ports:
+#       - "3306:3306"
+#     networks:
+#       - interlink_network
+#     restart: unless-stopped
+
+#   # Redis
+#   redis:
+#     image: redis:alpine
+#     ports:
+#       - "6379:6379"
+#     networks:
+#       - interlink_network
+
+#   # Backend - Development Configuration
+#   backend:
+#     build:
+#       context: ./Backend
+#       dockerfile: Dockerfile.dev
+#     environment:
+#       - DJANGO_SETTINGS_MODULE=interlink.settings
+#       - DATABASE_URL=mysql://${DB_USER}:${DB_PASSWORD}@db:3306/${DB_NAME}
+#       - REDIS_URL=redis://redis:6379/0
+#       - DEBUG=1
+#     volumes:
+#       - ./Backend:/app/backend
+#       - static_volume:/app/backend/static
+#       - media_volume:/app/backend/media
+#     ports:
+#       - "8000:8000"
+#     depends_on:
+#       - db
+#       - redis
+#     networks:
+#       - interlink_network
+#     command: >
+#       sh -c "python manage.py migrate &&
+#              python manage.py runserver 0.0.0.0:8000"
+
+#   # Dashboard Frontend - Development
+#   dashboard:
+#     build:
+#       context: ./Frontend/Dashboard
+#       dockerfile: Dockerfile.dev
+#     environment:
+#       - NODE_ENV=development
+#     volumes:
+#       - ./Frontend/dashboard:/app
+#       - /app/node_modules
+#     ports:
+#       - "5173:5173"
+#     networks:
+#       - interlink_network
+
+#   # Landing Page Frontend - Production (built separately)
+#   landingpage:
+#     build:
+#       context: ./Frontend/Landingpage
+#       dockerfile: Dockerfile
+#     networks:
+#       - interlink_network
+
+#   # Nginx
+#   nginx:
+#     build: ./nginx
+#     ports:
+#       - "80:80"
+#     volumes:
+#       - static_volume:/var/www/static:ro
+#       - media_volume:/var/www/media:ro
+#       - ./Frontend/landingpage/dist:/var/www/static/landing:ro
+#     depends_on:
+#       - backend
+#       - dashboard
+#       - landingpage
+#     networks:
+#       - interlink_network
+
+# volumes:
+#   db_data:
+#   static_volume:
+#   media_volume:
+
+# networks:
+#   interlink_network:
+#     driver: bridge
+
+
+
+
+
+
+
+# services:
+#   db:
+#     image: mysql:5.7
+#     container_name: interlink_db
+#     volumes:
+#       - mysql_data:/var/lib/mysql
+#     environment:
+#       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+#       MYSQL_DATABASE: ${DB_NAME}
+#       MYSQL_USER: ${DB_USER}
+#       MYSQL_PASSWORD: ${DB_PASSWORD}
+#       MYSQL_ROOT_HOST: '%'
+#     ports:
+#       - "3306:3306"
+#     networks:
+#       - interlink_network
+#     restart: unless-stopped
+#     healthcheck:
+#       test: ["CMD-SHELL", "mysqladmin ping -uroot -p$${MYSQL_ROOT_PASSWORD}"]
+#       interval: 5s
+#       timeout: 10s
+#       retries: 10
+#     mem_limit: 512m
+#     cpus: 0.5
+#     command:
+#       - --character-set-server=utf8mb4
+#       - --collation-server=utf8mb4_unicode_ci
+#       - --max_connections=200
+#       - --innodb_buffer_pool_size=256M
+
+#   redis:
+#     image: redis:alpine
+#     container_name: interlink_redis
+#     ports:
+#       - "6379:6379"
+#     networks:
+#       - interlink_network
+#     restart: unless-stopped
+#     mem_limit: 128m
+#     cpus: 0.2
+#     command: redis-server --save 60 1 --loglevel warning
+
+#   backend:
+#     build:
+#       context: ./Backend
+#       dockerfile: Dockerfile.dev
+#     container_name: interlink_backend
+#     environment:
+#       - DJANGO_SETTINGS_MODULE=interlink.settings
+#       - DATABASE_URL=mysql://${DB_USER}:${DB_PASSWORD}@db:3306/${DB_NAME}
+#       - REDIS_URL=redis://redis:6379/0
+#       - DEBUG=1
+#     volumes:
+#       - ./Backend:/app/backend
+#       - static_volume:/app/backend/static
+#       - media_volume:/app/backend/media
+#     ports:
+#       - "8000:8000"
+#     depends_on:
+#       db:
+#         condition: service_healthy
+#     networks:
+#       - interlink_network
+#     restart: unless-stopped
+#     mem_limit: 768m
+#     cpus: 0.6
+#     command: >
+#       sh -c "python manage.py migrate &&
+#              python manage.py runserver 0.0.0.0:8000"
+
+#   dashboard:
+#     build:
+#       context: ./Frontend/Dashboard
+#       dockerfile: Dockerfile.dev
+#     container_name: interlink_dashboard
+#     environment:
+#       - NODE_ENV=development
+#     volumes:
+#       - ./Frontend/Dashboard:/app
+#       - /app/node_modules
+#     ports:
+#       - "5173:5173"
+#     networks:
+#       - interlink_network
+#     restart: unless-stopped
+#     mem_limit: 384m
+#     cpus: 0.4
+
+#   landingpage:
+#     build:
+#       context: ./Frontend/Landingpage
+#       dockerfile: Dockerfile
+#     container_name: interlink_landing
+#     networks:
+#       - interlink_network
+#     restart: unless-stopped
+#     mem_limit: 256m
+#     cpus: 0.3
+
+#   nginx:
+#     build: ./nginx
+#     container_name: interlink_nginx
+#     ports:
+#       - "80:80"
+#     volumes:
+#       - static_volume:/var/www/static:ro
+#       - media_volume:/var/www/media:ro
+#       - ./Frontend/Landingpage/dist:/var/www/static/landing:ro
+#     depends_on:
+#       - backend
+#     networks:
+#       - interlink_network
+#     restart: unless-stopped
+#     mem_limit: 256m
+#     cpus: 0.3
+
+# volumes:
+#   mysql_data:
+#   static_volume:
+#   media_volume:
+
+# networks:
+#   interlink_network:
+#     driver: bridge
+
+
+
+
+
+
+
+services:
+  db:
+    image: mysql:5.7
+    container_name: interlink_db
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - "3306:3306"
+    networks:
+      - interlink_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -uroot -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    mem_limit: 512m
+    cpus: 0.5
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --max_connections=200
+      - --innodb_buffer_pool_size=256M
+
+  redis:
+    image: redis:alpine
+    container_name: interlink_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - interlink_network
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.2
+    command: redis-server --save 60 1 --loglevel warning
+
+  backend:
+    image: codongo/interlink_backend:latest
+    container_name: interlink_backend
+    environment:
+      - DJANGO_SETTINGS_MODULE=interlink.settings
+      - DATABASE_URL=mysql://${DB_USER}:${DB_PASSWORD}@db:3306/${DB_NAME}
+      - REDIS_URL=redis://redis:6379/0
+      - DEBUG=1
+    volumes:
+      - ./Backend:/app/backend
+      - static_volume:/app/backend/static
+      - media_volume:/app/backend/media
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - interlink_network
+    restart: unless-stopped
+    mem_limit: 768m
+    cpus: 0.6
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+
+  dashboard:
+    image: codongo/interlink_dashboard:latest
+    container_name: interlink_dashboard
+    networks:
+      - interlink_network
+    restart: unless-stopped
+    mem_limit: 384m
+    cpus: 0.4
+
+  landingpage:
+    image: codongo/interlink_landing:latest
+    container_name: interlink_landing
+    networks:
+      - interlink_network
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.3
+
+  nginx:
+    build: ./nginx
+    container_name: interlink_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - static_volume:/var/www/static:ro
+      - media_volume:/var/www/media:ro
+      - ./Frontend/Landingpage/dist:/var/www/static/landing:ro
+    depends_on:
+      - backend
+    networks:
+      - interlink_network
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.3
+
+volumes:
+  mysql_data:
+  static_volume:
+  media_volume:
+
+networks:
+  interlink_network:
+    driver: bridge
