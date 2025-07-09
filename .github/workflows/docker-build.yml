@@ -11,7 +11,7 @@ jobs:
   build-and-push:  # Name of the job
     runs-on: ubuntu-latest  # Specifies the runner environment (Ubuntu Linux)
     # Matrix strategy allows running the job multiple times with different configurations
-    timeout-minutes: 30
+    timeout-minutes: 45
     strategy:
       matrix:
         # 'include' defines the specific configurations for each job run
