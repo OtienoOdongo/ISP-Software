@@ -7,14 +7,13 @@ ENV PYTHONUNBUFFERED=1
 # Set working directory
 WORKDIR /app/backend/
 
-# Install system dependencies
+# Install system dependencies (group apt commands)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libmariadb-dev \
     python3-dev \
     libffi-dev \
     pkg-config \
-    # Pillow dependencies
     libjpeg-dev \
     zlib1g-dev \
     libpng-dev \
@@ -23,31 +22,26 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libopenjp2-7-dev \
     libtiff-dev \
     libwebp-dev \
-    # Additional dependencies
     libxml2-dev \
     libxslt-dev \
     libpq-dev \
-    bash \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip
+# Upgrade pip first (separate layer)
 RUN pip install --upgrade pip
 
-# Copy requirements file
+# Copy only requirements first to leverage Docker cache
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt --no-build-isolation --jobs=1
+# Install Python dependencies with timeout and retry
+RUN pip install --no-cache-dir -r requirements.txt --default-timeout=100 --retries 5
 
 # Copy the rest of the project files
-COPY . /app/backend/
+COPY . .
 
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
-# Expose port
 EXPOSE 8000
 
-# Run migrations and start Gunicorn
 CMD ["sh", "-c", "python manage.py migrate && gunicorn --bind 0.0.0.0:8000 interlink.wsgi:application"]
