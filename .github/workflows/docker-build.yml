@@ -42,8 +42,7 @@ jobs:
       # Step 2: Set up Docker Buildx for advanced Docker build capabilities
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2  # Installs and configures Docker Buildx for multi-platform builds and caching
-        with:
-          install: true
+        
 
       # Step 3: Log in to Docker Hub for pushing images
       - name: Login to Docker Hub
