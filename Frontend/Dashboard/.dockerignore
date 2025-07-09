@@ -23,6 +23,3 @@ Thumbs.db
 .git
 .gitignore
 
-# Docker itself
-docker-compose.yml
-Dockerfile

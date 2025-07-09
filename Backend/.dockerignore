@@ -15,5 +15,4 @@ static/
 .vscode/
 *.log
 *.db
-.dockerignore
-Dockerfile*
+
