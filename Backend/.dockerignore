@@ -17,3 +17,9 @@
 **/tmp
 **/*.log
 **/*.sqlite3
+**/static
+**/media
+**/tests
+**/docs
+**/Frontend/node_modules
+**/Frontend/.next
