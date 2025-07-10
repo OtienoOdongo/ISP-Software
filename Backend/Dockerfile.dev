@@ -1,21 +1,16 @@
 FROM python:3.10-bullseye
 
-# Environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=interlink.settings
 
-# Set working directory
-WORKDIR /app/backend
+WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies (minimal required for psycopg2, Pillow, etc.)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
-    libmariadb-dev \
     python3-dev \
-    libffi-dev \
-    pkg-config \
-    # Pillow dependencies
+    libpq-dev \
     libjpeg-dev \
     zlib1g-dev \
     libpng-dev \
@@ -24,10 +19,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libopenjp2-7-dev \
     libtiff-dev \
     libwebp-dev \
-    # Additional dependencies
-    libxml2-dev \
-    libxslt-dev \
-    libpq-dev \
+    libffi-dev \
+    pkg-config \
     bash \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -37,20 +30,18 @@ RUN pip install --upgrade pip
 
 # Install app dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt --no-build-isolation --jobs=1
+RUN pip install --no-cache-dir --no-build-isolation --jobs=1 -r requirements.txt
 
-# Install dev-only tools
+# Optional: Install debug tools for development
 RUN pip install debugpy
 
-# Copy entrypoint script
+# Copy entrypoint script and make it executable
 COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
 
 # Copy source code
-COPY . /app/backend
+COPY . .
 
-# Expose port
 EXPOSE 8000
 
-# Run development entrypoint
 ENTRYPOINT ["./entrypoint.sh"]
