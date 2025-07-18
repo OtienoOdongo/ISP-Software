@@ -1,24 +1,3 @@
-// import React from 'react';
-
-// export const PaymentMethodStatusToggle = ({ isActive, onChange, index }) => (
-//   <label className="flex items-center cursor-pointer">
-//     <div className="relative">
-//       <input
-//         type="checkbox"
-//         checked={isActive}
-//         onChange={(e) => onChange(index, e)}
-//         className="sr-only"
-//       />
-//       <div className={`block w-10 h-6 rounded-full ${isActive ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-//       <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition ${isActive ? 'transform translate-x-4' : ''}`}></div>
-//     </div>
-//     <div className="ml-3 text-sm font-medium text-gray-700">
-//       Enable Method
-//     </div>
-//   </label>
-// );
-
-
 
 import React from 'react';
 import PropTypes from 'prop-types';

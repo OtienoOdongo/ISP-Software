@@ -1,11 +1,11 @@
 
 
-
-
 from rest_framework import serializers
 from payments.models.mpesa_config_model import PaymentMethodConfig, ConfigurationHistory, Transaction
-from account.models.admin_model import Client
+from account.models.admin_model import Client, Subscription
+from account.serializers.admin_serializer import ClientSerializer, SubscriptionSerializer
 from internet_plans.serializers.create_plan_serializers import InternetPlanSerializer
+from decimal import Decimal
 
 class PaymentMethodConfigSerializer(serializers.ModelSerializer):
     method_type_label = serializers.CharField(source='get_method_type_display', read_only=True)
@@ -90,13 +90,14 @@ class ConfigurationHistorySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class TransactionSerializer(serializers.ModelSerializer):
+    client = ClientSerializer(read_only=True)
     plan = InternetPlanSerializer(read_only=True)
     payment_method = serializers.StringRelatedField()
     security_level_label = serializers.CharField(source='get_security_level_display', read_only=True)
+    subscription = SubscriptionSerializer(read_only=True)
+    amount = serializers.DecimalField(max_digits=10, decimal_places=2, coerce_to_string=False)
 
     class Meta:
         model = Transaction
         fields = '__all__'
-
-
 

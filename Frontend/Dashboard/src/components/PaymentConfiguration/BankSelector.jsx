@@ -1,26 +1,4 @@
-// import React from 'react';
 
-// export const BankSelector = ({ value, onChange, index, banks }) => (
-//   <div>
-//     <label htmlFor={`bankName-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
-//       Bank Name
-//       <span className="text-red-500">*</span>
-//     </label>
-//     <select
-//       id={`bankName-${index}`}
-//       name="bankName"
-//       value={value || ''}
-//       onChange={onChange}
-//       className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
-//       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-//     >
-//       <option value="">Select Bank</option>
-//       {banks.map((bank, i) => (
-//         <option key={i} value={bank.name}>{bank.name} ({bank.code})</option>
-//       ))}
-//     </select>
-//   </div>
-// );
 
 
 import React from 'react';

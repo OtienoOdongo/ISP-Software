@@ -5,6 +5,7 @@ from datetime import timedelta
 from dotenv import load_dotenv
 load_dotenv()
 
+
 import os
 
 
@@ -38,7 +39,6 @@ INSTALLED_APPS = [
     'internet_plans',
     'network_management',
     'payments',
-    # 'reporting',
     'support',
     'account',
     'dashboard',
@@ -115,7 +115,16 @@ DJOSER = {
 AFRICAS_TALKING_USERNAME = 'your_username'
 AFRICAS_TALKING_API_KEY = 'your_api_key'
 
-# Celery configuration for scheduled tasks
+
+ # Celery settings for Redis
+CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Redis as message broker
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'  # Redis as result backend
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'  # Set timezone for Celery (adjust if needed)
+
+# Celery Beat schedule
 CELERY_BEAT_SCHEDULE = {
     'check-data-usage-and-notify': {
         'task': 'analytics.tasks.check_data_usage_and_notify',
@@ -244,27 +253,62 @@ USE_TZ = True
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = BASE_DIR / 'media'
+
+
+# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# STATICFILES_FINDERS = []  # Disable default static file finders
+# # Static files (CSS, JavaScript, Images)
+# STATIC_URL = '/static/'
+
+# # Directories where Django will look for static files
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, 'static/dashboard'),  # Dashboard static files
+#     os.path.join(BASE_DIR, 'static/landing'),    # LandingPage static files
+# ]
+
+
+# # The absolute path to the directory where collectstatic will collect static files for deployment
+# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # For collected static files
+
+
+# if DEBUG:
+#     print("\n=== Static Files Verification ===")
+#     print(f"BASE_DIR: {BASE_DIR}")
+#     print(f"STATIC_ROOT: {STATIC_ROOT}")
+#     print("STATICFILES_DIRS:")
+#     for static_dir in STATICFILES_DIRS:
+#         print(f" - {static_dir}")
+#         if os.path.exists(static_dir):
+#             print(f"   Contents: {os.listdir(static_dir)}")
+#             if os.path.exists(os.path.join(static_dir, 'assets')):
+#                 print(f"   Assets: {os.listdir(os.path.join(static_dir, 'assets'))}")
+#         else:
+#             print("   ⚠️ Directory does not exist!")
+
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-STATICFILES_FINDERS = []  # Disable default static file finders
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
-
-# Directories where Django will look for static files
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static/dashboard'),  # Dashboard static files
-    os.path.join(BASE_DIR, 'static/landing'),    # LandingPage static files
+    os.path.join(BASE_DIR, 'static'),  # General static files for backend
+]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # For production
+
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
 
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# The absolute path to the directory where collectstatic will collect static files for deployment
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # For collected static files
-
-
+# Verification for debugging
 if DEBUG:
     print("\n=== Static Files Verification ===")
     print(f"BASE_DIR: {BASE_DIR}")
@@ -273,12 +317,9 @@ if DEBUG:
     for static_dir in STATICFILES_DIRS:
         print(f" - {static_dir}")
         if os.path.exists(static_dir):
-            print(f"   Contents: {os.listdir(static_dir)}")
-            if os.path.exists(os.path.join(static_dir, 'assets')):
-                print(f"   Assets: {os.listdir(os.path.join(static_dir, 'assets'))}")
+            print(f"   Exists, Contents: {os.listdir(static_dir)}")
         else:
             print("   ⚠️ Directory does not exist!")
-
 
 
 CORS_ALLOW_HEADERS = [

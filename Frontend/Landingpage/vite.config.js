@@ -1,36 +1,9 @@
-// import { defineConfig } from 'vite';
-// import react from '@vitejs/plugin-react';
-// import { resolve } from 'path';
 
-// export default defineConfig({
-//   plugins: [react()],
-//   base: '/static/landing/', // Updated base
-//   server: {
-//     cors: {
-//       origin: 'http://localhost:8000',
-//     },
-//     proxy: {
-//       '/api': {
-//         target: 'http://localhost:8000',
-//         changeOrigin: true,
-//         secure: false,
-//       },
-//     },
-//   },
-//   build: {
-//     manifest: true,
-//     outDir: '../../Backend/static/landing/', // Output to static/landing/
-//     assetsDir: '',
-//     emptyOutDir: true, // Safe to clear since it’s a subdirectory
-//     sourcemap: true,
-//   },
-//   resolve: {
-//     alias: {
-//       '@': resolve(__dirname, './src'),
-//     },
-//   },
-// });
 
+
+
+
+// // Frontend/landingpage/vite.config.js
 
 // import { defineConfig } from 'vite';
 // import react from '@vitejs/plugin-react';
@@ -38,8 +11,9 @@
 
 // export default defineConfig({
 //   plugins: [react()],
-//   base: '/static/landing/',
+//   base: '/static/landing/', // for production
 //   server: {
+//     port: 5174,
 //     cors: true,
 //     proxy: {
 //       '/api': {
@@ -72,16 +46,17 @@
 
 
 
-
-
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 export default defineConfig({
   plugins: [react()],
-  base: '/static/landing/',
+  base: isProduction ? '/static/landing/' : '/',  // dynamic base
   server: {
+    port: 5174, // different from dashboard to avoid conflict
     cors: true,
     proxy: {
       '/api': {
@@ -92,7 +67,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'dist',
+    outDir: resolve(__dirname, '../../Backend/static/landing'),
     assetsDir: 'assets',
     emptyOutDir: true,
     manifest: true,

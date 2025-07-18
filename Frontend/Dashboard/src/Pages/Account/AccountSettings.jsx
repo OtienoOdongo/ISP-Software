@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import {
     Lock, Bell, Key, LogOut, Copy, Loader, Trash, Download, Eye, EyeOff
 } from "lucide-react";
-import api from "../../../api";
+import api from "../../api"
 import { useAuth } from "../../context/AuthContext";
 
 // Reusable Section Component

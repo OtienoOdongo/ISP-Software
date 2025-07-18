@@ -1,17 +1,4 @@
-// import React from 'react';
-// import { PAYMENT_METHODS } from './Utils/paymentConstants'
 
-// export const PaymentMethodTypeSelector = ({ value, onChange, index }) => (
-//   <select
-//     value={value}
-//     onChange={(e) => onChange(index, e.target.value)}
-//     className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-//   >
-//     {Object.values(PAYMENT_METHODS).map((methodOption, i) => (
-//       <option key={i} value={methodOption.value}>{methodOption.label}</option>
-//     ))}
-//   </select>
-// );
 
 
 import React from 'react';

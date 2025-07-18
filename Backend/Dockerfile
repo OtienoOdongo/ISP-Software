@@ -48,25 +48,23 @@
 
 
 
-
 # ---- Builder stage ----
 FROM python:3.10-slim-bullseye AS builder
 
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# ---- Final runtime image ----
-FROM python:3.10-slim-bullseye
+# ---- Runtime stage ----
+FROM python:3.10-slim-bullseye AS runtime
 
 WORKDIR /app
 
-ENV PATH="/root/.local/bin:$PATH"
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-COPY --from=builder /root/.local /root/.local
+COPY --from=builder /usr/local /usr/local
 COPY . .
 
 EXPOSE 8000
