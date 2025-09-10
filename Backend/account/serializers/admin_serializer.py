@@ -2,237 +2,133 @@
 
 
 
+
+
+# # account/serializers/admin_serializer.py  
+
 # from rest_framework import serializers
-# from django.core.files.images import get_image_dimensions
-# from django.core.exceptions import ValidationError
-# from account.models.admin_model import Client, Subscription, Payment, ActivityLog, Router
 # from django.contrib.auth import get_user_model
-# from phonenumber_field.modelfields import PhoneNumberField
-# from decimal import Decimal
-# from internet_plans.models.create_plan_models import InternetPlan
-# from internet_plans.serializers.create_plan_serializers import InternetPlanSerializer
-# from payments.models.mpesa_config_model import Transaction
-# from payments.serializers.mpesa_config_serializer import TransactionSerializer
+# from account.models.admin_model import Client, ActivityLog
 
 # User = get_user_model()
 
 # class AdminProfileSerializer(serializers.ModelSerializer):
-#     profile_pic = serializers.ImageField(max_length=None, use_url=True, allow_null=True, required=False)
-
-#     def validate_profile_pic(self, value):
-#         if value:
-#             if value.size > 5 * 1024 * 1024:
-#                 raise ValidationError("File size must be less than 5MB.")
-#             if not value.content_type.startswith('image/'):
-#                 raise ValidationError("Please upload an image file.")
-#         return value
-
+#     """Serializer for admin user profiles"""
 #     class Meta:
 #         model = User
-#         fields = ('name', 'email', 'profile_pic')
-#         read_only_fields = ('email',)
-
-# class ClientSerializer(serializers.ModelSerializer):
-#     phonenumber = serializers.CharField()
-
-#     def validate_phonenumber(self, value):
-#         # Handle formats: 07XXXXXXXX (10 digits), +254XXXXXXXXX (13 digits with +)
-#         if value.startswith("07") and len(value) == 10:
-#             return f"+254{value[2:]}"
-#         elif value.startswith("+254") and len(value) == 13:
-#             return value
-#         elif value.startswith("254") and len(value) == 12:
-#             return f"+{value}"
-#         raise serializers.ValidationError("Phone number must be in the format 07XXXXXXXX or +254XXXXXXXXX.")
-
-#     class Meta:
-#         model = Client
-#         fields = ('id', 'full_name', 'phonenumber', 'created_at')
-
-# class SubscriptionSerializer(serializers.ModelSerializer):
-#     client = ClientSerializer(read_only=True)
-#     internet_plan = InternetPlanSerializer(read_only=True)
-
-#     class Meta:
-#         model = Subscription
-#         fields = ('id', 'client', 'internet_plan', 'is_active', 'start_date', 'end_date')
-
-# class PaymentSerializer(serializers.ModelSerializer):
-#     client = ClientSerializer(read_only=True)
-#     amount = serializers.DecimalField(max_digits=10, decimal_places=2, coerce_to_string=False)
-#     transaction = TransactionSerializer(read_only=True)
-#     subscription = SubscriptionSerializer(read_only=True)
-
-#     class Meta:
-#         model = Payment
-#         fields = ('id', 'client', 'amount', 'timestamp', 'transaction', 'subscription')
+#         fields = ['name', 'email', 'profile_pic']
+#         read_only_fields = ['email']
 
 # class StatsSerializer(serializers.Serializer):
+#     """Serializer for system statistics"""
 #     clients = serializers.IntegerField()
 #     active_clients = serializers.IntegerField()
-#     revenue = serializers.FloatField()
-#     uptime = serializers.CharField()
-#     total_subscriptions = serializers.IntegerField()
-#     successful_transactions = serializers.IntegerField()
 
 # class ActivityLogSerializer(serializers.ModelSerializer):
+#     """Serializer for activity logs"""
 #     class Meta:
 #         model = ActivityLog
-#         fields = ('description', 'timestamp')
+#         fields = ['action_type', 'description', 'timestamp']
+#         read_only_fields = fields
 
-# class NetworkHealthSerializer(serializers.Serializer):
-#     latency = serializers.CharField()
-#     bandwidth = serializers.CharField()
-
-# class RouterSerializer(serializers.ModelSerializer):
+# class ClientSerializer(serializers.ModelSerializer):
+#     """
+#     Updated Client serializer with proper phone_number field mapping
+#     and validation for client creation.
+#     """
+#     full_name = serializers.CharField(source='user.name', required=True)
+#     phonenumber = serializers.CharField(source='user.phone_number', required=True)
+    
 #     class Meta:
-#         model = Router
-#         fields = ('name', 'status', 'color', 'latency', 'bandwidth_usage')
-
-
-
-
-# from rest_framework import serializers
-# from django.core.files.images import get_image_dimensions
-# from django.core.exceptions import ValidationError
-# from account.models.admin_model import Client, Subscription, ActivityLog, Router
-# from django.contrib.auth import get_user_model
-# from phonenumber_field.modelfields import PhoneNumberField
-# from internet_plans.models.create_plan_models import InternetPlan
-# from internet_plans.serializers.create_plan_serializers import InternetPlanSerializer
-
-# User = get_user_model()
-
-# class AdminProfileSerializer(serializers.ModelSerializer):
-#     profile_pic = serializers.ImageField(max_length=None, use_url=True, allow_null=True, required=False)
-
-#     def validate_profile_pic(self, value):
-#         if value:
-#             if value.size > 5 * 1024 * 1024:
-#                 raise ValidationError("File size must be less than 5MB.")
-#             if not value.content_type.startswith('image/'):
-#                 raise ValidationError("Please upload an image file.")
+#         model = Client
+#         fields = ['id', 'full_name', 'phonenumber', 'created_at']
+#         read_only_fields = ['id', 'created_at']
+        
+#     def validate_phonenumber(self, value):
+#         """Validate phone number format"""
+#         if not value.startswith('+'):
+#             raise serializers.ValidationError("Phone number must include country code (e.g., +254...)")
 #         return value
 
-#     class Meta:
-#         model = User
-#         fields = ('name', 'email', 'profile_pic')
-#         read_only_fields = ('email',)
+#     def create(self, validated_data):
+#         """
+#         Custom create method to handle client user creation
+#         through the proper UserAccountManager.
+#         """
+#         user_data = validated_data['user']
+#         # Create the client user using the custom manager
+#         user = User.objects.create_client(name=user_data['name'], phone_number=user_data['phone_number'])
+        
+#         # Create the client profile
+#         client = Client.objects.create(user=user)
+#         return client
 
-# class ClientSerializer(serializers.ModelSerializer):
-#     phonenumber = serializers.CharField()
-
-#     def validate_phonenumber(self, value):
-#         if value.startswith("07") and len(value) == 10:
-#             return f"+254{value[2:]}"
-#         elif value.startswith("+254") and len(value) == 13:
-#             return value
-#         elif value.startswith("254") and len(value) == 12:
-#             return f"+{value}"
-#         raise serializers.ValidationError("Phone number must be in the format 07XXXXXXXX or +254XXXXXXXXX.")
-
-#     class Meta:
-#         model = Client
-#         fields = ('id', 'full_name', 'phonenumber', 'created_at')
-
-# class SubscriptionSerializer(serializers.ModelSerializer):
-#     client = ClientSerializer(read_only=True)
-#     internet_plan = InternetPlanSerializer(read_only=True)
-
-#     class Meta:
-#         model = Subscription
-#         fields = ('id', 'client', 'internet_plan', 'is_active', 'start_date', 'end_date')
-
-# class StatsSerializer(serializers.Serializer):
-#     clients = serializers.IntegerField()
-#     active_clients = serializers.IntegerField()
-#     revenue = serializers.FloatField()
-#     uptime = serializers.CharField()
-#     total_subscriptions = serializers.IntegerField()
-#     successful_transactions = serializers.IntegerField()
-
-# class ActivityLogSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = ActivityLog
-#         fields = ('description', 'timestamp')
-
-# class NetworkHealthSerializer(serializers.Serializer):
-#     latency = serializers.CharField()
-#     bandwidth = serializers.CharField()
-
-# class RouterSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Router
-#         fields = ('name', 'status', 'color', 'latency', 'bandwidth_usage')
 
 
 
 
 
 from rest_framework import serializers
-from django.core.files.images import get_image_dimensions
-from django.core.exceptions import ValidationError
-from account.models.admin_model import Client, Subscription, ActivityLog
 from django.contrib.auth import get_user_model
-from phonenumber_field.modelfields import PhoneNumberField
-from internet_plans.models.create_plan_models import InternetPlan
-from internet_plans.serializers.create_plan_serializers import InternetPlanSerializer
+from account.models.admin_model import Client, ActivityLog
 
 User = get_user_model()
 
 class AdminProfileSerializer(serializers.ModelSerializer):
-    profile_pic = serializers.ImageField(max_length=None, use_url=True, allow_null=True, required=False)
-
-    def validate_profile_pic(self, value):
-        if value:
-            if value.size > 5 * 1024 * 1024:
-                raise ValidationError("File size must be less than 5MB.")
-            if not value.content_type.startswith('image/'):
-                raise ValidationError("Please upload an image file.")
-        return value
-
+    """Serializer for admin user profiles"""
     class Meta:
         model = User
-        fields = ('name', 'email', 'profile_pic')
-        read_only_fields = ('email',)
-
-class ClientSerializer(serializers.ModelSerializer):
-    phonenumber = serializers.CharField()
-
-    def validate_phonenumber(self, value):
-        if value.startswith("07") and len(value) == 10:
-            return f"+254{value[2:]}"
-        elif value.startswith("+254") and len(value) == 13:
-            return value
-        elif value.startswith("254") and len(value) == 12:
-            return f"+{value}"
-        raise serializers.ValidationError("Phone number must be in the format 07XXXXXXXX or +254XXXXXXXXX.")
-
-    class Meta:
-        model = Client
-        fields = ('id', 'full_name', 'phonenumber', 'created_at')
-
-class SubscriptionSerializer(serializers.ModelSerializer):
-    client = ClientSerializer(read_only=True)
-    internet_plan = InternetPlanSerializer(read_only=True)
-
-    class Meta:
-        model = Subscription
-        fields = ('id', 'client', 'internet_plan', 'is_active', 'start_date', 'end_date')
+        fields = ['name', 'email', 'profile_pic']
+        read_only_fields = ['email']
 
 class StatsSerializer(serializers.Serializer):
+    """Serializer for system statistics"""
     clients = serializers.IntegerField()
     active_clients = serializers.IntegerField()
-    revenue = serializers.FloatField()
-    uptime = serializers.CharField()
-    total_subscriptions = serializers.IntegerField()
-    successful_transactions = serializers.IntegerField()
 
 class ActivityLogSerializer(serializers.ModelSerializer):
+    """Serializer for activity logs"""
     class Meta:
         model = ActivityLog
-        fields = ('description', 'timestamp')
+        fields = ['action_type', 'description', 'timestamp']
+        read_only_fields = fields
 
-class NetworkHealthSerializer(serializers.Serializer):
-    latency = serializers.CharField()
-    bandwidth = serializers.CharField()
+class ClientSerializer(serializers.ModelSerializer):
+    """
+    Updated Client serializer - removed name field, using username instead
+    """
+    username = serializers.CharField(source='user.username', read_only=True)
+    phonenumber = serializers.CharField(source='user.phone_number', required=True)
+    
+    class Meta:
+        model = Client
+        fields = ['id', 'username', 'phonenumber', 'created_at']
+        read_only_fields = ['id', 'username', 'created_at']
+        
+    def validate_phonenumber(self, value):
+        """Validate phone number format and uniqueness"""
+        if not value.startswith('+'):
+            raise serializers.ValidationError("Phone number must include country code (e.g., +254...)")
+        
+        # Check if phone number already exists
+        if User.objects.filter(phone_number=value).exists():
+            raise serializers.ValidationError("A client with this phone number already exists.")
+        
+        return value
+
+    def create(self, validated_data):
+        """
+        Custom create method to handle client user creation
+        """
+        phone_number = validated_data['user']['phone_number']
+        
+        # Check if user already exists with this phone number
+        if User.objects.filter(phone_number=phone_number).exists():
+            raise serializers.ValidationError({"phonenumber": "A client with this phone number already exists."})
+        
+        # Create the client user using the custom manager
+        user = User.objects.create_client(phone_number=phone_number)
+        
+        # Create the client profile
+        client = Client.objects.create(user=user)
+        return client

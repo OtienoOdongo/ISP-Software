@@ -51,7 +51,7 @@ from rest_framework import serializers
 from network_management.models.bandwidth_allocation_model import BandwidthAllocation, BandwidthUsageHistory, QoSProfile
 from account.serializers.admin_serializer import ClientSerializer
 from internet_plans.serializers.create_plan_serializers import InternetPlanSerializer
-from payments.serializers.mpesa_config_serializer import TransactionSerializer
+from payments.serializers.payment_config_serializer import TransactionSerializer
 
 
 class QoSProfileSerializer(serializers.ModelSerializer):

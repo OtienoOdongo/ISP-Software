@@ -1,15 +1,15 @@
+
+
+
+
 # from django.db import models
 # from django.utils import timezone
+# from account.models.admin_model import Client
+# from internet_plans.models.create_plan_models import InternetPlan
+# from payments.models.payment_config_model import Transaction
 
 # class Router(models.Model):
-#     ROUTER_TYPES = (
-#         ("mikrotik", "Mikrotik"),
-#         ("openwrt", "OpenWRT"),
-#         ("cisco", "Cisco"),
-#         ("generic", "Generic"),
-#         ("tp-link", "TP-Link"),
-#         ("ubiquiti", "Ubiquiti"),
-#     )
+#     ROUTER_TYPES = (("mikrotik", "Mikrotik"),)
 #     STATUS_CHOICES = (
 #         ("connected", "Connected"),
 #         ("disconnected", "Disconnected"),
@@ -26,63 +26,60 @@
 #     location = models.CharField(max_length=100, blank=True, null=True)
 #     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="disconnected")
 #     last_seen = models.DateTimeField(default=timezone.now)
-#     hotspot_config = models.JSONField(blank=True, null=True)  # Stores hotspot settings as JSON
+#     hotspot_config = models.JSONField(blank=True, null=True)
 
 #     def __str__(self):
 #         return f"{self.name} ({self.ip})"
 
-#     class Meta:
-#         verbose_name = "Router"
-#         verbose_name_plural = "Routers"
-
 # class RouterStats(models.Model):
 #     router = models.ForeignKey(Router, on_delete=models.CASCADE, related_name="stats")
-#     cpu = models.FloatField()  # CPU usage in percentage
-#     memory = models.FloatField()  # Memory usage in MB
-#     clients = models.IntegerField()  # Number of connected clients
-#     uptime = models.CharField(max_length=10)  # Uptime as a percentage string (e.g., "99.9%")
-#     signal = models.IntegerField()  # Signal strength in dBm
-#     temperature = models.FloatField()  # Temperature in Celsius
-#     throughput = models.FloatField()  # Throughput in Mbps
-#     disk = models.FloatField()  # Disk usage in percentage
+#     cpu = models.FloatField()
+#     memory = models.FloatField()
+#     clients = models.IntegerField()
+#     uptime = models.CharField(max_length=10)
+#     signal = models.IntegerField()
+#     temperature = models.FloatField()
+#     throughput = models.FloatField()
+#     disk = models.FloatField()
 #     timestamp = models.DateTimeField(default=timezone.now)
 
 #     def __str__(self):
 #         return f"Stats for {self.router.name} at {self.timestamp}"
 
-#     class Meta:
-#         verbose_name = "Router Stats"
-#         verbose_name_plural = "Router Stats"
-
 # class HotspotUser(models.Model):
 #     router = models.ForeignKey(Router, on_delete=models.CASCADE, related_name="hotspot_users")
-#     name = models.CharField(max_length=100)
-#     mac = models.CharField(max_length=17)  # MAC address (e.g., "00:11:22:33:44:55")
+#     client = models.ForeignKey(Client, on_delete=models.CASCADE, null=True)
+#     plan = models.ForeignKey(InternetPlan, on_delete=models.SET_NULL, null=True)
+#     transaction = models.ForeignKey(Transaction, on_delete=models.SET_NULL, null=True)
+#     mac = models.CharField(max_length=17)
 #     ip = models.GenericIPAddressField()
-#     plan = models.CharField(max_length=50, blank=True, null=True)  # e.g., "Basic", "Premium"
 #     connected_at = models.DateTimeField(default=timezone.now)
-#     data_used = models.BigIntegerField(default=0)  # Data used in bytes
+#     data_used = models.BigIntegerField(default=0)
+#     active = models.BooleanField(default=False)
 
 #     def __str__(self):
-#         return f"{self.name} on {self.router.name}"
-
-#     class Meta:
-#         verbose_name = "Hotspot User"
-#         verbose_name_plural = "Hotspot Users"
+#         return f"{self.client.full_name if self.client else 'Guest'} on {self.router.name}"
 
 
 
 
 
+
+# network_management/models/router_management_model.py
 
 from django.db import models
 from django.utils import timezone
 from account.models.admin_model import Client
 from internet_plans.models.create_plan_models import InternetPlan
-from payments.models.mpesa_config_model import Transaction
+from payments.models.payment_config_model import Transaction
 
 class Router(models.Model):
-    ROUTER_TYPES = (("mikrotik", "Mikrotik"),)
+    ROUTER_TYPES = (
+        ("mikrotik", "MikroTik"),
+        ("ubiquiti", "Ubiquiti"),
+        ("cisco", "Cisco"),
+        ("other", "Other"),
+    )
     STATUS_CHOICES = (
         ("connected", "Connected"),
         ("disconnected", "Disconnected"),
@@ -102,7 +99,7 @@ class Router(models.Model):
     hotspot_config = models.JSONField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.name} ({self.ip})"
+        return f"{self.name} ({self.ip}) - {self.type}"
 
 class RouterStats(models.Model):
     router = models.ForeignKey(Router, on_delete=models.CASCADE, related_name="stats")
@@ -131,4 +128,5 @@ class HotspotUser(models.Model):
     active = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.client.full_name if self.client else 'Guest'} on {self.router.name}"
+        return f"{self.client.user.name if self.client else 'Guest'} on {self.router.name}"
+

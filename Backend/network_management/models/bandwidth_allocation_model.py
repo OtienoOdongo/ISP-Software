@@ -61,7 +61,7 @@ from django.db import models
 from django.utils import timezone
 from account.models.admin_model import Client
 from internet_plans.models.create_plan_models import InternetPlan
-from payments.models.mpesa_config_model import Transaction
+from payments.models.payment_config_model import Transaction
 
 
 class QoSProfile(models.Model):

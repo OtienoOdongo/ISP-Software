@@ -33,6 +33,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django_crontab',
+    'django_extensions',
+    
 
     'authentication',
     'user_management',
@@ -49,6 +51,11 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
 ]
+
+
+ENCRYPTED_FIELDS_KEYDIR = os.path.join(BASE_DIR, 'field_keys')
+
+
 
 SITE_ID = 1
 
@@ -88,29 +95,55 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'user_id',
 }
 
-DJOSER = { 
-    'LOGIN_FIELD': 'email',
-    'SET_STAFF_STATUS': True,
-    'USER_CREATE_PASSWORD_RETYPE': True,
-    'USERNAME_CHANGED_EMAIL_CONFIRMATION': True,
-    'PASSWORD_CHANGED_EMAIL_CONFIRMATION': True,
-    'SEND_CONFIRMATION_EMAIL': True,
-    'SEND_ACTIVATION_EMAIL': True,
-    'SET_USERNAME_RETYPE': True,
-    'SET_PASSWORD_RETYPE': True,
-    'ACTIVATION_URL': 'activate/{uid}/{token}/',
-    'PASSWORD_RESET_CONFIRM_URL': 'password/reset/confirm/{uid}/{token}/',
-    'USERNAME_RESET_CONFIRM_URL': 'email/reset/confirm/{uid}/{token}/',
-    'SERIALIZERS': {
-        'user_create': 'authentication.serializers.UserCreateSerializer',
-        'user': 'authentication.serializers.UserCreateSerializer',
-        'user_delete': 'djoser.serializers.UserDeleteSerializer',
-        'current_user': 'authentication.serializers.UserCreateSerializer',
-    },
+# DJOSER = { 
+#     'LOGIN_FIELD': 'email',
+#     'SET_STAFF_STATUS': True,
+#     'USER_CREATE_PASSWORD_RETYPE': True,
+#     'USERNAME_CHANGED_EMAIL_CONFIRMATION': True,
+#     'PASSWORD_CHANGED_EMAIL_CONFIRMATION': True,
+#     'SEND_CONFIRMATION_EMAIL': True,
+#     'SEND_ACTIVATION_EMAIL': True,
+#     'SET_USERNAME_RETYPE': True,
+#     'SET_PASSWORD_RETYPE': True,
+#     'ACTIVATION_URL': 'activate/{uid}/{token}/',
+#     'PASSWORD_RESET_CONFIRM_URL': 'password/reset/confirm/{uid}/{token}/',
+#     'USERNAME_RESET_CONFIRM_URL': 'email/reset/confirm/{uid}/{token}/',
+#     'SERIALIZERS': {
+#         'user_create': 'authentication.serializers.UserCreateSerializer',
+#         'user': 'authentication.serializers.UserCreateSerializer',
+#         'user_delete': 'djoser.serializers.UserDeleteSerializer',
+#         'current_user': 'authentication.serializers.UserCreateSerializer',
+#     },
     
 
-}
+# }
 
+
+DJOSER = {
+    'LOGIN_FIELD': 'email',
+    'USER_CREATE_PASSWORD_RETYPE': True,
+    'SET_USERNAME_RETYPE': True,
+    'SET_PASSWORD_RETYPE': True,
+    'PASSWORD_RESET_CONFIRM_URL': 'password/reset/confirm/{uid}/{token}/',
+    'USERNAME_RESET_CONFIRM_URL': 'email/reset/confirm/{uid}/{token}/',
+    'ACTIVATION_URL': 'activate/{uid}/{token}/',
+    'SEND_ACTIVATION_EMAIL': True,
+    'SEND_CONFIRMATION_EMAIL': True,
+    'PASSWORD_CHANGED_EMAIL_CONFIRMATION': True,
+    'USERNAME_CHANGED_EMAIL_CONFIRMATION': True,
+    'HIDE_USERS': False,
+    'PERMISSIONS': {
+        'user': ['rest_framework.permissions.IsAuthenticated'],
+        'user_list': ['rest_framework.permissions.IsAdminUser'],
+    },
+    'SERIALIZERS': {
+        'user_create': 'authentication.serializers.DjoserUserCreateSerializer',
+        'user': 'authentication.serializers.UserSerializer',
+        'current_user': 'authentication.serializers.UserSerializer',
+        'user_delete': 'djoser.serializers.UserDeleteSerializer',
+    },
+    'SET_STAFF_STATUS': False,
+}
 
 AFRICAS_TALKING_USERNAME = 'your_username'
 AFRICAS_TALKING_API_KEY = 'your_api_key'
@@ -159,10 +192,12 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [  
-    "http://localhost:8000",  # Frontend served by Django
-    "http://127.0.0.1:8000",  # Backend (optional, for consistency)
+    "http://localhost:8000",  
+    "http://127.0.0.1:8000",  
     "http://127.0.0.1:5173",
     "http://localhost:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
 ]
 
 ROOT_URLCONF = 'interlink_logic.urls'
@@ -253,51 +288,19 @@ USE_TZ = True
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# MEDIA_URL = '/media/'
-# MEDIA_ROOT = BASE_DIR / 'media'
-
-
-# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# STATICFILES_FINDERS = []  # Disable default static file finders
-# # Static files (CSS, JavaScript, Images)
-# STATIC_URL = '/static/'
-
-# # Directories where Django will look for static files
-# STATICFILES_DIRS = [
-#     os.path.join(BASE_DIR, 'static/dashboard'),  # Dashboard static files
-#     os.path.join(BASE_DIR, 'static/landing'),    # LandingPage static files
-# ]
-
-
-# # The absolute path to the directory where collectstatic will collect static files for deployment
-# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # For collected static files
-
-
-# if DEBUG:
-#     print("\n=== Static Files Verification ===")
-#     print(f"BASE_DIR: {BASE_DIR}")
-#     print(f"STATIC_ROOT: {STATIC_ROOT}")
-#     print("STATICFILES_DIRS:")
-#     for static_dir in STATICFILES_DIRS:
-#         print(f" - {static_dir}")
-#         if os.path.exists(static_dir):
-#             print(f"   Contents: {os.listdir(static_dir)}")
-#             if os.path.exists(os.path.join(static_dir, 'assets')):
-#                 print(f"   Assets: {os.listdir(os.path.join(static_dir, 'assets'))}")
-#         else:
-#             print("   ⚠️ Directory does not exist!")
 
 
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = '/static/'
+STATIC_URL = '/static/'  # Ensure this is the correct prefix for static files
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),  # General static files for backend
+    os.path.join(BASE_DIR, 'static'),  # General static files
+    os.path.join(BASE_DIR, 'static/dashboard'),  # Dashboard static files
+    os.path.join(BASE_DIR, 'static/landing'),  # Landing page static files
 ]
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # For production
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Where collectstatic will place files
 
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
@@ -308,10 +311,11 @@ STATICFILES_FINDERS = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Verification for debugging
+# Debugging for static files
 if DEBUG:
     print("\n=== Static Files Verification ===")
     print(f"BASE_DIR: {BASE_DIR}")
+    print(f"STATIC_URL: {STATIC_URL}")
     print(f"STATIC_ROOT: {STATIC_ROOT}")
     print("STATICFILES_DIRS:")
     for static_dir in STATICFILES_DIRS:
@@ -321,11 +325,20 @@ if DEBUG:
         else:
             print("   ⚠️ Directory does not exist!")
 
+# If you're sending cookies or authentication headers
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 
 CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
     "authorization",
     "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",  
 ]
-CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-CORS_ORIGIN_ALLOW_ALL = True  # For dev only, restrict in production
 

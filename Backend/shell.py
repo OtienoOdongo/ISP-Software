@@ -18,3 +18,20 @@ print(Site.objects.all())  # Should now show localhost:8000
 
 
 
+
+# How to Generate encryption key:
+# python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+
+
+
+# Create empty initial migration for payments
+python manage.py makemigrations payments --empty
+
+# Create internet_plans migration (it will depend on payments)
+python manage.py makemigrations internet_plans
+
+# Now create the actual payments migration
+python manage.py makemigrations payments
+
+# Migrate
+python manage.py migrate

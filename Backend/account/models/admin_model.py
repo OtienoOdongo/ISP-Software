@@ -1,190 +1,136 @@
 
+
+
+# # account/models/admin_model.py
+
 # from django.db import models
 # from django.contrib.auth import get_user_model
-# from phonenumber_field.modelfields import PhoneNumberField
+# from django.utils import timezone
+# from django.core.exceptions import ValidationError
 
 # User = get_user_model()
 
 # class Client(models.Model):
-#     full_name = models.CharField(max_length=255)
-#     phonenumber = PhoneNumberField(unique=True)
+#     """
+#     Client model that extends the base User model with additional client-specific fields.
+#     Now properly linked to User model with phone_number field.
+#     """
+#     user = models.OneToOneField(
+#         User,
+#         on_delete=models.CASCADE,
+#         limit_choices_to={'user_type': 'client'},
+#         related_name='client_profile',
+#         null=False
+#     )
 #     created_at = models.DateTimeField(auto_now_add=True)
+#     data_retention_end = models.DateTimeField(
+#         blank=True,
+#         null=True,
+#         help_text="Date after which client data should be deleted if inactive."
+#     )
 
 #     def __str__(self):
-#         return f"{self.full_name} ({self.phonenumber})"
+#         return f"{self.user.name} ({self.user.phone_number})"
+
+#     def clean(self):
+#         """Ensure linked user is a client."""
+#         if self.user.user_type != 'client':
+#             raise ValidationError("Only users with user_type 'client' can be linked to Client model.")
+
+#     def set_retention_period(self, months=6):
+#         """Set data retention end date (default: 6 months after creation)."""
+#         if not self.data_retention_end:
+#             self.data_retention_end = self.created_at + timezone.timedelta(days=30 * months)
+#             self.save()
+
+#     def delete_personal_data(self):
+#         """Anonymize or delete client data for DPA compliance."""
+#         self.user.name = "Anonymized User"
+#         self.user.email = None  # Client users shouldn't have email
+#         self.user.phone_number = None
+#         self.user.is_active = False
+#         self.user.save()
+#         self.delete()
 
 #     class Meta:
 #         verbose_name = 'Client'
 #         verbose_name_plural = 'Clients'
 #         indexes = [
-#             models.Index(fields=['phonenumber']),
+#             models.Index(fields=['user']),
+#             models.Index(fields=['data_retention_end']),
 #         ]
 
-# class Subscription(models.Model):
-#     client = models.ForeignKey('Client', on_delete=models.CASCADE, related_name='subscriptions')
-#     internet_plan = models.ForeignKey(
-#         'internet_plans.InternetPlan',
-#         on_delete=models.SET_NULL,
-#         null=True,
-#         blank=True,
-#         related_name='subscriptions'
+# class ConsentRecord(models.Model):
+#     """Model to track client consent for data processing"""
+#     user = models.ForeignKey(
+#         User,
+#         on_delete=models.CASCADE,
+#         limit_choices_to={'user_type': 'client'},
+#         related_name='consent_records'
 #     )
-#     is_active = models.BooleanField(default=True)
-#     start_date = models.DateTimeField(auto_now_add=True)
-#     end_date = models.DateTimeField()
+#     policy_version = models.CharField(max_length=50, help_text="Version of the privacy policy consented to")
+#     consented_at = models.DateTimeField(auto_now_add=True)
+#     ip_address = models.GenericIPAddressField(null=True, blank=True)
+#     consent_withdrawn = models.BooleanField(default=False)
+#     withdrawn_at = models.DateTimeField(null=True, blank=True)
 
 #     def __str__(self):
-#         return f"Subscription for {self.client.phonenumber} ({self.internet_plan.name if self.internet_plan else 'No Plan'})"
+#         return f"Consent by {self.user.name} on {self.consented_at}"
+
+#     def withdraw_consent(self):
+#         """Mark consent as withdrawn and trigger data deletion if required."""
+#         self.consent_withdrawn = True
+#         self.withdrawn_at = timezone.now()
+#         self.save()
+#         if hasattr(self.user, 'client_profile'):
+#             self.user.client_profile.delete_personal_data()
 
 #     class Meta:
-#         verbose_name = 'Subscription'
-#         verbose_name_plural = 'Subscriptions'
-#         ordering = ['-start_date']
-
-# class Payment(models.Model):
-#     client = models.ForeignKey('Client', on_delete=models.CASCADE, related_name='payments')
-#     amount = models.DecimalField(max_digits=10, decimal_places=2)
-#     timestamp = models.DateTimeField(auto_now_add=True)
-#     transaction = models.ForeignKey(
-#         'payments.Transaction',
-#         on_delete=models.SET_NULL,
-#         null=True,
-#         blank=True,
-#         related_name='payments'
-#     )
-#     subscription = models.ForeignKey(
-#         'Subscription',
-#         on_delete=models.SET_NULL,
-#         null=True,
-#         blank=True,
-#         related_name='payments'
-#     )
-
-#     def __str__(self):
-#         return f"Payment of {self.amount} by {self.client.phonenumber}"
-
-#     class Meta:
-#         verbose_name = 'Payment'
-#         verbose_name_plural = 'Payments'
-#         ordering = ['-timestamp']
-
-# class ActivityLog(models.Model):
-#     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-#     description = models.TextField()
-#     timestamp = models.DateTimeField(auto_now_add=True)
-
-#     def __str__(self):
-#         return f"Activity: {self.description}"
-
-#     class Meta:
-#         verbose_name = 'Activity Log'
-#         verbose_name_plural = 'Activity Logs'
-#         ordering = ['-timestamp']
-
-# class Router(models.Model):
-#     name = models.CharField(max_length=100)
-#     status = models.CharField(max_length=20, default="Offline")
-#     latency = models.FloatField(null=True, blank=True)
-#     bandwidth_usage = models.FloatField(null=True, blank=True)
-#     color = models.CharField(max_length=20, default="red")
-
-#     def save(self, *args, **kwargs):
-#         if self.status == "Online":
-#             self.color = "green"
-#         elif self.status == "Offline":
-#             self.color = "red"
-#         else:
-#             self.color = "yellow"
-#         super().save(*args, **kwargs)
-
-#     def __str__(self):
-#         return self.name
-
-#     class Meta:
-#         verbose_name = 'Router'
-#         verbose_name_plural = 'Routers'
-#         ordering = ['name']
-
-
-
-# from django.db import models
-# from django.contrib.auth import get_user_model
-# from phonenumber_field.modelfields import PhoneNumberField
-
-# User = get_user_model()
-
-# class Client(models.Model):
-#     full_name = models.CharField(max_length=255)
-#     phonenumber = PhoneNumberField(unique=True)
-#     created_at = models.DateTimeField(auto_now_add=True)
-
-#     def __str__(self):
-#         return f"{self.full_name} ({self.phonenumber})"
-
-#     class Meta:
-#         verbose_name = 'Client'
-#         verbose_name_plural = 'Clients'
+#         verbose_name = 'Consent Record'
+#         verbose_name_plural = 'Consent Records'
 #         indexes = [
-#             models.Index(fields=['phonenumber']),
+#             models.Index(fields=['user', 'consented_at']),
 #         ]
 
-# class Subscription(models.Model):
-#     client = models.ForeignKey('Client', on_delete=models.CASCADE, related_name='subscriptions')
-#     internet_plan = models.ForeignKey(
-#         'internet_plans.InternetPlan',
+# class ActivityLog(models.Model):
+#     """Model to track user activities in the system"""
+#     ACTION_TYPES = (
+#         ('access', 'Data Access'),
+#         ('modify', 'Data Modification'),
+#         ('delete', 'Data Deletion'),
+#         ('consent', 'Consent Update'),
+#     )
+
+#     user = models.ForeignKey(
+#         User,
 #         on_delete=models.SET_NULL,
 #         null=True,
 #         blank=True,
-#         related_name='subscriptions'
+#         related_name='activity_logs'
 #     )
-#     is_active = models.BooleanField(default=True)
-#     start_date = models.DateTimeField(auto_now_add=True)
-#     end_date = models.DateTimeField()
-
-#     def __str__(self):
-#         return f"Subscription for {self.client.phonenumber} ({self.internet_plan.name if self.internet_plan else 'No Plan'})"
-
-#     class Meta:
-#         verbose_name = 'Subscription'
-#         verbose_name_plural = 'Subscriptions'
-#         ordering = ['-start_date']
-
-# class ActivityLog(models.Model):
-#     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+#     action_type = models.CharField(max_length=50, choices=ACTION_TYPES)
 #     description = models.TextField()
 #     timestamp = models.DateTimeField(auto_now_add=True)
+#     related_user = models.ForeignKey(
+#         User,
+#         on_delete=models.SET_NULL,
+#         null=True,
+#         blank=True,
+#         related_name='related_activity_logs',
+#         help_text="User whose data was affected"
+#     )
 
 #     def __str__(self):
-#         return f"Activity: {self.description}"
+#         return f"{self.action_type}: {self.description}"
 
 #     class Meta:
 #         verbose_name = 'Activity Log'
 #         verbose_name_plural = 'Activity Logs'
 #         ordering = ['-timestamp']
-
-# class Router(models.Model):
-#     name = models.CharField(max_length=100)
-#     status = models.CharField(max_length=20, default="Offline")
-#     latency = models.FloatField(null=True, blank=True)
-#     bandwidth_usage = models.FloatField(null=True, blank=True)
-#     color = models.CharField(max_length=20, default="red")
-
-#     def save(self, *args, **kwargs):
-#         if self.status == "Online":
-#             self.color = "green"
-#         elif self.status == "Offline":
-#             self.color = "red"
-#         else:
-#             self.color = "yellow"
-#         super().save(*args, **kwargs)
-
-#     def __str__(self):
-#         return self.name
-
-#     class Meta:
-#         verbose_name = 'Router'
-#         verbose_name_plural = 'Routers'
-#         ordering = ['name']
+#         indexes = [
+#             models.Index(fields=['action_type', 'timestamp']),
+#             models.Index(fields=['related_user']),
+#         ]
 
 
 
@@ -193,55 +139,136 @@
 
 from django.db import models
 from django.contrib.auth import get_user_model
-from phonenumber_field.modelfields import PhoneNumberField
+from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 User = get_user_model()
 
 class Client(models.Model):
-    full_name = models.CharField(max_length=255)
-    phonenumber = PhoneNumberField(unique=True)
+    """
+    Client model that extends the base User model with additional client-specific fields.
+    Now properly linked to User model with phone_number field.
+    """
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        limit_choices_to={'user_type': 'client'},
+        related_name='client_profile',
+        null=False
+    )
     created_at = models.DateTimeField(auto_now_add=True)
+    data_retention_end = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="Date after which client data should be deleted if inactive."
+    )
 
     def __str__(self):
-        return f"{self.full_name} ({self.phonenumber})"
+        return f"{self.user.username} ({self.user.phone_number})"  
+
+    def clean(self):
+        """Ensure linked user is a client."""
+        if self.user.user_type != 'client':
+            raise ValidationError("Only users with user_type 'client' can be linked to Client model.")
+
+    def set_retention_period(self, months=6):
+        """Set data retention end date (default: 6 months after creation)."""
+        if not self.data_retention_end:
+            self.data_retention_end = self.created_at + timezone.timedelta(days=30 * months)
+            self.save()
+
+    def delete_personal_data(self):
+        """Anonymize or delete client data for DPA compliance."""
+        # Store username for logging before anonymization
+        original_username = self.user.username
+        
+        self.user.username = f"deleted_{self.user.client_id}"  # Use client_id for anonymous reference
+        self.user.email = None  # Client users shouldn't have email
+        self.user.phone_number = None
+        self.user.is_active = False
+        self.user.save()
+        
+        # Delete the client profile
+        self.delete()
+        
+        return original_username  # Return the original username for logging purposes
 
     class Meta:
         verbose_name = 'Client'
         verbose_name_plural = 'Clients'
         indexes = [
-            models.Index(fields=['phonenumber']),
+            models.Index(fields=['user']),
+            models.Index(fields=['data_retention_end']),
         ]
 
-class Subscription(models.Model):
-    client = models.ForeignKey('Client', on_delete=models.CASCADE, related_name='subscriptions')
-    internet_plan = models.ForeignKey(
-        'internet_plans.InternetPlan',
+class ConsentRecord(models.Model):
+    """Model to track client consent for data processing"""
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        limit_choices_to={'user_type': 'client'},
+        related_name='consent_records'
+    )
+    policy_version = models.CharField(max_length=50, help_text="Version of the privacy policy consented to")
+    consented_at = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    consent_withdrawn = models.BooleanField(default=False)
+    withdrawn_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Consent by {self.user.username} on {self.consented_at}"  
+
+    def withdraw_consent(self):
+        """Mark consent as withdrawn and trigger data deletion if required."""
+        self.consent_withdrawn = True
+        self.withdrawn_at = timezone.now()
+        self.save()
+        if hasattr(self.user, 'client_profile'):
+            self.user.client_profile.delete_personal_data()
+
+    class Meta:
+        verbose_name = 'Consent Record'
+        verbose_name_plural = 'Consent Records'
+        indexes = [
+            models.Index(fields=['user', 'consented_at']),
+        ]
+
+class ActivityLog(models.Model):
+    """Model to track user activities in the system"""
+    ACTION_TYPES = (
+        ('access', 'Data Access'),
+        ('modify', 'Data Modification'),
+        ('delete', 'Data Deletion'),
+        ('consent', 'Consent Update'),
+    )
+
+    user = models.ForeignKey(
+        User,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='subscriptions'
+        related_name='activity_logs'
     )
-    is_active = models.BooleanField(default=True)
-    start_date = models.DateTimeField(auto_now_add=True)
-    end_date = models.DateTimeField()
-
-    def __str__(self):
-        return f"Subscription for {self.client.phonenumber} ({self.internet_plan.name if self.internet_plan else 'No Plan'})"
-
-    class Meta:
-        verbose_name = 'Subscription'
-        verbose_name_plural = 'Subscriptions'
-        ordering = ['-start_date']
-
-class ActivityLog(models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    action_type = models.CharField(max_length=50, choices=ACTION_TYPES)
     description = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
+    related_user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='related_activity_logs',
+        help_text="User whose data was affected"
+    )
 
     def __str__(self):
-        return f"Activity: {self.description}"
+        return f"{self.action_type}: {self.description}"
 
     class Meta:
         verbose_name = 'Activity Log'
         verbose_name_plural = 'Activity Logs'
         ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['action_type', 'timestamp']),
+            models.Index(fields=['related_user']),
+        ]

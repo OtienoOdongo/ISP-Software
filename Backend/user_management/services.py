@@ -669,8 +669,8 @@ from django.utils import timezone
 from datetime import timedelta
 from django.db.models import F, ExpressionWrapper, FloatField, Q
 from user_management.models.plan_model import SMSNotification, DataUsageThreshold, ClientAnalytics, ActionNotification
-from account.models.admin_model import Client, Subscription
-from internet_plans.models.create_plan_models import InternetPlan
+from account.models.admin_model import Client
+from internet_plans.models.create_plan_models import InternetPlan, Subscription
 from network_management.models.router_management_model import HotspotUser
 import requests
 

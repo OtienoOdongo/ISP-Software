@@ -1,45 +1,83 @@
+# # payments/api/urls.py
 # from django.urls import path
-# from payments.api.views.mpesa_config_view import (
-#     MpesaConfigView,
+# from payments.api.views.payment_config_view import (
+#     PaymentGatewayView,
+#     TestConnectionView,
+#     ClientPaymentMethodsView,
 #     InitiatePaymentView,
-#     StkStatusView,
-#     payment_callback
+#     TransactionStatusView,
+#     ConfigurationHistoryView,
+#     mpesa_callback,
+#     paypal_callback,
+#     bank_callback
 # )
 
 # urlpatterns = [
-#     path('', InitiatePaymentView.as_view(), name='payment'),  
-#     path('callback/', payment_callback, name='payment_callback'),
-#     path('stk-status/', StkStatusView.as_view(), name='stk_status'),
-#     path('initiate/', InitiatePaymentView.as_view(), name='initiate_payment'),
-#     path('mpesa-config/', MpesaConfigView.as_view(), name='mpesa_config'),
+#     # Payment Gateway Configuration Endpoints
+#     path('gateways/', PaymentGatewayView.as_view(), name='payment-gateways-list'),
+#     path('gateways/<uuid:gateway_id>/', PaymentGatewayView.as_view(), name='payment-gateway-detail'),
+    
+#     # Connection Testing
+#     path('gateways/<uuid:gateway_id>/test/', TestConnectionView.as_view(), name='test-connection'),
+    
+#     # Client Payment Methods
+#     path('client-methods/', ClientPaymentMethodsView.as_view(), name='client-payment-methods'),
+#     path('client-methods/<uuid:gateway_id>/', ClientPaymentMethodsView.as_view(), name='client-payment-method-detail'),
+    
+#     # Payment Processing
+#     path('initiate/', InitiatePaymentView.as_view(), name='initiate-payment'),
+#     path('transactions/<str:reference>/', TransactionStatusView.as_view(), name='transaction-status'),
+    
+#     # Configuration History
+#     path('history/', ConfigurationHistoryView.as_view(), name='configuration-history'),
+    
+#     # Payment Callbacks (CSRF exempt)
+#     path('callback/mpesa/', mpesa_callback, name='mpesa-callback'),
+#     path('callback/paypal/', paypal_callback, name='paypal-callback'),
+#     path('callback/bank/', bank_callback, name='bank-callback'),
 # ]
 
 
 
 
-
 from django.urls import path
-from payments.api.views.mpesa_config_view import (
-    PaymentConfigView,
-    ConfigurationHistoryView,
-    InitiatePaymentView,
-    StkStatusView,
-    payment_callback,
+from payments.api.views.payment_config_view import (
+    PaymentGatewayView,
+    WebhookConfigurationView,
     TestConnectionView,
+    ClientPaymentMethodsView,
+    InitiatePaymentView,
+    TransactionStatusView,
+    ConfigurationHistoryView,
+    mpesa_callback,
     paypal_callback,
     bank_callback
 )
 
-app_name = 'payments'
-
 urlpatterns = [
-    path('config/', PaymentConfigView.as_view(), name='payment_config'),
-    path('config/<int:pk>/', PaymentConfigView.as_view(), name='payment_config_detail'),
-    path('config/<int:pk>/test/', TestConnectionView.as_view(), name='test_connection'),
-    path('history/', ConfigurationHistoryView.as_view(), name='configuration_history'),
-    path('initiate/', InitiatePaymentView.as_view(), name='initiate_payment'),
-    path('stk-status/', StkStatusView.as_view(), name='stk_status'),
-    path('callback/mpesa/', payment_callback, name='payment_callback'),
-    path('callback/paypal/', paypal_callback, name='paypal_callback'),
-    path('callback/bank/', bank_callback, name='bank_callback'),
+    # Payment Gateway Configuration Endpoints
+    path('gateways/', PaymentGatewayView.as_view(), name='payment-gateways-list'),
+    path('gateways/<uuid:gateway_id>/', PaymentGatewayView.as_view(), name='payment-gateway-detail'),
+    
+    # Webhook Configuration
+    path('webhooks/generate/', WebhookConfigurationView.as_view(), name='generate-webhook'),
+    
+    # Connection Testing
+    path('gateways/<uuid:gateway_id>/test/', TestConnectionView.as_view(), name='test-connection'),
+    
+    # Client Payment Methods
+    path('client-methods/', ClientPaymentMethodsView.as_view(), name='client-payment-methods'),
+    path('client-methods/<uuid:gateway_id>/', ClientPaymentMethodsView.as_view(), name='client-payment-method-detail'),
+    
+    # Payment Processing
+    path('initiate/', InitiatePaymentView.as_view(), name='initiate-payment'),
+    path('transactions/<str:reference>/', TransactionStatusView.as_view(), name='transaction-status'),
+    
+    # Configuration History
+    path('history/', ConfigurationHistoryView.as_view(), name='configuration-history'),
+    
+    # Payment Callbacks (CSRF exempt)
+    path('callback/mpesa/', mpesa_callback, name='mpesa-callback'),
+    path('callback/paypal/', paypal_callback, name='paypal-callback'),
+    path('callback/bank/', bank_callback, name='bank-callback'),
 ]
