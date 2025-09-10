@@ -86,3 +86,48 @@ export default defineConfig({
     },
   },
 });
+
+
+
+
+
+
+// // frontend/landingpage/vite.config.js
+// import { defineConfig } from 'vite';
+// import react from '@vitejs/plugin-react';
+// import { resolve } from 'path';
+
+// export default defineConfig(({ mode }) => ({
+//   plugins: [react()],
+//   base: mode === 'production' ? '/static/landingpage/' : '/',
+//   server: {
+//     port: 5174,
+//     cors: true,
+//     proxy: {
+//       '/api': {
+//         target: 'http://localhost:8000',
+//         changeOrigin: true,
+//         secure: false,
+//       },
+//     },
+//   },
+//   build: {
+//     outDir: resolve(__dirname, '../../Backend/static/landingpage'),
+//     assetsDir: 'assets',
+//     emptyOutDir: true,
+//     manifest: true,
+//     sourcemap: true,
+//     rollupOptions: {
+//       output: {
+//         assetFileNames: 'assets/[name]-[hash][extname]',
+//         chunkFileNames: 'assets/[name]-[hash].js',
+//         entryFileNames: 'assets/[name]-[hash].js',
+//       },
+//     },
+//   },
+//   resolve: {
+//     alias: {
+//       '@': resolve(__dirname, './src'),
+//     },
+//   },
+// }));
