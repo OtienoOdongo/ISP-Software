@@ -2,95 +2,152 @@
 
 
 
-import React, { useState, useEffect } from 'react';
-import { FiLoader, FiCheck, FiPlus, FiAlertCircle } from 'react-icons/fi';
-import { toast } from 'react-toastify';
-import PropTypes from 'prop-types';
-import api from '../../api'
-import { getMethodLabel } from './Utils/paymentUtils'
 
-/**
- * Button to test payment method connection.
- */
-const TestConnectionButton = ({ methodType, configId, fullWidth = false }) => {
+
+
+// import React, { useState } from 'react';
+// import { FiLoader, FiCheck, FiAlertCircle } from 'react-icons/fi';
+// import { toast } from 'react-toastify';
+// import { getMethodLabel } from './Utils/paymentUtils';
+
+// const TestConnectionButton = ({ methodType, callbackUrl, fullWidth = false }) => {
+//   const [isTesting, setIsTesting] = useState(false);
+//   const [testResult, setTestResult] = useState(null);
+
+//   const handleTest = async () => {
+//     setIsTesting(true);
+//     try {
+//       // Simulate API call
+//       await new Promise(resolve => setTimeout(resolve, 1500));
+      
+//       // Randomly determine success for demo purposes
+//       const isSuccess = Math.random() > 0.3;
+      
+//       if (isSuccess) {
+//         setTestResult('success');
+//         toast.success(`${getMethodLabel(methodType)} connection successful!`);
+//       } else {
+//         throw new Error('Connection failed');
+//       }
+//     } catch (error) {
+//       setTestResult('error');
+//       toast.error(`${getMethodLabel(methodType)} connection failed`);
+//     } finally {
+//       setIsTesting(false);
+//     }
+//   };
+
+//   return (
+//     <button
+//       onClick={handleTest}
+//       disabled={isTesting}
+//       className={`inline-flex items-center px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors ${
+//         isTesting ? 'bg-gray-400 text-white cursor-not-allowed' :
+//         testResult === 'success' ? 'bg-green-600 text-white hover:bg-green-700' :
+//         testResult === 'error' ? 'bg-red-600 text-white hover:bg-red-700' :
+//         'bg-blue-600 text-white hover:bg-blue-700'
+//       } ${fullWidth ? 'w-full justify-center' : ''}`}
+//     >
+//       {isTesting ? (
+//         <>
+//           <FiLoader className="animate-spin mr-2" />
+//           Testing...
+//         </>
+//       ) : testResult === 'success' ? (
+//         <>
+//           <FiCheck className="mr-2" />
+//           Connected
+//         </>
+//       ) : testResult === 'error' ? (
+//         <>
+//           <FiAlertCircle className="mr-2" />
+//           Failed
+//         </>
+//       ) : (
+//         'Test Connection'
+//       )}
+//     </button>
+//   );
+// };
+
+// export default TestConnectionButton;
+
+
+
+
+
+
+
+import React, { useState } from 'react';
+import { FiLoader, FiCheck, FiAlertCircle } from 'react-icons/fi';
+import { toast } from 'react-toastify';
+import api from '../../api';
+import { getMethodLabel } from './Utils/paymentUtils';
+
+const TestConnectionButton = ({ methodType, gatewayId, callbackUrl, fullWidth = false }) => {
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
 
-  useEffect(() => {
-    if (testResult) {
-      const timer = setTimeout(() => setTestResult(null), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [testResult]);
-
-  const handleTestConnection = async () => {
-    if (!configId) {
-      toast.error('Configuration ID is required');
+  const handleTest = async () => {
+    if (!gatewayId) {
+      toast.error('Please save the configuration first before testing');
       return;
     }
 
     setIsTesting(true);
     try {
-      const response = await api.post(`/api/payments/config/${configId}/test/`);
+      const response = await api.post(`/api/payments/gateways/${gatewayId}/test/`);
+      
       if (response.data.success) {
         setTestResult('success');
-        toast.success(`${getMethodLabel(methodType)} connection test successful!`);
+        toast.success(`${getMethodLabel(methodType)} connection successful!`);
       } else {
-        throw new Error(response.data.message || 'Test failed');
+        setTestResult('error');
+        toast.error(`${getMethodLabel(methodType)} connection failed: ${response.data.message}`);
       }
     } catch (error) {
       setTestResult('error');
-      toast.error(`${getMethodLabel(methodType)} connection test failed: ${error.response?.data?.error || error.message}`);
+      toast.error(`${getMethodLabel(methodType)} connection failed`);
+      console.error('Connection test error:', error);
     } finally {
       setIsTesting(false);
     }
   };
 
   return (
-    <div className={fullWidth ? 'w-full' : ''}>
-      <button
-        onClick={handleTestConnection}
-        disabled={isTesting}
-        className={`inline-flex items-center px-4 py-2 rounded-md text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-          isTesting
-            ? 'bg-gray-400 cursor-not-allowed'
-            : testResult === 'success'
-            ? 'bg-green-600 hover:bg-green-700'
-            : testResult === 'error'
-            ? 'bg-red-600 hover:bg-red-700'
-            : 'bg-blue-600 hover:bg-blue-800'
-        } ${fullWidth ? 'w-full' : ''}`}
-      >
-        {isTesting ? (
-          <>
-            <FiLoader className="animate-spin mr-2" />
-            Testing...
-          </>
-        ) : testResult === 'success' ? (
-          <>
-            <FiCheck className="mr-2" />
-            Connection Verified
-          </>
-        ) : testResult === 'error' ? (
-          <>
-            <FiAlertCircle className="mr-2" />
-            Connection Failed
-          </>
-        ) : (
-          <>
-            <FiPlus className="mr-2" />
-            Test Connection
-          </>
-        )}
-      </button>
-    </div>
+    <button
+      onClick={handleTest}
+      disabled={isTesting || !gatewayId}
+      className={`inline-flex items-center px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors ${
+        isTesting ? 'bg-gray-400 text-white cursor-not-allowed' :
+        testResult === 'success' ? 'bg-green-600 text-white hover:bg-green-700' :
+        testResult === 'error' ? 'bg-red-600 text-white hover:bg-red-700' :
+        !gatewayId ? 'bg-gray-400 text-white cursor-not-allowed' :
+        'bg-blue-600 text-white hover:bg-blue-700'
+      } ${fullWidth ? 'w-full justify-center' : ''}`}
+    >
+      {isTesting ? (
+        <>
+          <FiLoader className="animate-spin mr-2" />
+          Testing...
+        </>
+      ) : testResult === 'success' ? (
+        <>
+          <FiCheck className="mr-2" />
+          Connected
+        </>
+      ) : testResult === 'error' ? (
+        <>
+          <FiAlertCircle className="mr-2" />
+          Failed
+        </>
+      ) : !gatewayId ? (
+        'Save First'
+      ) : (
+        'Test Connection'
+      )}
+    </button>
   );
-};
-
-TestConnectionButton.propTypes = {
-  methodType: PropTypes.string.isRequired,
-  configId: PropTypes.string.isRequired,
-  fullWidth: PropTypes.bool,
 };
 
 export default TestConnectionButton;

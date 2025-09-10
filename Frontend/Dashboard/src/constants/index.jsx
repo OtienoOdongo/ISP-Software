@@ -1,140 +1,165 @@
-import { FaUserCircle } from "react-icons/fa";
-import { BsFillRouterFill } from "react-icons/bs";
-import { TfiWorld } from "react-icons/tfi";
-import { RiSecurePaymentLine } from "react-icons/ri";
-import { HiDocumentReport } from "react-icons/hi";
-import { FcSupport } from "react-icons/fc";
-import { Settings, Space } from 'lucide-react';
-import { LogOut } from 'lucide-react';
-import ActiveUsers  from "../assets/ActiveUsers.png"
-import WifiSignal from "../assets/WifiSignal.png"
-import customers from  "../assets/customers.png"
-import customersGroup from  "../assets/customersGroup.png"
-import income from "../assets/income.png"
-import networth from "../assets/networth.png"
-import wifiRouter from "../assets/wifiRouter.png"
-import networking from "../assets/networking.png"
+// import users from "../assets/users.png";
+// import internet from "../assets/internet.png";
+// import payment from "../assets/payment.png";
+// import network from "../assets/network.png";
+// import setting from "../assets/setting.png";
+// import maintenance from "../assets/maintenance.png";
+// import logout from "../assets/logout.png"; 
 
-/**
- * Menu Items Configuration
- * Each menu item includes a title, optional icon, submenu flag, and submenu items (if any).
- */
+// export const menuItems = [
+//   { title: "Dashboard Overview", },
+//   {
+//     title: "User Management",
+//     icon: <img src={users} alt="users" className="h-6 w-6" />,
+//     submenu: true,
+//     submenuItems: [
+//       { title: "User Profile" },
+//       { title: "Plan Overview" },
+//     ],
+//   },
+//   {
+//     title: "Internet Plans",
+//     icon: <img src={internet} alt="internet" className="h-6 w-6" />,
+//     submenu: true,
+//     submenuItems: [
+//       { title: "Create Plans" },
+//       { title: "Plan Analytics" },
+//     ],
+//   },
+//   {
+//     title: "Network Management",
+//     icon: <img src={network} alt="network" className="h-6 w-6" />,
+//     submenu: true,
+//     submenuItems: [
+//       { title: "Router Management" },
+//       { title: "Bandwidth Allocation" },
+//       { title: "IP Address Management" },
+//       { title: "Network Diagnostics" },
+//     ],
+//   },
+//   {
+//     title: "Payment Processing",
+//     icon: <img src={payment} alt="payment" className="h-6 w-6" />,
+//     submenu: true,
+//     submenuItems: [
+//       { title: "Payment Transaction Log" },
+//       { title: "Payment Configuration" },
+//       { title: "MPesa Callback Settings" },
+//       { title: "Payment Reconciliation" },
+//     ],
+//   },
+//   {
+//     title: "Support and Maintenance",
+//     icon: <img src={maintenance} alt="maintenance" className="h-6 w-6" />,
+//     submenu: true,
+//     submenuItems: [
+//       { title: "User Support Tickets" },
+//       { title: "Knowledge Base" },
+//     ],
+//   },
+//   {
+//     title: "Account",
+//     icon: <img src={setting} alt="setting" className="h-6 w-6" />,
+//     submenu: true,
+//     spacing: true,
+//     submenuItems: [
+//       { title: "Admin Profile" },
+//       { title: "Settings" },
+//     ],
+//   },
+//   {
+//     title: "LogOut",
+//     icon: <img src={logout} alt="logout" className="h-6 w-6" />,
+//     submenu: false,
+//     action: "LogOut",
+//   },
+// ];
 
+
+
+import internet from "../assets/internet.png";
+import payment from "../assets/payment.png";
+import network from "../assets/network.png";
+import setting from "../assets/setting.png";
+import maintenance from "../assets/maintenance.png";
+import logout from "../assets/logout.png"; 
+import users from "../assets/users.png";
 
 export const menuItems = [
-  { title: "Dashboard Overview" },
-  {
-    title: "User Management",
-    icon: <FaUserCircle className="h-8 w-8 text-slate-500" />,
-    submenu: true,
-    submenuItems: [
-      { title: "User Profile" },
-      { title: "Plan Overview" },
-    ],
+  { 
+    title: "Dashboard",
+    
   },
   {
-    title: "Internet Plans",
-    icon: <TfiWorld className="h-8 w-8 text-slate-500" />,
+    title: "Clients",
+    icon: <img src={users} alt="client management icon" className="h-5 w-5" />,
     submenu: true,
     submenuItems: [
-      { title: "Create Plans" },
-      { title: "Plan Analytics" },
-    ],
-  },
-  {
-    title: "Network Management",
-    icon: <BsFillRouterFill className="h-8 w-8 text-slate-500" />,
-    submenu: true,
-    submenuItems: [
-      {title: "Router Management"},
-      { title: "Bandwidth Allocation" },
-      { title: "IP Address Management" },
-      { title: "Network Diagnostics" },
-    ],
-  },
-  {
-    title: "Payment Processing",
-    icon: <RiSecurePaymentLine className="h-8 w-8 text-slate-500" />,
-    submenu: true,
-    submenuItems: [
-      { title: "MPesa Transaction Log" },
-      { title: "MPesa Configuration" },
-      { title: "MPesa Callback Settings" },
-      { title: "Payment Reconciliation" },
-    ],
-  },
-  {
-    title: "Support and Maintenance",
-    icon: <FcSupport className="h-8 w-8 text-slate-500" />,
-    submenu: true,
-    submenuItems: [
-      { title: "User Support Tickets" },
-      { title: "Knowledge Base" },
+      { title: "Client Dashboard" },
+      { title: "SMS Automation" },   
+      { title: "Bulk Actions" },
       
     ],
-    
-    
   },
- 
-  
-
+  {
+    title: "Internet",
+    icon: <img src={internet} alt="internet" className="h-5 w-5" />,
+    submenu: true,
+    submenuItems: [
+      { title: "Plan Management" },
+      { title: "Usage Analytics" },
+    ],
+  },
+  {
+    title: "Network",
+    icon: <img src={network} alt="network" className="h-5 w-5" />,
+    submenu: true,
+    submenuItems: [
+      { title: "Routers" },
+      { title: "Bandwidth" },
+      { title: "IP Management" },
+      { title: "Diagnostics" },
+    ],
+  },
+  {
+    title: "Payments",
+    icon: <img src={payment} alt="payment" className="h-5 w-5" />,
+    submenu: true,
+    submenuItems: [
+      { title: "Transactions" },
+      { title: "Configuration" },
+      { title: "MPesa Settings" },
+      { title: "Reconciliation" },
+    ],
+  },
+  {
+    title: "Support",
+    icon: <img src={maintenance} alt="maintenance" className="h-5 w-5" />,
+    submenu: true,
+    submenuItems: [
+      { title: "Tickets" },
+      { title: "Resources" },
+    ],
+  },
   {
     title: "Account",
-    icon: <Settings className="h-8 w-8 text-slate-500" />,
+    icon: <img src={setting} alt="setting" className="h-5 w-5" />,
     submenu: true,
     spacing: true,
     submenuItems: [
-      { title: "Admin Profile" },
-      { title: "Settings" },
+      { title: "Profile" },
+      { title: "Preferences" },
     ],
-    
   },
   {
-    title: "LogOut",
-    icon: <LogOut className="h-8 w-8 text-slate-500" />,
+    title: "Logout",
+    icon: <img src={logout} alt="logout" className="h-5 w-5" />,
     submenu: false,
-    action: "LogOut"
+    action: "Logout",
   },
 ];
 
 
-
-
-
-
-
-
-export const gridData = [
-  {
-    userIcon: <img src={ActiveUsers} alt="Active Users Icon"/>,
-    userLabel: "Active Users",
-    totalUsers: "12",
-    signalIcon: <img src={WifiSignal} alt="Wifi Signal Icon"/>,
-    userRate: -12.7,
-  },
-  {
-    customersIcon: <img src={customers} alt="Customers Icon"/>,
-    customerLabel: "Total Clients",
-    totalClients: "78",
-    customerGroupIcon: <img src={customersGroup} alt="Customers Group Icon"/>,
-    customerRate: 34,
-  },
-  {
-    incomeIcon: <img src={income} alt="Income Icon"/>,
-    incomeLabel: "Today's Income",
-    totalIncome: "KES 10,000",
-    networthIcon: <img src={networth} alt="Networth Icon"/>,
-    incomeRate: "45.6",
-  },
-  {
-    connectIcon: <img src={networking} alt="Networking Icon"/>,
-    connectLabel: "Connectivity Hubs",
-    totalConnect: "3",
-    otherConnectIcon: <img src={wifiRouter} alt="WiFi Router Icon"/>,
-    connectRate:-3.4,
-  }
-
-]
 
 
 

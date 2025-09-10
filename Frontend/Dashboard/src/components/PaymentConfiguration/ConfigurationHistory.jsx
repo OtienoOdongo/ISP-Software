@@ -1,89 +1,157 @@
 
 
 
-import React from 'react';
-import { FiClock, FiInfo, FiCheck, FiUser, FiAlertCircle } from 'react-icons/fi';
-import { format } from 'date-fns';
-import PropTypes from 'prop-types';
 
-/**
- * Displays the history of payment configuration changes.
- */
-const ConfigurationHistory = ({ history, actions, statuses }) => {
+
+
+
+// import React from 'react';
+// import { FiClock, FiUser, FiCheck, FiAlertCircle } from 'react-icons/fi';
+// import { format } from 'date-fns';
+
+// const ConfigurationHistory = ({ history }) => {
+//   if (!history || history.length === 0) {
+//     return (
+//       <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+//         <div className="text-center text-gray-500">
+//           No configuration history available
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+//       <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+//         <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+//           <FiClock className="mr-2 text-indigo-600" />
+//           Configuration History
+//         </h3>
+//       </div>
+      
+//       <div className="divide-y divide-gray-200">
+//         {history.map((entry) => (
+//           <div key={entry.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+//             <div className="flex items-start">
+//               <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
+//                 entry.action.includes('Failed') ? 'bg-red-100 text-red-600' :
+//                 entry.action.includes('Added') ? 'bg-green-100 text-green-600' :
+//                 'bg-blue-100 text-blue-600'
+//               }`}>
+//                 {entry.action.includes('Failed') ? (
+//                   <FiAlertCircle className="h-4 w-4" />
+//                 ) : entry.action.includes('Added') ? (
+//                   <FiCheck className="h-4 w-4" />
+//                 ) : (
+//                   <FiUser className="h-4 w-4" />
+//                 )}
+//               </div>
+              
+//               <div className="ml-4 flex-1 min-w-0">
+//                 <p className="text-sm font-medium text-gray-900">{entry.action}</p>
+                
+//                 <div className="mt-2 flex flex-wrap gap-1">
+//                   {Array.isArray(entry.changes) ? (
+//                     entry.changes.map((change, i) => (
+//                       <span key={i} className="inline-block bg-gray-100 rounded-md px-2 py-0.5 text-xs text-gray-700">
+//                         {change}
+//                       </span>
+//                     ))
+//                   ) : (
+//                     <span className="text-sm text-gray-500">{entry.changes || 'No changes recorded'}</span>
+//                   )}
+//                 </div>
+                
+//                 <div className="mt-2 flex items-center text-xs text-gray-500">
+//                   <FiClock className="mr-1.5" />
+//                   <span>{format(new Date(entry.timestamp), 'PPpp')}</span>
+//                   <span className="mx-2">•</span>
+//                   <FiUser className="mr-1.5" />
+//                   <span>{entry.user || 'System'}</span>
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
+//         ))}
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default ConfigurationHistory;
+
+
+
+
+
+
+
+
+import React from 'react';
+import { FiClock, FiUser, FiCheck, FiAlertCircle } from 'react-icons/fi';
+import { format } from 'date-fns';
+
+const ConfigurationHistory = ({ history }) => {
   if (!history || history.length === 0) {
     return (
-      <div className="bg-gray-50 p-6 rounded-md border border-gray-200 mt-6">
-        <div className="flex items-center justify-center text-gray-500">
-          <FiInfo className="mr-2" />
-          <span>No configuration history available</span>
+      <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+        <div className="text-center text-gray-500">
+          No configuration history available
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border overflow-hidden mt-6 border-gray-200">
-      <div className="px-6 py-4 bg-gray-100 border-b border-gray-200">
-        <h3 className="text-xl font-semibold text-gray-900 flex items-center">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center">
           <FiClock className="mr-2 text-indigo-600" />
-          <span className="font-semibold">Configuration History</span>
+          Configuration History
         </h3>
       </div>
+      
       <div className="divide-y divide-gray-200">
         {history.map((entry) => (
-          <div key={entry.id} className="px-6 py-4 hover:bg-gray-50">
+          <div key={entry.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
             <div className="flex items-start">
-              <div className="flex-shrink-0 mt-1">
-                <div
-                  className={`flex items-center h-8 w-8 justify-center rounded-full ${
-                    entry.action.includes('Added')
-                      ? 'bg-green-100 text-green-600'
-                      : entry.action.includes('Failed')
-                      ? 'bg-red-100 text-red-600'
-                      : 'bg-blue-100 text-blue-600'
-                  }`}
-                >
-                  {entry.action.includes('Added') ? (
-                    <FiCheck className="h-4 w-4" />
-                  ) : entry.action.includes('Failed') ? (
-                    <FiAlertCircle className="h-4 w-4" />
-                  ) : (
-                    <FiUser className="h-4 w-4" />
-                  )}
-                </div>
+              <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
+                entry.action.includes('Failed') || entry.action === 'delete' ? 'bg-red-100 text-red-600' :
+                entry.action.includes('Added') || entry.action === 'create' ? 'bg-green-100 text-green-600' :
+                'bg-blue-100 text-blue-600'
+              }`}>
+                {entry.action.includes('Failed') || entry.action === 'delete' ? (
+                  <FiAlertCircle className="h-4 w-4" />
+                ) : entry.action.includes('Added') || entry.action === 'create' ? (
+                  <FiCheck className="h-4 w-4" />
+                ) : (
+                  <FiUser className="h-4 w-4" />
+                )}
               </div>
-              <div className="ml-3 flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900">{entry.action}</p>
-                <p className="text-sm text-gray-500 mt-1">
-                  {Array.isArray(entry.changes) ? (
+              
+              <div className="ml-4 flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900">
+                  {entry.action_display || entry.action}
+                </p>
+                
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {Array.isArray(entry.changes) && entry.changes.length > 0 ? (
                     entry.changes.map((change, i) => (
-                      <span
-                        key={i}
-                        className="inline-block bg-gray-100 rounded-md px-2 py-0.5 text-xs text-gray-700 mr-1 mb-1"
-                      >
+                      <span key={i} className="inline-block bg-gray-100 rounded-md px-2 py-0.5 text-xs text-gray-700">
                         {change}
                       </span>
                     ))
                   ) : (
-                    entry.changes || ''
+                    <span className="text-sm text-gray-500">No changes recorded</span>
                   )}
-                </p>
-                <div className="mt-2 flex items-center text-sm text-gray-500">
+                </div>
+                
+                <div className="mt-2 flex items-center text-xs text-gray-500">
                   <FiClock className="mr-1.5" />
                   <span>{format(new Date(entry.timestamp), 'PPpp')}</span>
-                  <span className="mx-2 text-gray-500">•</span>
-                  <span className="text-indigo-600">{entry.user}</span>
-                  {statuses[entry.id] && (
-                    <span
-                      className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${
-                        statuses[entry.id] === 'success'
-                          ? 'bg-green-100 text-green-600'
-                          : 'bg-red-100 text-red-600'
-                      }`}
-                    >
-                      {statuses[entry.id]}
-                    </span>
-                  )}
+                  <span className="mx-2">•</span>
+                  <FiUser className="mr-1.5" />
+                  <span>{entry.user_username || entry.user || 'System'}</span>
                 </div>
               </div>
             </div>
@@ -92,20 +160,6 @@ const ConfigurationHistory = ({ history, actions, statuses }) => {
       </div>
     </div>
   );
-};
-
-ConfigurationHistory.propTypes = {
-  history: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string,
-      action: PropTypes.string,
-      changes: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.string), PropTypes.string]),
-      timestamp: PropTypes.string,
-      user: PropTypes.string
-    })
-  ).isRequired,
-  actions: PropTypes.object,
-  statuses: PropTypes.object
 };
 
 export default ConfigurationHistory;
