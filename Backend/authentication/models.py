@@ -28,7 +28,7 @@ class UserAccountManager(BaseUserManager):
             client_id = f"CLT-{uuid.uuid4().hex[:8].upper()}"
             
             user = self.model(
-                username=username,  # Use auto-generated username instead of name
+                username=username,  # Use auto-generated username 
                 phone_number=phone_number,
                 user_type=user_type,
                 is_staff=False,

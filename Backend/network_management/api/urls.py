@@ -1,3 +1,8 @@
+
+
+
+
+
 # from django.urls import path
 # from network_management.api.views.router_management_view import (
 #     RouterDetailView,
@@ -7,7 +12,9 @@
 #     HotspotConfigView,
 #     HotspotUserDetailView,
 #     HotspotUsersView,
-#     BulkActionView
+#     BulkActionView,
+#     RouterActivateUserView,
+#     GetMacView  # Added
 # )
 # from network_management.api.views.bandwidth_allocation_view import (
 #     BandwidthAllocationListView,
@@ -34,7 +41,9 @@
 #     path("routers/<int:pk>/hotspot-users/", HotspotUsersView.as_view(), name="hotspot-users"),
 #     path("hotspot-users/<int:pk>/", HotspotUserDetailView.as_view(), name="hotspot-user-detail"),
 #     path("routers/<int:pk>/hotspot-config/", HotspotConfigView.as_view(), name="hotspot-config"),
+#     path("routers/<int:pk>/activate-user/", RouterActivateUserView.as_view(), name="router-activate-user"),
 #     path("routers/bulk-action/", BulkActionView.as_view(), name="bulk-action"),
+#     path("get-mac/", GetMacView.as_view(), name="get-mac"),  
 
 #     # bandwidth allocation api endpoints
 #     path('allocations/', BandwidthAllocationListView.as_view(), name='bandwidth-allocation-list'),
@@ -69,7 +78,10 @@ from network_management.api.views.router_management_view import (
     HotspotUsersView,
     BulkActionView,
     RouterActivateUserView,
-    GetMacView  # Added
+    GetMacView,
+    RouterHealthCheckView,
+    RestoreSessionsView,
+    UserSessionRecoveryView
 )
 from network_management.api.views.bandwidth_allocation_view import (
     BandwidthAllocationListView,
@@ -98,7 +110,10 @@ urlpatterns = [
     path("routers/<int:pk>/hotspot-config/", HotspotConfigView.as_view(), name="hotspot-config"),
     path("routers/<int:pk>/activate-user/", RouterActivateUserView.as_view(), name="router-activate-user"),
     path("routers/bulk-action/", BulkActionView.as_view(), name="bulk-action"),
-    path("get-mac/", GetMacView.as_view(), name="get-mac"),  
+    path("get-mac/", GetMacView.as_view(), name="get-mac"),
+    path("health-check/", RouterHealthCheckView.as_view(), name="router-health-check"),
+    path("routers/<int:pk>/restore-sessions/", RestoreSessionsView.as_view(), name="restore-sessions"),
+    path("recover-session/", UserSessionRecoveryView.as_view(), name="user-session-recovery"),
 
     # bandwidth allocation api endpoints
     path('allocations/', BandwidthAllocationListView.as_view(), name='bandwidth-allocation-list'),
