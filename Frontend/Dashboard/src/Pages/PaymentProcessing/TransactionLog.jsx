@@ -411,9 +411,883 @@
 
 
 
+// import React, { useState, useEffect, useMemo, useCallback } from 'react';
+// import { toast, ToastContainer } from 'react-toastify';
+// import { FaSearch, FaDownload, FaSortAmountDown, FaSortAmountUp, FaUser, FaCalendarAlt } from 'react-icons/fa';
+// import { GrTransaction } from 'react-icons/gr';
+// import { AiOutlineReload } from 'react-icons/ai';
+// import jsPDF from 'jspdf';
+// import 'jspdf-autotable';
+// import { CSVLink } from 'react-csv';
+// import 'react-toastify/dist/ReactToastify.css';
+// import DatePicker from 'react-datepicker';
+// import 'react-datepicker/dist/react-datepicker.css';
+// import api from '../../api'; 
+
+// const TransactionLog = () => {
+//   const [searchTerm, setSearchTerm] = useState('');
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   const [filterStatus, setFilterStatus] = useState('all');
+//   const [sortDirection, setSortDirection] = useState('date_desc');
+//   const [startDate, setStartDate] = useState(() => new Date(new Date().setDate(new Date().getDate() - 7)));
+//   const [endDate, setEndDate] = useState(new Date());
+//   const [refreshCount, setRefreshCount] = useState(0);
+//   const [transactions, setTransactions] = useState([]);
+//   const [pagination, setPagination] = useState({
+//     current_page: 1,
+//     total_pages: 1,
+//     total_items: 0,
+//     page_size: 20,
+//     has_next: false,
+//     has_previous: false
+//   });
+//   const [stats, setStats] = useState({
+//     total: 0,
+//     success: 0,
+//     pending: 0,
+//     failed: 0,
+//     totalAmount: 0
+//   });
+//   const [exportData, setExportData] = useState([]);
+
+//   // Fetch transactions from backend
+//   const fetchTransactions = useCallback(async () => {
+//     setLoading(true);
+//     setError(null);
+    
+//     try {
+//       // Format dates for API
+//       const formattedStartDate = startDate.toISOString().split('T')[0];
+//       const formattedEndDate = endDate.toISOString().split('T')[0];
+      
+//       const params = {
+//         start_date: formattedStartDate,
+//         end_date: formattedEndDate,
+//         status: filterStatus,
+//         search: searchTerm,
+//         sort_by: sortDirection,
+//         page: pagination.current_page,
+//         page_size: pagination.page_size
+//       };
+
+//       // Remove undefined params
+//       Object.keys(params).forEach(key => {
+//         if (params[key] === undefined || params[key] === '') {
+//           delete params[key];
+//         }
+//       });
+
+//       // Updated endpoint to match Django URL
+//       const response = await api.get('/api/payments/transactions/', { params });
+      
+//       setTransactions(response.data.transactions || []);
+//       setPagination(response.data.pagination || {});
+//       setStats(response.data.stats || {});
+      
+//       if (response.data.transactions.length === 0) {
+//         toast.info('No transactions found for the selected criteria', { autoClose: 3000 });
+//       }
+//     } catch (err) {
+//       const errorMessage = err.response?.data?.error || 'Failed to load transactions. Please try again.';
+//       setError(errorMessage);
+//       console.error('Error fetching transactions:', err);
+//       toast.error(errorMessage);
+//     } finally {
+//       setLoading(false);
+//     }
+//   }, [startDate, endDate, filterStatus, searchTerm, sortDirection, pagination.current_page, pagination.page_size, refreshCount]);
+
+//   // Fetch export data
+//   const fetchExportData = useCallback(async () => {
+//     try {
+//       const formattedStartDate = startDate.toISOString().split('T')[0];
+//       const formattedEndDate = endDate.toISOString().split('T')[0];
+      
+//       const params = {
+//         start_date: formattedStartDate,
+//         end_date: formattedEndDate,
+//         status: filterStatus,
+//         search: searchTerm,
+//         sort_by: sortDirection
+//       };
+
+//       Object.keys(params).forEach(key => {
+//         if (params[key] === undefined || params[key] === '') {
+//           delete params[key];
+//         }
+//       });
+
+//       // Updated endpoint to match Django URL
+//       const response = await api.get('/api/payments/transactions/export/', { params });
+//       setExportData(response.data.data || []);
+      
+//       return response.data.data;
+//     } catch (err) {
+//       console.error('Error fetching export data:', err);
+//       toast.error('Failed to prepare export data');
+//       return [];
+//     }
+//   }, [startDate, endDate, filterStatus, searchTerm, sortDirection]);
+
+//   // Load transactions on component mount and when dependencies change
+//   useEffect(() => {
+//     fetchTransactions();
+//   }, [fetchTransactions]);
+
+//   const handleRefresh = useCallback(() => {
+//     setRefreshCount(prev => prev + 1);
+//     toast.info('Refreshing transaction data...', { autoClose: 2000 });
+//   }, []);
+
+//   const handlePageChange = useCallback((newPage) => {
+//     setPagination(prev => ({
+//       ...prev,
+//       current_page: newPage
+//     }));
+//   }, []);
+
+//   const handleSearch = useCallback((e) => {
+//     setSearchTerm(e.target.value);
+//     // Reset to first page when searching
+//     setPagination(prev => ({ ...prev, current_page: 1 }));
+//   }, []);
+
+//   const handleStatusFilter = useCallback((e) => {
+//     setFilterStatus(e.target.value);
+//     setPagination(prev => ({ ...prev, current_page: 1 }));
+//   }, []);
+
+//   const toggleSort = useCallback((type) => {
+//     if (type === 'amount') {
+//       setSortDirection(prev => prev === 'amount_asc' ? 'amount_desc' : 'amount_asc');
+//     } else {
+//       setSortDirection(prev => prev === 'date_asc' ? 'date_desc' : 'date_asc');
+//     }
+//     setPagination(prev => ({ ...prev, current_page: 1 }));
+//   }, []);
+
+//   const generateReport = useCallback(async (type) => {
+//     try {
+//       const exportData = await fetchExportData();
+      
+//       if (exportData.length === 0) {
+//         toast.warning('No transactions to generate report', { autoClose: 3000 });
+//         return;
+//       }
+
+//       if (type === 'pdf') {
+//         const doc = new jsPDF();
+        
+//         // Title
+//         doc.setFontSize(16);
+//         doc.setTextColor(40, 53, 147);
+//         doc.text('TRANSACTION LOG REPORT', 105, 15, { align: 'center' });
+        
+//         // Metadata
+//         doc.setFontSize(10);
+//         doc.setTextColor(100, 100, 100);
+//         doc.text(`Date Range: ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`, 14, 25);
+//         doc.text(`Status: ${filterStatus === 'all' ? 'All' : filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}`, 14, 30);
+//         doc.text(`Total Transactions: ${exportData.length}`, 14, 35);
+        
+//         // Table headers
+//         const headers = [['Transaction ID', 'User', 'Phone', 'Amount (KES)', 'Status', 'Date & Time']];
+        
+//         // Table data
+//         const data = exportData.map(tx => [
+//           tx.transaction_id,
+//           tx.user_name,
+//           tx.phone,
+//           tx.amount.toLocaleString(),
+//           tx.status,
+//           new Date(tx.date_time).toLocaleString()
+//         ]);
+        
+//         // Create table
+//         doc.autoTable({
+//           head: headers,
+//           body: data,
+//           startY: 45,
+//           styles: { fontSize: 8 },
+//           headStyles: { fillColor: [40, 53, 147], textColor: 255 },
+//           alternateRowStyles: { fillColor: [240, 240, 240] }
+//         });
+        
+//         // Footer with totals
+//         const totalAmount = exportData.reduce((sum, tx) => sum + tx.amount, 0);
+//         doc.setFontSize(10);
+//         doc.setTextColor(40, 53, 147);
+//         doc.text(`Total Amount: KES ${totalAmount.toLocaleString()}`, 14, doc.lastAutoTable.finalY + 10);
+//         doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, doc.lastAutoTable.finalY + 15);
+        
+//         // Save PDF
+//         doc.save(`Transaction_Log_${new Date().toISOString().slice(0, 10)}.pdf`);
+//         toast.success('PDF report generated successfully');
+//       }
+//     } catch (err) {
+//       console.error('Report generation error:', err);
+//       toast.error(`Failed to generate report: ${err.message}`);
+//     }
+//   }, [fetchExportData, startDate, endDate, filterStatus]);
+
+//   // Prepare CSV data
+//   const csvData = useMemo(() => exportData.map(tx => ({
+//     'Transaction ID': tx.transaction_id,
+//     'User': tx.user_name,
+//     'Phone': tx.phone,
+//     'Amount (KES)': tx.amount,
+//     'Status': tx.status,
+//     'Payment Method': tx.payment_method,
+//     'Date & Time': new Date(tx.date_time).toLocaleString()
+//   })), [exportData]);
+
+//   // Pagination controls component
+//   const PaginationControls = useMemo(() => (
+//     <div className="flex items-center justify-between mt-4">
+//       <div className="text-sm text-gray-700">
+//         Showing {((pagination.current_page - 1) * pagination.page_size) + 1} to{' '}
+//         {Math.min(pagination.current_page * pagination.page_size, pagination.total_items)} of{' '}
+//         {pagination.total_items} entries
+//       </div>
+      
+//       <div className="flex space-x-2">
+//         <button
+//           onClick={() => handlePageChange(pagination.current_page - 1)}
+//           disabled={!pagination.has_previous}
+//           className={`px-3 py-1 rounded-md ${
+//             pagination.has_previous
+//               ? 'bg-gray-200 hover:bg-gray-300'
+//               : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+//           }`}
+//         >
+//           Previous
+//         </button>
+        
+//         {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
+//           const pageNum = Math.max(1, Math.min(
+//             pagination.current_page - 2,
+//             pagination.total_pages - 4
+//           )) + i;
+          
+//           if (pageNum > pagination.total_pages) return null;
+          
+//           return (
+//             <button
+//               key={pageNum}
+//               onClick={() => handlePageChange(pageNum)}
+//               className={`px-3 py-1 rounded-md ${
+//                 pageNum === pagination.current_page
+//                   ? 'bg-blue-500 text-white'
+//                   : 'bg-gray-200 hover:bg-gray-300'
+//               }`}
+//             >
+//               {pageNum}
+//             </button>
+//           );
+//         })}
+        
+//         <button
+//           onClick={() => handlePageChange(pagination.current_page + 1)}
+//           disabled={!pagination.has_next}
+//           className={`px-3 py-1 rounded-md ${
+//             pagination.has_next
+//               ? 'bg-gray-200 hover:bg-gray-300'
+//               : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+//           }`}
+//         >
+//           Next
+//         </button>
+//       </div>
+//     </div>
+//   ), [pagination, handlePageChange]);
+
+//   return (
+//     <div className="p-6 bg-gray-50 min-h-screen">
+//       <div className="max-w-7xl mx-auto">
+//         {/* Header Section */}
+//         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+//           <h1 className="text-2xl md:text-3xl font-semibold text-gray-800 flex items-center">
+//             <GrTransaction className="mr-2 text-blue-600" /> Transaction Log
+//           </h1>
+//           <div className="flex items-center space-x-2 mt-2 md:mt-0">
+//             <button
+//               onClick={handleRefresh}
+//               className="flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+//               aria-label="Refresh transactions"
+//             >
+//               <AiOutlineReload className="mr-1" /> Refresh
+//             </button>
+            
+//             {/* Date Range Selectors */}
+//             <div className="relative">
+//               <DatePicker
+//                 selected={startDate}
+//                 onChange={date => date && setStartDate(date)}
+//                 selectsStart
+//                 startDate={startDate}
+//                 endDate={endDate}
+//                 maxDate={new Date()}
+//                 className="p-2 border rounded-lg w-32 focus:ring-blue-500 focus:border-blue-500"
+//                 dateFormat="dd/MM/yyyy"
+//                 aria-label="Start date"
+//               />
+//               <FaCalendarAlt className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
+//             </div>
+            
+//             <span className="text-gray-500">to</span>
+            
+//             <div className="relative">
+//               <DatePicker
+//                 selected={endDate}
+//                 onChange={date => date && setEndDate(date)}
+//                 selectsEnd
+//                 startDate={startDate}
+//                 endDate={endDate}
+//                 minDate={startDate}
+//                 maxDate={new Date()}
+//                 className="p-2 border rounded-lg w-32 focus:ring-blue-500 focus:border-blue-500"
+//                 dateFormat="dd/MM/yyyy"
+//                 aria-label="End date"
+//               />
+//               <FaCalendarAlt className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Statistics Cards */}
+//         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+//           <div className="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
+//             <h3 className="text-gray-500 text-sm">Total Transactions</h3>
+//             <p className="text-2xl font-bold">{stats.total}</p>
+//           </div>
+//           <div className="bg-white p-4 rounded-lg shadow border-l-4 border-green-500">
+//             <h3 className="text-gray-500 text-sm">Successful</h3>
+//             <p className="text-2xl font-bold text-green-600">{stats.success}</p>
+//           </div>
+//           <div className="bg-white p-4 rounded-lg shadow border-l-4 border-yellow-500">
+//             <h3 className="text-gray-500 text-sm">Pending</h3>
+//             <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+//           </div>
+//           <div className="bg-white p-4 rounded-lg shadow border-l-4 border-red-500">
+//             <h3 className="text-gray-500 text-sm">Total Amount</h3>
+//             <p className="text-2xl font-bold">KES {stats.totalAmount?.toLocaleString() || '0'}</p>
+//           </div>
+//         </div>
+
+//         {/* Filters and Controls */}
+//         <div className="bg-white p-4 rounded-lg shadow mb-6">
+//           <div className="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-4 md:space-y-0">
+//             {/* Search Input */}
+//             <div className="relative flex-grow">
+//               <FaSearch className="absolute left-3 top-3 text-gray-400" />
+//               <input
+//                 type="text"
+//                 className="pl-10 pr-4 py-2 border rounded-lg w-full focus:ring-blue-500 focus:border-blue-500"
+//                 placeholder="Search by ID, phone, or user..."
+//                 value={searchTerm}
+//                 onChange={handleSearch}
+//                 aria-label="Search transactions"
+//               />
+//             </div>
+            
+//             {/* Filter Controls */}
+//             <div className="flex space-x-2">
+//               <select
+//                 className="p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
+//                 value={filterStatus}
+//                 onChange={handleStatusFilter}
+//                 aria-label="Filter by status"
+//               >
+//                 <option value="all">All Status</option>
+//                 <option value="success">Success</option>
+//                 <option value="pending">Pending</option>
+//                 <option value="failed">Failed</option>
+//               </select>
+              
+//               {/* Sort Buttons */}
+//               <button
+//                 className="flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50"
+//                 onClick={() => toggleSort('date')}
+//                 aria-label="Sort by date"
+//               >
+//                 {sortDirection.includes('date') ? (
+//                   sortDirection === 'date_asc' ? <FaSortAmountUp className="mr-1" /> : <FaSortAmountDown className="mr-1" />
+//                 ) : (
+//                   <FaSortAmountDown className="mr-1" />
+//                 )}
+//                 Date
+//               </button>
+              
+//               <button
+//                 className="flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50"
+//                 onClick={() => toggleSort('amount')}
+//                 aria-label="Sort by amount"
+//               >
+//                 {sortDirection.includes('amount') ? (
+//                   sortDirection === 'amount_asc' ? <FaSortAmountUp className="mr-1" /> : <FaSortAmountDown className="mr-1" />
+//                 ) : (
+//                   <FaSortAmountDown className="mr-1" />
+//                 )}
+//                 Amount
+//               </button>
+//             </div>
+            
+//             {/* Export Buttons */}
+//             <div className="flex space-x-2">
+//               <button
+//                 onClick={() => generateReport('pdf')}
+//                 className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                 aria-label="Generate PDF report"
+//               >
+//                 <FaDownload className="mr-2" /> PDF
+//               </button>
+              
+//               <CSVLink
+//                 data={csvData}
+//                 filename={`transaction_log_${new Date().toISOString().slice(0, 10)}.csv`}
+//                 className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+//                 aria-label="Download CSV"
+//                 asyncOnClick={true}
+//                 onClick={fetchExportData}
+//               >
+//                 <FaDownload className="mr-2" /> CSV
+//               </CSVLink>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Loading State */}
+//         {loading ? (
+//           <div className="text-center py-8" aria-live="polite">
+//             <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-2"></div>
+//             <p>Loading transactions...</p>
+//           </div>
+//         ) : error ? (
+//           <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6" role="alert">
+//             <div className="flex">
+//               <div className="flex-shrink-0">
+//                 <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+//                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+//                 </svg>
+//               </div>
+//               <div className="ml-3">
+//                 <p className="text-sm text-red-700">{error}</p>
+//               </div>
+//             </div>
+//           </div>
+//         ) : (
+//           <>
+//             {/* Transactions Table */}
+//             <div className="bg-white rounded-lg shadow overflow-hidden">
+//               <div className="overflow-x-auto">
+//                 <table className="min-w-full divide-y divide-gray-200">
+//                   <thead className="bg-gray-50">
+//                     <tr>
+//                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+//                         Transaction ID
+//                       </th>
+//                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+//                         User
+//                       </th>
+//                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+//                         Phone
+//                       </th>
+//                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+//                         Amount (KES)
+//                       </th>
+//                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+//                         Status
+//                       </th>
+//                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+//                         Date & Time
+//                       </th>
+//                     </tr>
+//                   </thead>
+//                   <tbody className="bg-white divide-y divide-gray-200">
+//                     {transactions.length > 0 ? (
+//                       transactions.map((transaction) => (
+//                         <tr key={transaction.id} className="hover:bg-gray-50">
+//                           <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+//                             {transaction.transaction_id}
+//                           </td>
+//                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+//                             {transaction.user_name}
+//                           </td>
+//                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+//                             {transaction.phone}
+//                           </td>
+//                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+//                             {transaction.amount.toLocaleString()}
+//                           </td>
+//                           <td className="px-6 py-4 whitespace-nowrap">
+//                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+//                               transaction.status === 'Success' 
+//                                 ? 'bg-green-100 text-green-800' 
+//                                 : transaction.status === 'Pending' 
+//                                   ? 'bg-yellow-100 text-yellow-800' 
+//                                   : 'bg-red-100 text-red-800'
+//                             }`}>
+//                               {transaction.status}
+//                             </span>
+//                           </td>
+//                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+//                             {new Date(transaction.date_time).toLocaleString()}
+//                           </td>
+//                         </tr>
+//                       ))
+//                     ) : (
+//                       <tr>
+//                         <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
+//                           No transactions found matching your criteria
+//                         </td>
+//                       </tr>
+//                     )}
+//                   </tbody>
+//                 </table>
+//               </div>
+              
+//               {/* Pagination Controls */}
+//               {transactions.length > 0 && PaginationControls}
+//             </div>
+//           </>
+//         )}
+//       </div>
+//       <ToastContainer position="top-right" autoClose={5000} />
+//     </div>
+//   );
+// };
+
+// export default TransactionLog;
+
+
+
+
+
+// // src/components/Payments/TransactionLog.js
+// import React, { useState, useEffect, useMemo, useCallback } from 'react';
+// import { toast, ToastContainer } from 'react-toastify';
+// import { FaSearch, FaDownload, FaSortAmountDown, FaSortAmountUp, FaCalendarAlt } from 'react-icons/fa';
+// import { GrTransaction } from 'react-icons/gr';
+// import { AiOutlineReload } from 'react-icons/ai';
+// import jsPDF from 'jspdf';
+// import 'jspdf-autotable';
+// import { CSVLink } from 'react-csv';
+// import 'react-toastify/dist/ReactToastify.css';
+// import DatePicker from 'react-datepicker';
+// import 'react-datepicker/dist/react-datepicker.css';
+// import api from '../../api';
+
+// const TransactionLog = () => {
+//   const [transactions, setTransactions] = useState([]);
+//   const [exportData, setExportData] = useState([]);
+//   const [searchTerm, setSearchTerm] = useState('');
+//   const [filterStatus, setFilterStatus] = useState('all');
+//   const [sortDirection, setSortDirection] = useState('date_desc');
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   const [refreshCount, setRefreshCount] = useState(0);
+
+//   const [startDate, setStartDate] = useState(() => new Date(new Date().setDate(new Date().getDate() - 7)));
+//   const [endDate, setEndDate] = useState(new Date());
+
+//   const [pagination, setPagination] = useState({
+//     current_page: 1,
+//     total_pages: 1,
+//     total_items: 0,
+//     page_size: 20,
+//     has_next: false,
+//     has_previous: false
+//   });
+
+//   const [stats, setStats] = useState({
+//     total: 0,
+//     success: 0,
+//     pending: 0,
+//     failed: 0,
+//     totalAmount: 0
+//   });
+
+//   /** 🔹 Fetch Transactions */
+//   const fetchTransactions = useCallback(async () => {
+//     setLoading(true);
+//     setError(null);
+
+//     try {
+//       const formattedStartDate = startDate.toISOString().split('T')[0];
+//       const formattedEndDate = endDate.toISOString().split('T')[0];
+
+//       const params = {
+//         start_date: formattedStartDate,
+//         end_date: formattedEndDate,
+//         status: filterStatus,
+//         search: searchTerm,
+//         sort_by: sortDirection,
+//         page: pagination.current_page,
+//         page_size: pagination.page_size
+//       };
+
+//       Object.keys(params).forEach(key => {
+//         if (!params[key]) delete params[key];
+//       });
+
+//       const response = await api.get('/api/payments/transactions/', { params });
+
+//       setTransactions(response.data.transactions || []);
+//       setPagination(response.data.pagination || {});
+//       setStats(response.data.stats || {});
+
+//       if ((response.data.transactions || []).length === 0) {
+//         toast.info('No transactions found for the selected criteria', { autoClose: 3000 });
+//       }
+//     } catch (err) {
+//       const errorMessage = err.response?.data?.error || 'Failed to load transactions';
+//       setError(errorMessage);
+//       toast.error(errorMessage);
+//     } finally {
+//       setLoading(false);
+//     }
+//   }, [startDate, endDate, filterStatus, searchTerm, sortDirection, pagination.current_page, pagination.page_size, refreshCount]);
+
+//   /** 🔹 Fetch Export Data */
+//   const fetchExportData = useCallback(async () => {
+//     try {
+//       const formattedStartDate = startDate.toISOString().split('T')[0];
+//       const formattedEndDate = endDate.toISOString().split('T')[0];
+
+//       const params = {
+//         start_date: formattedStartDate,
+//         end_date: formattedEndDate,
+//         status: filterStatus,
+//         search: searchTerm,
+//         sort_by: sortDirection
+//       };
+
+//       Object.keys(params).forEach(key => {
+//         if (!params[key]) delete params[key];
+//       });
+
+//       const response = await api.get('/api/payments/transactions/export/', { params });
+//       setExportData(response.data.data || []);
+//       return response.data.data || [];
+//     } catch (err) {
+//       toast.error('Failed to prepare export data');
+//       return [];
+//     }
+//   }, [startDate, endDate, filterStatus, searchTerm, sortDirection]);
+
+//   /** 🔹 Load Transactions */
+//   useEffect(() => {
+//     fetchTransactions();
+//   }, [fetchTransactions]);
+
+//   const handleRefresh = () => {
+//     setRefreshCount(prev => prev + 1);
+//     toast.info('Refreshing data...', { autoClose: 2000 });
+//   };
+
+//   const handlePageChange = (newPage) => {
+//     setPagination(prev => ({ ...prev, current_page: newPage }));
+//   };
+
+//   const toggleSort = (type) => {
+//     if (type === 'amount') {
+//       setSortDirection(prev => (prev === 'amount_asc' ? 'amount_desc' : 'amount_asc'));
+//     } else {
+//       setSortDirection(prev => (prev === 'date_asc' ? 'date_desc' : 'date_asc'));
+//     }
+//     setPagination(prev => ({ ...prev, current_page: 1 }));
+//   };
+
+//   /** 🔹 PDF Report */
+//   const generateReport = async () => {
+//     const data = await fetchExportData();
+//     if (data.length === 0) {
+//       toast.warning('No data for report');
+//       return;
+//     }
+
+//     const doc = new jsPDF();
+//     doc.setFontSize(16);
+//     doc.text('TRANSACTION LOG REPORT', 105, 15, { align: 'center' });
+
+//     const headers = [['Transaction ID', 'User', 'Phone', 'Amount (KES)', 'Status', 'Date & Time']];
+//     const rows = data.map(tx => [
+//       tx.transaction_id,
+//       tx.user_name,
+//       tx.phone,
+//       tx.amount.toLocaleString(),
+//       tx.status,
+//       new Date(tx.date_time).toLocaleString()
+//     ]);
+
+//     doc.autoTable({
+//       head: headers,
+//       body: rows,
+//       startY: 30
+//     });
+
+//     doc.save(`Transaction_Log_${new Date().toISOString().slice(0, 10)}.pdf`);
+//     toast.success('PDF generated');
+//   };
+
+//   /** 🔹 CSV Data */
+//   const csvData = useMemo(() => exportData.map(tx => ({
+//     'Transaction ID': tx.transaction_id,
+//     'User': tx.user_name,
+//     'Phone': tx.phone,
+//     'Amount (KES)': tx.amount,
+//     'Status': tx.status,
+//     'Payment Method': tx.payment_method,
+//     'Date & Time': new Date(tx.date_time).toLocaleString()
+//   })), [exportData]);
+
+//   /** 🔹 Pagination Controls */
+//   const PaginationControls = (
+//     <div className="flex items-center justify-between mt-4">
+//       <div className="text-sm text-gray-700">
+//         Showing {((pagination.current_page - 1) * pagination.page_size) + 1} to{' '}
+//         {Math.min(pagination.current_page * pagination.page_size, pagination.total_items)} of{' '}
+//         {pagination.total_items} entries
+//       </div>
+//       <div className="flex space-x-2">
+//         <button
+//           onClick={() => handlePageChange(pagination.current_page - 1)}
+//           disabled={!pagination.has_previous}
+//           className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+//         >
+//           Previous
+//         </button>
+//         <button
+//           onClick={() => handlePageChange(pagination.current_page + 1)}
+//           disabled={!pagination.has_next}
+//           className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+//         >
+//           Next
+//         </button>
+//       </div>
+//     </div>
+//   );
+
+//   return (
+//     <div className="p-6 bg-gray-50 min-h-screen">
+//       <div className="max-w-7xl mx-auto">
+//         {/* Header */}
+//         <div className="flex justify-between items-center mb-6">
+//           <h1 className="text-2xl font-semibold flex items-center">
+//             <GrTransaction className="mr-2 text-blue-600" /> Transaction Log
+//           </h1>
+//           <button onClick={handleRefresh} className="flex items-center px-3 py-2 bg-white border rounded shadow">
+//             <AiOutlineReload className="mr-1" /> Refresh
+//           </button>
+//         </div>
+
+//         {/* Stats */}
+//         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+//           <div className="bg-white p-4 rounded shadow border-l-4 border-blue-500">
+//             <h3>Total Transactions</h3>
+//             <p className="text-xl font-bold">{stats.total}</p>
+//           </div>
+//           <div className="bg-white p-4 rounded shadow border-l-4 border-green-500">
+//             <h3>Success</h3>
+//             <p className="text-xl font-bold text-green-600">{stats.success}</p>
+//           </div>
+//           <div className="bg-white p-4 rounded shadow border-l-4 border-yellow-500">
+//             <h3>Pending</h3>
+//             <p className="text-xl font-bold text-yellow-600">{stats.pending}</p>
+//           </div>
+//           <div className="bg-white p-4 rounded shadow border-l-4 border-red-500">
+//             <h3>Total Amount</h3>
+//             <p className="text-xl font-bold">KES {stats.totalAmount?.toLocaleString()}</p>
+//           </div>
+//         </div>
+
+//         {/* Filters */}
+//         <div className="bg-white p-4 rounded shadow mb-6 flex flex-wrap gap-4">
+//           <div className="relative flex-grow">
+//             <FaSearch className="absolute left-3 top-3 text-gray-400" />
+//             <input
+//               type="text"
+//               placeholder="Search..."
+//               className="pl-10 pr-4 py-2 border rounded w-full"
+//               value={searchTerm}
+//               onChange={(e) => setSearchTerm(e.target.value)}
+//             />
+//           </div>
+//           <select
+//             className="p-2 border rounded"
+//             value={filterStatus}
+//             onChange={(e) => setFilterStatus(e.target.value)}
+//           >
+//             <option value="all">All</option>
+//             <option value="success">Success</option>
+//             <option value="pending">Pending</option>
+//             <option value="failed">Failed</option>
+//           </select>
+//           <button onClick={() => toggleSort('date')} className="px-3 py-2 border rounded">Sort by Date</button>
+//           <button onClick={() => toggleSort('amount')} className="px-3 py-2 border rounded">Sort by Amount</button>
+//           <button onClick={generateReport} className="px-4 py-2 bg-blue-600 text-white rounded">PDF</button>
+//           <CSVLink
+//             data={csvData}
+//             filename={`transaction_log_${new Date().toISOString().slice(0, 10)}.csv`}
+//             onClick={fetchExportData}
+//             className="px-4 py-2 bg-green-600 text-white rounded"
+//           >
+//             CSV
+//           </CSVLink>
+//         </div>
+
+//         {/* Table */}
+//         {loading ? (
+//           <p>Loading...</p>
+//         ) : error ? (
+//           <p className="text-red-600">{error}</p>
+//         ) : (
+//           <div className="bg-white rounded shadow overflow-hidden">
+//             <table className="min-w-full divide-y divide-gray-200">
+//               <thead>
+//                 <tr>
+//                   <th>Transaction ID</th>
+//                   <th>User</th>
+//                   <th>Phone</th>
+//                   <th>Amount</th>
+//                   <th>Status</th>
+//                   <th>Date & Time</th>
+//                 </tr>
+//               </thead>
+//               <tbody>
+//                 {transactions.map(tx => (
+//                   <tr key={tx.id}>
+//                     <td>{tx.transaction_id}</td>
+//                     <td>{tx.user_name}</td>
+//                     <td>{tx.phone}</td>
+//                     <td>KES {tx.amount.toLocaleString()}</td>
+//                     <td>{tx.status}</td>
+//                     <td>{new Date(tx.date_time).toLocaleString()}</td>
+//                   </tr>
+//                 ))}
+//               </tbody>
+//             </table>
+//             {transactions.length > 0 && PaginationControls}
+//           </div>
+//         )}
+//       </div>
+//       <ToastContainer />
+//     </div>
+//   );
+// };
+
+// export default TransactionLog;
+
+
+
+
+
+
+// src/components/Payments/TransactionLog.js
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
-import { FaSearch, FaDownload, FaSortAmountDown, FaSortAmountUp, FaUser, FaCalendarAlt } from 'react-icons/fa';
+import { FaSearch, FaDownload, FaSortAmountDown, FaSortAmountUp, FaCalendarAlt } from 'react-icons/fa';
 import { GrTransaction } from 'react-icons/gr';
 import { AiOutlineReload } from 'react-icons/ai';
 import jsPDF from 'jspdf';
@@ -422,18 +1296,21 @@ import { CSVLink } from 'react-csv';
 import 'react-toastify/dist/ReactToastify.css';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import api from '../../api'; 
+import api from '../../api';
 
 const TransactionLog = () => {
+  const [transactions, setTransactions] = useState([]);
+  const [exportData, setExportData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortDirection, setSortDirection] = useState('date_desc');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [refreshCount, setRefreshCount] = useState(0);
+
   const [startDate, setStartDate] = useState(() => new Date(new Date().setDate(new Date().getDate() - 7)));
   const [endDate, setEndDate] = useState(new Date());
-  const [refreshCount, setRefreshCount] = useState(0);
-  const [transactions, setTransactions] = useState([]);
+
   const [pagination, setPagination] = useState({
     current_page: 1,
     total_pages: 1,
@@ -442,6 +1319,7 @@ const TransactionLog = () => {
     has_next: false,
     has_previous: false
   });
+
   const [stats, setStats] = useState({
     total: 0,
     success: 0,
@@ -449,18 +1327,16 @@ const TransactionLog = () => {
     failed: 0,
     totalAmount: 0
   });
-  const [exportData, setExportData] = useState([]);
 
-  // Fetch transactions from backend
+  /** 🔹 Fetch Transactions */
   const fetchTransactions = useCallback(async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      // Format dates for API
       const formattedStartDate = startDate.toISOString().split('T')[0];
       const formattedEndDate = endDate.toISOString().split('T')[0];
-      
+
       const params = {
         start_date: formattedStartDate,
         end_date: formattedEndDate,
@@ -471,39 +1347,34 @@ const TransactionLog = () => {
         page_size: pagination.page_size
       };
 
-      // Remove undefined params
       Object.keys(params).forEach(key => {
-        if (params[key] === undefined || params[key] === '') {
-          delete params[key];
-        }
+        if (!params[key]) delete params[key];
       });
 
-      // Updated endpoint to match Django URL
       const response = await api.get('/api/payments/transactions/', { params });
-      
+
       setTransactions(response.data.transactions || []);
       setPagination(response.data.pagination || {});
       setStats(response.data.stats || {});
-      
-      if (response.data.transactions.length === 0) {
+
+      if ((response.data.transactions || []).length === 0) {
         toast.info('No transactions found for the selected criteria', { autoClose: 3000 });
       }
     } catch (err) {
-      const errorMessage = err.response?.data?.error || 'Failed to load transactions. Please try again.';
+      const errorMessage = err.response?.data?.error || 'Failed to load transactions';
       setError(errorMessage);
-      console.error('Error fetching transactions:', err);
       toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
   }, [startDate, endDate, filterStatus, searchTerm, sortDirection, pagination.current_page, pagination.page_size, refreshCount]);
 
-  // Fetch export data
+  /** 🔹 Fetch Export Data */
   const fetchExportData = useCallback(async () => {
     try {
       const formattedStartDate = startDate.toISOString().split('T')[0];
       const formattedEndDate = endDate.toISOString().split('T')[0];
-      
+
       const params = {
         start_date: formattedStartDate,
         end_date: formattedEndDate,
@@ -513,447 +1384,219 @@ const TransactionLog = () => {
       };
 
       Object.keys(params).forEach(key => {
-        if (params[key] === undefined || params[key] === '') {
-          delete params[key];
-        }
+        if (!params[key]) delete params[key];
       });
 
-      // Updated endpoint to match Django URL
       const response = await api.get('/api/payments/transactions/export/', { params });
       setExportData(response.data.data || []);
-      
-      return response.data.data;
+      return response.data.data || [];
     } catch (err) {
-      console.error('Error fetching export data:', err);
       toast.error('Failed to prepare export data');
       return [];
     }
   }, [startDate, endDate, filterStatus, searchTerm, sortDirection]);
 
-  // Load transactions on component mount and when dependencies change
+  /** 🔹 Load Transactions */
   useEffect(() => {
     fetchTransactions();
   }, [fetchTransactions]);
 
-  const handleRefresh = useCallback(() => {
+  const handleRefresh = () => {
     setRefreshCount(prev => prev + 1);
-    toast.info('Refreshing transaction data...', { autoClose: 2000 });
-  }, []);
+    toast.info('Refreshing data...', { autoClose: 2000 });
+  };
 
-  const handlePageChange = useCallback((newPage) => {
-    setPagination(prev => ({
-      ...prev,
-      current_page: newPage
-    }));
-  }, []);
+  const handlePageChange = (newPage) => {
+    setPagination(prev => ({ ...prev, current_page: newPage }));
+  };
 
-  const handleSearch = useCallback((e) => {
-    setSearchTerm(e.target.value);
-    // Reset to first page when searching
-    setPagination(prev => ({ ...prev, current_page: 1 }));
-  }, []);
-
-  const handleStatusFilter = useCallback((e) => {
-    setFilterStatus(e.target.value);
-    setPagination(prev => ({ ...prev, current_page: 1 }));
-  }, []);
-
-  const toggleSort = useCallback((type) => {
+  const toggleSort = (type) => {
     if (type === 'amount') {
-      setSortDirection(prev => prev === 'amount_asc' ? 'amount_desc' : 'amount_asc');
+      setSortDirection(prev => (prev === 'amount_asc' ? 'amount_desc' : 'amount_asc'));
     } else {
-      setSortDirection(prev => prev === 'date_asc' ? 'date_desc' : 'date_asc');
+      setSortDirection(prev => (prev === 'date_asc' ? 'date_desc' : 'date_asc'));
     }
     setPagination(prev => ({ ...prev, current_page: 1 }));
-  }, []);
+  };
 
-  const generateReport = useCallback(async (type) => {
-    try {
-      const exportData = await fetchExportData();
-      
-      if (exportData.length === 0) {
-        toast.warning('No transactions to generate report', { autoClose: 3000 });
-        return;
-      }
-
-      if (type === 'pdf') {
-        const doc = new jsPDF();
-        
-        // Title
-        doc.setFontSize(16);
-        doc.setTextColor(40, 53, 147);
-        doc.text('TRANSACTION LOG REPORT', 105, 15, { align: 'center' });
-        
-        // Metadata
-        doc.setFontSize(10);
-        doc.setTextColor(100, 100, 100);
-        doc.text(`Date Range: ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`, 14, 25);
-        doc.text(`Status: ${filterStatus === 'all' ? 'All' : filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}`, 14, 30);
-        doc.text(`Total Transactions: ${exportData.length}`, 14, 35);
-        
-        // Table headers
-        const headers = [['Transaction ID', 'User', 'Phone', 'Amount (KES)', 'Status', 'Date & Time']];
-        
-        // Table data
-        const data = exportData.map(tx => [
-          tx.transaction_id,
-          tx.user_name,
-          tx.phone,
-          tx.amount.toLocaleString(),
-          tx.status,
-          new Date(tx.date_time).toLocaleString()
-        ]);
-        
-        // Create table
-        doc.autoTable({
-          head: headers,
-          body: data,
-          startY: 45,
-          styles: { fontSize: 8 },
-          headStyles: { fillColor: [40, 53, 147], textColor: 255 },
-          alternateRowStyles: { fillColor: [240, 240, 240] }
-        });
-        
-        // Footer with totals
-        const totalAmount = exportData.reduce((sum, tx) => sum + tx.amount, 0);
-        doc.setFontSize(10);
-        doc.setTextColor(40, 53, 147);
-        doc.text(`Total Amount: KES ${totalAmount.toLocaleString()}`, 14, doc.lastAutoTable.finalY + 10);
-        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, doc.lastAutoTable.finalY + 15);
-        
-        // Save PDF
-        doc.save(`Transaction_Log_${new Date().toISOString().slice(0, 10)}.pdf`);
-        toast.success('PDF report generated successfully');
-      }
-    } catch (err) {
-      console.error('Report generation error:', err);
-      toast.error(`Failed to generate report: ${err.message}`);
+  /** 🔹 PDF Report */
+  const generateReport = async () => {
+    const data = await fetchExportData();
+    if (data.length === 0) {
+      toast.warning('No data for report');
+      return;
     }
-  }, [fetchExportData, startDate, endDate, filterStatus]);
 
-  // Prepare CSV data
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text('TRANSACTION LOG REPORT', 105, 15, { align: 'center' });
+
+    const headers = [['Transaction ID', 'User', 'Phone', 'Amount (KES)', 'Status', 'Subscription', 'Date & Time']];
+    const rows = data.map(tx => [
+      tx.transaction_id,
+      tx.user_name,
+      tx.phone,
+      tx.amount.toLocaleString(),
+      tx.status,
+      tx.subscription_plan || 'N/A', // ✅ NEW: Added subscription column
+      new Date(tx.date_time).toLocaleString()
+    ]);
+
+    doc.autoTable({
+      head: headers,
+      body: rows,
+      startY: 30
+    });
+
+    doc.save(`Transaction_Log_${new Date().toISOString().slice(0, 10)}.pdf`);
+    toast.success('PDF generated');
+  };
+
+  /** 🔹 CSV Data */
   const csvData = useMemo(() => exportData.map(tx => ({
     'Transaction ID': tx.transaction_id,
     'User': tx.user_name,
     'Phone': tx.phone,
     'Amount (KES)': tx.amount,
     'Status': tx.status,
+    'Subscription': tx.subscription_plan || 'N/A', // ✅ NEW: Added subscription column
     'Payment Method': tx.payment_method,
     'Date & Time': new Date(tx.date_time).toLocaleString()
   })), [exportData]);
 
-  // Pagination controls component
-  const PaginationControls = useMemo(() => (
+  /** 🔹 Pagination Controls */
+  const PaginationControls = (
     <div className="flex items-center justify-between mt-4">
       <div className="text-sm text-gray-700">
         Showing {((pagination.current_page - 1) * pagination.page_size) + 1} to{' '}
         {Math.min(pagination.current_page * pagination.page_size, pagination.total_items)} of{' '}
         {pagination.total_items} entries
       </div>
-      
       <div className="flex space-x-2">
         <button
           onClick={() => handlePageChange(pagination.current_page - 1)}
           disabled={!pagination.has_previous}
-          className={`px-3 py-1 rounded-md ${
-            pagination.has_previous
-              ? 'bg-gray-200 hover:bg-gray-300'
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-          }`}
+          className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
         >
           Previous
         </button>
-        
-        {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
-          const pageNum = Math.max(1, Math.min(
-            pagination.current_page - 2,
-            pagination.total_pages - 4
-          )) + i;
-          
-          if (pageNum > pagination.total_pages) return null;
-          
-          return (
-            <button
-              key={pageNum}
-              onClick={() => handlePageChange(pageNum)}
-              className={`px-3 py-1 rounded-md ${
-                pageNum === pagination.current_page
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 hover:bg-gray-300'
-              }`}
-            >
-              {pageNum}
-            </button>
-          );
-        })}
-        
         <button
           onClick={() => handlePageChange(pagination.current_page + 1)}
           disabled={!pagination.has_next}
-          className={`px-3 py-1 rounded-md ${
-            pagination.has_next
-              ? 'bg-gray-200 hover:bg-gray-300'
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-          }`}
+          className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
         >
           Next
         </button>
       </div>
     </div>
-  ), [pagination, handlePageChange]);
+  );
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <h1 className="text-2xl md:text-3xl font-semibold text-gray-800 flex items-center">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-semibold flex items-center">
             <GrTransaction className="mr-2 text-blue-600" /> Transaction Log
           </h1>
-          <div className="flex items-center space-x-2 mt-2 md:mt-0">
-            <button
-              onClick={handleRefresh}
-              className="flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              aria-label="Refresh transactions"
-            >
-              <AiOutlineReload className="mr-1" /> Refresh
-            </button>
-            
-            {/* Date Range Selectors */}
-            <div className="relative">
-              <DatePicker
-                selected={startDate}
-                onChange={date => date && setStartDate(date)}
-                selectsStart
-                startDate={startDate}
-                endDate={endDate}
-                maxDate={new Date()}
-                className="p-2 border rounded-lg w-32 focus:ring-blue-500 focus:border-blue-500"
-                dateFormat="dd/MM/yyyy"
-                aria-label="Start date"
-              />
-              <FaCalendarAlt className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
-            </div>
-            
-            <span className="text-gray-500">to</span>
-            
-            <div className="relative">
-              <DatePicker
-                selected={endDate}
-                onChange={date => date && setEndDate(date)}
-                selectsEnd
-                startDate={startDate}
-                endDate={endDate}
-                minDate={startDate}
-                maxDate={new Date()}
-                className="p-2 border rounded-lg w-32 focus:ring-blue-500 focus:border-blue-500"
-                dateFormat="dd/MM/yyyy"
-                aria-label="End date"
-              />
-              <FaCalendarAlt className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
-            </div>
-          </div>
+          <button onClick={handleRefresh} className="flex items-center px-3 py-2 bg-white border rounded shadow">
+            <AiOutlineReload className="mr-1" /> Refresh
+          </button>
         </div>
 
-        {/* Statistics Cards */}
+        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
-            <h3 className="text-gray-500 text-sm">Total Transactions</h3>
-            <p className="text-2xl font-bold">{stats.total}</p>
+          <div className="bg-white p-4 rounded shadow border-l-4 border-blue-500">
+            <h3>Total Transactions</h3>
+            <p className="text-xl font-bold">{stats.total}</p>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow border-l-4 border-green-500">
-            <h3 className="text-gray-500 text-sm">Successful</h3>
-            <p className="text-2xl font-bold text-green-600">{stats.success}</p>
+          <div className="bg-white p-4 rounded shadow border-l-4 border-green-500">
+            <h3>Success</h3>
+            <p className="text-xl font-bold text-green-600">{stats.success}</p>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow border-l-4 border-yellow-500">
-            <h3 className="text-gray-500 text-sm">Pending</h3>
-            <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+          <div className="bg-white p-4 rounded shadow border-l-4 border-yellow-500">
+            <h3>Pending</h3>
+            <p className="text-xl font-bold text-yellow-600">{stats.pending}</p>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow border-l-4 border-red-500">
-            <h3 className="text-gray-500 text-sm">Total Amount</h3>
-            <p className="text-2xl font-bold">KES {stats.totalAmount?.toLocaleString() || '0'}</p>
-          </div>
-        </div>
-
-        {/* Filters and Controls */}
-        <div className="bg-white p-4 rounded-lg shadow mb-6">
-          <div className="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-4 md:space-y-0">
-            {/* Search Input */}
-            <div className="relative flex-grow">
-              <FaSearch className="absolute left-3 top-3 text-gray-400" />
-              <input
-                type="text"
-                className="pl-10 pr-4 py-2 border rounded-lg w-full focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Search by ID, phone, or user..."
-                value={searchTerm}
-                onChange={handleSearch}
-                aria-label="Search transactions"
-              />
-            </div>
-            
-            {/* Filter Controls */}
-            <div className="flex space-x-2">
-              <select
-                className="p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                value={filterStatus}
-                onChange={handleStatusFilter}
-                aria-label="Filter by status"
-              >
-                <option value="all">All Status</option>
-                <option value="success">Success</option>
-                <option value="pending">Pending</option>
-                <option value="failed">Failed</option>
-              </select>
-              
-              {/* Sort Buttons */}
-              <button
-                className="flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50"
-                onClick={() => toggleSort('date')}
-                aria-label="Sort by date"
-              >
-                {sortDirection.includes('date') ? (
-                  sortDirection === 'date_asc' ? <FaSortAmountUp className="mr-1" /> : <FaSortAmountDown className="mr-1" />
-                ) : (
-                  <FaSortAmountDown className="mr-1" />
-                )}
-                Date
-              </button>
-              
-              <button
-                className="flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50"
-                onClick={() => toggleSort('amount')}
-                aria-label="Sort by amount"
-              >
-                {sortDirection.includes('amount') ? (
-                  sortDirection === 'amount_asc' ? <FaSortAmountUp className="mr-1" /> : <FaSortAmountDown className="mr-1" />
-                ) : (
-                  <FaSortAmountDown className="mr-1" />
-                )}
-                Amount
-              </button>
-            </div>
-            
-            {/* Export Buttons */}
-            <div className="flex space-x-2">
-              <button
-                onClick={() => generateReport('pdf')}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                aria-label="Generate PDF report"
-              >
-                <FaDownload className="mr-2" /> PDF
-              </button>
-              
-              <CSVLink
-                data={csvData}
-                filename={`transaction_log_${new Date().toISOString().slice(0, 10)}.csv`}
-                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-                aria-label="Download CSV"
-                asyncOnClick={true}
-                onClick={fetchExportData}
-              >
-                <FaDownload className="mr-2" /> CSV
-              </CSVLink>
-            </div>
+          <div className="bg-white p-4 rounded shadow border-l-4 border-red-500">
+            <h3>Total Amount</h3>
+            <p className="text-xl font-bold">KES {stats.totalAmount?.toLocaleString()}</p>
           </div>
         </div>
 
-        {/* Loading State */}
+        {/* Filters */}
+        <div className="bg-white p-4 rounded shadow mb-6 flex flex-wrap gap-4">
+          <div className="relative flex-grow">
+            <FaSearch className="absolute left-3 top-3 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search..."
+              className="pl-10 pr-4 py-2 border rounded w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <select
+            className="p-2 border rounded"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="all">All</option>
+            <option value="success">Success</option>
+            <option value="pending">Pending</option>
+            <option value="failed">Failed</option>
+          </select>
+          <button onClick={() => toggleSort('date')} className="px-3 py-2 border rounded">Sort by Date</button>
+          <button onClick={() => toggleSort('amount')} className="px-3 py-2 border rounded">Sort by Amount</button>
+          <button onClick={generateReport} className="px-4 py-2 bg-blue-600 text-white rounded">PDF</button>
+          <CSVLink
+            data={csvData}
+            filename={`transaction_log_${new Date().toISOString().slice(0, 10)}.csv`}
+            onClick={fetchExportData}
+            className="px-4 py-2 bg-green-600 text-white rounded"
+          >
+            CSV
+          </CSVLink>
+        </div>
+
+        {/* Table */}
         {loading ? (
-          <div className="text-center py-8" aria-live="polite">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-2"></div>
-            <p>Loading transactions...</p>
-          </div>
+          <p>Loading...</p>
         ) : error ? (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6" role="alert">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            </div>
-          </div>
+          <p className="text-red-600">{error}</p>
         ) : (
-          <>
-            {/* Transactions Table */}
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Transaction ID
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        User
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Phone
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Amount (KES)
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date & Time
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {transactions.length > 0 ? (
-                      transactions.map((transaction) => (
-                        <tr key={transaction.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
-                            {transaction.transaction_id}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {transaction.user_name}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {transaction.phone}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                            {transaction.amount.toLocaleString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              transaction.status === 'Success' 
-                                ? 'bg-green-100 text-green-800' 
-                                : transaction.status === 'Pending' 
-                                  ? 'bg-yellow-100 text-yellow-800' 
-                                  : 'bg-red-100 text-red-800'
-                            }`}>
-                              {transaction.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(transaction.date_time).toLocaleString()}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
-                          No transactions found matching your criteria
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              
-              {/* Pagination Controls */}
-              {transactions.length > 0 && PaginationControls}
-            </div>
-          </>
+          <div className="bg-white rounded shadow overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead>
+                <tr>
+                  <th>Transaction ID</th>
+                  <th>User</th>
+                  <th>Phone</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Subscription</th> {/* ✅ NEW: Subscription column */}
+                  <th>Date & Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.map(tx => (
+                  <tr key={tx.id}>
+                    <td>{tx.transactionId}</td>
+                    <td>{tx.userName}</td>
+                    <td>{tx.phone}</td>
+                    <td>KES {tx.amount.toLocaleString()}</td>
+                    <td>{tx.status}</td>
+                    <td>{tx.subscriptionPlan || 'N/A'}</td> {/* ✅ NEW: Subscription data */}
+                    <td>{new Date(tx.date).toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {transactions.length > 0 && PaginationControls}
+          </div>
         )}
       </div>
-      <ToastContainer position="top-right" autoClose={5000} />
+      <ToastContainer />
     </div>
   );
 };

@@ -153,7 +153,6 @@ import NetworkDiagnostics from "./Pages/NetworkManagement/NetworkDiagnostics";
 // Payment Processing
 import TransactionLog from "./Pages/PaymentProcessing/TransactionLog";
 import PaymentConfiguration from "./Pages/PaymentProcessing/PaymentConfiguration";
-import MpesaCallbackSettings from "./Pages/PaymentProcessing/MpesaCallbackSettings";
 import PaymentReconciliation from "./Pages/PaymentProcessing/PaymentReconciliation";
 
 // Support & Maintenance
@@ -162,7 +161,8 @@ import KnowledgeBase from "./Pages/SupportMaintenance/KnowledgeBase";
 
 // Account Management
 import AdminProfile from "./Pages/Account/AdminProfile";
-import AccountSettings from "./Pages/Account/AccountSettings";
+
+
 
 const App = () => {
   return (
@@ -217,7 +217,6 @@ const App = () => {
             <Route index element={<Navigate to="transactions" replace />} />
             <Route path="transactions" element={<TransactionLog />} />
             <Route path="configuration" element={<PaymentConfiguration />} />
-            <Route path="mpesa-settings" element={<MpesaCallbackSettings />} />
             <Route path="reconciliation" element={<PaymentReconciliation />} />
           </Route>
           
@@ -232,7 +231,7 @@ const App = () => {
           <Route path="account/*">
             <Route index element={<Navigate to="profile" replace />} />
             <Route path="profile" element={<AdminProfile />} />
-            <Route path="preferences" element={<AccountSettings />} />
+           
           </Route>
         </Route>
 

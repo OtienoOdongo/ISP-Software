@@ -128,7 +128,6 @@ export const menuItems = [
     submenuItems: [
       { title: "Transactions" },
       { title: "Configuration" },
-      { title: "MPesa Settings" },
       { title: "Reconciliation" },
     ],
   },
@@ -148,7 +147,7 @@ export const menuItems = [
     spacing: true,
     submenuItems: [
       { title: "Profile" },
-      { title: "Preferences" },
+      
     ],
   },
   {

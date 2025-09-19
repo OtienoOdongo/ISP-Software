@@ -299,11 +299,216 @@
 
 
 
+// import React, { useState, useCallback, useEffect, useRef } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { FaEnvelope, FaSpinner, FaCheckCircle, FaArrowLeft } from "react-icons/fa";
+// import { RiMailSendLine } from "react-icons/ri";
+// import { motion } from "framer-motion"; // Added for animations
+// import api from "../../api";
+// import { useAuth } from "../../context/AuthContext";
+
+// const ResetPassword = () => {
+//     const [formState, setFormState] = useState({ email: "" });
+//     const [loading, setLoading] = useState(false);
+//     const [error, setError] = useState("");
+//     const [success, setSuccess] = useState(false);
+//     const [emailValid, setEmailValid] = useState(false);
+//     const navigate = useNavigate();
+//     const { isAuthenticated } = useAuth();
+//     const debounceTimer = useRef(null);
+
+//     const validateEmail = useCallback((email) => {
+//         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//         return re.test(String(email).toLowerCase());
+//     }, []);
+
+//     useEffect(() => {
+//         if (debounceTimer.current) {
+//             clearTimeout(debounceTimer.current);
+//         }
+        
+//         debounceTimer.current = setTimeout(() => {
+//             setEmailValid(validateEmail(formState.email));
+//         }, 300);
+
+//         return () => clearTimeout(debounceTimer.current);
+//     }, [formState.email, validateEmail]);
+
+//     const handleChange = useCallback((e) => {
+//         const { name, value } = e.target;
+//         setFormState((prev) => ({ ...prev, [name]: value }));
+//     }, []);
+
+//     const handleSubmit = useCallback(
+//         async (e) => {
+//             e.preventDefault();
+//             if (!emailValid) return;
+            
+//             setLoading(true);
+//             setError("");
+//             setSuccess(false);
+
+//             try {
+//                 await api.post("/api/auth/users/reset_password/", { 
+//                     email: formState.email 
+//                 });
+//                 setSuccess(true);
+//             } catch (error) {
+//                 setError(error.response?.data?.detail || 
+//                     "Failed to send reset email. Please try again.");
+//             } finally {
+//                 setLoading(false);
+//             }
+//         },
+//         [formState.email, emailValid]
+//     );
+
+//     useEffect(() => {
+//         if (isAuthenticated) {
+//             navigate("/dashboard", { replace: true });
+//         }
+//     }, [isAuthenticated, navigate]);
+
+//     return (
+//         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 p-4">
+//             <motion.div 
+//                 initial={{ opacity: 0, y: 20 }}
+//                 animate={{ opacity: 1, y: 0 }}
+//                 transition={{ delay: 0.3, duration: 0.4 }}
+//                 className="bg-gray-800/90 backdrop-blur-md p-8 rounded-2xl shadow-2xl w-full max-w-md border border-gray-700/50"
+//             >
+//                 <motion.button 
+//                     whileHover={{ scale: 1.02 }}
+//                     whileTap={{ scale: 0.98 }}
+//                     onClick={() => navigate(-1)}
+//                     className="flex items-center text-gray-400 hover:text-blue-400 mb-4 transition-colors duration-200"
+//                 >
+//                     <FaArrowLeft className="mr-2" />
+//                     Back
+//                 </motion.button>
+
+//                 <div className="flex justify-center mb-6">
+//                     <RiMailSendLine className="text-gray-400 text-5xl" />
+//                 </div>
+//                 <h2 className="text-3xl font-bold text-center text-white mb-2">Reset Password</h2>
+//                 <p className="text-center text-gray-400 mb-8">
+//                     Enter your email to receive a reset link
+//                 </p>
+
+//                 {!success ? (
+//                     <form onSubmit={handleSubmit}>
+//                         <div className="mb-6">
+//                             <label className="block text-sm font-medium text-gray-300 mb-2">
+//                                 Email Address
+//                             </label>
+//                             <div className="relative">
+//                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+//                                     <FaEnvelope className="text-gray-400" />
+//                                 </div>
+//                                 <input
+//                                     type="email"
+//                                     name="email"
+//                                     value={formState.email}
+//                                     onChange={handleChange}
+//                                     className={`pl-10 pr-10 w-full py-3 rounded-lg bg-gray-900/70 border ${
+//                                         formState.email ? 
+//                                             (emailValid ? 'border-green-500' : 'border-red-500') 
+//                                             : 'border-gray-700'
+//                                     } text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200`}
+//                                     placeholder="example@mail.com"
+//                                     required
+//                                 />
+//                                 {formState.email && (
+//                                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+//                                         {emailValid ? (
+//                                             <span className="text-green-500">✓</span>
+//                                         ) : (
+//                                             <span className="text-red-500">✗</span>
+//                                         )}
+//                                     </div>
+//                                 )}
+//                             </div>
+//                             {formState.email && !emailValid && (
+//                                 <p className="mt-1 text-xs text-red-400">
+//                                     Please enter a valid email address
+//                                 </p>
+//                             )}
+//                         </div>
+
+//                         {error && (
+//                             <motion.div 
+//                                 initial={{ opacity: 0, y: -10 }}
+//                                 animate={{ opacity: 1, y: 0 }}
+//                                 className="mb-4 p-3 bg-red-900/50 text-red-200 rounded-lg text-sm border border-red-800/50"
+//                             >
+//                                 {error}
+//                             </motion.div>
+//                         )}
+
+//                         <motion.button
+//                             whileHover={{ scale: 1.02 }}
+//                             whileTap={{ scale: 0.98 }}
+//                             type="submit"
+//                             disabled={loading || !emailValid}
+//                             className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3.5 px-4 rounded-lg font-bold shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+//                         >
+//                             {loading ? (
+//                                 <span className="flex items-center justify-center">
+//                                     <FaSpinner className="animate-spin mr-2" />
+//                                     Sending...
+//                                 </span>
+//                             ) : "Send Reset Link"}
+//                         </motion.button>
+//                     </form>
+//                 ) : (
+//                     <div className="text-center">
+//                         <FaCheckCircle className="text-green-500 text-5xl mx-auto mb-4" />
+//                         <h3 className="text-xl font-bold text-white mb-2">
+//                             Reset Link Sent!
+//                         </h3>
+//                         <p className="text-gray-400 mb-6">
+//                             We've sent a password reset link to <span className="text-white font-medium">{formState.email}</span>. 
+//                             Please check your inbox.
+//                         </p>
+//                         <motion.button
+//                             whileHover={{ scale: 1.02 }}
+//                             whileTap={{ scale: 0.98 }}
+//                             onClick={() => navigate("/login")}
+//                             className="w-full bg-gray-900/50 hover:bg-gray-800/70 text-gray-300 hover:text-white py-3.5 px-4 rounded-lg font-medium shadow-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-all duration-200"
+//                         >
+//                             Return to Login
+//                         </motion.button>
+//                     </div>
+//                 )}
+
+//                 <div className="mt-6 text-center">
+//                     <p className="text-sm text-gray-400">
+//                         Remember your password?{" "}
+//                         <button
+//                             onClick={() => navigate("/login")}
+//                             className="text-white hover:text-blue-400 font-medium hover:underline transition-colors duration-200"
+//                         >
+//                             Login
+//                         </button>
+//                     </p>
+//                 </div>
+//             </motion.div>
+//         </div>
+//     );
+// };
+
+// export default React.memo(ResetPassword);
+
+
+
+
+
+
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEnvelope, FaSpinner, FaCheckCircle, FaArrowLeft } from "react-icons/fa";
 import { RiMailSendLine } from "react-icons/ri";
-import { motion } from "framer-motion"; // Added for animations
+import { motion } from "framer-motion";
 import api from "../../api";
 import { useAuth } from "../../context/AuthContext";
 
@@ -313,6 +518,7 @@ const ResetPassword = () => {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
     const [emailValid, setEmailValid] = useState(false);
+    const [is2FAEnabled, setIs2FAEnabled] = useState(false); // Track if 2FA is enabled
     const navigate = useNavigate();
     const { isAuthenticated } = useAuth();
     const debounceTimer = useRef(null);
@@ -333,6 +539,31 @@ const ResetPassword = () => {
 
         return () => clearTimeout(debounceTimer.current);
     }, [formState.email, validateEmail]);
+
+    useEffect(() => {
+        // Check if email exists and if 2FA is enabled
+        const checkEmail = async () => {
+            if (emailValid && formState.email) {
+                try {
+                    const response = await api.get(`/api/auth/check-email/?email=${formState.email}`);
+                    if (response.data.exists) {
+                        // Assume 2FA status is fetched from user profile or similar endpoint
+                        // For simplicity, we'll check profile endpoint if authenticated
+                        try {
+                            const profileResponse = await api.get("/api/account/profile/");
+                            setIs2FAEnabled(profileResponse.data.profile.is_2fa_enabled || false);
+                        } catch {
+                            // If profile fetch fails, assume 2FA is not enabled
+                            setIs2FAEnabled(false);
+                        }
+                    }
+                } catch (err) {
+                    // Silently handle check-email errors to avoid UX disruption
+                }
+            }
+        };
+        checkEmail();
+    }, [formState.email, emailValid]);
 
     const handleChange = useCallback((e) => {
         const { name, value } = e.target;
@@ -433,6 +664,11 @@ const ResetPassword = () => {
                                     Please enter a valid email address
                                 </p>
                             )}
+                            {is2FAEnabled && (
+                                <p className="mt-2 text-xs text-yellow-400">
+                                    Note: Your account has 2FA enabled. You'll need to verify your identity after resetting your password.
+                                </p>
+                            )}
                         </div>
 
                         {error && (
@@ -469,6 +705,11 @@ const ResetPassword = () => {
                         <p className="text-gray-400 mb-6">
                             We've sent a password reset link to <span className="text-white font-medium">{formState.email}</span>. 
                             Please check your inbox.
+                            {is2FAEnabled && (
+                                <span className="block mt-2">
+                                    You will need to verify your identity using 2FA after resetting your password.
+                                </span>
+                            )}
                         </p>
                         <motion.button
                             whileHover={{ scale: 1.02 }}
