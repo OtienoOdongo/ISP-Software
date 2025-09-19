@@ -1,5 +1,6 @@
 from pathlib import Path
 from decouple import config
+from django.core.exceptions import ImproperlyConfigured
 from celery.schedules import crontab
 from datetime import timedelta
 from dotenv import load_dotenv
@@ -47,6 +48,7 @@ INSTALLED_APPS = [
     'otp_auth',
 
     'rest_framework',
+    'drf_spectacular',
     'djoser',
     'rest_framework_simplejwt',
     'corsheaders',
@@ -54,6 +56,10 @@ INSTALLED_APPS = [
 
 
 ENCRYPTED_FIELDS_KEYDIR = os.path.join(BASE_DIR, 'field_keys')
+
+MPESA_ENCRYPTION_KEY = config('MPESA_ENCRYPTION_KEY', default=None)
+if not MPESA_ENCRYPTION_KEY:
+    raise ImproperlyConfigured("MPESA_ENCRYPTION_KEY is not set. Add it to your environment or .env")
 
 
 
@@ -83,6 +89,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',  
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 
