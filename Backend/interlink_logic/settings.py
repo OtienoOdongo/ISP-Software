@@ -102,28 +102,7 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'user_id',
 }
 
-# DJOSER = { 
-#     'LOGIN_FIELD': 'email',
-#     'SET_STAFF_STATUS': True,
-#     'USER_CREATE_PASSWORD_RETYPE': True,
-#     'USERNAME_CHANGED_EMAIL_CONFIRMATION': True,
-#     'PASSWORD_CHANGED_EMAIL_CONFIRMATION': True,
-#     'SEND_CONFIRMATION_EMAIL': True,
-#     'SEND_ACTIVATION_EMAIL': True,
-#     'SET_USERNAME_RETYPE': True,
-#     'SET_PASSWORD_RETYPE': True,
-#     'ACTIVATION_URL': 'activate/{uid}/{token}/',
-#     'PASSWORD_RESET_CONFIRM_URL': 'password/reset/confirm/{uid}/{token}/',
-#     'USERNAME_RESET_CONFIRM_URL': 'email/reset/confirm/{uid}/{token}/',
-#     'SERIALIZERS': {
-#         'user_create': 'authentication.serializers.UserCreateSerializer',
-#         'user': 'authentication.serializers.UserCreateSerializer',
-#         'user_delete': 'djoser.serializers.UserDeleteSerializer',
-#         'current_user': 'authentication.serializers.UserCreateSerializer',
-#     },
-    
 
-# }
 
 
 DJOSER = {
@@ -157,8 +136,8 @@ AFRICAS_TALKING_API_KEY = 'your_api_key'
 
 
  # Celery settings for Redis
-CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Redis as message broker
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'  # Redis as result backend
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'  
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'  
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
@@ -241,7 +220,7 @@ DATABASES = {
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://redis:6379/1',
+        'LOCATION': 'redis://127.0.0.1:6379/1',  
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
