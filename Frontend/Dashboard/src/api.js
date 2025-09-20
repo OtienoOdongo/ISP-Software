@@ -1,8 +1,5 @@
 
 
-
-
-
 // api.js
 import axios from "axios";
 import { ACCESS_TOKEN } from "./constants/index";
@@ -59,3 +56,6 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+
+

@@ -1,7 +1,182 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-
-
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Base styles for light theme (default) */
+:root {
+  --color-bg-primary: theme('colors.light.background.primary');
+  --color-bg-secondary: theme('colors.light.background.secondary');
+  --color-bg-tertiary: theme('colors.light.background.tertiary');
+  --color-text-primary: theme('colors.light.text.primary');
+  --color-text-secondary: theme('colors.light.text.secondary');
+  --color-text-tertiary: theme('colors.light.text.tertiary');
+  --color-border-light: theme('colors.light.border.light');
+  --color-border-medium: theme('colors.light.border.medium');
+  --color-border-dark: theme('colors.light.border.dark');
+}
+
+/* Base styles for dark theme */
+.dark {
+  --color-bg-primary: theme('colors.dark.background.primary');
+  --color-bg-secondary: theme('colors.dark.background.secondary');
+  --color-bg-tertiary: theme('colors.dark.background.tertiary');
+  --color-text-primary: theme('colors.dark.text.primary');
+  --color-text-secondary: theme('colors.dark.text.secondary');
+  --color-text-tertiary: theme('colors.dark.text.tertiary');
+  --color-border-light: theme('colors.dark.border.light');
+  --color-border-medium: theme('colors.dark.border.medium');
+  --color-border-dark: theme('colors.dark.border.dark');
+}
+
+/* Apply theme colors to base elements */
+@layer base {
+  html {
+    font-family: 'Inter', 'Poppins', system-ui, sans-serif;
+  }
+  
+  body {
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Custom scrollbar for webkit browsers */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-bg-secondary);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border-medium);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-border-dark);
+  }
+
+  /* Selection colors */
+  ::selection {
+    background-color: theme('colors.light.primary.400');
+    color: white;
+  }
+
+  .dark ::selection {
+    background-color: theme('colors.dark.primary.600');
+    color: white;
+  }
+}
+
+/* Component classes with theme support */
+@layer components {
+  .card {
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-light);
+    border-radius: theme('borderRadius.lg');
+    padding: theme('spacing.6');
+    box-shadow: theme('boxShadow.sm');
+    transition: all 0.3s ease;
+  }
+
+  .card:hover {
+    box-shadow: theme('boxShadow.md');
+    transform: translateY(-2px);
+  }
+
+  .btn-primary {
+    background-color: theme('colors.light.primary.600');
+    color: white;
+    padding: theme('spacing.2') theme('spacing.4');
+    border-radius: theme('borderRadius.md');
+    font-weight: theme('fontWeight.medium');
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary:hover {
+    background-color: theme('colors.light.primary.700');
+    transform: translateY(-1px);
+  }
+
+  .dark .btn-primary {
+    background-color: theme('colors.dark.primary.600');
+  }
+
+  .dark .btn-primary:hover {
+    background-color: theme('colors.dark.primary.700');
+  }
+
+  .input-field {
+    background-color: var(--color-bg-primary);
+    border: 1px solid var(--color-border-medium);
+    border-radius: theme('borderRadius.md');
+    padding: theme('spacing.2') theme('spacing.3');
+    color: var(--color-text-primary);
+    transition: all 0.2s ease;
+  }
+
+  .input-field:focus {
+    outline: none;
+    border-color: theme('colors.light.primary.500');
+    box-shadow: 0 0 0 3px theme('colors.light.primary.100');
+  }
+
+  .dark .input-field:focus {
+    border-color: theme('colors.dark.primary.400');
+    box-shadow: 0 0 0 3px theme('colors.dark.primary.900');
+  }
+
+  .theme-transition {
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+  }
+}
+
+/* Utility classes */
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(135deg, theme('colors.light.primary.600'), theme('colors.light.primary.400'));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .dark .text-gradient {
+    background: linear-gradient(135deg, theme('colors.dark.primary.400'), theme('colors.dark.primary.200'));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, theme('colors.light.primary.600'), theme('colors.light.primary.400'));
+  }
+
+  .dark .bg-gradient-primary {
+    background: linear-gradient(135deg, theme('colors.dark.primary.600'), theme('colors.dark.primary.400'));
+  }
+}
+
+/* Animation classes */
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}
+
+/* Focus styles for accessibility */
+.focus-ring:focus {
+  outline: 2px solid theme('colors.light.primary.500');
+  outline-offset: 2px;
+}
+
+.dark .focus-ring:focus {
+  outline: 2px solid theme('colors.dark.primary.400');
+}
