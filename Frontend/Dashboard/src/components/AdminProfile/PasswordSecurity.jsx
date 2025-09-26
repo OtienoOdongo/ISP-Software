@@ -641,13 +641,11 @@
 
 
 
-
-
 import React, { useState, useMemo, useCallback } from 'react';
 import { LockKeyhole, ShieldCheck, Eye, EyeOff, KeyRound } from 'lucide-react';
 import api from '../../api';
 import { toast } from 'react-hot-toast';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Password strength calculator with memoization
 class PasswordStrengthCalculator {
@@ -980,7 +978,7 @@ const PasswordSecurity = ({ user, theme }) => {
                 {isLoading ? 'Updating...' : user.is_2fa_enabled ? "Disable" : "Enable"} 2FA
               </button>
             </div>
-          </div>
+            </div>
         </section>
       </div>
     </div>
