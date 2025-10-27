@@ -1,969 +1,4 @@
 
-// import React, { useState, useEffect, useMemo, useCallback } from 'react';
-// import { toast, ToastContainer } from 'react-toastify';
-// import { FaSearch, FaDownload, FaSortAmountDown, FaSortAmountUp, FaUser, FaCalendarAlt } from 'react-icons/fa';
-// import { GrTransaction } from 'react-icons/gr';
-// import { AiOutlineReload } from 'react-icons/ai';
-// import jsPDF from 'jspdf';
-// import 'jspdf-autotable';
-// import { CSVLink } from 'react-csv';
-// import 'react-toastify/dist/ReactToastify.css';
-// import DatePicker from 'react-datepicker';
-// import 'react-datepicker/dist/react-datepicker.css';
-
-// const TransactionLog = () => {
-//   const [searchTerm, setSearchTerm] = useState('');
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-//   const [filterStatus, setFilterStatus] = useState('all');
-//   const [sortDirection, setSortDirection] = useState('date_desc');
-//   const [startDate, setStartDate] = useState(() => new Date(new Date().setDate(new Date().getDate() - 7)));
-//   const [endDate, setEndDate] = useState(new Date());
-//   const [refreshCount, setRefreshCount] = useState(0);
-//   const [transactions, setTransactions] = useState([]);
-
-//   const mockTransactions = useMemo(() => [
-//     { id: 1, transactionId: 'TX100523456', userName: 'John Doe', amount: 1000, status: 'Success', date: new Date().toISOString(), phone: '254712345678' },
-//     { id: 2, transactionId: 'TX100665432', userName: 'Jane Smith', amount: 500, status: 'Pending', date: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(), phone: '254723456789' },
-//     { id: 3, transactionId: 'TX100798765', userName: 'Bob Johnson', amount: 2000, status: 'Failed', date: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(), phone: '254734567890' },
-//     { id: 4, transactionId: 'TX100845678', userName: 'Alice Brown', amount: 1500, status: 'Success', date: new Date(new Date().setDate(new Date().getDate() - 3)).toISOString(), phone: '254745678901' },
-//     { id: 5, transactionId: 'TX100932165', userName: 'Mike Wilson', amount: 750, status: 'Pending', date: new Date(new Date().setDate(new Date().getDate() - 4)).toISOString(), phone: '254712345678' },
-//     { id: 6, transactionId: 'TX101012345', userName: 'Sarah Davis', amount: 3000, status: 'Success', date: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString(), phone: '254756789012' },
-//     { id: 7, transactionId: 'TX101154321', userName: 'Tom Clark', amount: 1200, status: 'Success', date: new Date(new Date().setDate(new Date().getDate() - 6)).toISOString(), phone: '254767890123' },
-//   ], []);
-
-//   const fetchTransactions = useCallback(async () => {
-//     setLoading(true);
-//     setError(null);
-    
-//     try {
-//       await new Promise(resolve => setTimeout(resolve, 800));
-      
-//       const start = new Date(startDate);
-//       const end = new Date(endDate);
-      
-//       const filteredData = mockTransactions.filter(tx => {
-//         const txDate = new Date(tx.date);
-//         return txDate >= new Date(start.setHours(0, 0, 0, 0)) && 
-//                txDate <= new Date(end.setHours(23, 59, 59, 999));
-//       });
-      
-//       setTransactions(filteredData);
-      
-//       if (filteredData.length === 0) {
-//         toast.info('No transactions found for the selected date range', { autoClose: 3000 });
-//       }
-//     } catch (err) {
-//       setError('Failed to load transactions. Please try again.');
-//       console.error('Error fetching transactions:', err);
-//       toast.error('Failed to load transactions. Please try again.');
-//     } finally {
-//       setLoading(false);
-//     }
-//   }, [startDate, endDate, refreshCount]);
-
-//   useEffect(() => {
-//     fetchTransactions();
-//   }, [fetchTransactions]);
-
-//   const handleRefresh = useCallback(() => {
-//     setRefreshCount(prev => prev + 1);
-//     toast.info('Refreshing transaction data...', { autoClose: 2000 });
-//   }, []);
-
-//   const filteredTransactions = useMemo(() => transactions.filter(
-//     transaction =>
-//       (transaction.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//       transaction.phone.includes(searchTerm) ||
-//       transaction.userName.toLowerCase().includes(searchTerm.toLowerCase())) &&
-//       (filterStatus === 'all' || transaction.status.toLowerCase() === filterStatus)
-//   ), [transactions, searchTerm, filterStatus]);
-
-//   const sortedTransactions = useMemo(() => [...filteredTransactions].sort((a, b) => {
-//     const dateA = new Date(a.date);
-//     const dateB = new Date(b.date);
-    
-//     if (sortDirection === 'amount_asc') return a.amount - b.amount;
-//     if (sortDirection === 'amount_desc') return b.amount - a.amount;
-//     if (sortDirection === 'date_asc') return dateA.getTime() - dateB.getTime();
-//     return dateB.getTime() - dateA.getTime();
-//   }), [filteredTransactions, sortDirection]);
-
-//   const toggleSort = useCallback((type) => {
-//     if (type === 'amount') {
-//       setSortDirection(prev => prev === 'amount_asc' ? 'amount_desc' : 'amount_asc');
-//     } else {
-//       setSortDirection(prev => prev === 'date_asc' ? 'date_desc' : 'date_asc');
-//     }
-//   }, []);
-
-//   const generateReport = useCallback((type) => {
-//     try {
-//       if (sortedTransactions.length === 0) {
-//         toast.warning('No transactions to generate report', { autoClose: 3000 });
-//         return;
-//       }
-
-//       if (type === 'pdf') {
-//         const doc = new jsPDF();
-        
-//         doc.setFontSize(16);
-//         doc.setTextColor(40, 53, 147);
-//         doc.text('TRANSACTION LOG REPORT', 105, 15, { align: 'center' });
-        
-//         doc.setFontSize(10);
-//         doc.setTextColor(100, 100, 100);
-//         doc.text(`Date Range: ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`, 14, 25);
-//         doc.text(`Status: ${filterStatus === 'all' ? 'All' : filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}`, 14, 30);
-        
-//         const headers = [['Transaction ID', 'User', 'Phone', 'Amount (KES)', 'Status', 'Date & Time']];
-//         const data = sortedTransactions.map(tx => [
-//           tx.transactionId,
-//           tx.userName,
-//           tx.phone,
-//           tx.amount.toLocaleString(),
-//           tx.status,
-//           new Date(tx.date).toLocaleString()
-//         ]);
-        
-//         doc.autoTable({
-//           head: headers,
-//           body: data,
-//           startY: 40,
-//           styles: { fontSize: 8 },
-//           headStyles: { fillColor: [40, 53, 147], textColor: 255 },
-//           alternateRowStyles: { fillColor: [240, 240, 240] }
-//         });
-        
-//         const totalAmount = sortedTransactions.reduce((sum, tx) => sum + tx.amount, 0);
-//         doc.setFontSize(10);
-//         doc.setTextColor(40, 53, 147);
-//         doc.text(`Total Transactions: ${sortedTransactions.length}`, 14, doc.lastAutoTable.finalY + 10);
-//         doc.text(`Total Amount: KES ${totalAmount.toLocaleString()}`, 14, doc.lastAutoTable.finalY + 15);
-//         doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, doc.lastAutoTable.finalY + 20);
-        
-//         doc.save(`Transaction_Log_${new Date().toISOString().slice(0, 10)}.pdf`);
-//         toast.success('PDF report generated successfully');
-//       } else if (type === 'csv') {
-//         toast.info('Preparing CSV download...', { autoClose: 2000 });
-//       }
-//     } catch (err) {
-//       console.error('Report generation error:', err);
-//       toast.error(`Failed to generate report: ${err.message}`);
-//     }
-//   }, [sortedTransactions, startDate, endDate, filterStatus]);
-
-//   const stats = useMemo(() => ({
-//     total: transactions.length,
-//     success: transactions.filter(tx => tx.status === 'Success').length,
-//     pending: transactions.filter(tx => tx.status === 'Pending').length,
-//     failed: transactions.filter(tx => tx.status === 'Failed').length,
-//     totalAmount: transactions.reduce((sum, tx) => sum + tx.amount, 0)
-//   }), [transactions]);
-
-//   const csvData = useMemo(() => sortedTransactions.map(tx => ({
-//     'Transaction ID': tx.transactionId,
-//     'User': tx.userName,
-//     'Phone': tx.phone,
-//     'Amount (KES)': tx.amount,
-//     'Status': tx.status,
-//     'Date & Time': new Date(tx.date).toLocaleString()
-//   })), [sortedTransactions]);
-
-//   return (
-//     <div className="p-6 bg-gray-50 min-h-screen">
-//       <div className="max-w-7xl mx-auto">
-//         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-//           <h1 className="text-2xl md:text-3xl font-semibold text-gray-800 flex items-center">
-//             <GrTransaction className="mr-2 text-blue-600" /> Transaction Log
-//           </h1>
-//           <div className="flex items-center space-x-2 mt-2 md:mt-0">
-//             <button
-//               onClick={handleRefresh}
-//               className="flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-//               aria-label="Refresh transactions"
-//             >
-//               <AiOutlineReload className="mr-1" /> Refresh
-//             </button>
-//             <div className="relative">
-//               <DatePicker
-//                 selected={startDate}
-//                 onChange={date => date && setStartDate(date)}
-//                 selectsStart
-//                 startDate={startDate}
-//                 endDate={endDate}
-//                 maxDate={new Date()}
-//                 className="p-2 border rounded-lg w-32 focus:ring-blue-500 focus:border-blue-500"
-//                 dateFormat="dd/MM/yyyy"
-//                 aria-label="Start date"
-//               />
-//               <FaCalendarAlt className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
-//             </div>
-//             <span className="text-gray-500">to</span>
-//             <div className="relative">
-//               <DatePicker
-//                 selected={endDate}
-//                 onChange={date => date && setEndDate(date)}
-//                 selectsEnd
-//                 startDate={startDate}
-//                 endDate={endDate}
-//                 minDate={startDate}
-//                 maxDate={new Date()}
-//                 className="p-2 border rounded-lg w-32 focus:ring-blue-500 focus:border-blue-500"
-//                 dateFormat="dd/MM/yyyy"
-//                 aria-label="End date"
-//               />
-//               <FaCalendarAlt className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
-//             </div>
-//           </div>
-//         </div>
-
-//         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-//           <div className="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
-//             <h3 className="text-gray-500 text-sm">Total Transactions</h3>
-//             <p className="text-2xl font-bold">{stats.total}</p>
-//           </div>
-//           <div className="bg-white p-4 rounded-lg shadow border-l-4 border-green-500">
-//             <h3 className="text-gray-500 text-sm">Successful</h3>
-//             <p className="text-2xl font-bold text-green-600">{stats.success}</p>
-//           </div>
-//           <div className="bg-white p-4 rounded-lg shadow border-l-4 border-yellow-500">
-//             <h3 className="text-gray-500 text-sm">Pending</h3>
-//             <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
-//           </div>
-//           <div className="bg-white p-4 rounded-lg shadow border-l-4 border-red-500">
-//             <h3 className="text-gray-500 text-sm">Total Amount</h3>
-//             <p className="text-2xl font-bold">KES {stats.totalAmount.toLocaleString()}</p>
-//           </div>
-//         </div>
-
-//         <div className="bg-white p-4 rounded-lg shadow mb-6">
-//           <div className="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-4 md:space-y-0">
-//             <div className="relative flex-grow">
-//               <FaSearch className="absolute left-3 top-3 text-gray-400" />
-//               <input
-//                 type="text"
-//                 className="pl-10 pr-4 py-2 border rounded-lg w-full focus:ring-blue-500 focus:border-blue-500"
-//                 placeholder="Search by ID, phone, or user..."
-//                 value={searchTerm}
-//                 onChange={(e) => setSearchTerm(e.target.value)}
-//                 aria-label="Search transactions"
-//               />
-//             </div>
-            
-//             <div className="flex space-x-2">
-//               <select
-//                 className="p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
-//                 value={filterStatus}
-//                 onChange={(e) => setFilterStatus(e.target.value)}
-//                 aria-label="Filter by status"
-//               >
-//                 <option value="all">All Status</option>
-//                 <option value="success">Success</option>
-//                 <option value="pending">Pending</option>
-//                 <option value="failed">Failed</option>
-//               </select>
-              
-//               <button
-//                 className="flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50"
-//                 onClick={() => toggleSort('date')}
-//                 aria-label="Sort by date"
-//               >
-//                 {sortDirection.includes('date') ? (
-//                   sortDirection === 'date_asc' ? <FaSortAmountUp className="mr-1" /> : <FaSortAmountDown className="mr-1" />
-//                 ) : (
-//                   <FaSortAmountDown className="mr-1" />
-//                 )}
-//                 Date
-//               </button>
-              
-//               <button
-//                 className="flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50"
-//                 onClick={() => toggleSort('amount')}
-//                 aria-label="Sort by amount"
-//               >
-//                 {sortDirection.includes('amount') ? (
-//                   sortDirection === 'amount_asc' ? <FaSortAmountUp className="mr-1" /> : <FaSortAmountDown className="mr-1" />
-//                 ) : (
-//                   <FaSortAmountDown className="mr-1" />
-//                 )}
-//                 Amount
-//               </button>
-//             </div>
-            
-//             <div className="flex space-x-2">
-//               <button
-//                 onClick={() => generateReport('pdf')}
-//                 className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-//                 aria-label="Generate PDF report"
-//               >
-//                 <FaDownload className="mr-2" /> PDF
-//               </button>
-              
-//               <CSVLink
-//                 data={csvData}
-//                 filename={`transaction_log_${new Date().toISOString().slice(0, 10)}.csv`}
-//                 className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-//                 aria-label="Download CSV"
-//               >
-//                 <FaDownload className="mr-2" /> CSV
-//               </CSVLink>
-//             </div>
-//           </div>
-//         </div>
-
-//         {loading ? (
-//           <div className="text-center py-8" aria-live="polite">
-//             <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-2"></div>
-//             <p>Loading transactions...</p>
-//           </div>
-//         ) : error ? (
-//           <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6" role="alert">
-//             <div className="flex">
-//               <div className="flex-shrink-0">
-//                 <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-//                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-//                 </svg>
-//               </div>
-//               <div className="ml-3">
-//                 <p className="text-sm text-red-700">{error}</p>
-//               </div>
-//             </div>
-//           </div>
-//         ) : (
-//           <div className="bg-white rounded-lg shadow overflow-hidden">
-//             <div className="overflow-x-auto">
-//               <table className="min-w-full divide-y divide-gray-200">
-//                 <thead className="bg-gray-50">
-//                   <tr>
-//                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                       Transaction ID
-//                     </th>
-//                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                       User
-//                     </th>
-//                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                       Phone
-//                     </th>
-//                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                       Amount (KES)
-//                     </th>
-//                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                       Status
-//                     </th>
-//                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                       Date & Time
-//                     </th>
-//                   </tr>
-//                 </thead>
-//                 <tbody className="bg-white divide-y divide-gray-200">
-//                   {sortedTransactions.length > 0 ? (
-//                     sortedTransactions.map((transaction) => (
-//                       <tr key={transaction.id} className="hover:bg-gray-50">
-//                         <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
-//                           {transaction.transactionId}
-//                         </td>
-//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-//                           {transaction.userName}
-//                         </td>
-//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-//                           {transaction.phone}
-//                         </td>
-//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-//                           {transaction.amount.toLocaleString()}
-//                         </td>
-//                         <td className="px-6 py-4 whitespace-nowrap">
-//                           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-//                             transaction.status === 'Success' 
-//                               ? 'bg-green-100 text-green-800' 
-//                               : transaction.status === 'Pending' 
-//                                 ? 'bg-yellow-100 text-yellow-800' 
-//                                 : 'bg-red-100 text-red-800'
-//                           }`}>
-//                             {transaction.status}
-//                           </span>
-//                         </td>
-//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-//                           {new Date(transaction.date).toLocaleString()}
-//                         </td>
-//                       </tr>
-//                     ))
-//                   ) : (
-//                     <tr>
-//                       <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
-//                         No transactions found matching your criteria
-//                       </td>
-//                     </tr>
-//                   )}
-//                 </tbody>
-//               </table>
-//             </div>
-//           </div>
-//         )}
-//       </div>
-//       <ToastContainer position="top-right" autoClose={5000} />
-//     </div>
-//   );
-// };
-
-// export default TransactionLog;
-
-
-
-
-// import React, { useState, useEffect, useMemo, useCallback } from 'react';
-// import { toast, ToastContainer } from 'react-toastify';
-// import { FaSearch, FaDownload, FaSortAmountDown, FaSortAmountUp, FaUser, FaCalendarAlt } from 'react-icons/fa';
-// import { GrTransaction } from 'react-icons/gr';
-// import { AiOutlineReload } from 'react-icons/ai';
-// import jsPDF from 'jspdf';
-// import 'jspdf-autotable';
-// import { CSVLink } from 'react-csv';
-// import 'react-toastify/dist/ReactToastify.css';
-// import DatePicker from 'react-datepicker';
-// import 'react-datepicker/dist/react-datepicker.css';
-// import api from '../../api'; 
-
-// const TransactionLog = () => {
-//   const [searchTerm, setSearchTerm] = useState('');
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-//   const [filterStatus, setFilterStatus] = useState('all');
-//   const [sortDirection, setSortDirection] = useState('date_desc');
-//   const [startDate, setStartDate] = useState(() => new Date(new Date().setDate(new Date().getDate() - 7)));
-//   const [endDate, setEndDate] = useState(new Date());
-//   const [refreshCount, setRefreshCount] = useState(0);
-//   const [transactions, setTransactions] = useState([]);
-//   const [pagination, setPagination] = useState({
-//     current_page: 1,
-//     total_pages: 1,
-//     total_items: 0,
-//     page_size: 20,
-//     has_next: false,
-//     has_previous: false
-//   });
-//   const [stats, setStats] = useState({
-//     total: 0,
-//     success: 0,
-//     pending: 0,
-//     failed: 0,
-//     totalAmount: 0
-//   });
-//   const [exportData, setExportData] = useState([]);
-
-//   // Fetch transactions from backend
-//   const fetchTransactions = useCallback(async () => {
-//     setLoading(true);
-//     setError(null);
-    
-//     try {
-//       // Format dates for API
-//       const formattedStartDate = startDate.toISOString().split('T')[0];
-//       const formattedEndDate = endDate.toISOString().split('T')[0];
-      
-//       const params = {
-//         start_date: formattedStartDate,
-//         end_date: formattedEndDate,
-//         status: filterStatus,
-//         search: searchTerm,
-//         sort_by: sortDirection,
-//         page: pagination.current_page,
-//         page_size: pagination.page_size
-//       };
-
-//       // Remove undefined params
-//       Object.keys(params).forEach(key => {
-//         if (params[key] === undefined || params[key] === '') {
-//           delete params[key];
-//         }
-//       });
-
-//       // Updated endpoint to match Django URL
-//       const response = await api.get('/api/payments/transactions/', { params });
-      
-//       setTransactions(response.data.transactions || []);
-//       setPagination(response.data.pagination || {});
-//       setStats(response.data.stats || {});
-      
-//       if (response.data.transactions.length === 0) {
-//         toast.info('No transactions found for the selected criteria', { autoClose: 3000 });
-//       }
-//     } catch (err) {
-//       const errorMessage = err.response?.data?.error || 'Failed to load transactions. Please try again.';
-//       setError(errorMessage);
-//       console.error('Error fetching transactions:', err);
-//       toast.error(errorMessage);
-//     } finally {
-//       setLoading(false);
-//     }
-//   }, [startDate, endDate, filterStatus, searchTerm, sortDirection, pagination.current_page, pagination.page_size, refreshCount]);
-
-//   // Fetch export data
-//   const fetchExportData = useCallback(async () => {
-//     try {
-//       const formattedStartDate = startDate.toISOString().split('T')[0];
-//       const formattedEndDate = endDate.toISOString().split('T')[0];
-      
-//       const params = {
-//         start_date: formattedStartDate,
-//         end_date: formattedEndDate,
-//         status: filterStatus,
-//         search: searchTerm,
-//         sort_by: sortDirection
-//       };
-
-//       Object.keys(params).forEach(key => {
-//         if (params[key] === undefined || params[key] === '') {
-//           delete params[key];
-//         }
-//       });
-
-//       // Updated endpoint to match Django URL
-//       const response = await api.get('/api/payments/transactions/export/', { params });
-//       setExportData(response.data.data || []);
-      
-//       return response.data.data;
-//     } catch (err) {
-//       console.error('Error fetching export data:', err);
-//       toast.error('Failed to prepare export data');
-//       return [];
-//     }
-//   }, [startDate, endDate, filterStatus, searchTerm, sortDirection]);
-
-//   // Load transactions on component mount and when dependencies change
-//   useEffect(() => {
-//     fetchTransactions();
-//   }, [fetchTransactions]);
-
-//   const handleRefresh = useCallback(() => {
-//     setRefreshCount(prev => prev + 1);
-//     toast.info('Refreshing transaction data...', { autoClose: 2000 });
-//   }, []);
-
-//   const handlePageChange = useCallback((newPage) => {
-//     setPagination(prev => ({
-//       ...prev,
-//       current_page: newPage
-//     }));
-//   }, []);
-
-//   const handleSearch = useCallback((e) => {
-//     setSearchTerm(e.target.value);
-//     // Reset to first page when searching
-//     setPagination(prev => ({ ...prev, current_page: 1 }));
-//   }, []);
-
-//   const handleStatusFilter = useCallback((e) => {
-//     setFilterStatus(e.target.value);
-//     setPagination(prev => ({ ...prev, current_page: 1 }));
-//   }, []);
-
-//   const toggleSort = useCallback((type) => {
-//     if (type === 'amount') {
-//       setSortDirection(prev => prev === 'amount_asc' ? 'amount_desc' : 'amount_asc');
-//     } else {
-//       setSortDirection(prev => prev === 'date_asc' ? 'date_desc' : 'date_asc');
-//     }
-//     setPagination(prev => ({ ...prev, current_page: 1 }));
-//   }, []);
-
-//   const generateReport = useCallback(async (type) => {
-//     try {
-//       const exportData = await fetchExportData();
-      
-//       if (exportData.length === 0) {
-//         toast.warning('No transactions to generate report', { autoClose: 3000 });
-//         return;
-//       }
-
-//       if (type === 'pdf') {
-//         const doc = new jsPDF();
-        
-//         // Title
-//         doc.setFontSize(16);
-//         doc.setTextColor(40, 53, 147);
-//         doc.text('TRANSACTION LOG REPORT', 105, 15, { align: 'center' });
-        
-//         // Metadata
-//         doc.setFontSize(10);
-//         doc.setTextColor(100, 100, 100);
-//         doc.text(`Date Range: ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`, 14, 25);
-//         doc.text(`Status: ${filterStatus === 'all' ? 'All' : filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}`, 14, 30);
-//         doc.text(`Total Transactions: ${exportData.length}`, 14, 35);
-        
-//         // Table headers
-//         const headers = [['Transaction ID', 'User', 'Phone', 'Amount (KES)', 'Status', 'Date & Time']];
-        
-//         // Table data
-//         const data = exportData.map(tx => [
-//           tx.transaction_id,
-//           tx.user_name,
-//           tx.phone,
-//           tx.amount.toLocaleString(),
-//           tx.status,
-//           new Date(tx.date_time).toLocaleString()
-//         ]);
-        
-//         // Create table
-//         doc.autoTable({
-//           head: headers,
-//           body: data,
-//           startY: 45,
-//           styles: { fontSize: 8 },
-//           headStyles: { fillColor: [40, 53, 147], textColor: 255 },
-//           alternateRowStyles: { fillColor: [240, 240, 240] }
-//         });
-        
-//         // Footer with totals
-//         const totalAmount = exportData.reduce((sum, tx) => sum + tx.amount, 0);
-//         doc.setFontSize(10);
-//         doc.setTextColor(40, 53, 147);
-//         doc.text(`Total Amount: KES ${totalAmount.toLocaleString()}`, 14, doc.lastAutoTable.finalY + 10);
-//         doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, doc.lastAutoTable.finalY + 15);
-        
-//         // Save PDF
-//         doc.save(`Transaction_Log_${new Date().toISOString().slice(0, 10)}.pdf`);
-//         toast.success('PDF report generated successfully');
-//       }
-//     } catch (err) {
-//       console.error('Report generation error:', err);
-//       toast.error(`Failed to generate report: ${err.message}`);
-//     }
-//   }, [fetchExportData, startDate, endDate, filterStatus]);
-
-//   // Prepare CSV data
-//   const csvData = useMemo(() => exportData.map(tx => ({
-//     'Transaction ID': tx.transaction_id,
-//     'User': tx.user_name,
-//     'Phone': tx.phone,
-//     'Amount (KES)': tx.amount,
-//     'Status': tx.status,
-//     'Payment Method': tx.payment_method,
-//     'Date & Time': new Date(tx.date_time).toLocaleString()
-//   })), [exportData]);
-
-//   // Pagination controls component
-//   const PaginationControls = useMemo(() => (
-//     <div className="flex items-center justify-between mt-4">
-//       <div className="text-sm text-gray-700">
-//         Showing {((pagination.current_page - 1) * pagination.page_size) + 1} to{' '}
-//         {Math.min(pagination.current_page * pagination.page_size, pagination.total_items)} of{' '}
-//         {pagination.total_items} entries
-//       </div>
-      
-//       <div className="flex space-x-2">
-//         <button
-//           onClick={() => handlePageChange(pagination.current_page - 1)}
-//           disabled={!pagination.has_previous}
-//           className={`px-3 py-1 rounded-md ${
-//             pagination.has_previous
-//               ? 'bg-gray-200 hover:bg-gray-300'
-//               : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-//           }`}
-//         >
-//           Previous
-//         </button>
-        
-//         {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
-//           const pageNum = Math.max(1, Math.min(
-//             pagination.current_page - 2,
-//             pagination.total_pages - 4
-//           )) + i;
-          
-//           if (pageNum > pagination.total_pages) return null;
-          
-//           return (
-//             <button
-//               key={pageNum}
-//               onClick={() => handlePageChange(pageNum)}
-//               className={`px-3 py-1 rounded-md ${
-//                 pageNum === pagination.current_page
-//                   ? 'bg-blue-500 text-white'
-//                   : 'bg-gray-200 hover:bg-gray-300'
-//               }`}
-//             >
-//               {pageNum}
-//             </button>
-//           );
-//         })}
-        
-//         <button
-//           onClick={() => handlePageChange(pagination.current_page + 1)}
-//           disabled={!pagination.has_next}
-//           className={`px-3 py-1 rounded-md ${
-//             pagination.has_next
-//               ? 'bg-gray-200 hover:bg-gray-300'
-//               : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-//           }`}
-//         >
-//           Next
-//         </button>
-//       </div>
-//     </div>
-//   ), [pagination, handlePageChange]);
-
-//   return (
-//     <div className="p-6 bg-gray-50 min-h-screen">
-//       <div className="max-w-7xl mx-auto">
-//         {/* Header Section */}
-//         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-//           <h1 className="text-2xl md:text-3xl font-semibold text-gray-800 flex items-center">
-//             <GrTransaction className="mr-2 text-blue-600" /> Transaction Log
-//           </h1>
-//           <div className="flex items-center space-x-2 mt-2 md:mt-0">
-//             <button
-//               onClick={handleRefresh}
-//               className="flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-//               aria-label="Refresh transactions"
-//             >
-//               <AiOutlineReload className="mr-1" /> Refresh
-//             </button>
-            
-//             {/* Date Range Selectors */}
-//             <div className="relative">
-//               <DatePicker
-//                 selected={startDate}
-//                 onChange={date => date && setStartDate(date)}
-//                 selectsStart
-//                 startDate={startDate}
-//                 endDate={endDate}
-//                 maxDate={new Date()}
-//                 className="p-2 border rounded-lg w-32 focus:ring-blue-500 focus:border-blue-500"
-//                 dateFormat="dd/MM/yyyy"
-//                 aria-label="Start date"
-//               />
-//               <FaCalendarAlt className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
-//             </div>
-            
-//             <span className="text-gray-500">to</span>
-            
-//             <div className="relative">
-//               <DatePicker
-//                 selected={endDate}
-//                 onChange={date => date && setEndDate(date)}
-//                 selectsEnd
-//                 startDate={startDate}
-//                 endDate={endDate}
-//                 minDate={startDate}
-//                 maxDate={new Date()}
-//                 className="p-2 border rounded-lg w-32 focus:ring-blue-500 focus:border-blue-500"
-//                 dateFormat="dd/MM/yyyy"
-//                 aria-label="End date"
-//               />
-//               <FaCalendarAlt className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
-//             </div>
-//           </div>
-//         </div>
-
-//         {/* Statistics Cards */}
-//         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-//           <div className="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
-//             <h3 className="text-gray-500 text-sm">Total Transactions</h3>
-//             <p className="text-2xl font-bold">{stats.total}</p>
-//           </div>
-//           <div className="bg-white p-4 rounded-lg shadow border-l-4 border-green-500">
-//             <h3 className="text-gray-500 text-sm">Successful</h3>
-//             <p className="text-2xl font-bold text-green-600">{stats.success}</p>
-//           </div>
-//           <div className="bg-white p-4 rounded-lg shadow border-l-4 border-yellow-500">
-//             <h3 className="text-gray-500 text-sm">Pending</h3>
-//             <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
-//           </div>
-//           <div className="bg-white p-4 rounded-lg shadow border-l-4 border-red-500">
-//             <h3 className="text-gray-500 text-sm">Total Amount</h3>
-//             <p className="text-2xl font-bold">KES {stats.totalAmount?.toLocaleString() || '0'}</p>
-//           </div>
-//         </div>
-
-//         {/* Filters and Controls */}
-//         <div className="bg-white p-4 rounded-lg shadow mb-6">
-//           <div className="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-4 md:space-y-0">
-//             {/* Search Input */}
-//             <div className="relative flex-grow">
-//               <FaSearch className="absolute left-3 top-3 text-gray-400" />
-//               <input
-//                 type="text"
-//                 className="pl-10 pr-4 py-2 border rounded-lg w-full focus:ring-blue-500 focus:border-blue-500"
-//                 placeholder="Search by ID, phone, or user..."
-//                 value={searchTerm}
-//                 onChange={handleSearch}
-//                 aria-label="Search transactions"
-//               />
-//             </div>
-            
-//             {/* Filter Controls */}
-//             <div className="flex space-x-2">
-//               <select
-//                 className="p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
-//                 value={filterStatus}
-//                 onChange={handleStatusFilter}
-//                 aria-label="Filter by status"
-//               >
-//                 <option value="all">All Status</option>
-//                 <option value="success">Success</option>
-//                 <option value="pending">Pending</option>
-//                 <option value="failed">Failed</option>
-//               </select>
-              
-//               {/* Sort Buttons */}
-//               <button
-//                 className="flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50"
-//                 onClick={() => toggleSort('date')}
-//                 aria-label="Sort by date"
-//               >
-//                 {sortDirection.includes('date') ? (
-//                   sortDirection === 'date_asc' ? <FaSortAmountUp className="mr-1" /> : <FaSortAmountDown className="mr-1" />
-//                 ) : (
-//                   <FaSortAmountDown className="mr-1" />
-//                 )}
-//                 Date
-//               </button>
-              
-//               <button
-//                 className="flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50"
-//                 onClick={() => toggleSort('amount')}
-//                 aria-label="Sort by amount"
-//               >
-//                 {sortDirection.includes('amount') ? (
-//                   sortDirection === 'amount_asc' ? <FaSortAmountUp className="mr-1" /> : <FaSortAmountDown className="mr-1" />
-//                 ) : (
-//                   <FaSortAmountDown className="mr-1" />
-//                 )}
-//                 Amount
-//               </button>
-//             </div>
-            
-//             {/* Export Buttons */}
-//             <div className="flex space-x-2">
-//               <button
-//                 onClick={() => generateReport('pdf')}
-//                 className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-//                 aria-label="Generate PDF report"
-//               >
-//                 <FaDownload className="mr-2" /> PDF
-//               </button>
-              
-//               <CSVLink
-//                 data={csvData}
-//                 filename={`transaction_log_${new Date().toISOString().slice(0, 10)}.csv`}
-//                 className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-//                 aria-label="Download CSV"
-//                 asyncOnClick={true}
-//                 onClick={fetchExportData}
-//               >
-//                 <FaDownload className="mr-2" /> CSV
-//               </CSVLink>
-//             </div>
-//           </div>
-//         </div>
-
-//         {/* Loading State */}
-//         {loading ? (
-//           <div className="text-center py-8" aria-live="polite">
-//             <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-2"></div>
-//             <p>Loading transactions...</p>
-//           </div>
-//         ) : error ? (
-//           <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6" role="alert">
-//             <div className="flex">
-//               <div className="flex-shrink-0">
-//                 <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-//                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-//                 </svg>
-//               </div>
-//               <div className="ml-3">
-//                 <p className="text-sm text-red-700">{error}</p>
-//               </div>
-//             </div>
-//           </div>
-//         ) : (
-//           <>
-//             {/* Transactions Table */}
-//             <div className="bg-white rounded-lg shadow overflow-hidden">
-//               <div className="overflow-x-auto">
-//                 <table className="min-w-full divide-y divide-gray-200">
-//                   <thead className="bg-gray-50">
-//                     <tr>
-//                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                         Transaction ID
-//                       </th>
-//                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                         User
-//                       </th>
-//                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                         Phone
-//                       </th>
-//                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                         Amount (KES)
-//                       </th>
-//                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                         Status
-//                       </th>
-//                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                         Date & Time
-//                       </th>
-//                     </tr>
-//                   </thead>
-//                   <tbody className="bg-white divide-y divide-gray-200">
-//                     {transactions.length > 0 ? (
-//                       transactions.map((transaction) => (
-//                         <tr key={transaction.id} className="hover:bg-gray-50">
-//                           <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
-//                             {transaction.transaction_id}
-//                           </td>
-//                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-//                             {transaction.user_name}
-//                           </td>
-//                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-//                             {transaction.phone}
-//                           </td>
-//                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-//                             {transaction.amount.toLocaleString()}
-//                           </td>
-//                           <td className="px-6 py-4 whitespace-nowrap">
-//                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-//                               transaction.status === 'Success' 
-//                                 ? 'bg-green-100 text-green-800' 
-//                                 : transaction.status === 'Pending' 
-//                                   ? 'bg-yellow-100 text-yellow-800' 
-//                                   : 'bg-red-100 text-red-800'
-//                             }`}>
-//                               {transaction.status}
-//                             </span>
-//                           </td>
-//                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-//                             {new Date(transaction.date_time).toLocaleString()}
-//                           </td>
-//                         </tr>
-//                       ))
-//                     ) : (
-//                       <tr>
-//                         <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
-//                           No transactions found matching your criteria
-//                         </td>
-//                       </tr>
-//                     )}
-//                   </tbody>
-//                 </table>
-//               </div>
-              
-//               {/* Pagination Controls */}
-//               {transactions.length > 0 && PaginationControls}
-//             </div>
-//           </>
-//         )}
-//       </div>
-//       <ToastContainer position="top-right" autoClose={5000} />
-//     </div>
-//   );
-// };
-
-// export default TransactionLog;
-
-
-
-
-
 // // src/components/Payments/TransactionLog.js
 // import React, { useState, useEffect, useMemo, useCallback } from 'react';
 // import { toast, ToastContainer } from 'react-toastify';
@@ -1111,13 +146,14 @@
 //     doc.setFontSize(16);
 //     doc.text('TRANSACTION LOG REPORT', 105, 15, { align: 'center' });
 
-//     const headers = [['Transaction ID', 'User', 'Phone', 'Amount (KES)', 'Status', 'Date & Time']];
+//     const headers = [['Transaction ID', 'User', 'Phone', 'Amount (KES)', 'Status', 'Subscription', 'Date & Time']];
 //     const rows = data.map(tx => [
 //       tx.transaction_id,
 //       tx.user_name,
 //       tx.phone,
 //       tx.amount.toLocaleString(),
 //       tx.status,
+//       tx.subscription_plan || 'N/A', // ✅ NEW: Added subscription column
 //       new Date(tx.date_time).toLocaleString()
 //     ]);
 
@@ -1138,6 +174,7 @@
 //     'Phone': tx.phone,
 //     'Amount (KES)': tx.amount,
 //     'Status': tx.status,
+//     'Subscription': tx.subscription_plan || 'N/A', // ✅ NEW: Added subscription column
 //     'Payment Method': tx.payment_method,
 //     'Date & Time': new Date(tx.date_time).toLocaleString()
 //   })), [exportData]);
@@ -1252,18 +289,20 @@
 //                   <th>Phone</th>
 //                   <th>Amount</th>
 //                   <th>Status</th>
+//                   <th>Subscription</th> {/* ✅ NEW: Subscription column */}
 //                   <th>Date & Time</th>
 //                 </tr>
 //               </thead>
 //               <tbody>
 //                 {transactions.map(tx => (
 //                   <tr key={tx.id}>
-//                     <td>{tx.transaction_id}</td>
-//                     <td>{tx.user_name}</td>
+//                     <td>{tx.transactionId}</td>
+//                     <td>{tx.userName}</td>
 //                     <td>{tx.phone}</td>
 //                     <td>KES {tx.amount.toLocaleString()}</td>
 //                     <td>{tx.status}</td>
-//                     <td>{new Date(tx.date_time).toLocaleString()}</td>
+//                     <td>{tx.subscriptionPlan || 'N/A'}</td> {/* ✅ NEW: Subscription data */}
+//                     <td>{new Date(tx.date).toLocaleString()}</td>
 //                   </tr>
 //                 ))}
 //               </tbody>
@@ -1284,6 +323,12 @@
 
 
 
+
+
+
+
+
+
 // src/components/Payments/TransactionLog.js
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
@@ -1297,8 +342,10 @@ import 'react-toastify/dist/ReactToastify.css';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import api from '../../api';
+import { useTheme } from '../../context/ThemeContext'; // Import theme context
 
 const TransactionLog = () => {
+  const { theme } = useTheme(); // Get current theme
   const [transactions, setTransactions] = useState([]);
   const [exportData, setExportData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -1340,34 +387,51 @@ const TransactionLog = () => {
       const params = {
         start_date: formattedStartDate,
         end_date: formattedEndDate,
-        status: filterStatus,
-        search: searchTerm,
+        status: filterStatus !== 'all' ? filterStatus : undefined,
+        search: searchTerm || undefined,
         sort_by: sortDirection,
         page: pagination.current_page,
         page_size: pagination.page_size
       };
 
+      // Remove undefined parameters
       Object.keys(params).forEach(key => {
-        if (!params[key]) delete params[key];
+        if (params[key] === undefined) delete params[key];
       });
 
       const response = await api.get('/api/payments/transactions/', { params });
 
-      setTransactions(response.data.transactions || []);
-      setPagination(response.data.pagination || {});
-      setStats(response.data.stats || {});
+      // Ensure we have consistent data structure
+      const transactionsData = response.data.transactions || [];
+      setTransactions(transactionsData);
+      setPagination(response.data.pagination || {
+        current_page: 1,
+        total_pages: 1,
+        total_items: transactionsData.length,
+        page_size: pagination.page_size,
+        has_next: false,
+        has_previous: false
+      });
+      setStats(response.data.stats || {
+        total: transactionsData.length,
+        success: transactionsData.filter(t => t.status === 'success').length,
+        pending: transactionsData.filter(t => t.status === 'pending').length,
+        failed: transactionsData.filter(t => t.status === 'failed').length,
+        totalAmount: transactionsData.reduce((sum, t) => sum + (t.amount || 0), 0)
+      });
 
-      if ((response.data.transactions || []).length === 0) {
+      if (transactionsData.length === 0) {
         toast.info('No transactions found for the selected criteria', { autoClose: 3000 });
       }
     } catch (err) {
-      const errorMessage = err.response?.data?.error || 'Failed to load transactions';
+      const errorMessage = err.response?.data?.error || err.message || 'Failed to load transactions';
       setError(errorMessage);
       toast.error(errorMessage);
+      console.error('Fetch transactions error:', err);
     } finally {
       setLoading(false);
     }
-  }, [startDate, endDate, filterStatus, searchTerm, sortDirection, pagination.current_page, pagination.page_size, refreshCount]);
+  }, [startDate, endDate, filterStatus, searchTerm, sortDirection, pagination.current_page, pagination.page_size]);
 
   /** 🔹 Fetch Export Data */
   const fetchExportData = useCallback(async () => {
@@ -1378,20 +442,24 @@ const TransactionLog = () => {
       const params = {
         start_date: formattedStartDate,
         end_date: formattedEndDate,
-        status: filterStatus,
-        search: searchTerm,
+        status: filterStatus !== 'all' ? filterStatus : undefined,
+        search: searchTerm || undefined,
         sort_by: sortDirection
       };
 
+      // Remove undefined parameters
       Object.keys(params).forEach(key => {
-        if (!params[key]) delete params[key];
+        if (params[key] === undefined) delete params[key];
       });
 
       const response = await api.get('/api/payments/transactions/export/', { params });
-      setExportData(response.data.data || []);
-      return response.data.data || [];
+      const data = response.data.data || [];
+      setExportData(data);
+      return data;
     } catch (err) {
-      toast.error('Failed to prepare export data');
+      const errorMessage = err.response?.data?.error || 'Failed to prepare export data';
+      toast.error(errorMessage);
+      console.error('Export data error:', err);
       return [];
     }
   }, [startDate, endDate, filterStatus, searchTerm, sortDirection]);
@@ -1400,6 +468,13 @@ const TransactionLog = () => {
   useEffect(() => {
     fetchTransactions();
   }, [fetchTransactions]);
+
+  /** 🔹 Refresh when refreshCount changes */
+  useEffect(() => {
+    if (refreshCount > 0) {
+      fetchTransactions();
+    }
+  }, [refreshCount, fetchTransactions]);
 
   const handleRefresh = () => {
     setRefreshCount(prev => prev + 1);
@@ -1419,55 +494,110 @@ const TransactionLog = () => {
     setPagination(prev => ({ ...prev, current_page: 1 }));
   };
 
+  /** 🔹 Handle search with debounce */
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    setPagination(prev => ({ ...prev, current_page: 1 }));
+  };
+
+  /** 🔹 Handle status filter change */
+  const handleStatusChange = (value) => {
+    setFilterStatus(value);
+    setPagination(prev => ({ ...prev, current_page: 1 }));
+  };
+
   /** 🔹 PDF Report */
   const generateReport = async () => {
     const data = await fetchExportData();
     if (data.length === 0) {
-      toast.warning('No data for report');
+      toast.warning('No data available for report generation');
       return;
     }
 
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text('TRANSACTION LOG REPORT', 105, 15, { align: 'center' });
+    try {
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.text('TRANSACTION LOG REPORT', 105, 15, { align: 'center' });
 
-    const headers = [['Transaction ID', 'User', 'Phone', 'Amount (KES)', 'Status', 'Subscription', 'Date & Time']];
-    const rows = data.map(tx => [
-      tx.transaction_id,
-      tx.user_name,
-      tx.phone,
-      tx.amount.toLocaleString(),
-      tx.status,
-      tx.subscription_plan || 'N/A', // ✅ NEW: Added subscription column
-      new Date(tx.date_time).toLocaleString()
-    ]);
+      const headers = [['Transaction ID', 'User', 'Phone', 'Amount (KES)', 'Status', 'Subscription', 'Date & Time']];
+      const rows = data.map(tx => [
+        tx.transaction_id || tx.transactionId || 'N/A',
+        tx.user_name || tx.userName || 'N/A',
+        tx.phone || 'N/A',
+        (tx.amount || 0).toLocaleString(),
+        tx.status || 'N/A',
+        tx.subscription_plan || tx.subscriptionPlan || 'N/A',
+        new Date(tx.date_time || tx.date).toLocaleString()
+      ]);
 
-    doc.autoTable({
-      head: headers,
-      body: rows,
-      startY: 30
-    });
+      doc.autoTable({
+        head: headers,
+        body: rows,
+        startY: 30,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [59, 130, 246] }
+      });
 
-    doc.save(`Transaction_Log_${new Date().toISOString().slice(0, 10)}.pdf`);
-    toast.success('PDF generated');
+      doc.save(`Transaction_Log_${new Date().toISOString().slice(0, 10)}.pdf`);
+      toast.success('PDF report generated successfully');
+    } catch (err) {
+      toast.error('Failed to generate PDF report');
+      console.error('PDF generation error:', err);
+    }
   };
 
   /** 🔹 CSV Data */
-  const csvData = useMemo(() => exportData.map(tx => ({
-    'Transaction ID': tx.transaction_id,
-    'User': tx.user_name,
-    'Phone': tx.phone,
-    'Amount (KES)': tx.amount,
-    'Status': tx.status,
-    'Subscription': tx.subscription_plan || 'N/A', // ✅ NEW: Added subscription column
-    'Payment Method': tx.payment_method,
-    'Date & Time': new Date(tx.date_time).toLocaleString()
-  })), [exportData]);
+  const csvData = useMemo(() => {
+    return exportData.map(tx => ({
+      'Transaction ID': tx.transaction_id || tx.transactionId,
+      'User': tx.user_name || tx.userName,
+      'Phone': tx.phone,
+      'Amount (KES)': tx.amount,
+      'Status': tx.status,
+      'Subscription': tx.subscription_plan || tx.subscriptionPlan || 'N/A',
+      'Payment Method': tx.payment_method,
+      'Date & Time': new Date(tx.date_time || tx.date).toLocaleString()
+    }));
+  }, [exportData]);
+
+  /** 🔹 Get status color based on theme */
+  const getStatusColor = (status) => {
+    const baseColors = {
+      success: 'text-green-600',
+      pending: 'text-yellow-600',
+      failed: 'text-red-600'
+    };
+    
+    const darkColors = {
+      success: 'text-green-400',
+      pending: 'text-yellow-400',
+      failed: 'text-red-400'
+    };
+    
+    return theme === 'dark' ? darkColors[status] : baseColors[status];
+  };
+
+  /** 🔹 Get status background color */
+  const getStatusBgColor = (status) => {
+    const baseColors = {
+      success: 'bg-green-100',
+      pending: 'bg-yellow-100',
+      failed: 'bg-red-100'
+    };
+    
+    const darkColors = {
+      success: 'bg-green-900/30',
+      pending: 'bg-yellow-900/30',
+      failed: 'bg-red-900/30'
+    };
+    
+    return theme === 'dark' ? darkColors[status] : baseColors[status];
+  };
 
   /** 🔹 Pagination Controls */
   const PaginationControls = (
-    <div className="flex items-center justify-between mt-4">
-      <div className="text-sm text-gray-700">
+    <div className="flex items-center justify-between mt-4 p-4">
+      <div className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
         Showing {((pagination.current_page - 1) * pagination.page_size) + 1} to{' '}
         {Math.min(pagination.current_page * pagination.page_size, pagination.total_items)} of{' '}
         {pagination.total_items} entries
@@ -1476,14 +606,22 @@ const TransactionLog = () => {
         <button
           onClick={() => handlePageChange(pagination.current_page - 1)}
           disabled={!pagination.has_previous}
-          className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+          className={`px-4 py-2 rounded-lg transition-all ${
+            theme === 'dark' 
+              ? 'bg-gray-700 text-white hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-500' 
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400'
+          } disabled:cursor-not-allowed`}
         >
           Previous
         </button>
         <button
           onClick={() => handlePageChange(pagination.current_page + 1)}
           disabled={!pagination.has_next}
-          className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+          className={`px-4 py-2 rounded-lg transition-all ${
+            theme === 'dark' 
+              ? 'bg-gray-700 text-white hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-500' 
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400'
+          } disabled:cursor-not-allowed`}
         >
           Next
         </button>
@@ -1491,112 +629,274 @@ const TransactionLog = () => {
     </div>
   );
 
+  // Theme-based classes
+  const containerClass = theme === 'dark' 
+    ? 'bg-gradient-to-br from-gray-900 to-indigo-900 text-white min-h-screen' 
+    : 'bg-gray-50 text-gray-800 min-h-screen';
+
+  const cardClass = theme === 'dark' 
+    ? 'bg-gray-800/80 backdrop-blur-md border border-gray-700' 
+    : 'bg-white border border-gray-200';
+
+  const inputClass = theme === 'dark'
+    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+    : 'bg-white border-gray-300 text-gray-800 placeholder-gray-500';
+
+  const tableHeaderClass = theme === 'dark'
+    ? 'bg-gray-700 text-gray-200'
+    : 'bg-gray-50 text-gray-700';
+
+  const tableRowClass = theme === 'dark'
+    ? 'border-gray-700 hover:bg-gray-700/50'
+    : 'border-gray-200 hover:bg-gray-50';
+
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className={`p-6 min-h-screen transition-colors duration-300 ${containerClass}`}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold flex items-center">
-            <GrTransaction className="mr-2 text-blue-600" /> Transaction Log
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <h1 className="text-2xl font-bold flex items-center">
+            <GrTransaction className="mr-3 text-blue-500" /> 
+            Transaction Log
           </h1>
-          <button onClick={handleRefresh} className="flex items-center px-3 py-2 bg-white border rounded shadow">
-            <AiOutlineReload className="mr-1" /> Refresh
+          <button 
+            onClick={handleRefresh} 
+            disabled={loading}
+            className={`flex items-center px-4 py-2 rounded-lg transition-all ${
+              theme === 'dark'
+                ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-300'
+            } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <AiOutlineReload className={`mr-2 ${loading ? 'animate-spin' : ''}`} /> 
+            {loading ? 'Refreshing...' : 'Refresh'}
           </button>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded shadow border-l-4 border-blue-500">
-            <h3>Total Transactions</h3>
-            <p className="text-xl font-bold">{stats.total}</p>
-          </div>
-          <div className="bg-white p-4 rounded shadow border-l-4 border-green-500">
-            <h3>Success</h3>
-            <p className="text-xl font-bold text-green-600">{stats.success}</p>
-          </div>
-          <div className="bg-white p-4 rounded shadow border-l-4 border-yellow-500">
-            <h3>Pending</h3>
-            <p className="text-xl font-bold text-yellow-600">{stats.pending}</p>
-          </div>
-          <div className="bg-white p-4 rounded shadow border-l-4 border-red-500">
-            <h3>Total Amount</h3>
-            <p className="text-xl font-bold">KES {stats.totalAmount?.toLocaleString()}</p>
-          </div>
+          {[
+            { label: 'Total Transactions', value: stats.total, border: 'border-l-blue-500' },
+            { label: 'Success', value: stats.success, border: 'border-l-green-500', color: 'text-green-600' },
+            { label: 'Pending', value: stats.pending, border: 'border-l-yellow-500', color: 'text-yellow-600' },
+            { label: 'Total Amount', value: `KES ${stats.totalAmount?.toLocaleString() || '0'}`, border: 'border-l-purple-500' },
+          ].map((stat, index) => (
+            <div key={index} className={`p-6 rounded-xl shadow-lg ${cardClass} ${stat.border}`}>
+              <h3 className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                {stat.label}
+              </h3>
+              <p className={`text-2xl font-bold mt-2 ${stat.color || (theme === 'dark' ? 'text-white' : 'text-gray-800')}`}>
+                {stat.value}
+              </p>
+            </div>
+          ))}
         </div>
 
         {/* Filters */}
-        <div className="bg-white p-4 rounded shadow mb-6 flex flex-wrap gap-4">
-          <div className="relative flex-grow">
-            <FaSearch className="absolute left-3 top-3 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="pl-10 pr-4 py-2 border rounded w-full"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        <div className={`p-6 rounded-xl shadow-lg mb-6 ${cardClass}`}>
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
+            {/* Search */}
+            <div className="relative flex-grow w-full lg:w-auto">
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by transaction ID, user, or phone..."
+                className={`pl-10 pr-4 py-3 border rounded-lg w-full transition-colors ${inputClass}`}
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+            </div>
+
+            {/* Status Filter */}
+            <select
+              className={`p-3 border rounded-lg transition-colors ${inputClass} w-full lg:w-40`}
+              value={filterStatus}
+              onChange={(e) => handleStatusChange(e.target.value)}
+            >
+              <option value="all">All Status</option>
+              <option value="success">Success</option>
+              <option value="pending">Pending</option>
+              <option value="failed">Failed</option>
+            </select>
+
+            {/* Date Pickers */}
+            <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+              <div className="flex items-center gap-2">
+                <FaCalendarAlt className="text-gray-400" />
+                <DatePicker
+                  selected={startDate}
+                  onChange={setStartDate}
+                  selectsStart
+                  startDate={startDate}
+                  endDate={endDate}
+                  className={`p-2 border rounded-lg transition-colors ${inputClass} w-full`}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>to</span>
+                <DatePicker
+                  selected={endDate}
+                  onChange={setEndDate}
+                  selectsEnd
+                  startDate={startDate}
+                  endDate={endDate}
+                  minDate={startDate}
+                  className={`p-2 border rounded-lg transition-colors ${inputClass} w-full`}
+                />
+              </div>
+            </div>
+
+            {/* Sort Buttons */}
+            <div className="flex gap-2 w-full lg:w-auto">
+              <button 
+                onClick={() => toggleSort('date')}
+                className={`px-4 py-3 border rounded-lg transition-all flex items-center gap-2 ${
+                  theme === 'dark' 
+                    ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' 
+                    : 'bg-white border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {sortDirection.includes('asc') ? <FaSortAmountUp /> : <FaSortAmountDown />}
+                Date
+              </button>
+              <button 
+                onClick={() => toggleSort('amount')}
+                className={`px-4 py-3 border rounded-lg transition-all flex items-center gap-2 ${
+                  theme === 'dark' 
+                    ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' 
+                    : 'bg-white border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {sortDirection.includes('asc') ? <FaSortAmountUp /> : <FaSortAmountDown />}
+                Amount
+              </button>
+            </div>
+
+            {/* Export Buttons */}
+            <div className="flex gap-2 w-full lg:w-auto">
+              <button 
+                onClick={generateReport}
+                disabled={loading}
+                className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <FaDownload />
+                PDF
+              </button>
+              <CSVLink
+                data={csvData}
+                filename={`transaction_log_${new Date().toISOString().slice(0, 10)}.csv`}
+                onClick={fetchExportData}
+                className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 text-center"
+              >
+                <FaDownload />
+                CSV
+              </CSVLink>
+            </div>
           </div>
-          <select
-            className="p-2 border rounded"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <option value="all">All</option>
-            <option value="success">Success</option>
-            <option value="pending">Pending</option>
-            <option value="failed">Failed</option>
-          </select>
-          <button onClick={() => toggleSort('date')} className="px-3 py-2 border rounded">Sort by Date</button>
-          <button onClick={() => toggleSort('amount')} className="px-3 py-2 border rounded">Sort by Amount</button>
-          <button onClick={generateReport} className="px-4 py-2 bg-blue-600 text-white rounded">PDF</button>
-          <CSVLink
-            data={csvData}
-            filename={`transaction_log_${new Date().toISOString().slice(0, 10)}.csv`}
-            onClick={fetchExportData}
-            className="px-4 py-2 bg-green-600 text-white rounded"
-          >
-            CSV
-          </CSVLink>
         </div>
 
         {/* Table */}
         {loading ? (
-          <p>Loading...</p>
+          <div className={`p-8 rounded-xl ${cardClass} text-center`}>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-4">Loading transactions...</p>
+          </div>
         ) : error ? (
-          <p className="text-red-600">{error}</p>
+          <div className={`p-6 rounded-xl ${cardClass} text-center`}>
+            <p className="text-red-500 text-lg">{error}</p>
+            <button 
+              onClick={handleRefresh}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
         ) : (
-          <div className="bg-white rounded shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead>
-                <tr>
-                  <th>Transaction ID</th>
-                  <th>User</th>
-                  <th>Phone</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Subscription</th> {/* ✅ NEW: Subscription column */}
-                  <th>Date & Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.map(tx => (
-                  <tr key={tx.id}>
-                    <td>{tx.transactionId}</td>
-                    <td>{tx.userName}</td>
-                    <td>{tx.phone}</td>
-                    <td>KES {tx.amount.toLocaleString()}</td>
-                    <td>{tx.status}</td>
-                    <td>{tx.subscriptionPlan || 'N/A'}</td> {/* ✅ NEW: Subscription data */}
-                    <td>{new Date(tx.date).toLocaleString()}</td>
+          <div className={`rounded-xl shadow-lg overflow-hidden ${cardClass}`}>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className={tableHeaderClass}>
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
+                      Transaction ID
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
+                      User
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
+                      Phone
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
+                      Subscription
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
+                      Date & Time
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-200'}`}>
+                  {transactions.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" className="px-6 py-8 text-center">
+                        <div className="flex flex-col items-center justify-center">
+                          <GrTransaction className="text-4xl text-gray-400 mb-2" />
+                          <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>
+                            No transactions found
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    transactions.map((tx, index) => (
+                      <tr key={tx.id || index} className={`transition-colors ${tableRowClass}`}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">
+                          {tx.transaction_id || tx.transactionId || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {tx.user_name || tx.userName || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {tx.phone || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold">
+                          KES {(tx.amount || 0).toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusBgColor(tx.status)} ${getStatusColor(tx.status)}`}>
+                            {tx.status?.charAt(0).toUpperCase() + tx.status?.slice(1) || 'Unknown'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {tx.subscription_plan || tx.subscriptionPlan || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {new Date(tx.date_time || tx.date).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
             {transactions.length > 0 && PaginationControls}
           </div>
         )}
       </div>
-      <ToastContainer />
+      <ToastContainer 
+        position="bottom-right"
+        theme={theme}
+        toastClassName={() => 
+          `relative flex p-1 min-h-10 rounded-md justify-between overflow-hidden cursor-pointer ${
+            theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'
+          }`
+        }
+      />
     </div>
   );
 };

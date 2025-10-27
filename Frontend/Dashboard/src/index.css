@@ -4,7 +4,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Base styles for light theme (default) */
+/* Enhanced CSS Variables */
 :root {
   --color-bg-primary: theme('colors.light.background.primary');
   --color-bg-secondary: theme('colors.light.background.secondary');
@@ -17,166 +17,305 @@
   --color-border-dark: theme('colors.light.border.dark');
 }
 
-/* Base styles for dark theme */
 .dark {
   --color-bg-primary: theme('colors.dark.background.primary');
   --color-bg-secondary: theme('colors.dark.background.secondary');
   --color-bg-tertiary: theme('colors.dark.background.tertiary');
+  --color-bg-accent: theme('colors.dark.background.accent');
+  --color-surface-primary: theme('colors.dark.surface.primary');
+  --color-surface-secondary: theme('colors.dark.surface.secondary');
+  --color-surface-elevated: theme('colors.dark.surface.elevated');
+  --color-surface-glass: theme('colors.dark.surface.glass');
   --color-text-primary: theme('colors.dark.text.primary');
   --color-text-secondary: theme('colors.dark.text.secondary');
   --color-text-tertiary: theme('colors.dark.text.tertiary');
+  --color-text-accent: theme('colors.dark.text.accent');
   --color-border-light: theme('colors.dark.border.light');
   --color-border-medium: theme('colors.dark.border.medium');
   --color-border-dark: theme('colors.dark.border.dark');
+  --color-border-glow: theme('colors.dark.border.glow');
 }
 
-/* Apply theme colors to base elements */
+/* Enhanced Base Styles */
 @layer base {
   html {
     font-family: 'Inter', 'Poppins', system-ui, sans-serif;
+    scroll-behavior: smooth;
   }
   
   body {
     background-color: var(--color-bg-primary);
     color: var(--color-text-primary);
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+                color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    min-height: 100vh;
   }
 
-  /* Custom scrollbar for webkit browsers */
-  ::-webkit-scrollbar {
+  /* AdminProfile-inspired dark theme background */
+  .dark body {
+    background: linear-gradient(135deg, 
+      rgb(17, 24, 39) 0%, 
+      rgb(30, 41, 59) 50%, 
+      rgb(49, 46, 129) 100%);
+    background-attachment: fixed;
+    background-size: 200% 200%;
+    animation: gradient-shift 8s ease infinite;
+  }
+
+  /* Enhanced background pattern overlay */
+  .dark body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+      radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 50% 80%, rgba(236, 72, 153, 0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.6;
+  }
+
+  /* Enhanced scrollbar for dark theme */
+  .dark ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
 
-  ::-webkit-scrollbar-track {
-    background: var(--color-bg-secondary);
+  .dark ::-webkit-scrollbar-track {
+    background: rgba(31, 41, 55, 0.6);
     border-radius: 4px;
+    backdrop-filter: blur(10px);
   }
 
-  ::-webkit-scrollbar-thumb {
-    background: var(--color-border-medium);
+  .dark ::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.6), rgba(139, 92, 246, 0.6));
     border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--color-border-dark);
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.8), rgba(139, 92, 246, 0.8));
   }
 
-  /* Selection colors */
-  ::selection {
-    background-color: theme('colors.light.primary.400');
-    color: white;
-  }
-
+  /* Enhanced selection colors */
   .dark ::selection {
-    background-color: theme('colors.dark.primary.600');
+    background-color: rgba(99, 102, 241, 0.3);
     color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   }
 }
 
-/* Component classes with theme support */
+/* Enhanced Component Styles matching AdminProfile */
 @layer components {
+  /* Glass morphism card matching AdminProfile */
   .card {
-    background-color: var(--color-bg-secondary);
+    background: var(--color-surface-glass);
     border: 1px solid var(--color-border-light);
-    border-radius: theme('borderRadius.lg');
+    border-radius: theme('borderRadius.xl');
     padding: theme('spacing.6');
-    box-shadow: theme('boxShadow.sm');
-    transition: all 0.3s ease;
+    backdrop-filter: blur(16px) saturate(180%);
+    box-shadow: 
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color-border-glow), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
   }
 
   .card:hover {
-    box-shadow: theme('boxShadow.md');
     transform: translateY(-2px);
+    box-shadow: theme('boxShadow.depth'), theme('boxShadow.glow');
+    border-color: var(--color-border-glow);
   }
 
+  .card:hover::before {
+    opacity: 1;
+  }
+
+  /* Enhanced buttons matching AdminProfile style */
   .btn-primary {
-    background-color: theme('colors.light.primary.600');
+    background: linear-gradient(135deg, theme('colors.dark.primary.500'), theme('colors.dark.primary.600'));
     color: white;
-    padding: theme('spacing.2') theme('spacing.4');
-    border-radius: theme('borderRadius.md');
-    font-weight: theme('fontWeight.medium');
-    transition: all 0.2s ease;
+    padding: theme('spacing.3') theme('spacing.6');
+    border-radius: theme('borderRadius.lg');
+    font-weight: theme('fontWeight.semibold');
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    box-shadow: 
+      0 4px 6px -1px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+  }
+
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
   }
 
   .btn-primary:hover {
-    background-color: theme('colors.light.primary.700');
     transform: translateY(-1px);
+    box-shadow: 
+      0 8px 15px -3px rgba(0, 0, 0, 0.3),
+      theme('boxShadow.glow');
+    border-color: rgba(99, 102, 241, 0.5);
   }
 
-  .dark .btn-primary {
-    background-color: theme('colors.dark.primary.600');
+  .btn-primary:hover::before {
+    left: 100%;
   }
 
-  .dark .btn-primary:hover {
-    background-color: theme('colors.dark.primary.700');
+  /* Sidebar navigation items */
+  .nav-item {
+    @apply px-4 py-3 rounded-xl transition-all duration-300 ease-in-out;
+    background: transparent;
+    color: var(--color-text-secondary);
+    position: relative;
+    backdrop-filter: blur(10px);
+    border: 1px solid transparent;
   }
 
+  .nav-item:hover {
+    color: var(--color-text-accent);
+    background: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.2);
+    transform: translateX(4px);
+  }
+
+  .nav-item.active {
+    color: var(--color-text-accent);
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.15), transparent);
+    border-left: 3px solid theme('colors.dark.primary.400');
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  /* Stats cards like in AdminProfile dashboard */
+  .stat-card {
+    @apply p-6 rounded-xl shadow-md backdrop-blur-md;
+    background: var(--color-surface-glass);
+    border: 1px solid var(--color-border-light);
+    transition: all 0.3s ease;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: theme('boxShadow.depth'), theme('boxShadow.glow');
+    border-color: var(--color-border-glow);
+  }
+
+  /* Input fields with glass effect */
   .input-field {
-    background-color: var(--color-bg-primary);
-    border: 1px solid var(--color-border-medium);
-    border-radius: theme('borderRadius.md');
-    padding: theme('spacing.2') theme('spacing.3');
+    background: var(--color-surface-glass);
+    border: 1px solid var(--color-border-light);
+    border-radius: theme('borderRadius.lg');
+    padding: theme('spacing.3') theme('spacing.4');
     color: var(--color-text-primary);
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+    font-size: theme('fontSize.sm');
   }
 
   .input-field:focus {
     outline: none;
-    border-color: theme('colors.light.primary.500');
-    box-shadow: 0 0 0 3px theme('colors.light.primary.100');
-  }
-
-  .dark .input-field:focus {
     border-color: theme('colors.dark.primary.400');
-    box-shadow: 0 0 0 3px theme('colors.dark.primary.900');
-  }
-
-  .theme-transition {
-    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+    box-shadow: 
+      0 0 0 3px rgba(99, 102, 241, 0.1),
+      theme('boxShadow.glow');
+    background: var(--color-surface-elevated);
   }
 }
 
-/* Utility classes */
+/* Enhanced Utility Classes */
 @layer utilities {
   .text-gradient {
-    background: linear-gradient(135deg, theme('colors.light.primary.600'), theme('colors.light.primary.400'));
+    background: linear-gradient(135deg, theme('colors.dark.primary.400'), theme('colors.dark.text.accent'));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  .dark .text-gradient {
-    background: linear-gradient(135deg, theme('colors.dark.primary.400'), theme('colors.dark.primary.200'));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  .bg-glass {
+    background: var(--color-surface-glass);
+    backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid var(--color-border-light);
   }
 
-  .bg-gradient-primary {
-    background: linear-gradient(135deg, theme('colors.light.primary.600'), theme('colors.light.primary.400'));
+  .bg-glass-elevated {
+    background: rgba(31, 41, 55, 0.9);
+    backdrop-filter: blur(20px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  .dark .bg-gradient-primary {
-    background: linear-gradient(135deg, theme('colors.dark.primary.600'), theme('colors.dark.primary.400'));
+  .shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2.5s ease-in-out infinite;
+  }
+
+  .glow-text {
+    text-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+  }
+
+  .border-glow {
+    box-shadow: 0 0 20px -5px rgba(99, 102, 241, 0.3);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+  }
+
+  .animate-gradient-shift {
+    animation: gradient-shift 8s ease infinite;
   }
 }
 
 /* Animation classes */
-.animate-fade-in {
-  animation: fade-in 0.5s ease-out;
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }
 
-.animate-slide-in {
-  animation: slide-in 0.3s ease-out;
+.animate-glow {
+  animation: glow 3s ease-in-out infinite alternate;
 }
 
-/* Focus styles for accessibility */
+/* Enhanced focus styles */
 .focus-ring:focus {
-  outline: 2px solid theme('colors.light.primary.500');
+  outline: 2px solid theme('colors.dark.primary.400');
   outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
 }
 
-.dark .focus-ring:focus {
-  outline: 2px solid theme('colors.dark.primary.400');
+/* Theme switcher enhancement */
+.theme-switcher {
+  @apply relative inline-flex items-center p-2 rounded-xl transition-all duration-500 ease-in-out;
+  background: var(--color-surface-glass);
+  border: 1px solid var(--color-border-light);
+  backdrop-filter: blur(10px);
+}
+
+.theme-switcher:hover {
+  border-color: var(--color-border-glow);
+  box-shadow: theme('boxShadow.glow');
 }
