@@ -1,60 +1,109 @@
 # from django.urls import path
 # from internet_plans.api.views.create_plan_views import (
+#     # Plan Templates
+#     PlanTemplateListCreateView,
+#     PlanTemplateDetailView,
+#     PublicPlanTemplateListView,
+#     CreatePlanFromTemplateView,
+    
+#     # Internet Plans
 #     InternetPlanListCreateView,
 #     InternetPlanDetailView,
-#     PublicInternetPlanListView
+#     PublicInternetPlanListView,
+    
+#     # Subscriptions
+#     SubscriptionListView,
+    
+#     # Analytics
+#     PlanAnalyticsView,
+#     PlanAccessTypeAnalyticsView,
+    
+#     # Router Management
+#     RouterCompatibilityView,
+#     ActivatePlanOnRouterView
 # )
-# from internet_plans.api.views.plan_analytics_views import PlanAnalyticsView  
+
 # app_name = 'internet_plans'
 
 # urlpatterns = [
+#     # Plan Templates
+#     path('templates/', PlanTemplateListCreateView.as_view(), name='template-list-create'),
+#     path('templates/<int:pk>/', PlanTemplateDetailView.as_view(), name='template-detail'),
+#     path('templates/public/', PublicPlanTemplateListView.as_view(), name='public-template-list'),
+#     path('templates/<int:template_id>/create-plan/', CreatePlanFromTemplateView.as_view(), name='create-plan-from-template'),
+    
+#     # Internet Plans
 #     path('', InternetPlanListCreateView.as_view(), name='plan-list-create'),
 #     path('<int:pk>/', InternetPlanDetailView.as_view(), name='plan-detail'),
 #     path('public/', PublicInternetPlanListView.as_view(), name='public-plan-list'),
-#     path('plan_analytics/', PlanAnalyticsView.as_view(), name='plan_analytics'),
+    
+#     # Subscriptions
+#     path('subscriptions/', SubscriptionListView.as_view(), name='subscription-list'),
+    
+#     # Analytics
+#     path('analytics/', PlanAnalyticsView.as_view(), name='plan-analytics'),
+#     path('analytics/access-types/', PlanAccessTypeAnalyticsView.as_view(), name='access-type-analytics'),
+    
+#     # Router Management
+#     path('<int:plan_id>/compatible-routers/', RouterCompatibilityView.as_view(), name='router-compatibility'),
+#     path('<int:plan_id>/activate-on-router/<int:router_id>/', ActivatePlanOnRouterView.as_view(), name='activate-on-router'),
 # ]
+
+
+
+
 
 
 
 from django.urls import path
 from internet_plans.api.views.create_plan_views import (
+    # Plan Templates
+    PlanTemplateListCreateView,
+    PlanTemplateDetailView,
+    TemplateIncrementUsageView,
+    PublicPlanTemplateListView,
+    CreatePlanFromTemplateView,
+    
+    # Internet Plans
     InternetPlanListCreateView,
     InternetPlanDetailView,
     PublicInternetPlanListView,
+    
+    # Subscriptions
     SubscriptionListView,
-    SubscriptionAnalyticsView,
+    
+    # Analytics
+    PlanAnalyticsView,
+    PlanAccessTypeAnalyticsView,
+    
+    # Router Management
     RouterCompatibilityView,
     ActivatePlanOnRouterView
 )
 
-from internet_plans.api.views.plan_analytics_views import PlanAnalyticsView  
 app_name = 'internet_plans'
 
 urlpatterns = [
-    # List and create plans (authenticated)
+    # Plan Templates
+    path('templates/', PlanTemplateListCreateView.as_view(), name='template-list-create'),
+    path('templates/<int:pk>/', PlanTemplateDetailView.as_view(), name='template-detail'),
+    path('templates/<int:pk>/increment-usage/', TemplateIncrementUsageView.as_view(), name='template-increment-usage'),
+    path('templates/public/', PublicPlanTemplateListView.as_view(), name='public-template-list'),
+    path('templates/<int:template_id>/create-plan/', CreatePlanFromTemplateView.as_view(), name='create-plan-from-template'),
+    
+    # Internet Plans
     path('', InternetPlanListCreateView.as_view(), name='plan-list-create'),
-    
-    # Detail view for a specific plan (get, put, delete)
     path('<int:pk>/', InternetPlanDetailView.as_view(), name='plan-detail'),
-    
-    # Public list of active plans (no auth)
     path('public/', PublicInternetPlanListView.as_view(), name='public-plan-list'),
     
-    # List subscriptions with filters
+    # Subscriptions
     path('subscriptions/', SubscriptionListView.as_view(), name='subscription-list'),
     
-    # Analytics dashboard
-    path('subscription-analytics/', PlanAnalyticsView.as_view(), name='subscription_analytics'),
+    # Analytics
+    path('analytics/', PlanAnalyticsView.as_view(), name='plan-analytics'),
+    path('analytics/access-types/', PlanAccessTypeAnalyticsView.as_view(), name='access-type-analytics'),
     
-    # Compatible routers for a plan
+    # Router Management
     path('<int:plan_id>/compatible-routers/', RouterCompatibilityView.as_view(), name='router-compatibility'),
-    
-    # Activate plan on specific router
     path('<int:plan_id>/activate-on-router/<int:router_id>/', ActivatePlanOnRouterView.as_view(), name='activate-on-router'),
-
-    # plan analysis
-    path('plan_analytics/', PlanAnalyticsView.as_view(), name='plan_analytics'),
 ]
-
-
-

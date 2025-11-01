@@ -10,7 +10,7 @@ site = Site.objects.get(id=1)
 
 # Update the domain and name
 site.domain = "localhost:5173"
-site.name = "Interlink ISP Software"
+site.name = "Dinconden ISP Software"
 site.save()
 
 # Confirm the update
@@ -35,3 +35,6 @@ print(Site.objects.all())  # Should now show localhost:8000
 
 # Migrate
 #python manage.py migrate
+
+
+sudo service redis-server start
