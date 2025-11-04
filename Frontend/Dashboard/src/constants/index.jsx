@@ -30,7 +30,6 @@ export const menuItems = [
     submenu: true,
     submenuItems: [
       { title: "Plan Management" },
-      { title: "Usage Analytics" },
     ],
   },
   {

@@ -1,6 +1,11 @@
 
 
 
+
+
+
+
+
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -161,6 +166,7 @@ const PlanManagement = () => {
     form,
     setForm,
     errors,
+    setErrors,
     touched,
     handleChange,
     handleAccessTypeChange,
@@ -197,6 +203,159 @@ const PlanManagement = () => {
       setMobileSuccessAlert({ visible: false, message: "" });
     }, 3000);
   }, []);
+
+  // Fetch plans
+  const fetchPlans = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await api.get("/api/internet_plans/");
+      const plansData = response.data.results || response.data;
+      
+      if (!Array.isArray(plansData)) throw new Error("Expected an array of plans");
+      
+      const normalizedPlans = plansData.map(normalizePlanData);
+      setPlans(normalizedPlans);
+    } catch (error) {
+      console.error("Error fetching plans:", error);
+      const message = "Failed to load plans from server";
+      if (window.innerWidth <= 768) {
+        showMobileSuccess(message);
+      } else {
+        toast.error(message);
+      }
+      setPlans([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showMobileSuccess]);
+
+  // Fetch templates
+  const fetchTemplates = useCallback(async () => {
+    try {
+      const response = await api.get("/api/internet_plans/templates/");
+      const templatesData = response.data.results || response.data;
+      
+      if (Array.isArray(templatesData)) {
+        setTemplates(templatesData);
+      }
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+    }
+  }, []);
+
+  // Fetch routers
+  const fetchRouters = useCallback(async () => {
+    try {
+      const response = await api.get("/api/network_management/routers/");
+      setRouters(response.data);
+    } catch (error) {
+      console.error("Error fetching routers:", error);
+      const message = "Failed to load routers";
+      if (window.innerWidth <= 768) {
+        showMobileSuccess(message);
+      } else {
+        toast.error(message);
+      }
+      setRouters([]);
+    }
+  }, [showMobileSuccess]);
+
+  // Fetch subscriptions
+  const fetchSubscriptions = useCallback(async () => {
+    try {
+      const response = await api.get("/api/internet_plans/subscriptions/");
+      const subsData = response.data;
+      if (!Array.isArray(subsData)) throw new Error("Expected an array of subscriptions");
+      setSubscriptions(subsData);
+    } catch (error) {
+      console.error("Error fetching subscriptions:", error);
+      const message = "Failed to load subscriptions";
+      if (window.innerWidth <= 768) {
+        showMobileSuccess(message);
+      } else {
+        toast.error(message);
+      }
+      setSubscriptions([]);
+    }
+  }, [showMobileSuccess]);
+
+  // Enhanced apply template function
+  const applyTemplate = useCallback((template) => {
+    const newForm = deepClone(getInitialFormState());
+    
+    // Apply template settings
+    newForm.name = template.name || "";
+    newForm.category = template.category || "Residential";
+    newForm.price = template.basePrice?.toString() || template.base_price?.toString() || "0";
+    newForm.description = template.description || "";
+    newForm.accessType = template.accessType || "hotspot";
+    
+    // Safely apply access methods based on template access type
+    if (template.accessMethods || template.access_methods) {
+      const templateMethods = template.accessMethods || template.access_methods;
+      newForm.accessMethods = {
+        hotspot: templateMethods.hotspot || createDefaultAccessMethods().hotspot,
+        pppoe: templateMethods.pppoe || createDefaultAccessMethods().pppoe
+      };
+    }
+    
+    setForm(newForm);
+    setEditingPlan(null);
+    setActiveTab("basic");
+    setViewMode("form");
+    
+    const message = `Template "${template.name}" applied`;
+    if (window.innerWidth <= 768) {
+      showMobileSuccess(message);
+    } else {
+      toast.success(message);
+    }
+  }, [setForm, showMobileSuccess]);
+
+  // FIXED: Enhanced create plan from template function
+  const createPlanFromTemplate = useCallback(async (templateId, additionalData = {}) => {
+    setIsLoading(true);
+    try {
+      const response = await api.post(`/api/internet_plans/templates/${templateId}/create-plan/`, additionalData);
+      
+      // Refresh plans list to include the newly created plan
+      await fetchPlans();
+      
+      const message = `Plan created from template successfully`;
+      if (window.innerWidth <= 768) {
+        showMobileSuccess(message);
+      } else {
+        toast.success(message);
+      }
+      
+      // Return to list view to see the new plan
+      setViewMode("list");
+      
+      return response.data;
+    } catch (error) {
+      console.error("Error creating plan from template:", error);
+      const message = "Failed to create plan from template";
+      if (window.innerWidth <= 768) {
+        showMobileSuccess(message);
+      } else {
+        toast.error(`${message}: ${error.response?.data?.detail || error.message}`);
+      }
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchPlans, showMobileSuccess]);
+
+  // FIXED: Enhanced quick create from template
+  const quickCreateFromTemplate = useCallback(async (template) => {
+    try {
+      const createdPlan = await createPlanFromTemplate(template.id, { name: `${template.name} - ${new Date().toLocaleDateString()}` });
+      return createdPlan;
+    } catch (error) {
+      console.error("Quick create failed:", error);
+      throw error;
+    }
+  }, [createPlanFromTemplate]);
 
   // Add this function to handle analytics type selection
   const handleAnalyticsTypeSelect = (analyticsType) => {
@@ -318,81 +477,6 @@ const PlanManagement = () => {
     return !hasValidationErrors;
   }, [form, validateFormEnhanced]);
 
-  // Fetch plans
-  const fetchPlans = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const response = await api.get("/api/internet_plans/");
-      const plansData = response.data.results || response.data;
-      
-      if (!Array.isArray(plansData)) throw new Error("Expected an array of plans");
-      
-      const normalizedPlans = plansData.map(normalizePlanData);
-      setPlans(normalizedPlans);
-    } catch (error) {
-      console.error("Error fetching plans:", error);
-      const message = "Failed to load plans from server";
-      if (window.innerWidth <= 768) {
-        showMobileSuccess(message);
-      } else {
-        toast.error(message);
-      }
-      setPlans([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [showMobileSuccess]);
-
-  // Fetch templates
-  const fetchTemplates = useCallback(async () => {
-    try {
-      const response = await api.get("/api/internet_plans/templates/");
-      const templatesData = response.data.results || response.data;
-      
-      if (Array.isArray(templatesData)) {
-        setTemplates(templatesData);
-      }
-    } catch (error) {
-      console.error("Error fetching templates:", error);
-    }
-  }, []);
-
-  // Fetch routers
-  const fetchRouters = useCallback(async () => {
-    try {
-      const response = await api.get("/api/network_management/routers/");
-      setRouters(response.data);
-    } catch (error) {
-      console.error("Error fetching routers:", error);
-      const message = "Failed to load routers";
-      if (window.innerWidth <= 768) {
-        showMobileSuccess(message);
-      } else {
-        toast.error(message);
-      }
-      setRouters([]);
-    }
-  }, [showMobileSuccess]);
-
-  // Fetch subscriptions
-  const fetchSubscriptions = useCallback(async () => {
-    try {
-      const response = await api.get("/api/internet_plans/subscriptions/");
-      const subsData = response.data;
-      if (!Array.isArray(subsData)) throw new Error("Expected an array of subscriptions");
-      setSubscriptions(subsData);
-    } catch (error) {
-      console.error("Error fetching subscriptions:", error);
-      const message = "Failed to load subscriptions";
-      if (window.innerWidth <= 768) {
-        showMobileSuccess(message);
-      } else {
-        toast.error(message);
-      }
-      setSubscriptions([]);
-    }
-  }, [showMobileSuccess]);
-
   // Load data on component mount
   useEffect(() => {
     fetchPlans();
@@ -431,67 +515,6 @@ const PlanManagement = () => {
     setViewMode("form");
     setShowPlanTypeModal(false);
   }, [resetForm, setForm]);
-
-  // Apply template from template list
-  const applyTemplate = useCallback((template) => {
-    const newForm = deepClone(getInitialFormState());
-    
-    // Apply template settings
-    newForm.name = template.name || "";
-    newForm.category = template.category || "Residential";
-    newForm.price = template.basePrice?.toString() || template.base_price?.toString() || "0";
-    newForm.description = template.description || "";
-    newForm.accessType = template.accessType || "hotspot";
-    
-    // Safely apply access methods based on template access type
-    if (template.accessMethods || template.access_methods) {
-      const templateMethods = template.accessMethods || template.access_methods;
-      newForm.accessMethods = {
-        hotspot: templateMethods.hotspot || createDefaultAccessMethods().hotspot,
-        pppoe: templateMethods.pppoe || createDefaultAccessMethods().pppoe
-      };
-    }
-    
-    setForm(newForm);
-    setEditingPlan(null);
-    setActiveTab("basic");
-    setViewMode("form");
-    
-    const message = `Template "${template.name}" applied`;
-    if (window.innerWidth <= 768) {
-      showMobileSuccess(message);
-    } else {
-      toast.success(message);
-    }
-  }, [setForm, showMobileSuccess]);
-
-  // Create plan from template (API call)
-  const createPlanFromTemplate = useCallback(async (templateId, additionalData = {}) => {
-    setIsLoading(true);
-    try {
-      const response = await api.post(`/api/internet_plans/templates/${templateId}/create-plan/`, additionalData);
-      
-      const message = `Plan created from template successfully`;
-      if (window.innerWidth <= 768) {
-        showMobileSuccess(message);
-      } else {
-        toast.success(message);
-      }
-      
-      fetchPlans();
-      setViewMode("list");
-    } catch (error) {
-      console.error("Error creating plan from template:", error);
-      const message = "Failed to create plan from template";
-      if (window.innerWidth <= 768) {
-        showMobileSuccess(message);
-      } else {
-        toast.error(`${message}: ${error.response?.data?.detail || error.message}`);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [fetchPlans, showMobileSuccess]);
 
   // Enhanced save plan function
   const savePlan = async () => {
@@ -658,14 +681,6 @@ const PlanManagement = () => {
     setSelectedPlan(normalizedPlan);
     setViewMode("details");
   }, []);
-
-  // Quick create from template
-  const quickCreateFromTemplate = useCallback(async (template) => {
-    const planName = prompt("Enter plan name:", template.name);
-    if (planName) {
-      await createPlanFromTemplate(template.id, { name: planName });
-    }
-  }, [createPlanFromTemplate]);
 
   // Dynamic tabs based on access type
   const getTabs = useCallback(() => {

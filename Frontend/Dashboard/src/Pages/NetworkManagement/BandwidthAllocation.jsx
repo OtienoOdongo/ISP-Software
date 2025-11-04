@@ -1,8 +1,7 @@
 
 
 
-
-
+// // src/components/NetworkManagement/BandwidthAllocation.jsx
 // import React, { useState, useEffect, useCallback, useMemo } from "react";
 // import { motion, AnimatePresence } from "framer-motion";
 // import {
@@ -59,6 +58,38 @@
 //   const [qosProfiles, setQosProfiles] = useState([]);
 //   const [plans, setPlans] = useState([]);
 //   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+//   // Theme-based styling variables
+//   const containerClass = useMemo(() => 
+//     theme === "dark" 
+//       ? "bg-gradient-to-br from-gray-900 to-indigo-900 text-white min-h-screen" 
+//       : "bg-gray-50 text-gray-800 min-h-screen",
+//     [theme]
+//   );
+
+//   const cardClass = useMemo(() => 
+//     theme === "dark"
+//       ? "bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-xl shadow-md"
+//       : "bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl shadow-md",
+//     [theme]
+//   );
+
+//   const inputClass = useMemo(() => 
+//     theme === "dark"
+//       ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500"
+//       : "bg-white border-gray-300 text-gray-800 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500",
+//     [theme]
+//   );
+
+//   const textSecondaryClass = useMemo(() => 
+//     theme === "dark" ? "text-gray-400" : "text-gray-500",
+//     [theme]
+//   );
+
+//   const textTertiaryClass = useMemo(() => 
+//     theme === "dark" ? "text-gray-500" : "text-gray-400",
+//     [theme]
+//   );
 
 //   // Memoized data fetching functions
 //   const fetchQosProfiles = useCallback(async () => {
@@ -189,39 +220,39 @@
 //   // Algorithm for checking bandwidth quota status
 //   const checkBandwidthQuota = useCallback((device) => {
 //     if (device.unlimited) {
-//       return { status: "Unlimited", message: "Unlimited", color: "text-blue-600 dark:text-blue-400" };
+//       return { status: "Unlimited", message: "Unlimited", color: theme === "dark" ? "text-blue-400" : "text-blue-600" };
 //     }
     
 //     const remaining = device.quota - device.used;
 //     const usagePercentage = (device.used / device.quota) * 100;
     
 //     if (usagePercentage >= 90) {
-//       return { status: "Critical", message: `${remaining} GB left`, color: "text-red-600 dark:text-red-400" };
+//       return { status: "Critical", message: `${remaining} GB left`, color: theme === "dark" ? "text-red-400" : "text-red-600" };
 //     } else if (usagePercentage >= 75) {
-//       return { status: "Warning", message: `${remaining} GB left`, color: "text-yellow-600 dark:text-yellow-400" };
+//       return { status: "Warning", message: `${remaining} GB left`, color: theme === "dark" ? "text-yellow-400" : "text-yellow-600" };
 //     } else {
-//       return { status: "Normal", message: `${remaining} GB left`, color: "text-green-600 dark:text-green-400" };
+//       return { status: "Normal", message: `${remaining} GB left`, color: theme === "dark" ? "text-green-400" : "text-green-600" };
 //     }
-//   }, []);
+//   }, [theme]);
 
 //   // Algorithm for user status color coding
-//   const getUserStatusColor = (status) => {
+//   const getUserStatusColor = useCallback((status) => {
 //     const baseStyles = "px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full";
     
 //     switch (status) {
 //       case "active": 
-//         return `${baseStyles} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200`;
+//         return `${baseStyles} ${theme === "dark" ? "bg-green-900 text-green-200" : "bg-green-100 text-green-800"}`;
 //       case "inactive": 
-//         return `${baseStyles} bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200`;
+//         return `${baseStyles} ${theme === "dark" ? "bg-red-900 text-red-200" : "bg-red-100 text-red-800"}`;
 //       case "suspended": 
-//         return `${baseStyles} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200`;
+//         return `${baseStyles} ${theme === "dark" ? "bg-yellow-900 text-yellow-200" : "bg-yellow-100 text-yellow-800"}`;
 //       default: 
-//         return `${baseStyles} bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300`;
+//         return `${baseStyles} ${theme === "dark" ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-800"}`;
 //     }
-//   };
+//   }, [theme]);
 
 //   // Algorithm for time formatting
-//   const timeSince = (dateString) => {
+//   const timeSince = useCallback((dateString) => {
 //     if (!dateString) return "N/A";
     
 //     const date = new Date(dateString);
@@ -243,7 +274,7 @@
 //     }
     
 //     return `${Math.floor(seconds)} second${seconds === 1 ? "" : "s"} ago`;
-//   };
+//   }, []);
 
 //   // Algorithm for data filtering with search optimization
 //   const filterData = useCallback((data, term, statusFilter) => {
@@ -285,15 +316,15 @@
 //             data: chartStats.top_users.map(user => 
 //               user.allocated_bandwidth === "Unlimited" ? 150 : parseFloat(user.allocated_bandwidth.replace("GB", ""))
 //             ),
-//             backgroundColor: theme === 'dark' ? 'rgba(99, 102, 241, 0.7)' : 'rgba(99, 102, 241, 0.7)',
-//             borderColor: theme === 'dark' ? 'rgba(79, 70, 229, 1)' : 'rgba(79, 70, 229, 1)',
+//             backgroundColor: 'rgba(99, 102, 241, 0.7)',
+//             borderColor: 'rgba(79, 70, 229, 1)',
 //             borderWidth: 1
 //           },
 //           {
 //             label: "Used Bandwidth (GB)",
 //             data: chartStats.top_users.map(user => user.used_bandwidth),
-//             backgroundColor: theme === 'dark' ? 'rgba(244, 63, 94, 0.7)' : 'rgba(244, 63, 94, 0.7)',
-//             borderColor: theme === 'dark' ? 'rgba(225, 29, 72, 1)' : 'rgba(225, 29, 72, 1)',
+//             backgroundColor: 'rgba(244, 63, 94, 0.7)',
+//             borderColor: 'rgba(225, 29, 72, 1)',
 //             borderWidth: 1
 //           }
 //         ]
@@ -306,23 +337,23 @@
 //             data: chartStats.top_users.map(user => 
 //               user.allocated_bandwidth === "Unlimited" ? 150 : parseFloat(user.allocated_bandwidth.replace("GB", ""))
 //             ),
-//             borderColor: theme === 'dark' ? 'rgba(99, 102, 241, 1)' : 'rgba(99, 102, 241, 1)',
-//             backgroundColor: theme === 'dark' ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+//             borderColor: 'rgba(99, 102, 241, 1)',
+//             backgroundColor: 'rgba(99, 102, 241, 0.1)',
 //             fill: true,
 //             tension: 0.4
 //           },
 //           {
 //             label: "Used Bandwidth (GB)",
 //             data: chartStats.top_users.map(user => user.used_bandwidth),
-//             borderColor: theme === 'dark' ? 'rgba(244, 63, 94, 1)' : 'rgba(244, 63, 94, 1)',
-//             backgroundColor: theme === 'dark' ? 'rgba(244, 63, 94, 0.1)' : 'rgba(244, 63, 94, 0.1)',
+//             borderColor: 'rgba(244, 63, 94, 1)',
+//             backgroundColor: 'rgba(244, 63, 94, 0.1)',
 //             fill: true,
 //             tension: 0.4
 //           }
 //         ]
 //       }
 //     };
-//   }, [chartStats.top_users, theme]);
+//   }, [chartStats.top_users]);
 
 //   // Algorithm for chart options with theme support
 //   const chartOptions = useMemo(() => ({
@@ -332,7 +363,7 @@
 //       legend: {
 //         position: "bottom",
 //         labels: {
-//           color: theme === 'dark' ? '#F9FAFB' : '#1F2937',
+//           color: theme === "dark" ? "#F9FAFB" : "#1F2937",
 //           usePointStyle: true,
 //           padding: 20
 //         }
@@ -340,15 +371,15 @@
 //       title: {
 //         display: true,
 //         text: "Bandwidth Allocation and Usage",
-//         color: theme === 'dark' ? '#F9FAFB' : '#1F2937',
+//         color: theme === "dark" ? "#F9FAFB" : "#1F2937",
 //         font: { size: 16 }
 //       },
 //       tooltip: {
-//         backgroundColor: theme === 'dark' ? '#1F2937' : '#FFFFFF',
-//         titleColor: theme === 'dark' ? '#F9FAFB' : '#1F2937',
-//         bodyColor: theme === 'dark' ? '#F9FAFB' : '#1F2937',
+//         backgroundColor: theme === "dark" ? "#1f2937" : "#fff",
+//         titleColor: theme === "dark" ? "#F9FAFB" : "#1F2937",
+//         bodyColor: theme === "dark" ? "#F9FAFB" : "#1F2937",
 //         usePointStyle: true,
-//         borderColor: theme === 'dark' ? '#374151' : '#E5E7EB',
+//         borderColor: theme === "dark" ? "#374151" : "#e5e7eb",
 //         borderWidth: 1
 //       }
 //     },
@@ -358,21 +389,21 @@
 //         title: {
 //           display: true,
 //           text: "Bandwidth (GB)",
-//           color: theme === 'dark' ? '#D1D5DB' : '#6B7280'
+//           color: theme === "dark" ? "#D1D5DB" : "#6B7280"
 //         },
 //         grid: { 
-//           color: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' 
+//           color: theme === "dark" ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' 
 //         },
 //         ticks: { 
-//           color: theme === 'dark' ? '#D1D5DB' : '#6B7280' 
+//           color: theme === "dark" ? "#D1D5DB" : "#6B7280" 
 //         }
 //       },
 //       x: {
 //         grid: { 
-//           color: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' 
+//           color: theme === "dark" ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' 
 //         },
 //         ticks: { 
-//           color: theme === 'dark' ? '#D1D5DB' : '#6B7280',
+//           color: theme === "dark" ? "#D1D5DB" : "#6B7280",
 //           maxRotation: 45,
 //           minRotation: 45
 //         }
@@ -404,7 +435,7 @@
 //   }, []);
 
 //   const handleSaveChanges = useCallback(() => {
-//     if (selectedUser && selectedDevice) {
+//     if (selectedUser && selectedDevice && newAllocation && newQos) {
 //       updateBandwidth(selectedUser.id, selectedDevice.deviceId, newAllocation, newQos);
 //       setSelectedUser(null);
 //       setSelectedDevice(null);
@@ -432,40 +463,28 @@
 //   ];
 
 //   return (
-//     <div className={`min-h-screen transition-colors duration-300 ${
-//       theme === 'dark' 
-//         ? 'bg-dark-background-primary text-dark-text-primary' 
-//         : 'bg-light-background-primary text-light-text-primary'
-//     }`}>
+//     <div className={`${containerClass} p-4 md:p-8 transition-colors duration-300`}>
 //       <ToastContainer 
 //         position="top-right" 
 //         autoClose={3000} 
-//         theme={theme === 'dark' ? 'dark' : 'light'} 
+//         theme={theme} 
 //         pauseOnHover 
 //         newestOnTop 
 //       />
 
 //       {/* Header */}
 //       <motion.header 
-//         className={`p-4 rounded-lg shadow mb-6 mx-4 mt-4 ${
-//           theme === 'dark' 
-//             ? 'bg-dark-background-secondary' 
-//             : 'bg-light-background-secondary'
-//         }`}
+//         className={`${cardClass} p-6 mb-6 transition-colors duration-300`}
 //         initial={{ opacity: 0, y: -20 }}
 //         animate={{ opacity: 1, y: 0 }}
 //         transition={{ duration: 0.3 }}
 //       >
 //         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
 //           <div className="flex items-center space-x-3">
-//             <Server className={`w-8 h-8 ${
-//               theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'
-//             }`} />
+//             <Server className={`w-8 h-8 ${theme === "dark" ? "text-indigo-400" : "text-indigo-600"}`} />
 //             <div>
 //               <h1 className="text-xl sm:text-2xl font-bold">Bandwidth Allocation</h1>
-//               <p className={`text-sm ${
-//                 theme === 'dark' ? 'text-dark-text-tertiary' : 'text-light-text-tertiary'
-//               }`}>
+//               <p className={`text-sm ${textTertiaryClass}`}>
 //                 {bandwidthData.length} users • {bandwidthData.filter(u => u.status === "active").length} active
 //               </p>
 //             </div>
@@ -486,81 +505,65 @@
 
 //       {/* Search and Filter Section */}
 //       <motion.section 
-//         className="mx-4 mb-6"
+//         className="mb-6 transition-colors duration-300"
 //         initial={{ opacity: 0, y: 20 }}
 //         animate={{ opacity: 1, y: 0 }}
 //         transition={{ duration: 0.3, delay: 0.1 }}
 //       >
-//         <div className="flex flex-col lg:flex-row gap-4">
-//           {/* Search Input */}
-//           <div className="relative flex-1">
-//             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-//               <Search className={`h-5 w-5 ${
-//                 theme === 'dark' ? 'text-dark-text-tertiary' : 'text-light-text-tertiary'
-//               }`} />
+//         <div className={`p-4 ${cardClass}`}>
+//           <div className="flex flex-col lg:flex-row gap-4">
+//             {/* Search Input */}
+//             <div className="relative flex-1">
+//               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+//                 <Search className={`h-5 w-5 ${textTertiaryClass}`} />
+//               </div>
+//               <input
+//                 type="text"
+//                 className={`w-full pl-10 pr-4 py-2 rounded-lg border ${inputClass} transition-colors duration-300`}
+//                 placeholder="Search by name, ID, plan, category, MAC, or IP..."
+//                 value={searchTerm}
+//                 onChange={(e) => setSearchTerm(e.target.value)}
+//                 aria-label="Search bandwidth allocations"
+//               />
 //             </div>
-//             <input
-//               type="text"
-//               className={`w-full pl-10 pr-4 py-2 rounded-md border focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-//                 theme === 'dark' 
-//                   ? 'bg-dark-background-secondary border-dark-border-light text-dark-text-primary placeholder-dark-text-tertiary' 
-//                   : 'bg-light-background-secondary border-light-border-light text-light-text-primary placeholder-light-text-tertiary'
-//               }`}
-//               placeholder="Search by name, ID, plan, category, MAC, or IP..."
-//               value={searchTerm}
-//               onChange={(e) => setSearchTerm(e.target.value)}
-//               aria-label="Search bandwidth allocations"
-//             />
-//           </div>
 
-//           {/* Filter Dropdown */}
-//           <div className="flex gap-2">
-//             <select
-//               value={filter}
-//               onChange={(e) => setFilter(e.target.value)}
-//               className={`p-2 rounded-md border text-sm ${
-//                 theme === 'dark' 
-//                   ? 'bg-dark-background-secondary border-dark-border-light text-dark-text-primary' 
-//                   : 'bg-light-background-secondary border-light-border-light text-light-text-primary'
-//               }`}
-//               aria-label="Filter by status"
-//             >
-//               <option value="all">All Users</option>
-//               <option value="active">Active Only</option>
-//               <option value="inactive">Inactive</option>
-//               <option value="suspended">Suspended</option>
-//             </select>
+//             {/* Filter Dropdown */}
+//             <div className="flex gap-2">
+//               <select
+//                 value={filter}
+//                 onChange={(e) => setFilter(e.target.value)}
+//                 className={`p-2 rounded-lg border text-sm ${inputClass} transition-colors duration-300`}
+//                 aria-label="Filter by status"
+//               >
+//                 <option value="all">All Users</option>
+//                 <option value="active">Active Only</option>
+//                 <option value="inactive">Inactive</option>
+//                 <option value="suspended">Suspended</option>
+//               </select>
 
-//             {/* Mobile Menu Toggle */}
-//             <button
-//               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-//               className={`lg:hidden p-2 rounded-md border ${
-//                 theme === 'dark' 
-//                   ? 'bg-dark-background-secondary border-dark-border-light hover:bg-dark-background-tertiary' 
-//                   : 'bg-light-background-secondary border-light-border-light hover:bg-light-background-tertiary'
-//               }`}
-//               aria-label="Toggle mobile menu"
-//             >
-//               <ChevronDown className={`w-4 h-4 transition-transform ${isMobileMenuOpen ? 'rotate-180' : ''}`} />
-//             </button>
+//               {/* Mobile Menu Toggle */}
+//               <button
+//                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+//                 className={`lg:hidden p-2 rounded-lg border ${inputClass} hover:opacity-80 transition-colors duration-300`}
+//                 aria-label="Toggle mobile menu"
+//               >
+//                 <ChevronDown className={`w-4 h-4 transition-transform ${isMobileMenuOpen ? 'rotate-180' : ''}`} />
+//               </button>
+//             </div>
 //           </div>
 //         </div>
 //       </motion.section>
 
 //       {/* Chart Section */}
 //       <motion.section
-//         className={`mx-4 p-4 rounded-lg shadow mb-6 ${
-//           theme === 'dark' ? 'bg-dark-background-secondary' : 'bg-light-background-secondary'
-//         }`}
+//         className={`${cardClass} p-6 mb-6 transition-colors duration-300`}
 //         initial={{ opacity: 0, y: 20 }}
 //         animate={{ opacity: 1, y: 0 }}
 //         transition={{ duration: 0.3, delay: 0.2 }}
 //       >
 //         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
 //           <h2 className="text-lg font-semibold flex items-center">
-//             <BarChart2 className={`w-5 h-5 mr-2 ${
-//               theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'
-//             }`} />
+//             <BarChart2 className={`w-5 h-5 mr-2 ${theme === "dark" ? "text-indigo-400" : "text-indigo-600"}`} />
 //             Bandwidth Visualization
 //           </h2>
           
@@ -568,11 +571,7 @@
 //             <select
 //               value={chartType}
 //               onChange={(e) => setChartType(e.target.value)}
-//               className={`p-2 rounded-md border text-sm ${
-//                 theme === 'dark' 
-//                   ? 'bg-dark-background-secondary border-dark-border-light text-dark-text-primary' 
-//                   : 'bg-light-background-secondary border-light-border-light text-light-text-primary'
-//               }`}
+//               className={`p-2 rounded-lg border text-sm ${inputClass} transition-colors duration-300`}
 //               aria-label="Select chart type"
 //             >
 //               <option value="bar">Bar Chart</option>
@@ -607,9 +606,7 @@
 
 //       {/* Users Table Section */}
 //       <motion.section 
-//         className={`mx-4 p-4 rounded-lg shadow ${
-//           theme === 'dark' ? 'bg-dark-background-secondary' : 'bg-light-background-secondary'
-//         }`}
+//         className={`${cardClass} p-6 transition-colors duration-300`}
 //         initial={{ opacity: 0, y: 20 }}
 //         animate={{ opacity: 1, y: 0 }}
 //         transition={{ duration: 0.3, delay: 0.3 }}
@@ -617,16 +614,14 @@
 //         {isLoading ? (
 //           <div className="flex justify-center py-8">
 //             <ThreeDots 
-//               color={theme === 'dark' ? '#6366F1' : '#4F46E5'} 
+//               color={theme === "dark" ? "#6366F1" : "#4F46E5"} 
 //               height={50} 
 //               width={50} 
 //               aria-label="Loading bandwidth data" 
 //             />
 //           </div>
 //         ) : filteredData.length === 0 ? (
-//           <div className={`text-center py-8 flex flex-col items-center ${
-//             theme === 'dark' ? 'text-dark-text-secondary' : 'text-light-text-secondary'
-//           }`}>
+//           <div className={`text-center py-8 flex flex-col items-center ${textSecondaryClass}`}>
 //             <AlertTriangle className="w-8 h-8 mb-2" />
 //             <p>No users found matching your criteria</p>
 //           </div>
@@ -634,27 +629,27 @@
 //           <div className="overflow-x-auto">
 //             {/* Desktop Table */}
 //             <div className="hidden lg:block">
-//               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-//                 <thead>
+//               <table className="min-w-full divide-y">
+//                 <thead className={theme === "dark" ? "bg-gray-800/60" : "bg-white/80"}>
 //                   <tr>
 //                     {tableHeaders.map(header => (
 //                       <th 
 //                         key={header.key}
-//                         className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+//                         className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-300" : "text-gray-500"}`}
 //                       >
 //                         {header.label}
 //                       </th>
 //                     ))}
 //                   </tr>
 //                 </thead>
-//                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+//                 <tbody className="divide-y">
 //                   {filteredData.map(user => (
 //                     <React.Fragment key={user.id}>
 //                       <tr 
-//                         className={`hover:bg-opacity-50 cursor-pointer transition-colors ${
-//                           theme === 'dark' 
-//                             ? 'hover:bg-dark-background-tertiary' 
-//                             : 'hover:bg-light-background-tertiary'
+//                         className={`hover:opacity-80 cursor-pointer transition-colors duration-300 ${
+//                           theme === "dark" 
+//                             ? "hover:bg-gray-700" 
+//                             : "hover:bg-gray-50"
 //                         }`}
 //                         onClick={() => toggleUserExpansion(user.id)}
 //                       >
@@ -662,17 +657,15 @@
 //                         <td className="px-4 py-4 whitespace-nowrap">
 //                           <div className="flex items-center">
 //                             <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
-//                               theme === 'dark' ? 'bg-indigo-900' : 'bg-indigo-100'
+//                               theme === "dark" ? "bg-indigo-900" : "bg-indigo-100"
 //                             }`}>
-//                               <span className={theme === 'dark' ? 'text-indigo-300' : 'text-indigo-600'}>
+//                               <span className={theme === "dark" ? "text-indigo-300" : "text-indigo-600"}>
 //                                 {user.name.charAt(0)}
 //                               </span>
 //                             </div>
 //                             <div className="ml-4">
 //                               <div className="text-sm font-medium">{user.name}</div>
-//                               <div className={`text-xs ${
-//                                 theme === 'dark' ? 'text-dark-text-tertiary' : 'text-light-text-tertiary'
-//                               }`}>
+//                               <div className={`text-xs ${textTertiaryClass}`}>
 //                                 ID: {user.id}
 //                               </div>
 //                             </div>
@@ -708,16 +701,16 @@
 //                               e.stopPropagation();
 //                               openEditModal(user, user.devices[0]);
 //                             }}
-//                             className={`mr-3 hover:opacity-70 ${
-//                               theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'
+//                             className={`mr-3 hover:opacity-70 transition-colors duration-300 ${
+//                               theme === "dark" ? "text-indigo-400" : "text-indigo-600"
 //                             }`}
 //                             aria-label={`Edit bandwidth for ${user.name}`}
 //                           >
 //                             <Edit className="w-5 h-5" />
 //                           </button>
 //                           <button
-//                             className={`hover:opacity-70 ${
-//                               theme === 'dark' ? 'text-dark-text-tertiary' : 'text-light-text-tertiary'
+//                             className={`hover:opacity-70 transition-colors duration-300 ${
+//                               theme === "dark" ? textTertiaryClass : textTertiaryClass
 //                             }`}
 //                             aria-label={expandedUser === user.id ? "Collapse details" : "Expand details"}
 //                           >
@@ -744,9 +737,7 @@
 //                                     { label: "Quota", value: user.devices[0].quota === "Unlimited" ? "Unlimited" : `${user.devices[0].quota} GB` }
 //                                   ].map((item, index) => (
 //                                     <React.Fragment key={index}>
-//                                       <div className={`font-medium ${
-//                                         theme === 'dark' ? 'text-dark-text-secondary' : 'text-light-text-secondary'
-//                                       }`}>
+//                                       <div className={`font-medium ${textSecondaryClass}`}>
 //                                         {item.label}:
 //                                       </div>
 //                                       <div>{item.value}</div>
@@ -783,9 +774,7 @@
 //                                     }
 //                                   ].map((item, index) => (
 //                                     <React.Fragment key={index}>
-//                                       <div className={`font-medium ${
-//                                         theme === 'dark' ? 'text-dark-text-secondary' : 'text-light-text-secondary'
-//                                       }`}>
+//                                       <div className={`font-medium ${textSecondaryClass}`}>
 //                                         {item.label}:
 //                                       </div>
 //                                       <div className={index === 3 ? checkBandwidthQuota(user.devices[0]).color : ''}>
@@ -810,33 +799,27 @@
 //               {filteredData.map(user => (
 //                 <div
 //                   key={user.id}
-//                   className={`p-4 rounded-lg border transition-colors ${
-//                     theme === 'dark' 
-//                       ? 'bg-dark-background-tertiary border-dark-border-light' 
-//                       : 'bg-light-background-tertiary border-light-border-light'
-//                   }`}
+//                   className={`${cardClass} p-4 transition-colors duration-300`}
 //                 >
 //                   {/* Main Card Content */}
 //                   <div 
-//                     className="cursor-pointer"
+//                     className="cursor-pointer transition-colors duration-300 hover:opacity-80"
 //                     onClick={() => toggleUserExpansion(user.id)}
 //                   >
 //                     <div className="flex items-center justify-between mb-3">
 //                       <div className="flex items-center space-x-3">
 //                         <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-//                           theme === 'dark' ? 'bg-indigo-900' : 'bg-indigo-100'
+//                           theme === "dark" ? "bg-indigo-900" : "bg-indigo-100"
 //                         }`}>
 //                           <span className={`font-semibold ${
-//                             theme === 'dark' ? 'text-indigo-300' : 'text-indigo-600'
+//                             theme === "dark" ? "text-indigo-300" : "text-indigo-600"
 //                           }`}>
 //                             {user.name.charAt(0)}
 //                           </span>
 //                         </div>
 //                         <div>
 //                           <h3 className="font-semibold">{user.name}</h3>
-//                           <p className={`text-sm ${
-//                             theme === 'dark' ? 'text-dark-text-tertiary' : 'text-light-text-tertiary'
-//                           }`}>
+//                           <p className={`text-sm ${textTertiaryClass}`}>
 //                             ID: {user.id}
 //                           </p>
 //                         </div>
@@ -846,11 +829,7 @@
 //                           e.stopPropagation();
 //                           openEditModal(user, user.devices[0]);
 //                         }}
-//                         className={`p-2 rounded ${
-//                           theme === 'dark' 
-//                             ? 'bg-dark-background-secondary hover:bg-dark-border-light' 
-//                             : 'bg-light-background-secondary hover:bg-light-border-light'
-//                         }`}
+//                         className={`p-2 rounded-lg ${theme === "dark" ? "bg-gray-700 hover:bg-gray-600" : "bg-gray-100 hover:bg-gray-200"} transition-colors duration-300`}
 //                       >
 //                         <Edit className="w-4 h-4" />
 //                       </button>
@@ -858,9 +837,7 @@
 
 //                     <div className="grid grid-cols-2 gap-3 text-sm">
 //                       <div>
-//                         <span className={`font-medium ${
-//                           theme === 'dark' ? 'text-dark-text-secondary' : 'text-light-text-secondary'
-//                         }`}>
+//                         <span className={`font-medium ${textSecondaryClass}`}>
 //                           Status:
 //                         </span>
 //                         <div className={getUserStatusColor(user.status)}>
@@ -868,9 +845,7 @@
 //                         </div>
 //                       </div>
 //                       <div>
-//                         <span className={`font-medium ${
-//                           theme === 'dark' ? 'text-dark-text-secondary' : 'text-light-text-secondary'
-//                         }`}>
+//                         <span className={`font-medium ${textSecondaryClass}`}>
 //                           Allocated:
 //                         </span>
 //                         <div>
@@ -878,17 +853,13 @@
 //                         </div>
 //                       </div>
 //                       <div>
-//                         <span className={`font-medium ${
-//                           theme === 'dark' ? 'text-dark-text-secondary' : 'text-light-text-secondary'
-//                         }`}>
+//                         <span className={`font-medium ${textSecondaryClass}`}>
 //                           Used:
 //                         </span>
 //                         <div>{user.devices[0].used} GB</div>
 //                       </div>
 //                       <div>
-//                         <span className={`font-medium ${
-//                           theme === 'dark' ? 'text-dark-text-secondary' : 'text-light-text-secondary'
-//                         }`}>
+//                         <span className={`font-medium ${textSecondaryClass}`}>
 //                           Quota:
 //                         </span>
 //                         <div className={checkBandwidthQuota(user.devices[0]).color}>
@@ -904,7 +875,7 @@
 //                       initial={{ opacity: 0, height: 0 }}
 //                       animate={{ opacity: 1, height: 'auto' }}
 //                       exit={{ opacity: 0, height: 0 }}
-//                       className="mt-4 pt-4 border-t"
+//                       className="mt-4 pt-4 border-t border-gray-700 transition-colors duration-300"
 //                     >
 //                       <div className="space-y-4 text-sm">
 //                         <div>
@@ -920,9 +891,7 @@
 //                               { label: "QoS", value: user.devices[0].qos }
 //                             ].map((item, index) => (
 //                               <React.Fragment key={index}>
-//                                 <div className={`font-medium ${
-//                                   theme === 'dark' ? 'text-dark-text-secondary' : 'text-light-text-secondary'
-//                                 }`}>
+//                                 <div className={`font-medium ${textSecondaryClass}`}>
 //                                   {item.label}:
 //                                 </div>
 //                                 <div>{item.value}</div>
@@ -956,32 +925,22 @@
 //           >
 //             <div className="space-y-4">
 //               <div>
-//                 <label className={`block text-sm mb-1 ${
-//                   theme === 'dark' ? 'text-dark-text-secondary' : 'text-light-text-secondary'
-//                 }`}>
+//                 <label className={`block text-sm mb-1 ${textSecondaryClass}`}>
 //                   MAC Address
 //                 </label>
-//                 <div className={`p-2 rounded-md ${
-//                   theme === 'dark' ? 'bg-dark-background-tertiary' : 'bg-light-background-tertiary'
-//                 }`}>
+//                 <div className={`p-2 rounded-lg ${theme === "dark" ? "bg-gray-700/50" : "bg-gray-100"}`}>
 //                   {selectedDevice.mac}
 //                 </div>
 //               </div>
               
 //               <div>
-//                 <label className={`block text-sm mb-1 ${
-//                   theme === 'dark' ? 'text-dark-text-secondary' : 'text-light-text-secondary'
-//                 }`}>
+//                 <label className={`block text-sm mb-1 ${textSecondaryClass}`}>
 //                   Allocated Bandwidth
 //                 </label>
 //                 <div className="flex">
 //                   <input
 //                     type="text"
-//                     className={`flex-1 p-2 border rounded-l-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-//                       theme === 'dark' 
-//                         ? 'bg-dark-background-secondary border-dark-border-light text-dark-text-primary' 
-//                         : 'bg-light-background-secondary border-light-border-light text-light-text-primary'
-//                     }`}
+//                     className={`flex-1 p-2 border rounded-l-lg ${inputClass} transition-colors duration-300`}
 //                     value={newAllocation}
 //                     onChange={(e) => setNewAllocation(e.target.value)}
 //                     placeholder="Enter bandwidth in GB"
@@ -989,11 +948,7 @@
 //                     disabled={isUpdating}
 //                   />
 //                   <select
-//                     className={`p-2 border rounded-r-md ${
-//                       theme === 'dark' 
-//                         ? 'bg-dark-background-secondary border-dark-border-light text-dark-text-primary' 
-//                         : 'bg-light-background-secondary border-light-border-light text-light-text-primary'
-//                     }`}
+//                     className={`p-2 border rounded-r-lg ${inputClass} transition-colors duration-300`}
 //                     value={newAllocation === "Unlimited" ? "Unlimited" : ""}
 //                     onChange={(e) => setNewAllocation(e.target.value === "Unlimited" ? "Unlimited" : newAllocation)}
 //                     aria-label="Bandwidth type"
@@ -1003,9 +958,7 @@
 //                     <option value="Unlimited">Unlimited</option>
 //                   </select>
 //                 </div>
-//                 <p className={`text-xs mt-1 ${
-//                   theme === 'dark' ? 'text-dark-text-tertiary' : 'text-light-text-tertiary'
-//                 }`}>
+//                 <p className={`text-xs mt-1 ${textTertiaryClass}`}>
 //                   Max for {selectedUser.plan.name} ({selectedUser.plan.category}):{" "}
 //                   {plans.find(p => p.name === selectedUser.plan.name)?.dataLimit.value || "N/A"}{" "}
 //                   {plans.find(p => p.name === selectedUser.plan.name)?.dataLimit.unit || ""}
@@ -1013,17 +966,11 @@
 //               </div>
               
 //               <div>
-//                 <label className={`block text-sm mb-1 ${
-//                   theme === 'dark' ? 'text-dark-text-secondary' : 'text-light-text-secondary'
-//                 }`}>
+//                 <label className={`block text-sm mb-1 ${textSecondaryClass}`}>
 //                   Quality of Service (QoS)
 //                 </label>
 //                 <select
-//                   className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-//                     theme === 'dark' 
-//                       ? 'bg-dark-background-secondary border-dark-border-light text-dark-text-primary' 
-//                       : 'bg-light-background-secondary border-light-border-light text-light-text-primary'
-//                   }`}
+//                   className={`w-full p-2 border rounded-lg ${inputClass} transition-colors duration-300`}
 //                   value={newQos}
 //                   onChange={(e) => setNewQos(e.target.value)}
 //                   aria-label="Quality of Service"
@@ -1080,21 +1027,21 @@
 // }) => {
 //   const { theme } = useTheme();
   
-//   const baseStyles = "flex items-center justify-center font-medium rounded-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed";
+//   const baseStyles = "flex items-center justify-center font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed";
   
 //   const variants = {
-//     primary: theme === 'dark' 
-//       ? 'bg-indigo-600 hover:bg-indigo-700 text-white' 
-//       : 'bg-indigo-600 hover:bg-indigo-700 text-white',
-//     secondary: theme === 'dark'
-//       ? 'bg-dark-background-secondary hover:bg-dark-background-tertiary text-dark-text-primary border border-dark-border-light'
-//       : 'bg-light-background-secondary hover:bg-light-background-tertiary text-light-text-primary border border-light-border-light'
+//     primary: theme === "dark" 
+//       ? "bg-indigo-600 hover:bg-indigo-700 text-white" 
+//       : "bg-indigo-600 hover:bg-indigo-700 text-white",
+//     secondary: theme === "dark"
+//       ? "bg-gray-700 hover:bg-gray-600 text-white border border-gray-600"
+//       : "bg-gray-200 hover:bg-gray-300 text-gray-800 border border-gray-300"
 //   };
   
 //   const sizes = {
-//     sm: 'px-3 py-1.5 text-sm',
-//     md: 'px-4 py-2 text-sm',
-//     lg: 'px-6 py-3 text-base'
+//     sm: "px-3 py-1.5 text-sm",
+//     md: "px-4 py-2 text-sm",
+//     lg: "px-6 py-3 text-base"
 //   };
   
 //   return (
@@ -1103,7 +1050,7 @@
 //       whileTap={{ scale: disabled ? 1 : 0.98 }}
 //       onClick={onClick}
 //       disabled={disabled}
-//       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''}`}
+//       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${fullWidth ? "w-full" : ""}`}
 //       aria-label={ariaLabel}
 //     >
 //       {icon && React.cloneElement(icon, { className: `w-4 h-4 ${label ? "mr-2" : ""}` })}
@@ -1121,7 +1068,7 @@
 //     <AnimatePresence>
 //       {isOpen && (
 //         <div 
-//           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+//           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 transition-colors duration-300"
 //           role="dialog" 
 //           aria-modal="true"
 //           onClick={onClose}
@@ -1130,21 +1077,21 @@
 //             initial={{ scale: 0.9, opacity: 0 }}
 //             animate={{ scale: 1, opacity: 1 }}
 //             exit={{ scale: 0.9, opacity: 0 }}
-//             className={`max-w-md w-full max-h-[90vh] overflow-y-auto rounded-lg shadow-xl ${
-//               themeToUse === 'dark' 
-//                 ? 'bg-dark-background-primary text-dark-text-primary' 
-//                 : 'bg-light-background-primary text-light-text-primary'
-//             }`}
+//             className={`max-w-md w-full max-h-[90vh] overflow-y-auto rounded-xl shadow-xl ${
+//               themeToUse === "dark" 
+//                 ? "bg-gray-800/80 backdrop-blur-md text-white border border-gray-700" 
+//                 : "bg-white/80 backdrop-blur-md text-gray-800 border border-gray-200"
+//             } transition-colors duration-300`}
 //             onClick={(e) => e.stopPropagation()}
 //           >
-//             <div className="flex justify-between items-center p-6 border-b">
+//             <div className="flex justify-between items-center p-6 border-b border-gray-700">
 //               <h3 className="text-lg font-semibold">{title}</h3>
 //               <button 
 //                 onClick={onClose} 
-//                 className={`p-1 rounded-full hover:opacity-70 ${
-//                   themeToUse === 'dark' 
-//                     ? 'hover:bg-dark-background-secondary' 
-//                     : 'hover:bg-light-background-secondary'
+//                 className={`p-1 rounded-full hover:opacity-70 transition-colors duration-300 ${
+//                   themeToUse === "dark" 
+//                     ? "hover:bg-gray-700" 
+//                     : "hover:bg-gray-200"
 //                 }`}
 //                 aria-label="Close modal"
 //               >
@@ -1162,10 +1109,6 @@
 // };
 
 // export default BandwidthAllocation;
-
-
-
-
 
 
 
@@ -1681,7 +1624,7 @@ const BandwidthAllocation = () => {
         transition={{ duration: 0.3, delay: 0.1 }}
       >
         <div className={`p-4 ${cardClass}`}>
-          <div className="flex flex-col lg:flex-row gap-4">
+          <div className="flex flex-col lg:flex-row gap-4 items-end">
             {/* Search Input */}
             <div className="relative flex-1">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -1900,19 +1843,30 @@ const BandwidthAllocation = () => {
                                   Device Details
                                 </h4>
                                 <div className="grid grid-cols-2 gap-3">
-                                  {[
-                                    { label: "MAC Address", value: user.devices[0].mac },
-                                    { label: "IP Address", value: user.devices[0].ip },
-                                    { label: "Connected", value: timeSince(user.devices[0].connectedAt) },
-                                    { label: "Quota", value: user.devices[0].quota === "Unlimited" ? "Unlimited" : `${user.devices[0].quota} GB` }
-                                  ].map((item, index) => (
-                                    <React.Fragment key={index}>
-                                      <div className={`font-medium ${textSecondaryClass}`}>
-                                        {item.label}:
-                                      </div>
-                                      <div>{item.value}</div>
-                                    </React.Fragment>
-                                  ))}
+                                  <div>
+                                    <span className={`font-medium ${textSecondaryClass}`}>
+                                      MAC Address:
+                                    </span>
+                                    <div>{user.devices[0].mac}</div>
+                                  </div>
+                                  <div>
+                                    <span className={`font-medium ${textSecondaryClass}`}>
+                                      IP Address:
+                                    </span>
+                                    <div>{user.devices[0].ip}</div>
+                                  </div>
+                                  <div>
+                                    <span className={`font-medium ${textSecondaryClass}`}>
+                                      Connected:
+                                    </span>
+                                    <div>{timeSince(user.devices[0].connectedAt)}</div>
+                                  </div>
+                                  <div>
+                                    <span className={`font-medium ${textSecondaryClass}`}>
+                                      Quota:
+                                    </span>
+                                    <div>{user.devices[0].quota === "Unlimited" ? "Unlimited" : `${user.devices[0].quota} GB`}</div>
+                                  </div>
                                 </div>
                               </div>
                               
@@ -1922,36 +1876,38 @@ const BandwidthAllocation = () => {
                                   Usage Statistics
                                 </h4>
                                 <div className="grid grid-cols-2 gap-3">
-                                  {[
-                                    { 
-                                      label: "Bandwidth Used", 
-                                      value: `${user.devices[0].used} GB (${
-                                        user.devices[0].allocated === "Unlimited" 
-                                          ? "∞" 
-                                          : `${Math.round((user.devices[0].used / user.devices[0].allocated) * 100)}%`
-                                      } of allocated)` 
-                                    },
-                                    { 
-                                      label: "Remaining", 
-                                      value: user.devices[0].quota === "Unlimited" 
-                                        ? "Unlimited" 
-                                        : `${user.devices[0].quota - user.devices[0].used} GB` 
-                                    },
-                                    { label: "Last Seen", value: timeSince(user.lastSeen) },
-                                    { 
-                                      label: "Status", 
-                                      value: checkBandwidthQuota(user.devices[0]).message 
-                                    }
-                                  ].map((item, index) => (
-                                    <React.Fragment key={index}>
-                                      <div className={`font-medium ${textSecondaryClass}`}>
-                                        {item.label}:
-                                      </div>
-                                      <div className={index === 3 ? checkBandwidthQuota(user.devices[0]).color : ''}>
-                                        {item.value}
-                                      </div>
-                                    </React.Fragment>
-                                  ))}
+                                  <div>
+                                    <span className={`font-medium ${textSecondaryClass}`}>
+                                      Bandwidth Used:
+                                    </span>
+                                    <div>{`${user.devices[0].used} GB (${
+                                      user.devices[0].allocated === "Unlimited" 
+                                        ? "∞" 
+                                        : `${Math.round((user.devices[0].used / user.devices[0].allocated) * 100)}%`
+                                    } of allocated)`}</div>
+                                  </div>
+                                  <div>
+                                    <span className={`font-medium ${textSecondaryClass}`}>
+                                      Remaining:
+                                    </span>
+                                    <div>{user.devices[0].quota === "Unlimited" 
+                                      ? "Unlimited" 
+                                      : `${user.devices[0].quota - user.devices[0].used} GB`}</div>
+                                  </div>
+                                  <div>
+                                    <span className={`font-medium ${textSecondaryClass}`}>
+                                      Last Seen:
+                                    </span>
+                                    <div>{timeSince(user.lastSeen)}</div>
+                                  </div>
+                                  <div>
+                                    <span className={`font-medium ${textSecondaryClass}`}>
+                                      Status:
+                                    </span>
+                                    <div className={checkBandwidthQuota(user.devices[0]).color}>
+                                      {checkBandwidthQuota(user.devices[0]).message}
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -2091,7 +2047,6 @@ const BandwidthAllocation = () => {
               setNewAllocation("");
               setNewQos("");
             }}
-            theme={theme}
           >
             <div className="space-y-4">
               <div>
@@ -2230,10 +2185,9 @@ const Button = ({
 };
 
 // Reusable Modal Component
-const Modal = ({ isOpen, title, onClose, children, theme }) => {
-  const { theme: currentTheme } = useTheme();
-  const themeToUse = theme || currentTheme;
-
+const Modal = ({ isOpen, title, onClose, children }) => {
+  const { theme } = useTheme();
+  
   return (
     <AnimatePresence>
       {isOpen && (
@@ -2248,7 +2202,7 @@ const Modal = ({ isOpen, title, onClose, children, theme }) => {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             className={`max-w-md w-full max-h-[90vh] overflow-y-auto rounded-xl shadow-xl ${
-              themeToUse === "dark" 
+              theme === "dark" 
                 ? "bg-gray-800/80 backdrop-blur-md text-white border border-gray-700" 
                 : "bg-white/80 backdrop-blur-md text-gray-800 border border-gray-200"
             } transition-colors duration-300`}
@@ -2259,7 +2213,7 @@ const Modal = ({ isOpen, title, onClose, children, theme }) => {
               <button 
                 onClick={onClose} 
                 className={`p-1 rounded-full hover:opacity-70 transition-colors duration-300 ${
-                  themeToUse === "dark" 
+                  theme === "dark" 
                     ? "hover:bg-gray-700" 
                     : "hover:bg-gray-200"
                 }`}

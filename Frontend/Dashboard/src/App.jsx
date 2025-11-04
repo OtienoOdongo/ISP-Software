@@ -355,7 +355,7 @@ import BulkActions from "./Pages/UserManagement/BulkActions";
 
 // Service Plans
 import PlanManagement from "./Pages/ServiceManagement/PlanManagement"; 
-import PlanAnalytics from "./Pages/InternetPlans/PlanAnalytics";
+
 
 // Network Management
 import RouterManagement from "./Pages/NetworkManagement/RouterManagement";
@@ -402,7 +402,6 @@ const routeConfig = {
       children: [
         { index: true, element: <Navigate to="plan-management" replace /> },
         { path: "plan-management", element: <PlanManagement /> }, 
-        { path: "usage-analytics", element: <PlanAnalytics /> },
       ],
     },
     network: {

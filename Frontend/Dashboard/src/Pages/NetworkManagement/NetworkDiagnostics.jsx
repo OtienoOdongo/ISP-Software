@@ -1,12 +1,7 @@
 
 
-
-
-
-
-
-
-// import React, { useState, useCallback, useEffect } from 'react';
+// // src/components/NetworkManagement/NetworkDiagnostics.jsx
+// import React, { useState, useCallback, useEffect, useMemo } from 'react';
 // import {
 //   Activity, Wifi, Server, Download, Upload,
 //   Clock, AlertCircle, CheckCircle, XCircle,
@@ -57,6 +52,33 @@
 //   const [routers, setRouters] = useState([]);
 //   const [selectedRouterId, setSelectedRouterId] = useState(propRouterId || '');
 //   const { theme } = useTheme();
+
+//   // Theme-based styling variables
+//   const containerClass = useMemo(() => 
+//     theme === "dark" 
+//       ? "bg-gradient-to-br from-gray-900 to-indigo-900 text-white min-h-screen p-4 md:p-8" 
+//       : "bg-gray-50 text-gray-800 min-h-screen p-4 md:p-8",
+//     [theme]
+//   );
+
+//   const cardClass = useMemo(() => 
+//     theme === "dark"
+//       ? "bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-xl shadow-md"
+//       : "bg-white/80 backdrop-blur-md border border-gray-200 rounded-xl shadow-md",
+//     [theme]
+//   );
+
+//   const inputClass = useMemo(() => 
+//     theme === "dark"
+//       ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500"
+//       : "bg-white border-gray-300 text-gray-800 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500",
+//     [theme]
+//   );
+
+//   const textSecondaryClass = useMemo(() => 
+//     theme === "dark" ? "text-gray-400" : "text-gray-500",
+//     [theme]
+//   );
 
 //   const fetchRouters = useCallback(async () => {
 //     try {
@@ -228,17 +250,17 @@
 //     }
 //   }, [clientIp, selectedRouterId, fetchHistoricalData]);
 
-//   const renderStatusIcon = (status) => {
+//   const renderStatusIcon = useCallback((status) => {
 //     const icons = {
-//       running: <RefreshCw className="text-yellow-500 inline-block mr-2 animate-spin" />,
-//       success: <CheckCircle className="text-green-500 inline-block mr-2" />,
-//       error: <XCircle className="text-red-500 inline-block mr-2" />,
-//       idle: <Clock className="text-gray-500 inline-block mr-2" />,
+//       running: <RefreshCw className={`${theme === "dark" ? "text-yellow-400" : "text-yellow-600"} inline-block mr-2 animate-spin`} />,
+//       success: <CheckCircle className={`${theme === "dark" ? "text-green-400" : "text-green-600"} inline-block mr-2`} />,
+//       error: <XCircle className={`${theme === "dark" ? "text-red-400" : "text-red-600"} inline-block mr-2`} />,
+//       idle: <Clock className={`${textSecondaryClass} inline-block mr-2`} />,
 //     };
 //     return icons[status] || icons.idle;
-//   };
+//   }, [theme, textSecondaryClass]);
 
-//   const getStatusColor = (status) => {
+//   const getStatusColor = useCallback((status) => {
 //     const colors = theme === 'dark' ? {
 //       success: 'bg-green-900 text-green-300',
 //       error: 'bg-red-900 text-red-300',
@@ -251,22 +273,22 @@
 //       idle: 'bg-gray-100 text-gray-800',
 //     };
 //     return colors[status] || colors.idle;
-//   };
+//   }, [theme]);
 
-//   const formatSpeed = (speed) => {
+//   const formatSpeed = useCallback((speed) => {
 //     return speed != null ? `${speed.toFixed(2)} Mbps` : 'N/A';
-//   };
+//   }, []);
 
-//   const calculateEfficiency = (client, isp) => {
+//   const calculateEfficiency = useCallback((client, isp) => {
 //     if (isp == null || isp === 0 || client == null) return 0;
 //     return Math.min(100, Math.round((client / isp) * 100));
-//   };
+//   }, []);
 
 //   const toggleTestExpansion = useCallback((testName) => {
 //     setExpandedTest(prev => (prev === testName ? null : testName));
 //   }, []);
 
-//   const chartData = {
+//   const chartData = useMemo(() => ({
 //     labels:
 //       historicalData.isp[timeFrame]?.length > 0
 //         ? historicalData.isp[timeFrame].map(d => new Date(d.timestamp).toLocaleString())
@@ -297,29 +319,66 @@
 //         tension: 0.1,
 //       },
 //     ],
-//   };
+//   }), [historicalData, timeFrame]);
+
+//   const chartOptions = useMemo(() => ({
+//     responsive: true,
+//     plugins: {
+//       legend: { 
+//         position: 'top',
+//         labels: {
+//           color: theme === 'dark' ? '#e5e7eb' : '#374151'
+//         }
+//       },
+//       title: { 
+//         display: true, 
+//         text: 'Speed Test History',
+//         color: theme === 'dark' ? '#e5e7eb' : '#374151'
+//       },
+//     },
+//     scales: {
+//       y: {
+//         beginAtZero: true,
+//         title: { 
+//           display: true, 
+//           text: 'Speed (Mbps)',
+//           color: theme === 'dark' ? '#9ca3af' : '#6b7280'
+//         },
+//         grid: { 
+//           color: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' 
+//         },
+//         ticks: { 
+//           color: theme === 'dark' ? '#9ca3af' : '#6b7280' 
+//         }
+//       },
+//       x: {
+//         grid: { 
+//           color: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' 
+//         },
+//         ticks: { 
+//           color: theme === 'dark' ? '#9ca3af' : '#6b7280' 
+//         }
+//       }
+//     },
+//   }), [theme]);
 
 //   return (
-//     <div className={`p-6 rounded-lg theme-transition ${
-//       theme === 'dark' ? 'bg-dark-background-primary text-dark-text-primary' : 'bg-white text-gray-900'
-//     }`} role="region" aria-label="Network Diagnostics">
+//     <div className={containerClass} role="region" aria-label="Network Diagnostics">
 //       <ToastContainer position="top-right" autoClose={3000} theme={theme} />
 
-//       <header className={`flex flex-col md:flex-row justify-between items-start md:items-center mb-6 p-4 rounded-lg shadow ${
-//         theme === 'dark' ? 'bg-dark-background-secondary' : 'bg-gray-50'
-//       }`}>
+//       <header className={`${cardClass} flex flex-col md:flex-row justify-between items-start md:items-center mb-6 p-6 transition-colors duration-300`}>
 //         <div className="flex items-center space-x-4 mb-4 md:mb-0">
-//           <Activity className="w-8 h-8 text-indigo-600" aria-hidden="true" />
+//           <Activity className="w-8 h-8 text-indigo-500" aria-hidden="true" />
 //           <div>
-//             <h1 className="text-2xl font-bold text-indigo-600">Network Diagnostics</h1>
-//             <p className={`text-sm ${theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}`}>Comprehensive network analysis and speed testing</p>
+//             <h1 className="text-2xl font-bold text-indigo-500">Network Diagnostics</h1>
+//             <p className={`text-sm ${textSecondaryClass}`}>Comprehensive network analysis and speed testing</p>
 //           </div>
 //         </div>
 
 //         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
 //           {routers.length === 0 ? (
-//             <div className={`flex-1 border-l-4 p-3 rounded w-full ${
-//               theme === 'dark' ? 'bg-yellow-900 border-yellow-500 text-yellow-300' : 'bg-yellow-100 border-yellow-500 text-yellow-700'
+//             <div className={`flex-1 border-l-4 p-3 rounded-lg w-full transition-colors duration-300 ${
+//               theme === "dark" ? "bg-yellow-900 border-yellow-500 text-yellow-300" : "bg-yellow-100 border-yellow-500 text-yellow-700"
 //             }`}>
 //               <div className="flex items-center">
 //                 <AlertCircle className="w-5 h-5 mr-2" />
@@ -327,7 +386,7 @@
 //                   No routers configured. Please{' '}
 //                   <button
 //                     onClick={() => toast.info('Navigate to Router Management and click "Add Router" to configure a new router.')}
-//                     className="text-blue-600 underline hover:text-blue-800"
+//                     className="text-indigo-400 underline hover:text-indigo-300"
 //                   >
 //                     add a router
 //                   </button>{' '}
@@ -340,17 +399,13 @@
 //               <div className="relative flex-1">
 //                 <label htmlFor="router-select" className="sr-only">Select Router</label>
 //                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-//                   <Server className="h-5 w-5 text-gray-500" aria-hidden="true" />
+//                   <Server className={`h-5 w-5 ${textTertiaryClass}`} aria-hidden="true" />
 //                 </div>
 //                 <select
 //                   id="router-select"
 //                   value={selectedRouterId}
 //                   onChange={(e) => setSelectedRouterId(e.target.value)}
-//                   className={`pl-10 pr-4 py-2 w-full border rounded-md theme-transition ${
-//                     theme === 'dark'
-//                       ? 'bg-dark-background-primary border-dark-border-medium text-dark-text-primary'
-//                       : 'bg-white border-gray-300 text-gray-900'
-//                   } focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500`}
+//                   className={`pl-10 pr-4 py-2 w-full border rounded-lg ${inputClass} transition-colors duration-300`}
 //                   aria-label="Select router for diagnostics"
 //                 >
 //                   <option value="">Select a router</option>
@@ -364,22 +419,14 @@
 //               <div className="relative flex-1">
 //                 <label htmlFor="target-domain" className="sr-only">Target Domain</label>
 //                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-//                   <Network className="h-5 w-5 text-gray-500" aria-hidden="true" />
+//                   <Network className={`h-5 w-5 ${textTertiaryClass}`} aria-hidden="true" />
 //                 </div>
 //                 <input
 //                   id="target-domain"
 //                   type="text"
-//                   className={`pl-10 pr-4 py-2 w-full border rounded-md theme-transition ${
-//                     isTargetValid 
-//                       ? theme === 'dark' 
-//                         ? 'border-dark-border-medium' 
-//                         : 'border-gray-300'
-//                       : 'border-red-500'
-//                   } ${
-//                     theme === 'dark'
-//                       ? 'bg-dark-background-primary text-dark-text-primary placeholder-dark-text-tertiary'
-//                       : 'bg-white text-gray-900 placeholder-gray-500'
-//                   } focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500`}
+//                   className={`pl-10 pr-4 py-2 w-full border rounded-lg ${inputClass} transition-colors duration-300 ${
+//                     isTargetValid ? "" : "border-red-500"
+//                   }`}
 //                   placeholder="Enter target (e.g., example.com)"
 //                   value={diagnosticsTarget}
 //                   onChange={(e) => {
@@ -392,28 +439,20 @@
 //                   aria-describedby={isTargetValid ? undefined : 'target-domain-error'}
 //                 />
 //                 {!isTargetValid && (
-//                   <p id="target-domain-error" className="text-red-500 text-xs mt-1">Please enter a valid domain</p>
+//                   <p id="target-domain-error" className="text-red-400 text-xs mt-1">Please enter a valid domain</p>
 //                 )}
 //               </div>
 //               <div className="relative flex-1">
 //                 <label htmlFor="client-ip" className="sr-only">Client IP</label>
 //                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-//                   <Wifi className="h-5 w-5 text-gray-500" aria-hidden="true" />
+//                   <Wifi className={`h-5 w-5 ${textTertiaryClass}`} aria-hidden="true" />
 //                 </div>
 //                 <input
 //                   id="client-ip"
 //                   type="text"
-//                   className={`pl-10 pr-4 py-2 w-full border rounded-md theme-transition ${
-//                     isClientIpValid 
-//                       ? theme === 'dark' 
-//                         ? 'border-dark-border-medium' 
-//                         : 'border-gray-300'
-//                       : 'border-red-500'
-//                   } ${
-//                     theme === 'dark'
-//                       ? 'bg-dark-background-primary text-dark-text-primary placeholder-dark-text-tertiary'
-//                       : 'bg-white text-gray-900 placeholder-gray-500'
-//                   } focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500`}
+//                   className={`pl-10 pr-4 py-2 w-full border rounded-lg ${inputClass} transition-colors duration-300 ${
+//                     isClientIpValid ? "" : "border-red-500"
+//                   }`}
 //                   placeholder="Client IP (e.g., 192.168.1.100)"
 //                   value={clientIp}
 //                   onChange={(e) => {
@@ -426,14 +465,14 @@
 //                   aria-describedby={isClientIpValid ? undefined : 'client-ip-error'}
 //                 />
 //                 {!isClientIpValid && (
-//                   <p id="client-ip-error" className="text-red-500 text-xs mt-1">Please enter a valid IP address</p>
+//                   <p id="client-ip-error" className="text-red-400 text-xs mt-1">Please enter a valid IP address</p>
 //                 )}
 //               </div>
 //               <button
-//                 className={`px-4 py-2 rounded-md flex items-center justify-center disabled:opacity-50 theme-transition ${
-//                   theme === 'dark' 
-//                     ? 'bg-dark-primary-600 hover:bg-dark-primary-500 text-white' 
-//                     : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+//                 className={`px-4 py-2 rounded-lg flex items-center justify-center disabled:opacity-50 transition-colors duration-300 ${
+//                   theme === "dark" 
+//                     ? "bg-indigo-600 hover:bg-indigo-700 text-white" 
+//                     : "bg-indigo-600 hover:bg-indigo-700 text-white"
 //                 }`}
 //                 onClick={runDiagnostics}
 //                 disabled={loading || !selectedRouterId || isNaN(parseInt(selectedRouterId)) || !isClientIpValid || !isTargetValid || !diagnosticsTarget || !clientIp}
@@ -458,11 +497,9 @@
 
 //       {selectedRouterId && !isNaN(parseInt(selectedRouterId)) ? (
 //         <>
-//           <div className={`p-4 rounded-lg shadow mb-6 ${
-//             theme === 'dark' ? 'bg-dark-background-secondary' : 'bg-white'
-//           }`}>
+//           <div className={`${cardClass} p-6 mb-6 transition-colors duration-300`}>
 //             <div className="flex justify-between items-center mb-4">
-//               <h2 className="text-lg font-semibold flex items-center text-indigo-600">
+//               <h2 className="text-lg font-semibold flex items-center text-indigo-500">
 //                 <Gauge className="w-5 h-5 mr-2" aria-hidden="true" />
 //                 Bandwidth Speed Test
 //               </h2>
@@ -470,10 +507,10 @@
 //                 <button
 //                   onClick={() => runSpeedTest('full')}
 //                   disabled={speedTestRunning || !selectedRouterId || isNaN(parseInt(selectedRouterId)) || !isClientIpValid || !clientIp}
-//                   className={`px-3 py-1 rounded-md text-sm flex items-center disabled:opacity-50 theme-transition ${
-//                     theme === 'dark' 
-//                       ? 'bg-dark-primary-600 hover:bg-dark-primary-500 text-white' 
-//                       : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+//                   className={`px-3 py-1 rounded-lg text-sm flex items-center disabled:opacity-50 transition-colors duration-300 ${
+//                     theme === "dark" 
+//                       ? "bg-indigo-600 hover:bg-indigo-700 text-white" 
+//                       : "bg-indigo-600 hover:bg-indigo-700 text-white"
 //                   }`}
 //                   aria-label="Run full speed test"
 //                 >
@@ -487,10 +524,10 @@
 //                 <button
 //                   onClick={() => runSpeedTest('quick')}
 //                   disabled={speedTestRunning || !selectedRouterId || isNaN(parseInt(selectedRouterId)) || !isClientIpValid || !clientIp}
-//                   className={`px-3 py-1 rounded-md text-sm flex items-center disabled:opacity-50 theme-transition ${
-//                     theme === 'dark' 
-//                       ? 'bg-dark-background-primary text-dark-text-primary hover:bg-dark-border-light' 
-//                       : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
+//                   className={`px-3 py-1 rounded-lg text-sm flex items-center disabled:opacity-50 transition-colors duration-300 ${
+//                     theme === "dark" 
+//                       ? "bg-gray-700 hover:bg-gray-600 text-white" 
+//                       : "bg-gray-200 hover:bg-gray-300 text-gray-800"
 //                   }`}
 //                   aria-label="Run quick speed test"
 //                 >
@@ -501,96 +538,72 @@
 //             </div>
 
 //             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-//               <div className={`p-4 rounded-lg ${
-//                 theme === 'dark' ? 'bg-dark-background-tertiary' : 'bg-gray-50'
-//               }`}>
+//               <div className={`${cardClass} p-4 transition-colors duration-300`}>
 //                 <h3 className={`font-medium mb-3 flex items-center ${
-//                   theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-700'
+//                   theme === "dark" ? "text-white" : "text-gray-800"
 //                 }`}>
 //                   {renderStatusIcon(diagnostics.bandwidth.status)}
 //                   ISP Connection Speed
 //                 </h3>
 //                 <div className="grid grid-cols-2 gap-4">
-//                   <div className={`p-3 rounded shadow-sm ${
-//                     theme === 'dark' ? 'bg-dark-background-primary' : 'bg-white'
-//                   }`}>
-//                     <p className={`text-sm ${
-//                       theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'
-//                     }`}>Download</p>
-//                     <p className="text-xl font-bold text-green-600">{formatSpeed(diagnostics.bandwidth.download)}</p>
+//                   <div className={`${cardClass} p-3 transition-colors duration-300`}>
+//                     <p className={`text-sm ${textSecondaryClass}`}>Download</p>
+//                     <p className="text-xl font-bold text-green-500">{formatSpeed(diagnostics.bandwidth.download)}</p>
 //                   </div>
-//                   <div className={`p-3 rounded shadow-sm ${
-//                     theme === 'dark' ? 'bg-dark-background-primary' : 'bg-white'
-//                   }`}>
-//                     <p className={`text-sm ${
-//                       theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'
-//                     }`}>Upload</p>
-//                     <p className="text-xl font-bold text-blue-600">{formatSpeed(diagnostics.bandwidth.upload)}</p>
+//                   <div className={`${cardClass} p-3 transition-colors duration-300`}>
+//                     <p className={`text-sm ${textSecondaryClass}`}>Upload</p>
+//                     <p className="text-xl font-bold text-blue-500">{formatSpeed(diagnostics.bandwidth.upload)}</p>
 //                   </div>
 //                 </div>
 //                 {diagnostics.bandwidth.status === 'success' && (
 //                   <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Server: {diagnostics.bandwidth.server || 'N/A'}</p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>ISP: {diagnostics.bandwidth.isp || 'N/A'}</p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Latency: {diagnostics.bandwidth.latency != null ? `${diagnostics.bandwidth.latency.toFixed(2)} ms` : 'N/A'}</p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Jitter: {diagnostics.bandwidth.jitter != null ? `${diagnostics.bandwidth.jitter.toFixed(2)} ms` : 'N/A'}</p>
+//                     <p className={textSecondaryClass}>Server: {diagnostics.bandwidth.server || 'N/A'}</p>
+//                     <p className={textSecondaryClass}>ISP: {diagnostics.bandwidth.isp || 'N/A'}</p>
+//                     <p className={textSecondaryClass}>Latency: {diagnostics.bandwidth.latency != null ? `${diagnostics.bandwidth.latency.toFixed(2)} ms` : 'N/A'}</p>
+//                     <p className={textSecondaryClass}>Jitter: {diagnostics.bandwidth.jitter != null ? `${diagnostics.bandwidth.jitter.toFixed(2)} ms` : 'N/A'}</p>
 //                   </div>
 //                 )}
 //               </div>
 
-//               <div className={`p-4 rounded-lg ${
-//                 theme === 'dark' ? 'bg-dark-background-tertiary' : 'bg-gray-50'
-//               }`}>
+//               <div className={`${cardClass} p-4 transition-colors duration-300`}>
 //                 <h3 className={`font-medium mb-3 flex items-center ${
-//                   theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-700'
+//                   theme === "dark" ? "text-white" : "text-gray-800"
 //                 }`}>
 //                   {renderStatusIcon(diagnostics.clientBandwidth.status)}
 //                   Client Speed ({clientIp || 'N/A'})
 //                 </h3>
 //                 <div className="grid grid-cols-2 gap-4">
-//                   <div className={`p-3 rounded shadow-sm ${
-//                     theme === 'dark' ? 'bg-dark-background-primary' : 'bg-white'
-//                   }`}>
-//                     <p className={`text-sm ${
-//                       theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'
-//                     }`}>Download</p>
-//                     <p className="text-xl font-bold text-green-600">{formatSpeed(diagnostics.clientBandwidth.download)}</p>
+//                   <div className={`${cardClass} p-3 transition-colors duration-300`}>
+//                     <p className={`text-sm ${textSecondaryClass}`}>Download</p>
+//                     <p className="text-xl font-bold text-green-500">{formatSpeed(diagnostics.clientBandwidth.download)}</p>
 //                   </div>
-//                   <div className={`p-3 rounded shadow-sm ${
-//                     theme === 'dark' ? 'bg-dark-background-primary' : 'bg-white'
-//                   }`}>
-//                     <p className={`text-sm ${
-//                       theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'
-//                     }`}>Upload</p>
-//                     <p className="text-xl font-bold text-blue-600">{formatSpeed(diagnostics.clientBandwidth.upload)}</p>
+//                   <div className={`${cardClass} p-3 transition-colors duration-300`}>
+//                     <p className={`text-sm ${textSecondaryClass}`}>Upload</p>
+//                     <p className="text-xl font-bold text-blue-500">{formatSpeed(diagnostics.clientBandwidth.upload)}</p>
 //                   </div>
 //                 </div>
 //                 {diagnostics.clientBandwidth.status === 'success' && (
 //                   <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Device: {diagnostics.clientBandwidth.device || 'Unknown'}</p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Connection: {diagnostics.clientBandwidth.connectionType || 'Unknown'}</p>
+//                     <p className={textSecondaryClass}>Device: {diagnostics.clientBandwidth.device || 'Unknown'}</p>
+//                     <p className={textSecondaryClass}>Connection: {diagnostics.clientBandwidth.connectionType || 'Unknown'}</p>
 //                   </div>
 //                 )}
 //               </div>
 //             </div>
 
 //             {diagnostics.bandwidth.status === 'success' && diagnostics.clientBandwidth.status === 'success' && (
-//               <div className={`mt-4 p-4 rounded-lg ${
-//                 theme === 'dark' ? 'bg-dark-background-tertiary' : 'bg-gray-50'
-//               }`}>
+//               <div className={`${cardClass} mt-4 p-4 transition-colors duration-300`}>
 //                 <h3 className={`font-medium mb-3 ${
-//                   theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-700'
+//                   theme === "dark" ? "text-white" : "text-gray-800"
 //                 }`}>Bandwidth Comparison</h3>
 //                 <div className="space-y-2">
 //                   <div>
-//                     <p className={`text-sm mb-1 ${
-//                       theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'
-//                     }`}>Download Efficiency</p>
+//                     <p className={`text-sm mb-1 ${textSecondaryClass}`}>Download Efficiency</p>
 //                     <div className={`w-full rounded-full h-2.5 ${
-//                       theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
-//                     }`}>
+//                       theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+//                     } transition-colors duration-300`}>
 //                       <div
-//                         className="bg-green-500 h-2.5 rounded-full"
+//                         className="bg-green-500 h-2.5 rounded-full transition-all duration-300"
 //                         style={{
 //                           width: `${calculateEfficiency(diagnostics.clientBandwidth.download, diagnostics.bandwidth.download)}%`,
 //                         }}
@@ -600,22 +613,18 @@
 //                         aria-valuemax={100}
 //                       ></div>
 //                     </div>
-//                     <p className={`text-xs mt-1 ${
-//                       theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'
-//                     }`}>
+//                     <p className={`text-xs mt-1 ${textSecondaryClass}`}>
 //                       Client gets {formatSpeed(diagnostics.clientBandwidth.download)} of {formatSpeed(diagnostics.bandwidth.download)} (
 //                       {calculateEfficiency(diagnostics.clientBandwidth.download, diagnostics.bandwidth.download)}%)
 //                     </p>
 //                   </div>
 //                   <div>
-//                     <p className={`text-sm mb-1 ${
-//                       theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'
-//                     }`}>Upload Efficiency</p>
+//                     <p className={`text-sm mb-1 ${textSecondaryClass}`}>Upload Efficiency</p>
 //                     <div className={`w-full rounded-full h-2.5 ${
-//                       theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
-//                     }`}>
+//                       theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+//                     } transition-colors duration-300`}>
 //                       <div
-//                         className="bg-blue-500 h-2.5 rounded-full"
+//                         className="bg-blue-500 h-2.5 rounded-full transition-all duration-300"
 //                         style={{
 //                           width: `${calculateEfficiency(diagnostics.clientBandwidth.upload, diagnostics.bandwidth.upload)}%`,
 //                         }}
@@ -625,9 +634,7 @@
 //                         aria-valuemax={100}
 //                       ></div>
 //                     </div>
-//                     <p className={`text-xs mt-1 ${
-//                       theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'
-//                     }`}>
+//                     <p className={`text-xs mt-1 ${textSecondaryClass}`}>
 //                       Client gets {formatSpeed(diagnostics.clientBandwidth.upload)} of {formatSpeed(diagnostics.bandwidth.upload)} (
 //                       {calculateEfficiency(diagnostics.clientBandwidth.upload, diagnostics.bandwidth.upload)}%)
 //                     </p>
@@ -637,12 +644,10 @@
 //             )}
 
 //             {historicalData.isp[timeFrame]?.length > 0 && (
-//               <div className={`mt-4 p-4 rounded-lg ${
-//                 theme === 'dark' ? 'bg-dark-background-tertiary' : 'bg-gray-50'
-//               }`}>
+//               <div className={`${cardClass} mt-4 p-4 transition-colors duration-300`}>
 //                 <div className="flex justify-between items-center mb-4">
 //                   <h3 className={`font-medium ${
-//                     theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-700'
+//                     theme === "dark" ? "text-white" : "text-gray-800"
 //                   }`}>Historical Speed Data</h3>
 //                   <div>
 //                     <label htmlFor="timeframe-select" className="sr-only">
@@ -652,11 +657,7 @@
 //                       id="timeframe-select"
 //                       value={timeFrame}
 //                       onChange={(e) => setTimeFrame(e.target.value)}
-//                       className={`p-2 border rounded-md text-sm theme-transition ${
-//                         theme === 'dark'
-//                           ? 'bg-dark-background-primary border-dark-border-medium text-dark-text-primary'
-//                           : 'bg-white border-gray-300 text-gray-900'
-//                       }`}
+//                       className={`p-2 border rounded-lg text-sm ${inputClass} transition-colors duration-300`}
 //                       aria-label="Select time frame for historical data"
 //                     >
 //                       <option value="minute">Last Hour (Minutes)</option>
@@ -668,46 +669,7 @@
 //                 </div>
 //                 <Line
 //                   data={chartData}
-//                   options={{
-//                     responsive: true,
-//                     plugins: {
-//                       legend: { 
-//                         position: 'top',
-//                         labels: {
-//                           color: theme === 'dark' ? '#e5e7eb' : '#374151'
-//                         }
-//                       },
-//                       title: { 
-//                         display: true, 
-//                         text: 'Speed Test History',
-//                         color: theme === 'dark' ? '#e5e7eb' : '#374151'
-//                       },
-//                     },
-//                     scales: {
-//                       y: {
-//                         beginAtZero: true,
-//                         title: { 
-//                           display: true, 
-//                           text: 'Speed (Mbps)',
-//                           color: theme === 'dark' ? '#9ca3af' : '#6b7280'
-//                         },
-//                         grid: { 
-//                           color: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' 
-//                         },
-//                         ticks: { 
-//                           color: theme === 'dark' ? '#9ca3af' : '#6b7280' 
-//                         }
-//                       },
-//                       x: {
-//                         grid: { 
-//                           color: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' 
-//                         },
-//                         ticks: { 
-//                           color: theme === 'dark' ? '#9ca3af' : '#6b7280' 
-//                         }
-//                       }
-//                     },
-//                   }}
+//                   options={chartOptions}
 //                 />
 //               </div>
 //             )}
@@ -716,10 +678,8 @@
 //           <div className="space-y-4">
 //             {/* Ping Test Section */}
 //             <div
-//               className={`p-4 rounded-lg shadow cursor-pointer theme-transition ${
-//                 expandedTest === 'ping' ? 'ring-2 ring-indigo-500' : ''
-//               } ${
-//                 theme === 'dark' ? 'bg-dark-background-secondary' : 'bg-white'
+//               className={`${cardClass} p-4 cursor-pointer transition-all duration-300 ${
+//                 expandedTest === 'ping' ? "ring-2 ring-indigo-500" : ""
 //               }`}
 //               onClick={() => toggleTestExpansion('ping')}
 //               role="button"
@@ -730,13 +690,13 @@
 //             >
 //               <div className="flex justify-between items-center">
 //                 <h3 className={`font-semibold flex items-center ${
-//                   theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-700'
+//                   theme === "dark" ? "text-white" : "text-gray-800"
 //                 }`}>
 //                   {renderStatusIcon(diagnostics.ping.status)}
 //                   Ping Test ({diagnostics.ping.target})
 //                 </h3>
 //                 <button
-//                   className={theme === 'dark' ? 'text-dark-text-tertiary hover:text-dark-text-secondary' : 'text-gray-500 hover:text-gray-400'}
+//                   className={`${theme === "dark" ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-400"} transition-colors duration-300`}
 //                   aria-label={expandedTest === 'ping' ? 'Collapse ping test' : 'Expand ping test'}
 //                 >
 //                   {expandedTest === 'ping' ? (
@@ -746,26 +706,24 @@
 //                   )}
 //                 </button>
 //               </div>
-//               <p className={`mt-1 ${
-//                 theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'
-//               }`}>
+//               <p className={`mt-1 ${textSecondaryClass}`}>
 //                 {diagnostics.ping.result && diagnostics.ping.result.avg != null ? `Latency: ${diagnostics.ping.result.avg.toFixed(2)}ms` : 'No data yet.'}
 //               </p>
 
 //               {expandedTest === 'ping' && diagnostics.ping.result && (
-//                 <div className={`mt-3 p-3 rounded text-sm ${
-//                   theme === 'dark' ? 'bg-dark-background-tertiary' : 'bg-gray-50'
+//                 <div className={`mt-3 p-3 rounded-lg text-sm transition-colors duration-300 ${
+//                   theme === "dark" ? "bg-gray-800/60" : "bg-gray-50/80"
 //                 }`}>
-//                   <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Measures the round-trip time for messages sent to the target</p>
+//                   <p className={textSecondaryClass}>Measures the round-trip time for messages sent to the target</p>
 //                   <div className="grid grid-cols-2 gap-2 mt-2">
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Status:</p>
+//                     <p className={textSecondaryClass}>Status:</p>
 //                     <p className={getStatusColor(diagnostics.ping.status)}>
 //                       {diagnostics.ping.status.charAt(0).toUpperCase() + diagnostics.ping.status.slice(1)}
 //                     </p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Target:</p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-900'}>{diagnostics.ping.target}</p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Min/Avg/Max RTT:</p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-900'}>{`${
+//                     <p className={textSecondaryClass}>Target:</p>
+//                     <p className={theme === "dark" ? "text-white" : "text-gray-800"}>{diagnostics.ping.target}</p>
+//                     <p className={textSecondaryClass}>Min/Avg/Max RTT:</p>
+//                     <p className={theme === "dark" ? "text-white" : "text-gray-800"}>{`${
 //                       diagnostics.ping.result.min != null ? diagnostics.ping.result.min.toFixed(2) : 'N/A'
 //                     }/${diagnostics.ping.result.avg != null ? diagnostics.ping.result.avg.toFixed(2) : 'N/A'}/${
 //                       diagnostics.ping.result.max != null ? diagnostics.ping.result.max.toFixed(2) : 'N/A'
@@ -777,10 +735,8 @@
 
 //             {/* Traceroute Test Section */}
 //             <div
-//               className={`p-4 rounded-lg shadow cursor-pointer theme-transition ${
-//                 expandedTest === 'traceroute' ? 'ring-2 ring-indigo-500' : ''
-//               } ${
-//                 theme === 'dark' ? 'bg-dark-background-secondary' : 'bg-white'
+//               className={`${cardClass} p-4 cursor-pointer transition-all duration-300 ${
+//                 expandedTest === 'traceroute' ? "ring-2 ring-indigo-500" : ""
 //               }`}
 //               onClick={() => toggleTestExpansion('traceroute')}
 //               role="button"
@@ -791,13 +747,13 @@
 //             >
 //               <div className="flex justify-between items-center">
 //                 <h3 className={`font-semibold flex items-center ${
-//                   theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-700'
+//                   theme === "dark" ? "text-white" : "text-gray-800"
 //                 }`}>
 //                   {renderStatusIcon(diagnostics.traceroute.status)}
 //                   Traceroute ({diagnostics.traceroute.target})
 //                 </h3>
 //                 <button
-//                   className={theme === 'dark' ? 'text-dark-text-tertiary hover:text-dark-text-secondary' : 'text-gray-500 hover:text-gray-400'}
+//                   className={`${theme === "dark" ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-400"} transition-colors duration-300`}
 //                   aria-label={expandedTest === 'traceroute' ? 'Collapse traceroute test' : 'Expand traceroute test'}
 //                 >
 //                   {expandedTest === 'traceroute' ? (
@@ -809,39 +765,35 @@
 //               </div>
 
 //               {expandedTest === 'traceroute' && diagnostics.traceroute.result?.hops?.length > 0 ? (
-//                 <div className={`mt-3 p-3 rounded ${
-//                   theme === 'dark' ? 'bg-dark-background-tertiary' : 'bg-gray-50'
+//                 <div className={`mt-3 p-3 rounded-lg transition-colors duration-300 ${
+//                   theme === "dark" ? "bg-gray-800/60" : "bg-gray-50/80"
 //                 }`}>
 //                   <div className="grid grid-cols-3 gap-2 text-sm font-medium mb-2">
-//                     <div className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Hop</div>
-//                     <div className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>IP Address</div>
-//                     <div className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Time</div>
+//                     <div className={textSecondaryClass}>Hop</div>
+//                     <div className={textSecondaryClass}>IP Address</div>
+//                     <div className={textSecondaryClass}>Time</div>
 //                   </div>
 //                   {diagnostics.traceroute.result.hops.map((hop, index) => (
-//                     <div key={index} className={`grid grid-cols-3 gap-2 text-sm py-1 border-b ${
-//                       theme === 'dark' ? 'border-dark-border-light' : 'border-gray-200'
-//                     } last:border-0`}>
-//                       <div className={theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-900'}>{hop.hop ?? 'N/A'}</div>
+//                     <div key={index} className={`grid grid-cols-3 gap-2 text-sm py-1 border-b transition-colors duration-300 ${
+//                       theme === "dark" ? "border-gray-700 last:border-0" : "border-gray-200 last:border-0"
+//                     }`}>
+//                       <div className={theme === "dark" ? "text-white" : "text-gray-800"}>{hop.hop ?? 'N/A'}</div>
 //                       <div className={`font-mono ${
-//                         theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-900'
+//                         theme === "dark" ? "text-white" : "text-gray-800"
 //                       }`}>{hop.ip || '*'}</div>
-//                       <div className={theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-900'}>{hop.time != null ? `${hop.time.toFixed(2)} ms` : 'N/A'}</div>
+//                       <div className={theme === "dark" ? "text-white" : "text-gray-800"}>{hop.time != null ? `${hop.time.toFixed(2)} ms` : 'N/A'}</div>
 //                     </div>
 //                   ))}
 //                 </div>
 //               ) : (
-//                 <p className={`mt-1 ${
-//                   theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'
-//                 }`}>{diagnostics.traceroute.result ? 'No hops available' : 'No data yet.'}</p>
+//                 <p className={`mt-1 ${textSecondaryClass}`}>{diagnostics.traceroute.result ? 'No hops available' : 'No data yet.'}</p>
 //               )}
 //             </div>
 
 //             {/* Health Check Section */}
 //             <div
-//               className={`p-4 rounded-lg shadow cursor-pointer theme-transition ${
-//                 expandedTest === 'health' ? 'ring-2 ring-indigo-500' : ''
-//               } ${
-//                 theme === 'dark' ? 'bg-dark-background-secondary' : 'bg-white'
+//               className={`${cardClass} p-4 cursor-pointer transition-all duration-300 ${
+//                 expandedTest === 'health' ? "ring-2 ring-indigo-500" : ""
 //               }`}
 //               onClick={() => toggleTestExpansion('health')}
 //               role="button"
@@ -852,13 +804,13 @@
 //             >
 //               <div className="flex justify-between items-center">
 //                 <h3 className={`font-semibold flex items-center ${
-//                   theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-700'
+//                   theme === "dark" ? "text-white" : "text-gray-800"
 //                 }`}>
 //                   {renderStatusIcon(diagnostics.healthCheck.status)}
 //                   Router Health Check
 //                 </h3>
 //                 <button
-//                   className={theme === 'dark' ? 'text-dark-text-tertiary hover:text-dark-text-secondary' : 'text-gray-500 hover:text-gray-400'}
+//                   className={`${theme === "dark" ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-400"} transition-colors duration-300`}
 //                   aria-label={expandedTest === 'health' ? 'Collapse health check' : 'Expand health check'}
 //                 >
 //                   {expandedTest === 'health' ? (
@@ -868,40 +820,36 @@
 //                   )}
 //                 </button>
 //               </div>
-//               <p className={`mt-1 ${
-//                 theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'
-//               }`}>
+//               <p className={`mt-1 ${textSecondaryClass}`}>
 //                 {diagnostics.healthCheck.result && diagnostics.healthCheck.result.cpu_usage != null
 //                   ? `CPU: ${diagnostics.healthCheck.result.cpu_usage.toFixed(2)}%`
 //                   : 'No data yet.'}
 //               </p>
 
 //               {expandedTest === 'health' && diagnostics.healthCheck.result && (
-//                 <div className={`mt-3 p-3 rounded text-sm ${
-//                   theme === 'dark' ? 'bg-dark-background-tertiary' : 'bg-gray-50'
+//                 <div className={`mt-3 p-3 rounded-lg text-sm transition-colors duration-300 ${
+//                   theme === "dark" ? "bg-gray-800/60" : "bg-gray-50/80"
 //                 }`}>
-//                   <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Monitors the router's resource usage and service status</p>
+//                   <p className={textSecondaryClass}>Monitors the router's resource usage and service status</p>
 //                   <div className="grid grid-cols-2 gap-2 mt-2">
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Status:</p>
+//                     <p className={textSecondaryClass}>Status:</p>
 //                     <p className={getStatusColor(diagnostics.healthCheck.status)}>
 //                       {diagnostics.healthCheck.status.charAt(0).toUpperCase() + diagnostics.healthCheck.status.slice(1)}
 //                     </p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>CPU Usage:</p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-900'}>{diagnostics.healthCheck.result.cpu_usage != null ? `${diagnostics.healthCheck.result.cpu_usage.toFixed(2)}%` : 'N/A'}</p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Memory Usage:</p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-900'}>{diagnostics.healthCheck.result.memory_usage != null ? `${diagnostics.healthCheck.result.memory_usage.toFixed(2)}%` : 'N/A'}</p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Disk Usage:</p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-900'}>{diagnostics.healthCheck.result.disk_usage != null ? `${diagnostics.healthCheck.result.disk_usage.toFixed(2)}%` : 'N/A'}</p>
+//                     <p className={textSecondaryClass}>CPU Usage:</p>
+//                     <p className={theme === "dark" ? "text-white" : "text-gray-800"}>{diagnostics.healthCheck.result.cpu_usage != null ? `${diagnostics.healthCheck.result.cpu_usage.toFixed(2)}%` : 'N/A'}</p>
+//                     <p className={textSecondaryClass}>Memory Usage:</p>
+//                     <p className={theme === "dark" ? "text-white" : "text-gray-800"}>{diagnostics.healthCheck.result.memory_usage != null ? `${diagnostics.healthCheck.result.memory_usage.toFixed(2)}%` : 'N/A'}</p>
+//                     <p className={textSecondaryClass}>Disk Usage:</p>
+//                     <p className={theme === "dark" ? "text-white" : "text-gray-800"}>{diagnostics.healthCheck.result.disk_usage != null ? `${diagnostics.healthCheck.result.disk_usage.toFixed(2)}%` : 'N/A'}</p>
 //                   </div>
 //                   {diagnostics.healthCheck.result.services?.length > 0 && (
 //                     <div className="mt-3">
-//                       <p className={`font-medium ${
-//                         theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'
-//                       }`}>Services:</p>
+//                       <p className={`font-medium ${textSecondaryClass}`}>Services:</p>
 //                       {diagnostics.healthCheck.result.services.map((service, index) => (
 //                         <div key={index} className="flex justify-between py-1">
-//                           <span className={theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-900'}>{service.name ?? 'Unknown'}</span>
-//                           <span className={service.status === 'running' ? 'text-green-600' : 'text-red-600'}>
+//                           <span className={theme === "dark" ? "text-white" : "text-gray-800"}>{service.name ?? 'Unknown'}</span>
+//                           <span className={service.status === 'running' ? "text-green-500" : "text-red-500"}>
 //                             {service.status ? service.status.charAt(0).toUpperCase() + service.status.slice(1) : 'N/A'}
 //                           </span>
 //                         </div>
@@ -914,10 +862,8 @@
 
 //             {/* DNS Test Section */}
 //             <div
-//               className={`p-4 rounded-lg shadow cursor-pointer theme-transition ${
-//                 expandedTest === 'dns' ? 'ring-2 ring-indigo-500' : ''
-//               } ${
-//                 theme === 'dark' ? 'bg-dark-background-secondary' : 'bg-white'
+//               className={`${cardClass} p-4 cursor-pointer transition-all duration-300 ${
+//                 expandedTest === 'dns' ? "ring-2 ring-indigo-500" : ""
 //               }`}
 //               onClick={() => toggleTestExpansion('dns')}
 //               role="button"
@@ -928,13 +874,13 @@
 //             >
 //               <div className="flex justify-between items-center">
 //                 <h3 className={`font-semibold flex items-center ${
-//                   theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-700'
+//                   theme === "dark" ? "text-white" : "text-gray-800"
 //                 }`}>
 //                   {renderStatusIcon(diagnostics.dns.status)}
 //                   DNS Resolution Test ({diagnostics.dns.target})
 //                 </h3>
 //                 <button
-//                   className={theme === 'dark' ? 'text-dark-text-tertiary hover:text-dark-text-secondary' : 'text-gray-500 hover:text-gray-400'}
+//                   className={`${theme === "dark" ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-400"} transition-colors duration-300`}
 //                   aria-label={expandedTest === 'dns' ? 'Collapse DNS test' : 'Expand DNS test'}
 //                 >
 //                   {expandedTest === 'dns' ? (
@@ -944,34 +890,32 @@
 //                   )}
 //                 </button>
 //               </div>
-//               <p className={`mt-1 ${
-//                 theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'
-//               }`}>
+//               <p className={`mt-1 ${textSecondaryClass}`}>
 //                 {diagnostics.dns.result && diagnostics.dns.result.addresses?.length > 0
 //                   ? `Resolved: ${diagnostics.dns.result.addresses[0]}`
 //                   : 'No data yet.'}
 //               </p>
 
 //               {expandedTest === 'dns' && diagnostics.dns.result && (
-//                 <div className={`mt-3 p-3 rounded text-sm ${
-//                   theme === 'dark' ? 'bg-dark-background-tertiary' : 'bg-gray-50'
+//                 <div className={`mt-3 p-3 rounded-lg text-sm transition-colors duration-300 ${
+//                   theme === "dark" ? "bg-gray-800/60" : "bg-gray-50/80"
 //                 }`}>
-//                   <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Tests the resolution of domain names to IP addresses</p>
+//                   <p className={textSecondaryClass}>Tests the resolution of domain names to IP addresses</p>
 //                   <div className="grid grid-cols-2 gap-2 mt-2">
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Status:</p>
+//                     <p className={textSecondaryClass}>Status:</p>
 //                     <p className={getStatusColor(diagnostics.dns.status)}>
 //                       {diagnostics.dns.status.charAt(0).toUpperCase() + diagnostics.dns.status.slice(1)}
 //                     </p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Target:</p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-900'}>{diagnostics.dns.target}</p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Resolved IPs:</p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-900'}>
+//                     <p className={textSecondaryClass}>Target:</p>
+//                     <p className={theme === "dark" ? "text-white" : "text-gray-800"}>{diagnostics.dns.target}</p>
+//                     <p className={textSecondaryClass}>Resolved IPs:</p>
+//                     <p className={theme === "dark" ? "text-white" : "text-gray-800"}>
 //                       {diagnostics.dns.result.addresses?.length > 0
 //                         ? diagnostics.dns.result.addresses.join(', ')
 //                         : 'None'}
 //                     </p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Response Time:</p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-900'}>
+//                     <p className={textSecondaryClass}>Response Time:</p>
+//                     <p className={theme === "dark" ? "text-white" : "text-gray-800"}>
 //                       {diagnostics.dns.result.response_time != null
 //                         ? `${diagnostics.dns.result.response_time.toFixed(2)} ms`
 //                         : 'N/A'}
@@ -983,10 +927,8 @@
 
 //             {/* Packet Loss Test Section */}
 //             <div
-//               className={`p-4 rounded-lg shadow cursor-pointer theme-transition ${
-//                 expandedTest === 'packetLoss' ? 'ring-2 ring-indigo-500' : ''
-//               } ${
-//                 theme === 'dark' ? 'bg-dark-background-secondary' : 'bg-white'
+//               className={`${cardClass} p-4 cursor-pointer transition-all duration-300 ${
+//                 expandedTest === 'packetLoss' ? "ring-2 ring-indigo-500" : ""
 //               }`}
 //               onClick={() => toggleTestExpansion('packetLoss')}
 //               role="button"
@@ -997,13 +939,13 @@
 //             >
 //               <div className="flex justify-between items-center">
 //                 <h3 className={`font-semibold flex items-center ${
-//                   theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-700'
+//                   theme === "dark" ? "text-white" : "text-gray-800"
 //                 }`}>
 //                   {renderStatusIcon(diagnostics.packetLoss.status)}
 //                   Packet Loss Test ({diagnostics.packetLoss.target})
 //                 </h3>
 //                 <button
-//                   className={theme === 'dark' ? 'text-dark-text-tertiary hover:text-dark-text-secondary' : 'text-gray-500 hover:text-gray-400'}
+//                   className={`${theme === "dark" ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-400"} transition-colors duration-300`}
 //                   aria-label={expandedTest === 'packetLoss' ? 'Collapse packet loss test' : 'Expand packet loss test'}
 //                 >
 //                   {expandedTest === 'packetLoss' ? (
@@ -1013,34 +955,32 @@
 //                   )}
 //                 </button>
 //               </div>
-//               <p className={`mt-1 ${
-//                 theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'
-//               }`}>
+//               <p className={`mt-1 ${textSecondaryClass}`}>
 //                 {diagnostics.packetLoss.result && diagnostics.packetLoss.result.loss != null
 //                   ? `Loss: ${diagnostics.packetLoss.result.loss.toFixed(2)}%`
 //                   : 'No data yet.'}
 //               </p>
 
 //               {expandedTest === 'packetLoss' && diagnostics.packetLoss.result && (
-//                 <div className={`mt-3 p-3 rounded text-sm ${
-//                   theme === 'dark' ? 'bg-dark-background-tertiary' : 'bg-gray-50'
+//                 <div className={`mt-3 p-3 rounded-lg text-sm transition-colors duration-300 ${
+//                   theme === "dark" ? "bg-gray-800/60" : "bg-gray-50/80"
 //                 }`}>
-//                   <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Measures the percentage of packets lost during transmission</p>
+//                   <p className={textSecondaryClass}>Measures the percentage of packets lost during transmission</p>
 //                   <div className="grid grid-cols-2 gap-2 mt-2">
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Status:</p>
+//                     <p className={textSecondaryClass}>Status:</p>
 //                     <p className={getStatusColor(diagnostics.packetLoss.status)}>
 //                       {diagnostics.packetLoss.status.charAt(0).toUpperCase() + diagnostics.packetLoss.status.slice(1)}
 //                     </p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Target:</p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-900'}>{diagnostics.packetLoss.target}</p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Packet Loss:</p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-900'}>
+//                     <p className={textSecondaryClass}>Target:</p>
+//                     <p className={theme === "dark" ? "text-white" : "text-gray-800"}>{diagnostics.packetLoss.target}</p>
+//                     <p className={textSecondaryClass}>Packet Loss:</p>
+//                     <p className={theme === "dark" ? "text-white" : "text-gray-800"}>
 //                       {diagnostics.packetLoss.result.loss != null
 //                         ? `${diagnostics.packetLoss.result.loss.toFixed(2)}%`
 //                         : 'N/A'}
 //                     </p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'}>Packets Sent/Received:</p>
-//                     <p className={theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-900'}>
+//                     <p className={textSecondaryClass}>Packets Sent/Received:</p>
+//                     <p className={theme === "dark" ? "text-white" : "text-gray-800"}>
 //                       {diagnostics.packetLoss.result.sent != null && diagnostics.packetLoss.result.received != null
 //                         ? `${diagnostics.packetLoss.result.sent}/${diagnostics.packetLoss.result.received}`
 //                         : 'N/A'}
@@ -1052,20 +992,16 @@
 //           </div>
 //         </>
 //       ) : (
-//         <div className={`p-8 rounded-lg text-center ${
-//           theme === 'dark' ? 'bg-dark-background-tertiary' : 'bg-gray-50'
-//         }`}>
+//         <div className={`${cardClass} p-8 text-center transition-colors duration-300`}>
 //           <div className={`mx-auto flex items-center justify-center h-12 w-12 rounded-full ${
-//             theme === 'dark' ? 'bg-dark-background-primary' : 'bg-gray-200'
+//             theme === "dark" ? "bg-gray-700" : "bg-gray-200"
 //           }`}>
-//             <Router className={`h-6 w-6 ${theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-600'}`} aria-hidden="true" />
+//             <Router className={`h-6 w-6 ${textSecondaryClass}`} aria-hidden="true" />
 //           </div>
 //           <h3 className={`mt-2 text-lg font-medium ${
-//             theme === 'dark' ? 'text-dark-text-primary' : 'text-gray-900'
+//             theme === "dark" ? "text-white" : "text-gray-800"
 //           }`}>No router selected</h3>
-//           <p className={`mt-1 ${
-//             theme === 'dark' ? 'text-dark-text-secondary' : 'text-gray-500'
-//           }`}>
+//           <p className={`mt-1 ${textSecondaryClass}`}>
 //             {routers.length > 0
 //               ? 'Please select a router from the dropdown above'
 //               : 'No routers available. Navigate to Router Management and click "Add Router" to configure a new router.'}
@@ -1077,6 +1013,7 @@
 // };
 
 // export default NetworkDiagnostics;
+
 
 
 
@@ -1161,6 +1098,11 @@ const NetworkDiagnostics = ({ routerId: propRouterId }) => {
 
   const textSecondaryClass = useMemo(() => 
     theme === "dark" ? "text-gray-400" : "text-gray-500",
+    [theme]
+  );
+
+  const textTertiaryClass = useMemo(() => 
+    theme === "dark" ? "text-gray-500" : "text-gray-400",
     [theme]
   );
 
@@ -1984,7 +1926,6 @@ const NetworkDiagnostics = ({ routerId: propRouterId }) => {
                 <div className={`mt-3 p-3 rounded-lg text-sm transition-colors duration-300 ${
                   theme === "dark" ? "bg-gray-800/60" : "bg-gray-50/80"
                 }`}>
-                  <p className={textSecondaryClass}>Tests the resolution of domain names to IP addresses</p>
                   <div className="grid grid-cols-2 gap-2 mt-2">
                     <p className={textSecondaryClass}>Status:</p>
                     <p className={getStatusColor(diagnostics.dns.status)}>
