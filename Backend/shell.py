@@ -36,5 +36,8 @@ print(Site.objects.all())  # Should now show localhost:8000
 # Migrate
 #python manage.py migrate
 
+pip freeze | grep -E "channels|msgpack|asgiref" >> requirements.txt
+
+
 
 sudo service redis-server start
