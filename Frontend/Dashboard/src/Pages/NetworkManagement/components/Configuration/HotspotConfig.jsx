@@ -1,20 +1,35 @@
+
+
+
+
 // src/Pages/NetworkManagement/components/Configuration/HotspotConfig.jsx
 import React from "react";
 import { Wifi, Globe, Zap, Clock, Upload, Settings } from "lucide-react";
 import CustomModal from "../Common/CustomModal";
 import CustomButton from "../Common/CustomButton";
 import InputField from "../Common/InputField";
+import { getThemeClasses, EnhancedSelect } from "../../../../components/ServiceManagement/Shared/components"
+import { toast } from "react-toastify";
 
 const HotspotConfig = ({ 
   isOpen, 
   onClose, 
   hotspotForm, 
   activeRouter, 
-  theme, 
+  theme = "light", 
   onFormUpdate, 
   onSubmit,
   isLoading 
 }) => {
+  const themeClasses = getThemeClasses(theme);
+
+  const authMethods = [
+    { value: "universal", label: "Universal (Payment-based)" },
+    { value: "voucher", label: "Voucher-based" },
+    { value: "radius", label: "RADIUS Authentication" },
+    { value: "mixed", label: "Mixed Mode" },
+  ];
+
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -40,8 +55,8 @@ const HotspotConfig = ({
     >
       <div className="space-y-6">
         {activeRouter && (
-          <div className={`p-4 rounded-lg ${
-            theme === "dark" ? "bg-blue-900/20 border border-blue-800" : "bg-blue-50 border border-blue-200"
+          <div className={`p-4 rounded-lg border ${
+            theme === "dark" ? "bg-blue-900/20 border-blue-800" : "bg-blue-50 border-blue-200"
           }`}>
             <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
               Configuring hotspot for: <strong>{activeRouter.name}</strong>
@@ -93,7 +108,7 @@ const HotspotConfig = ({
 
         {/* Landing Page Upload */}
         <div>
-          <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+          <label className={`block text-sm font-medium mb-2 ${themeClasses.text.secondary}`}>
             Landing Page (HTML File)
           </label>
           <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
@@ -102,7 +117,7 @@ const HotspotConfig = ({
               : "border-gray-300 hover:border-gray-400 bg-gray-50"
           }`}>
             <Upload className="w-8 h-8 mx-auto mb-3 text-gray-400" />
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+            <p className={`text-sm ${themeClasses.text.tertiary} mb-2`}>
               {hotspotForm.landingPage 
                 ? `Selected: ${hotspotForm.landingPage.name}`
                 : "Drag and drop your HTML file here, or click to browse"
@@ -122,94 +137,104 @@ const HotspotConfig = ({
               Choose File
             </label>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+          <p className={`text-xs ${themeClasses.text.tertiary} mt-2`}>
             Upload the captive portal landing page (HTML/JavaScript file)
           </p>
         </div>
 
         {/* Authentication Method */}
         <div>
-          <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+          <label className={`block text-sm font-medium mb-2 ${themeClasses.text.secondary}`}>
             Authentication Method
           </label>
-          <select
+          <EnhancedSelect
             value={hotspotForm.authMethod}
-            onChange={(e) => onFormUpdate({ authMethod: e.target.value })}
-            className={`w-full p-3 rounded-lg border transition-colors ${
-              theme === "dark"
-                ? "bg-gray-700 border-gray-600 text-white focus:ring-blue-500 focus:border-blue-500"
-                : "bg-white border-gray-300 text-gray-800 focus:ring-blue-500 focus:border-blue-500"
-            }`}
-          >
-            <option value="universal">Universal (Payment-based)</option>
-            <option value="voucher">Voucher-based</option>
-            <option value="radius">RADIUS Authentication</option>
-            <option value="mixed">Mixed Mode</option>
-          </select>
+            onChange={(value) => onFormUpdate({ authMethod: value })}
+            options={authMethods}
+            placeholder="Select authentication method"
+            theme={theme}
+          />
         </div>
 
         {/* Advanced Settings */}
         <div className={`p-4 rounded-lg border ${
-          theme === "dark" ? "border-gray-600 bg-gray-800" : "border-gray-300 bg-gray-50"
-        }`}>
-          <h4 className="font-medium mb-3 flex items-center">
+          themeClasses.bg.card
+        } ${themeClasses.border.medium}`}>
+          <h4 className={`font-medium mb-3 flex items-center ${themeClasses.text.primary}`}>
             <Settings className="w-4 h-4 mr-2" />
             Advanced Settings
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center space-x-3">
+            <div className={`flex items-center space-x-3 p-3 rounded-lg border ${themeClasses.border.light}`}>
               <input
                 type="checkbox"
                 checked={hotspotForm.enableSplashPage || false}
                 onChange={(e) => onFormUpdate({ enableSplashPage: e.target.checked })}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                className={`w-4 h-4 text-blue-600 rounded focus:ring-2 ${
+                  theme === "dark" 
+                    ? "bg-gray-700 border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-600" 
+                    : "bg-gray-100 border-gray-300 focus:ring-blue-500"
+                }`}
               />
-              <label className="text-sm text-gray-700 dark:text-gray-300">
+              <label className={`text-sm ${themeClasses.text.primary}`}>
                 Enable Splash Page
               </label>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className={`flex items-center space-x-3 p-3 rounded-lg border ${themeClasses.border.light}`}>
               <input
                 type="checkbox"
                 checked={hotspotForm.allowSocialLogin || false}
                 onChange={(e) => onFormUpdate({ allowSocialLogin: e.target.checked })}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                className={`w-4 h-4 text-blue-600 rounded focus:ring-2 ${
+                  theme === "dark" 
+                    ? "bg-gray-700 border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-600" 
+                    : "bg-gray-100 border-gray-300 focus:ring-blue-500"
+                }`}
               />
-              <label className="text-sm text-gray-700 dark:text-gray-300">
+              <label className={`text-sm ${themeClasses.text.primary}`}>
                 Allow Social Login
               </label>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className={`flex items-center space-x-3 p-3 rounded-lg border ${themeClasses.border.light}`}>
               <input
                 type="checkbox"
                 checked={hotspotForm.enableBandwidthShaping || false}
                 onChange={(e) => onFormUpdate({ enableBandwidthShaping: e.target.checked })}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                className={`w-4 h-4 text-blue-600 rounded focus:ring-2 ${
+                  theme === "dark" 
+                    ? "bg-gray-700 border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-600" 
+                    : "bg-gray-100 border-gray-300 focus:ring-blue-500"
+                }`}
               />
-              <label className="text-sm text-gray-700 dark:text-gray-300">
+              <label className={`text-sm ${themeClasses.text.primary}`}>
                 Enable Bandwidth Shaping
               </label>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className={`flex items-center space-x-3 p-3 rounded-lg border ${themeClasses.border.light}`}>
               <input
                 type="checkbox"
                 checked={hotspotForm.logUserActivity || false}
                 onChange={(e) => onFormUpdate({ logUserActivity: e.target.checked })}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                className={`w-4 h-4 text-blue-600 rounded focus:ring-2 ${
+                  theme === "dark" 
+                    ? "bg-gray-700 border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-600" 
+                    : "bg-gray-100 border-gray-300 focus:ring-blue-500"
+                }`}
               />
-              <label className="text-sm text-gray-700 dark:text-gray-300">
+              <label className={`text-sm ${themeClasses.text.primary}`}>
                 Log User Activity
               </label>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className={`flex justify-end space-x-3 pt-4 border-t ${themeClasses.border.light}`}>
           <CustomButton
             onClick={onClose}
             label="Cancel"
             variant="secondary"
             disabled={isLoading}
+            theme={theme}
           />
           <CustomButton
             onClick={handleSubmit}
@@ -217,6 +242,7 @@ const HotspotConfig = ({
             variant="primary"
             disabled={isLoading || !hotspotForm.landingPage}
             loading={isLoading}
+            theme={theme}
           />
         </div>
       </div>

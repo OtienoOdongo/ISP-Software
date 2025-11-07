@@ -1,7 +1,7 @@
 // src/Pages/NetworkManagement/hooks/useHealthMonitoring.js
 import { useCallback } from "react";
 import { toast } from "react-toastify";
-import api from "../../../api";
+import api from "../../../../api";
 
 export const useHealthMonitoring = () => {
   const fetchHealthStats = useCallback(async () => {

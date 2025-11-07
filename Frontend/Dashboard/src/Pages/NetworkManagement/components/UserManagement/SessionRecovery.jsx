@@ -1,3 +1,7 @@
+
+
+
+
 // src/Pages/NetworkManagement/components/UserManagement/SessionRecovery.jsx
 import React, { useState, useEffect } from "react";
 import { RefreshCw, Wifi, Cable, User, Clock, Calendar, CheckCircle, AlertCircle } from "lucide-react";
@@ -5,16 +9,19 @@ import CustomModal from "../Common/CustomModal";
 import CustomButton from "../Common/CustomButton";
 import InputField from "../Common/InputField";
 import { toast } from "react-toastify";
+import { getThemeClasses } from  "../../../../components/ServiceManagement/Shared/components"
+
 
 const SessionRecovery = ({ 
-  isOpen, 
+  isOpen = false, 
   onClose, 
-  recoverableSessions, 
-  theme, 
+  recoverableSessions = [], 
+  theme = "light", 
   onRecoverSession,
   onBulkRecover,
-  isLoading 
+  isLoading = false 
 }) => {
+  const themeClasses = getThemeClasses(theme);
   const [recoveryMethod, setRecoveryMethod] = useState("auto");
   const [selectedSessions, setSelectedSessions] = useState([]);
   const [manualRecoveryData, setManualRecoveryData] = useState({
@@ -22,6 +29,18 @@ const SessionRecovery = ({
     mac_address: "",
     username: ""
   });
+
+  // Reset selections when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedSessions([]);
+      setManualRecoveryData({
+        phone_number: "",
+        mac_address: "",
+        username: ""
+      });
+    }
+  }, [isOpen]);
 
   const formatTime = (seconds) => {
     if (!seconds || seconds <= 0) return "Expired";
@@ -32,7 +51,12 @@ const SessionRecovery = ({
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString();
+    if (!dateString) return "Unknown";
+    try {
+      return new Date(dateString).toLocaleString();
+    } catch {
+      return "Invalid Date";
+    }
   };
 
   const handleSessionSelect = (sessionId) => {
@@ -44,10 +68,11 @@ const SessionRecovery = ({
   };
 
   const handleSelectAll = () => {
-    if (selectedSessions.length === recoverableSessions.length) {
+    const sessions = Array.isArray(recoverableSessions) ? recoverableSessions : [];
+    if (selectedSessions.length === sessions.length) {
       setSelectedSessions([]);
     } else {
-      setSelectedSessions(recoverableSessions.map(s => s.id));
+      setSelectedSessions(sessions.map(s => s.id));
     }
   };
 
@@ -82,7 +107,7 @@ const SessionRecovery = ({
     }
 
     try {
-      const sessionsToRecover = recoverableSessions
+      const sessionsToRecover = (Array.isArray(recoverableSessions) ? recoverableSessions : [])
         .filter(s => selectedSessions.includes(s.id))
         .map(session => ({
           phone_number: session.client?.user?.phone_number,
@@ -98,81 +123,90 @@ const SessionRecovery = ({
     }
   };
 
-  const RecoverySessionCard = ({ session }) => (
-    <div className={`p-4 rounded-lg border ${
-      theme === "dark" ? "border-gray-600 bg-gray-800" : "border-gray-300 bg-white"
-    }`}>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center space-x-3">
-          <input
-            type="checkbox"
-            checked={selectedSessions.includes(session.id)}
-            onChange={() => handleSessionSelect(session.id)}
-            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-          />
-          <div className={`p-2 rounded-full ${
-            session.user_type === "hotspot" 
-              ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-              : "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+  const RecoverySessionCard = ({ session }) => {
+    if (!session) return null;
+    
+    return (
+      <div className={`p-4 rounded-lg border ${
+        themeClasses.bg.card
+      } ${themeClasses.border.medium}`}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              checked={selectedSessions.includes(session.id)}
+              onChange={() => handleSessionSelect(session.id)}
+              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+            />
+            <div className={`p-2 rounded-full ${
+              session.user_type === "hotspot" 
+                ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+                : "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+            }`}>
+              {session.user_type === "hotspot" ? <Wifi className="w-4 h-4" /> : <Cable className="w-4 h-4" />}
+            </div>
+            <div>
+              <p className={`font-medium ${themeClasses.text.primary}`}>{session.client?.user?.username || "Unknown User"}</p>
+              <p className={`text-sm ${themeClasses.text.tertiary}`}>
+                {session.client?.user?.phone_number || "No phone"}
+              </p>
+            </div>
+          </div>
+          <span className={`px-2 py-1 rounded-full text-xs ${
+            session.disconnected_reason === "power_outage"
+              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+              : session.disconnected_reason === "router_reboot"
+              ? "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
+              : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400"
           }`}>
-            {session.user_type === "hotspot" ? <Wifi className="w-4 h-4" /> : <Cable className="w-4 h-4" />}
+            {session.disconnected_reason?.replace(/_/g, " ") || "Unknown"}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <p className={themeClasses.text.tertiary}>Type</p>
+            <p className={`font-medium ${themeClasses.text.primary} capitalize`}>{session.user_type || "unknown"}</p>
           </div>
           <div>
-            <p className="font-medium">{session.client?.user?.username || "Unknown User"}</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {session.client?.user?.phone_number}
+            <p className={themeClasses.text.tertiary}>Remaining Time</p>
+            <p className="font-medium text-green-600 dark:text-green-400">
+              {formatTime(session.remaining_time)}
             </p>
           </div>
+          <div>
+            <p className={themeClasses.text.tertiary}>Disconnected</p>
+            <p className={`font-medium ${themeClasses.text.primary}`}>{formatDate(session.end_time)}</p>
+          </div>
+          <div>
+            <p className={themeClasses.text.tertiary}>
+              {session.user_type === "hotspot" ? "MAC Address" : "Username"}
+            </p>
+            <p className={`font-mono text-xs ${themeClasses.text.primary}`}>{session.mac || session.username || "N/A"}</p>
+          </div>
         </div>
-        <span className={`px-2 py-1 rounded-full text-xs ${
-          session.disconnected_reason === "power_outage"
-            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
-            : session.disconnected_reason === "router_reboot"
-            ? "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
-            : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400"
-        }`}>
-          {session.disconnected_reason?.replace(/_/g, " ") || "Unknown"}
-        </span>
-      </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-        <div>
-          <p className="text-gray-500 dark:text-gray-400">Type</p>
-          <p className="font-medium capitalize">{session.user_type}</p>
-        </div>
-        <div>
-          <p className="text-gray-500 dark:text-gray-400">Remaining Time</p>
-          <p className="font-medium text-green-600 dark:text-green-400">
-            {formatTime(session.remaining_time)}
-          </p>
-        </div>
-        <div>
-          <p className="text-gray-500 dark:text-gray-400">Disconnected</p>
-          <p className="font-medium">{formatDate(session.end_time)}</p>
-        </div>
-        <div>
-          <p className="text-gray-500 dark:text-gray-400">
-            {session.user_type === "hotspot" ? "MAC Address" : "Username"}
-          </p>
-          <p className="font-mono text-xs">{session.mac || session.username}</p>
+        <div className="mt-3 flex justify-end">
+          <CustomButton
+            onClick={() => onRecoverSession({
+              phone_number: session.client?.user?.phone_number,
+              mac_address: session.mac,
+              username: session.username
+            })}
+            label="Recover"
+            variant="primary"
+            size="sm"
+            loading={isLoading}
+            theme={theme}
+          />
         </div>
       </div>
+    );
+  };
 
-      <div className="mt-3 flex justify-end">
-        <CustomButton
-          onClick={() => onRecoverSession({
-            phone_number: session.client?.user?.phone_number,
-            mac_address: session.mac,
-            username: session.username
-          })}
-          label="Recover"
-          variant="primary"
-          size="sm"
-          loading={isLoading}
-        />
-      </div>
-    </div>
-  );
+  const sessions = Array.isArray(recoverableSessions) ? recoverableSessions : [];
+  const powerOutageCount = sessions.filter(s => s.disconnected_reason === "power_outage").length;
+  const routerRebootCount = sessions.filter(s => s.disconnected_reason === "router_reboot").length;
 
   return (
     <CustomModal 
@@ -185,7 +219,7 @@ const SessionRecovery = ({
       <div className="space-y-6">
         {/* Recovery Method Selection */}
         <div>
-          <label className="block text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">
+          <label className={`block text-sm font-medium mb-3 ${themeClasses.text.secondary}`}>
             Recovery Method
           </label>
           <div className="grid grid-cols-2 gap-4">
@@ -195,12 +229,12 @@ const SessionRecovery = ({
               className={`p-4 rounded-lg border-2 transition-all duration-200 ${
                 recoveryMethod === "auto"
                   ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
-                  : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+                  : `${themeClasses.border.medium} hover:border-gray-400 dark:hover:border-gray-500`
               }`}
             >
               <RefreshCw className="w-6 h-6 mx-auto mb-2" />
               <span className="font-medium">Auto Recovery</span>
-              <p className="text-xs mt-1 text-gray-600 dark:text-gray-400">
+              <p className={`text-xs mt-1 ${themeClasses.text.tertiary}`}>
                 Recover from recent disconnections
               </p>
             </button>
@@ -211,12 +245,12 @@ const SessionRecovery = ({
               className={`p-4 rounded-lg border-2 transition-all duration-200 ${
                 recoveryMethod === "manual"
                   ? "border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300"
-                  : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+                  : `${themeClasses.border.medium} hover:border-gray-400 dark:hover:border-gray-500`
               }`}
             >
               <User className="w-6 h-6 mx-auto mb-2" />
               <span className="font-medium">Manual Recovery</span>
-              <p className="text-xs mt-1 text-gray-600 dark:text-gray-400">
+              <p className={`text-xs mt-1 ${themeClasses.text.tertiary}`}>
                 Recover using user details
               </p>
             </button>
@@ -227,14 +261,14 @@ const SessionRecovery = ({
         {recoveryMethod === "auto" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">Recoverable Sessions</h3>
-              {recoverableSessions.length > 0 && (
+              <h3 className={`text-lg font-medium ${themeClasses.text.primary}`}>Recoverable Sessions</h3>
+              {sessions.length > 0 && (
                 <div className="flex items-center space-x-4">
                   <button
                     onClick={handleSelectAll}
                     className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                   >
-                    {selectedSessions.length === recoverableSessions.length ? "Deselect All" : "Select All"}
+                    {selectedSessions.length === sessions.length ? "Deselect All" : "Select All"}
                   </button>
                   <CustomButton
                     onClick={handleBulkRecovery}
@@ -243,22 +277,23 @@ const SessionRecovery = ({
                     size="sm"
                     disabled={selectedSessions.length === 0}
                     loading={isLoading}
+                    theme={theme}
                   />
                 </div>
               )}
             </div>
 
-            {recoverableSessions.length === 0 ? (
+            {sessions.length === 0 ? (
               <div className="text-center py-8">
                 <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 dark:text-gray-400">No recoverable sessions found</p>
-                <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                <p className={themeClasses.text.tertiary}>No recoverable sessions found</p>
+                <p className={`text-sm ${themeClasses.text.tertiary} mt-1`}>
                   Sessions that were disconnected due to power outages or router reboots will appear here
                 </p>
               </div>
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto">
-                {recoverableSessions.map(session => (
+                {sessions.map(session => (
                   <RecoverySessionCard key={session.id} session={session} />
                 ))}
               </div>
@@ -269,7 +304,7 @@ const SessionRecovery = ({
         {/* Manual Recovery Section */}
         {recoveryMethod === "manual" && (
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Manual Session Recovery</h3>
+            <h3 className={`text-lg font-medium ${themeClasses.text.primary}`}>Manual Session Recovery</h3>
             
             <InputField
               label="Phone Number"
@@ -335,6 +370,7 @@ const SessionRecovery = ({
                 loading={isLoading}
                 disabled={!manualRecoveryData.phone_number || 
                   (!manualRecoveryData.mac_address && !manualRecoveryData.username)}
+                theme={theme}
               />
             </div>
           </div>
@@ -342,28 +378,28 @@ const SessionRecovery = ({
 
         {/* Recovery Statistics */}
         <div className={`p-4 rounded-lg border ${
-          theme === "dark" ? "border-gray-600 bg-gray-800" : "border-gray-300 bg-gray-50"
-        }`}>
-          <h4 className="font-medium mb-3">Recovery Statistics</h4>
+          themeClasses.bg.card
+        } ${themeClasses.border.medium}`}>
+          <h4 className={`font-medium mb-3 ${themeClasses.text.primary}`}>Recovery Statistics</h4>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Recoverable</p>
-              <p className="text-xl font-bold">{recoverableSessions.length}</p>
+              <p className={`text-sm ${themeClasses.text.tertiary}`}>Total Recoverable</p>
+              <p className={`text-xl font-bold ${themeClasses.text.primary}`}>{sessions.length}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Power Outages</p>
+              <p className={`text-sm ${themeClasses.text.tertiary}`}>Power Outages</p>
               <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
-                {recoverableSessions.filter(s => s.disconnected_reason === "power_outage").length}
+                {powerOutageCount}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Router Reboots</p>
+              <p className={`text-sm ${themeClasses.text.tertiary}`}>Router Reboots</p>
               <p className="text-xl font-bold text-orange-600 dark:text-orange-400">
-                {recoverableSessions.filter(s => s.disconnected_reason === "router_reboot").length}
+                {routerRebootCount}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Selected</p>
+              <p className={`text-sm ${themeClasses.text.tertiary}`}>Selected</p>
               <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
                 {selectedSessions.length}
               </p>

@@ -1383,7 +1383,7 @@ import debounce from 'lodash.debounce';
 import api from '../../api'; 
 import { useTheme } from "../../context/ThemeContext";
 
-const PaymentReconciliation = () => {
+const RevenueReports = () => {
   const { theme } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -2751,4 +2751,4 @@ const PaymentReconciliation = () => {
   );
 };
 
-export default PaymentReconciliation;
+export default RevenueReports;

@@ -1,18 +1,25 @@
+
+
+
+
 // src/Pages/NetworkManagement/components/UserManagement/UserList.jsx
 import React, { useState } from "react";
 import { Users, Wifi, Cable, Clock, Download, Upload, LogOut, History, User, Phone } from "lucide-react";
 import CustomButton from "../Common/CustomButton";
 import CustomModal from "../Common/CustomModal";
 import InputField from "../Common/InputField";
+import { getThemeClasses } from "../../../../components/ServiceManagement/Shared/components"
+
 
 const UserList = ({ 
   hotspotUsers, 
   pppoeUsers, 
-  theme, 
+  theme = "light", 
   onDisconnectUser, 
   onViewSessionHistory,
   showConfirm 
 }) => {
+  const themeClasses = getThemeClasses(theme);
   const [selectedUser, setSelectedUser] = useState(null);
   const [userType, setUserType] = useState(null);
   const [activeTab, setActiveTab] = useState("hotspot");
@@ -63,7 +70,7 @@ const UserList = ({
   };
 
   const UserTable = ({ users, type }) => (
-    <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className={`overflow-x-auto rounded-lg border ${themeClasses.border.medium}`}>
       <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
         <thead className={theme === "dark" ? "bg-gray-800" : "bg-gray-50"}>
           <tr>
@@ -100,30 +107,30 @@ const UserList = ({
                 <div className="flex items-center space-x-3">
                   <User className="w-4 h-4 text-gray-400" />
                   <div>
-                    <p className="font-semibold">
+                    <p className={`font-semibold ${themeClasses.text.primary}`}>
                       {user.client?.user?.username || "Unknown"}
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                    <p className={`text-sm ${themeClasses.text.tertiary} flex items-center`}>
                       <Phone className="w-3 h-3 mr-1" />
                       {user.client?.user?.phone_number || "N/A"}
                     </p>
                   </div>
                 </div>
               </td>
-              <td className="px-6 py-4 font-mono text-sm">
+              <td className={`px-6 py-4 font-mono text-sm ${themeClasses.text.primary}`}>
                 {type === "hotspot" ? user.mac : user.username}
               </td>
-              <td className="px-6 py-4">{user.plan?.name || "N/A"}</td>
+              <td className={`px-6 py-4 ${themeClasses.text.primary}`}>{user.plan?.name || "N/A"}</td>
               <td className="px-6 py-4">
                 <div className="flex items-center">
                   <Clock className="w-4 h-4 mr-2 text-blue-500" />
-                  {formatTime(user.remaining_time)}
+                  <span className={themeClasses.text.primary}>{formatTime(user.remaining_time)}</span>
                 </div>
               </td>
               <td className="px-6 py-4">
                 <div className="flex items-center space-x-2">
                   <Download className="w-3 h-3 text-green-500" />
-                  <span>{formatBytes(user.data_used)}</span>
+                  <span className={themeClasses.text.primary}>{formatBytes(user.data_used)}</span>
                 </div>
               </td>
               <td className="px-6 py-4">
@@ -146,6 +153,7 @@ const UserList = ({
                   icon={<History className="w-3 h-3" />}
                   variant="secondary"
                   size="sm"
+                  theme={theme}
                 />
                 {user.active && (
                   <CustomButton
@@ -154,6 +162,7 @@ const UserList = ({
                     icon={<LogOut className="w-3 h-3" />}
                     variant="danger"
                     size="sm"
+                    theme={theme}
                   />
                 )}
               </td>
@@ -165,7 +174,7 @@ const UserList = ({
       {users.length === 0 && (
         <div className="text-center py-8">
           <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500 dark:text-gray-400">No users found</p>
+          <p className={themeClasses.text.tertiary}>No users found</p>
         </div>
       )}
     </div>
@@ -181,7 +190,7 @@ const UserList = ({
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === "hotspot"
                 ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                : `${themeClasses.text.tertiary} hover:text-gray-700 dark:hover:text-gray-300`
             }`}
           >
             <Wifi className="w-4 h-4 inline mr-2" />
@@ -192,7 +201,7 @@ const UserList = ({
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === "pppoe"
                 ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                : `${themeClasses.text.tertiary} hover:text-gray-700 dark:hover:text-gray-300`
             }`}
           >
             <Cable className="w-4 h-4 inline mr-2" />
@@ -222,29 +231,29 @@ const UserList = ({
 
       {/* Total Summary */}
       <div className={`p-4 rounded-lg border ${
-        theme === "dark" ? "border-gray-600 bg-gray-800" : "border-gray-300 bg-gray-50"
-      }`}>
+        themeClasses.bg.card
+      } ${themeClasses.border.medium}`}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Total Users</p>
-            <p className="text-xl font-bold">
+            <p className={`text-sm ${themeClasses.text.tertiary}`}>Total Users</p>
+            <p className={`text-xl font-bold ${themeClasses.text.primary}`}>
               {hotspotUsers.length + pppoeUsers.length}
             </p>
           </div>
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Active Users</p>
+            <p className={`text-sm ${themeClasses.text.tertiary}`}>Active Users</p>
             <p className="text-xl font-bold text-green-600 dark:text-green-400">
               {hotspotUsers.filter(u => u.active).length + pppoeUsers.filter(u => u.active).length}
             </p>
           </div>
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Hotspot</p>
+            <p className={`text-sm ${themeClasses.text.tertiary}`}>Hotspot</p>
             <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
               {hotspotUsers.filter(u => u.active).length}
             </p>
           </div>
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">PPPoE</p>
+            <p className={`text-sm ${themeClasses.text.tertiary}`}>PPPoE</p>
             <p className="text-xl font-bold text-green-600 dark:text-green-400">
               {pppoeUsers.filter(u => u.active).length}
             </p>

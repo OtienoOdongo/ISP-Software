@@ -1,20 +1,34 @@
+
+
+
+
+
+
+
+
+
+
 // src/Pages/NetworkManagement/components/Configuration/PPPoEConfig.jsx
 import React from "react";
 import { Network, Globe, Gauge, Zap, Settings, Server } from "lucide-react";
 import CustomModal from "../Common/CustomModal";
 import CustomButton from "../Common/CustomButton";
 import InputField from "../Common/InputField";
+import { getThemeClasses } from "../../../../components/ServiceManagement/Shared/components"
+import { toast } from "react-toastify";
 
 const PPPoEConfig = ({ 
   isOpen, 
   onClose, 
   pppoeForm, 
   activeRouter, 
-  theme, 
+  theme = "light", 
   onFormUpdate, 
   onSubmit,
   isLoading 
 }) => {
+  const themeClasses = getThemeClasses(theme);
+
   const handleSubmit = () => {
     if (!activeRouter) {
       toast.error("No active router selected");
@@ -33,8 +47,8 @@ const PPPoEConfig = ({
     >
       <div className="space-y-6">
         {activeRouter && (
-          <div className={`p-4 rounded-lg ${
-            theme === "dark" ? "bg-green-900/20 border border-green-800" : "bg-green-50 border border-green-200"
+          <div className={`p-4 rounded-lg border ${
+            theme === "dark" ? "bg-green-900/20 border-green-800" : "bg-green-50 border-green-200"
           }`}>
             <p className="text-sm font-medium text-green-800 dark:text-green-300">
               Configuring PPPoE for: <strong>{activeRouter.name}</strong>
@@ -96,43 +110,55 @@ const PPPoEConfig = ({
 
         {/* Authentication Settings */}
         <div className={`p-4 rounded-lg border ${
-          theme === "dark" ? "border-gray-600 bg-gray-800" : "border-gray-300 bg-gray-50"
-        }`}>
-          <h4 className="font-medium mb-3 flex items-center">
+          themeClasses.bg.card
+        } ${themeClasses.border.medium}`}>
+          <h4 className={`font-medium mb-3 flex items-center ${themeClasses.text.primary}`}>
             <Settings className="w-4 h-4 mr-2" />
             Authentication Settings
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center space-x-3">
+            <div className={`flex items-center space-x-3 p-3 rounded-lg border ${themeClasses.border.light}`}>
               <input
                 type="checkbox"
                 checked={pppoeForm.enable_pap || false}
                 onChange={(e) => onFormUpdate({ enable_pap: e.target.checked })}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                className={`w-4 h-4 text-blue-600 rounded focus:ring-2 ${
+                  theme === "dark" 
+                    ? "bg-gray-700 border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-600" 
+                    : "bg-gray-100 border-gray-300 focus:ring-blue-500"
+                }`}
               />
-              <label className="text-sm text-gray-700 dark:text-gray-300">
+              <label className={`text-sm ${themeClasses.text.primary}`}>
                 PAP Authentication
               </label>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className={`flex items-center space-x-3 p-3 rounded-lg border ${themeClasses.border.light}`}>
               <input
                 type="checkbox"
                 checked={pppoeForm.enable_chap || false}
                 onChange={(e) => onFormUpdate({ enable_chap: e.target.checked })}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                className={`w-4 h-4 text-blue-600 rounded focus:ring-2 ${
+                  theme === "dark" 
+                    ? "bg-gray-700 border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-600" 
+                    : "bg-gray-100 border-gray-300 focus:ring-blue-500"
+                }`}
               />
-              <label className="text-sm text-gray-700 dark:text-gray-300">
+              <label className={`text-sm ${themeClasses.text.primary}`}>
                 CHAP Authentication
               </label>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className={`flex items-center space-x-3 p-3 rounded-lg border ${themeClasses.border.light}`}>
               <input
                 type="checkbox"
                 checked={pppoeForm.enable_mschap || false}
                 onChange={(e) => onFormUpdate({ enable_mschap: e.target.checked })}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                className={`w-4 h-4 text-blue-600 rounded focus:ring-2 ${
+                  theme === "dark" 
+                    ? "bg-gray-700 border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-600" 
+                    : "bg-gray-100 border-gray-300 focus:ring-blue-500"
+                }`}
               />
-              <label className="text-sm text-gray-700 dark:text-gray-300">
+              <label className={`text-sm ${themeClasses.text.primary}`}>
                 MS-CHAP Authentication
               </label>
             </div>
@@ -141,9 +167,9 @@ const PPPoEConfig = ({
 
         {/* Advanced PPPoE Settings */}
         <div className={`p-4 rounded-lg border ${
-          theme === "dark" ? "border-gray-600 bg-gray-800" : "border-gray-300 bg-gray-50"
-        }`}>
-          <h4 className="font-medium mb-3">Advanced PPPoE Settings</h4>
+          themeClasses.bg.card
+        } ${themeClasses.border.medium}`}>
+          <h4 className={`font-medium mb-3 ${themeClasses.text.primary}`}>Advanced PPPoE Settings</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InputField
               label="Idle Timeout (seconds)"
@@ -183,7 +209,7 @@ const PPPoEConfig = ({
 
         {/* IP Pool Configuration */}
         <div className={`p-4 rounded-lg border ${
-          theme === "dark" ? "border-blue-600 bg-blue-900/20" : "border-blue-300 bg-blue-50"
+          theme === "dark" ? "bg-blue-900/20 border-blue-800" : "bg-blue-50 border-blue-200"
         }`}>
           <h4 className="font-medium mb-3 text-blue-800 dark:text-blue-300">
             IP Pool Configuration
@@ -207,12 +233,13 @@ const PPPoEConfig = ({
           </div>
         </div>
 
-        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className={`flex justify-end space-x-3 pt-4 border-t ${themeClasses.border.light}`}>
           <CustomButton
             onClick={onClose}
             label="Cancel"
             variant="secondary"
             disabled={isLoading}
+            theme={theme}
           />
           <CustomButton
             onClick={handleSubmit}
@@ -220,6 +247,7 @@ const PPPoEConfig = ({
             variant="primary"
             disabled={isLoading}
             loading={isLoading}
+            theme={theme}
           />
         </div>
       </div>

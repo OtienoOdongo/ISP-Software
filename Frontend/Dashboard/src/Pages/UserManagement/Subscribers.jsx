@@ -1748,7 +1748,7 @@ const StatusBadge = React.memo(({ status, theme }) => {
   );
 });
 
-const ClientDashboard = () => {
+const Subscribers = () => {
   const { isAuthenticated, authLoading } = useAuth();
   const { theme } = useTheme();
   const today = useMemo(() => new Date(), []);
@@ -3683,4 +3683,4 @@ const ClientDashboard = () => {
   );
 };
 
-export default ClientDashboard;
+export default Subscribers;

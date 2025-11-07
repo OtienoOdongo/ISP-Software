@@ -1248,7 +1248,7 @@ import MpesaCallbackManager from '../../components/PaymentConfiguration/MpesaCal
 import { PAYMENT_METHODS, KENYAN_BANKS } from '../../components/PaymentConfiguration/Utils/paymentConstants';
 import { getMethodIcon, getMethodLabel, getMethodColor, getMethodGradient, getMethodMetadata } from '../../components/PaymentConfiguration/Utils/paymentUtils';
 
-const PaymentConfiguration = () => {
+const PaymentMethods = () => {
   const { theme } = useTheme();
   const [config, setConfig] = useState({ paymentMethods: [], lastUpdated: new Date().toISOString() });
   const [savedConfig, setSavedConfig] = useState(null);
@@ -2855,4 +2855,4 @@ const PaymentConfiguration = () => {
   );
 };
 
-export default PaymentConfiguration;
+export default PaymentMethods;

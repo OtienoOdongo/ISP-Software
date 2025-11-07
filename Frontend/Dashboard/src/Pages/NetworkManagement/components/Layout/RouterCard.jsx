@@ -1,18 +1,22 @@
+
+
 // src/Pages/NetworkManagement/components/Layout/RouterCard.jsx
 import React from "react";
 import { motion } from "framer-motion";
 import { 
   Wifi, Server, Settings, Power, ChevronDown, ChevronUp, 
   Cpu, HardDrive, Users, Network, Download, Upload, 
-  MapPin, Calendar, BarChart3, RefreshCw, Edit, Trash2, Play, Pause
+  MapPin, Calendar, BarChart3, RefreshCw, Edit, Trash2, Play, Pause,
+  Thermometer
 } from "lucide-react";
 import CustomButton from "../Common/CustomButton";
+import { getThemeClasses } from  "../../../../components/ServiceManagement/Shared/components"
 
 const RouterCard = ({ 
   router, 
   isExpanded, 
-  routerStats, 
-  theme, 
+  routerStats = {}, 
+  theme = "light", 
   onToggleExpand, 
   onViewStats, 
   onRestart, 
@@ -20,19 +24,21 @@ const RouterCard = ({
   onEdit, 
   onDelete 
 }) => {
+  const themeClasses = getThemeClasses(theme);
+
   const getRouterStatusColor = (status) => {
     const colors = theme === 'dark' ? {
-      connected: "bg-green-900 text-green-300",
-      disconnected: "bg-red-900 text-red-300",
-      updating: "bg-yellow-900 text-yellow-300",
-      error: "bg-gray-800 text-gray-300",
+      connected: "bg-green-900/80 text-green-300 border border-green-800",
+      disconnected: "bg-red-900/80 text-red-300 border border-red-800",
+      updating: "bg-yellow-900/80 text-yellow-300 border border-yellow-800",
+      error: "bg-gray-700 text-gray-300 border border-gray-600",
     } : {
-      connected: "bg-green-100 text-green-600",
-      disconnected: "bg-red-100 text-red-600",
-      updating: "bg-yellow-100 text-yellow-600",
-      error: "bg-gray-100 text-gray-600",
+      connected: "bg-green-100 text-green-600 border border-green-200",
+      disconnected: "bg-red-100 text-red-600 border border-red-200",
+      updating: "bg-yellow-100 text-yellow-600 border border-yellow-200",
+      error: "bg-gray-100 text-gray-600 border border-gray-200",
     };
-    return colors[status] || (theme === 'dark' ? "bg-gray-800 text-gray-300" : "bg-gray-100 text-gray-500");
+    return colors[status] || (theme === 'dark' ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-500");
   };
 
   const getRouterStatusIcon = (status) => {
@@ -51,7 +57,7 @@ const RouterCard = ({
   };
 
   const getPerformanceColor = (value, type = "usage") => {
-    if (!value) return "text-gray-500";
+    if (!value) return themeClasses.text.tertiary;
     
     if (type === "usage") {
       if (value >= 80) return "text-red-500";
@@ -99,33 +105,27 @@ const RouterCard = ({
   return (
     <motion.div
       layout
-      className={`rounded-xl shadow-lg backdrop-blur-md transition-all duration-300 ${
-        theme === "dark" 
-          ? "bg-gray-800/80 border border-gray-700 hover:bg-gray-800" 
-          : "bg-white border border-gray-200 hover:bg-gray-50"
-      }`}
+      className={`rounded-xl shadow-lg backdrop-blur-md transition-all duration-300 border ${themeClasses.bg.card} ${themeClasses.border.light} hover:${theme === 'dark' ? 'bg-gray-800/80' : 'bg-gray-50'}`}
     >
       {/* Main Router Card */}
       <div className="p-6">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           <div className="flex items-center space-x-4 flex-1">
-            <div className={`p-3 rounded-lg ${
-              theme === "dark" ? "bg-blue-900/50" : "bg-blue-100"
+            <div className={`p-3 rounded-lg border ${
+              theme === "dark" ? "bg-blue-900/50 border-blue-800" : "bg-blue-100 border-blue-200"
             }`}>
               {getRouterStatusIcon(router.status)}
             </div>
             
             <div className="flex-1">
               <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-4">
-                <h3 className="font-semibold text-lg">{router.name}</h3>
+                <h3 className={`font-semibold text-lg ${themeClasses.text.primary}`}>{router.name}</h3>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${getRouterStatusColor(router.status)}`}>
-                  {router.status.charAt(0).toUpperCase() + router.status.slice(1)}
+                  {router.status?.charAt(0).toUpperCase() + router.status?.slice(1) || "Unknown"}
                 </span>
               </div>
               
-              <div className={`grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-2 text-sm mt-3 ${
-                theme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}>
+              <div className={`grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-2 text-sm mt-3 ${themeClasses.text.secondary}`}>
                 <div className="flex items-center">
                   <Network className="w-4 h-4 mr-2" />
                   <span>{router.ip}</span>
@@ -157,6 +157,7 @@ const RouterCard = ({
               label="Stats"
               variant="secondary"
               size="sm"
+              theme={theme}
             />
             
             <CustomButton
@@ -166,6 +167,7 @@ const RouterCard = ({
               variant="secondary"
               size="sm"
               disabled={router.status === "disconnected"}
+              theme={theme}
             />
             
             <CustomButton
@@ -177,6 +179,7 @@ const RouterCard = ({
               label={router.status === 'connected' ? "Deactivate" : "Activate"}
               variant={router.status === 'connected' ? "secondary" : "primary"}
               size="sm"
+              theme={theme}
             />
             
             <CustomButton
@@ -185,6 +188,7 @@ const RouterCard = ({
               label="Edit"
               variant="secondary"
               size="sm"
+              theme={theme}
             />
             
             <CustomButton
@@ -193,6 +197,7 @@ const RouterCard = ({
               label="Delete"
               variant="danger"
               size="sm"
+              theme={theme}
             />
             
             <button
@@ -215,11 +220,11 @@ const RouterCard = ({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="mt-6 pt-6 border-t border-gray-700"
+            className={`mt-6 pt-6 border-t ${themeClasses.border.light}`}
           >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-sm">
               <div>
-                <h4 className="font-medium mb-3 flex items-center">
+                <h4 className={`font-medium mb-3 flex items-center ${themeClasses.text.primary}`}>
                   <Settings className="w-4 h-4 mr-2" />
                   Router Details
                 </h4>
@@ -235,20 +240,20 @@ const RouterCard = ({
                     { label: "Last Seen", value: router.last_seen ? new Date(router.last_seen).toLocaleString() : "N/A" }
                   ].map((item, index) => (
                     <React.Fragment key={index}>
-                      <div className={`font-medium ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-600"
-                      } flex items-center`}>
+                      <div className={`font-medium ${themeClasses.text.secondary} flex items-center`}>
                         {item.icon && <item.icon className="w-3 h-3 mr-1" />}
                         {item.label}:
                       </div>
-                      <div>{item.value}</div>
+                      <div className={themeClasses.text.primary}>
+                        {item.value}
+                      </div>
                     </React.Fragment>
                   ))}
                 </div>
               </div>
               
               <div>
-                <h4 className="font-medium mb-3 flex items-center">
+                <h4 className={`font-medium mb-3 flex items-center ${themeClasses.text.primary}`}>
                   <Server className="w-4 h-4 mr-2" />
                   Performance Metrics
                 </h4>
@@ -289,23 +294,23 @@ const RouterCard = ({
                     }
                   ].map((item, index) => (
                     <React.Fragment key={index}>
-                      <div className={`font-medium ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-600"
-                      } flex items-center`}>
+                      <div className={`font-medium ${themeClasses.text.secondary} flex items-center`}>
                         {item.icon && <item.icon className="w-3 h-3 mr-1" />}
                         {item.label}:
                       </div>
-                      <div className={item.color || ""}>{item.value}</div>
+                      <div className={`${item.color || ""} ${!item.color ? themeClasses.text.primary : ""}`}>
+                        {item.value}
+                      </div>
                     </React.Fragment>
                   ))}
                 </div>
                 
                 {router.description && (
                   <div className="mt-4">
-                    <div className={`font-medium ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-600"
-                    }`}>Description:</div>
-                    <div className="mt-1">{router.description}</div>
+                    <div className={`font-medium ${themeClasses.text.secondary}`}>Description:</div>
+                    <div className={`mt-1 ${themeClasses.text.primary}`}>
+                      {router.description}
+                    </div>
                   </div>
                 )}
               </div>

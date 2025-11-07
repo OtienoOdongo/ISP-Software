@@ -1,7 +1,15 @@
+
+
+
+
+
+
+
 // src/Pages/NetworkManagement/components/Common/CustomModal.jsx
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { getThemeClasses } from "../../../../components/ServiceManagement/Shared/components"
 
 const CustomModal = ({ 
   isOpen, 
@@ -11,6 +19,8 @@ const CustomModal = ({
   size = "md",
   theme = "light" 
 }) => {
+  const themeClasses = getThemeClasses(theme);
+  
   const sizeClasses = {
     sm: "max-w-md",
     md: "max-w-2xl",
@@ -31,17 +41,11 @@ const CustomModal = ({
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className={`${sizeClasses[size]} w-full max-h-[90vh] overflow-y-auto rounded-xl shadow-xl ${
-              theme === "dark" 
-                ? "bg-gray-800/80 backdrop-blur-md text-white border border-gray-700" 
-                : "bg-white/80 backdrop-blur-md text-gray-800 border border-gray-200"
-            } transition-colors duration-300`}
+            className={`${sizeClasses[size]} w-full max-h-[90vh] overflow-y-auto rounded-xl shadow-xl border ${themeClasses.bg.card} ${themeClasses.border.light}`}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className={`flex justify-between items-center p-6 border-b ${
-              theme === "dark" ? "border-gray-700" : "border-gray-200"
-            }`}>
-              <h3 className="text-lg font-semibold">{title}</h3>
+            <div className={`flex justify-between items-center p-6 border-b ${themeClasses.border.light}`}>
+              <h3 className={`text-lg font-semibold ${themeClasses.text.primary}`}>{title}</h3>
               <button 
                 onClick={onClose} 
                 className={`p-1 rounded-full hover:opacity-70 transition-colors duration-300 ${

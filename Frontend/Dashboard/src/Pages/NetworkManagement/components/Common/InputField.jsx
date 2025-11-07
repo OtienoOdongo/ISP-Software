@@ -1,6 +1,14 @@
+
+
+
+
+
+
+
 // src/Pages/NetworkManagement/components/Common/InputField.jsx
 import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { EnhancedSelect, getThemeClasses } from "../../../../components/ServiceManagement/Shared/components"
 
 const InputField = ({ 
   label, 
@@ -17,35 +25,32 @@ const InputField = ({
   disabled = false,
   options = [],
   isTextArea = false,
-  rows = 3
+  rows = 3,
+  theme = "light"
 }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const themeClasses = getThemeClasses(theme);
   
-  const inputClass = `w-full pl-10 pr-4 py-2 rounded-lg border transition-colors duration-300 ${
+  const inputClass = `w-full pl-10 pr-4 py-2 rounded-lg border transition-colors duration-300 text-sm ${
     disabled 
-      ? "bg-gray-100 cursor-not-allowed opacity-50" 
+      ? "cursor-not-allowed opacity-50" 
       : touched && error 
         ? "border-red-500 ring-red-500/20" 
-        : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+        : themeClasses.input
   }`;
 
   const renderInput = () => {
     if (type === "select") {
       return (
-        <select
+        <EnhancedSelect
           value={value}
           onChange={onChange}
-          onBlur={onBlur}
+          options={options}
+          placeholder={`Select ${label}`}
           disabled={disabled}
-          className={inputClass}
-        >
-          <option value="">Select {label}</option>
-          {options.map(option => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+          theme={theme}
+          className="w-full"
+        />
       );
     }
     
@@ -80,7 +85,9 @@ const InputField = ({
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${
+              themeClasses.text.tertiary
+            } hover:${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}
           >
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
@@ -105,14 +112,14 @@ const InputField = ({
   return (
     <div className={className}>
       {label && (
-        <label className="block text-sm mb-2 font-medium text-gray-700 dark:text-gray-300">
+        <label className={`block text-sm mb-2 font-medium ${themeClasses.text.primary}`}>
           {label} {required && <span className="text-red-600">*</span>}
         </label>
       )}
       <div className="relative">
         {icon && (
           <div className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-            touched && error ? "text-red-500" : "text-gray-500"
+            touched && error ? "text-red-500" : themeClasses.text.tertiary
           }`}>
             {React.cloneElement(icon, { className: "w-4 h-4" })}
           </div>

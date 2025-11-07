@@ -1,11 +1,17 @@
+
+
 // src/Pages/NetworkManagement/components/Monitoring/PerformanceMetrics.jsx
 import React from "react";
 import { TrendingUp, TrendingDown, Minus, Cpu, HardDrive, Network, Users } from "lucide-react";
+import { getThemeClasses } from "../../../../components/ServiceManagement/Shared/components"
+
 
 const PerformanceMetrics = ({ 
   routerStats, 
-  theme 
+  theme = "light" 
 }) => {
+  const themeClasses = getThemeClasses(theme);
+
   const calculateTrend = (current, previous) => {
     if (!previous || previous === 0) return { direction: 'neutral', value: '0%' };
     
@@ -81,12 +87,10 @@ const PerformanceMetrics = ({
   ];
 
   return (
-    <div className={`p-6 rounded-xl shadow-lg backdrop-blur-md transition-all duration-300 ${
-      theme === "dark" 
-        ? "bg-gray-800/80 border border-gray-700" 
-        : "bg-white/80 border border-gray-200"
-    }`}>
-      <h3 className="text-lg font-semibold mb-4 flex items-center">
+    <div className={`p-6 rounded-xl shadow-lg backdrop-blur-md transition-all duration-300 border ${
+      themeClasses.bg.card
+    } ${themeClasses.border.light}`}>
+      <h3 className={`text-lg font-semibold mb-4 flex items-center ${themeClasses.text.primary}`}>
         <TrendingUp className="w-5 h-5 mr-2" />
         Performance Trends
       </h3>
@@ -110,8 +114,8 @@ const PerformanceMetrics = ({
                     {metric.icon}
                   </div>
                   <div>
-                    <p className="font-medium text-sm">{metric.name}</p>
-                    <p className="text-2xl font-bold">
+                    <p className={`font-medium text-sm ${themeClasses.text.primary}`}>{metric.name}</p>
+                    <p className={`text-2xl font-bold ${themeClasses.text.primary}`}>
                       {metric.current}{metric.unit ? ` ${metric.unit}` : '%'}
                     </p>
                   </div>
@@ -144,7 +148,7 @@ const PerformanceMetrics = ({
         theme === "dark" ? "bg-gray-700/50" : "bg-gray-100"
       }`}>
         <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-600 dark:text-gray-400">Overall Performance</span>
+          <span className={themeClasses.text.tertiary}>Overall Performance</span>
           <span className={`font-medium ${
             metrics.every(m => m.current < 80) ? 'text-green-500' :
             metrics.some(m => m.current >= 90) ? 'text-red-500' : 'text-yellow-500'

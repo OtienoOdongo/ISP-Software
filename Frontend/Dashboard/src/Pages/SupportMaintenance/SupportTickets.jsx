@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const UserSupportTickets = () => {
+const SupportTickets = () => {
   // Sample ticket data (In a real app, this would be fetched from an API)
   const initialTickets = [
     { id: 1, user: 'John Doe', issue: 'Unable to connect to internet', status: 'Pending', date: '2024-11-01' },
@@ -80,4 +80,4 @@ const UserSupportTickets = () => {
   );
 };
 
-export default UserSupportTickets;
+export default SupportTickets;

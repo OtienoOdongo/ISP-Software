@@ -1,9 +1,12 @@
+
+
 // src/Pages/NetworkManagement/components/RouterForms/AddRouterForm.jsx
 import React, { useMemo } from "react";
 import { User, Globe, Router, Hash, Key, Settings, MapPin, Wifi, Users, FileText } from "lucide-react";
 import CustomModal from "../Common/CustomModal";
 import CustomButton from "../Common/CustomButton";
 import InputField from "../Common/InputField";
+import { getThemeClasses } from "../../../../components/ServiceManagement/Shared/components"
 
 const AddRouterForm = ({ 
   isOpen, 
@@ -11,12 +14,14 @@ const AddRouterForm = ({
   routerForm, 
   touchedFields, 
   isLoading, 
-  theme, 
+  theme = "light", 
   onFormUpdate, 
   onFieldBlur, 
   onSubmit,
   dispatch 
 }) => {
+  const themeClasses = getThemeClasses(theme);
+
   const routerTypes = [
     { value: "mikrotik", label: "MikroTik" },
     { value: "ubiquiti", label: "Ubiquiti" },
@@ -192,37 +197,52 @@ const AddRouterForm = ({
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className={`flex items-center space-x-3 p-3 rounded-lg border ${
+            themeClasses.border.light
+          }`}>
             <input
               type="checkbox"
               checked={routerForm.is_default}
               onChange={(e) => onFormUpdate({ is_default: e.target.checked })}
-              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+              className={`w-4 h-4 text-blue-600 rounded focus:ring-2 ${
+                theme === "dark" 
+                  ? "bg-gray-700 border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-600" 
+                  : "bg-gray-100 border-gray-300 focus:ring-blue-500"
+              }`}
             />
-            <label className="text-sm font-medium text-gray-900 dark:text-gray-300">
+            <label className={`text-sm font-medium ${themeClasses.text.primary}`}>
               Set as default router
             </label>
           </div>
 
-          <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className={`flex items-center space-x-3 p-3 rounded-lg border ${
+            themeClasses.border.light
+          }`}>
             <input
               type="checkbox"
               checked={routerForm.captive_portal_enabled}
               onChange={(e) => onFormUpdate({ captive_portal_enabled: e.target.checked })}
-              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+              className={`w-4 h-4 text-blue-600 rounded focus:ring-2 ${
+                theme === "dark" 
+                  ? "bg-gray-700 border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-600" 
+                  : "bg-gray-100 border-gray-300 focus:ring-blue-500"
+              }`}
             />
-            <label className="text-sm font-medium text-gray-900 dark:text-gray-300">
+            <label className={`text-sm font-medium ${themeClasses.text.primary}`}>
               Enable captive portal
             </label>
           </div>
         </div>
 
-        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className={`flex justify-end space-x-3 pt-4 border-t ${
+          themeClasses.border.light
+        }`}>
           <CustomButton
             onClick={onClose}
             label="Cancel"
             variant="secondary"
             disabled={isLoading}
+            theme={theme}
           />
           <CustomButton
             onClick={onSubmit}
@@ -230,6 +250,7 @@ const AddRouterForm = ({
             variant="primary"
             disabled={isLoading || !isFormValid}
             loading={isLoading}
+            theme={theme}
           />
         </div>
       </div>

@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 
-const KnowledgeBase = () => {
+const SystemStatus = () => {
   const faqs = [
     {
       question: 'How to reset my password?',
@@ -94,4 +94,4 @@ const KnowledgeBase = () => {
   );
 };
 
-export default KnowledgeBase;
+export default SystemStatus;

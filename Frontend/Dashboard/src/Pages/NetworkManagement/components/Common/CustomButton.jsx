@@ -1,6 +1,12 @@
+
+
+
+
 // src/Pages/NetworkManagement/components/Common/CustomButton.jsx
 import React from "react";
 import { motion } from "framer-motion";
+import { getThemeClasses } from "../../../../components/ServiceManagement/Shared/components"
+
 
 const CustomButton = ({ 
   onClick, 
@@ -12,15 +18,18 @@ const CustomButton = ({
   fullWidth = false,
   ariaLabel,
   className = "",
-  loading = false
+  loading = false,
+  theme = "light"
 }) => {
+  const themeClasses = getThemeClasses(theme);
+  
   const baseStyles = "flex items-center justify-center font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2";
   
   const variants = {
-    primary: "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500",
-    secondary: "bg-gray-200 hover:bg-gray-300 text-gray-800 border border-gray-300 focus:ring-gray-500",
-    danger: "bg-red-600 hover:bg-red-700 text-white focus:ring-red-500",
-    success: "bg-green-600 hover:bg-green-700 text-white focus:ring-green-500",
+    primary: themeClasses.button.primary + " focus:ring-indigo-500",
+    secondary: themeClasses.button.secondary + " focus:ring-gray-500",
+    danger: themeClasses.button.danger + " focus:ring-red-500",
+    success: themeClasses.button.success + " focus:ring-green-500",
     warning: "bg-yellow-600 hover:bg-yellow-700 text-white focus:ring-yellow-500",
     outline: "border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white focus:ring-blue-500"
   };
