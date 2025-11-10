@@ -20,13 +20,13 @@ from rest_framework.permissions import IsAuthenticated
 
 from network_management.models.router_management_model import (
     Router, HotspotUser, PPPoEUser, RouterSessionHistory, ActivationAttempt,
-    RouterAuditLog, Subscription
+    RouterAuditLog
 )
 from network_management.serializers.router_management_serializer import (
     SessionRecoverySerializer, HotspotUserSerializer, PPPoEUserSerializer
 )
 from account.models.admin_model import Client
-from internet_plans.models.create_plan_models import InternetPlan
+from internet_plans.models.create_plan_models import InternetPlan, Subscription
 from payments.models.payment_config_model import Transaction
 from network_management.utils.websocket_utils import WebSocketManager
 

@@ -253,15 +253,8 @@ urlpatterns = [
     path('tests/bulk/', DiagnosticTestBulkView.as_view(), name='diagnostic-test-bulk'),
     path('speed-test-history/', SpeedTestHistoryView.as_view(), name='speed-test-history'),
     
-    # =========================================================================
-    # WEBHOOK AND CALLBACK ENDPOINTS  
-    # =========================================================================
-    path('webhooks/router-status/', include('network_management.webhooks.urls')),
+  
     
-    # =========================================================================
-    # API DOCUMENTATION AND HEALTH CHECKS
-    # =========================================================================
-    path('health/', include('health_check.urls')),
 ]
 
 
@@ -383,3 +376,10 @@ class URLConfigurationManager:
             'deprecated': False,
             'documentation_url': '/api/docs/'
         }
+
+
+
+
+
+
+
