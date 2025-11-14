@@ -580,11 +580,11 @@ const routeConfig = {
   protected: {
     dashboard: { index: true, element: <DashboardOverview /> },
     // Updated to match "Subscriber Management" menu
-    "subscriber-management": {
-      path: "subscriber-management/*",
+    "subscribers": {
+      path: "subscribers/*",
       children: [
-        { index: true, element: <Navigate to="subscribers" replace /> },
-        { path: "subscribers", element: <Subscribers /> },
+        { index: true, element: <Navigate to="client-portal" replace /> },
+        { path: "client-portal", element: <Subscribers /> },
         { path: "sms-automation", element: <SmsAutomation /> },
         { path: "bulk-actions", element: <BulkActions /> },
       ],
@@ -598,8 +598,8 @@ const routeConfig = {
       ],
     },
     // Updated to match "Network Infrastructure" menu
-    "network-infrastructure": {
-      path: "network-infrastructure/*",
+    "network": {
+      path: "network/*",
       children: [
         { index: true, element: <Navigate to="routers-management" replace /> },
         { path: "routers-management", element: <RouterManagement /> },

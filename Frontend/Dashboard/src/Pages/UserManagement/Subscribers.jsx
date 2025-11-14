@@ -4322,20 +4322,489 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+// import React, { useState, useEffect, useMemo, useCallback } from "react";
+// import { useAuth } from "../../context/AuthContext";
+// import { useTheme } from "../../context/ThemeContext"
+// import { FaSpinner } from "react-icons/fa";
+// import { 
+//   FiDownload, 
+//   FiFilter, 
+//   FiRefreshCw, 
+//   FiUsers,
+//   FiX 
+// } from "react-icons/fi";
+// import api from "../../api"
+
+// // Import new components
+// import ConnectionStats from "../UserManagement/components/ConnectionStats"
+// import AdvancedFilters from "../UserManagement/components/AdvancedFilters"
+// import ClientList from "../UserManagement/components/ClientList"
+// import ClientProfile from "../UserManagement/components/ClientProfile"
+
+// // Import utility functions
+// import { formatClientData } from "../UserManagement/components/utils/clientDataFormatter"
+
+// // Import shared components
+// import { 
+//   DataUsageBar, 
+//   DataUsageIcon, 
+//   PaymentStatusIcon, 
+//   StatusBadge, 
+//   MessageTypeIcon 
+// } from "../UserManagement/components/SharedComponents"
+
+// const getContainerClass = (theme) => theme === "dark" 
+//   ? "bg-gradient-to-br from-gray-900 to-indigo-900 text-white min-h-screen" 
+//   : "bg-gray-50 text-gray-800 min-h-screen";
+
+// const Subscribers = () => {
+//   const { isAuthenticated, authLoading } = useAuth();
+//   const { theme } = useTheme();
+  
+//   // Enhanced state management
+//   const [users, setUsers] = useState([]);
+//   const [filteredUsers, setFilteredUsers] = useState([]);
+//   const [selectedUser, setSelectedUser] = useState(null);
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [usersPerPage] = useState(10);
+//   const [stats, setStats] = useState(null);
+//   const [showFilters, setShowFilters] = useState(true);
+
+//   // Enhanced filtering state
+//   const [activeFilter, setActiveFilter] = useState("all");
+//   const [connectionFilter, setConnectionFilter] = useState("all");
+//   const [searchQuery, setSearchQuery] = useState("");
+//   const [routerFilter, setRouterFilter] = useState("all");
+//   const [activeTab, setActiveTab] = useState("overview");
+//   const [lastRefresh, setLastRefresh] = useState(null);
+
+//   // Theme classes
+//   const containerClass = useMemo(() => getContainerClass(theme), [theme]);
+
+//   // Enhanced fetch function with query parameters
+//   const fetchUsers = useCallback(async () => {
+//     if (!isAuthenticated) {
+//       setError("Please log in to view client profiles.");
+//       setIsLoading(false);
+//       return;
+//     }
+
+//     try {
+//       setIsLoading(true);
+      
+//       // Build query parameters
+//       const params = new URLSearchParams();
+//       if (activeFilter === 'active') params.append('active', 'true');
+//       if (activeFilter === 'inactive') params.append('active', 'false');
+//       if (connectionFilter !== 'all') params.append('connection_type', connectionFilter);
+//       if (routerFilter !== 'all') params.append('router_id', routerFilter);
+//       if (searchQuery) params.append('search', searchQuery);
+//       params.append('page_size', '100');
+
+//       const [usersResponse, statsResponse] = await Promise.all([
+//         api.get(`/api/user_management/profiles/?${params}`),
+//         api.get('/api/user_management/connection-stats/')
+//       ]);
+
+//       const usersData = usersResponse.data.results || usersResponse.data;
+//       const enrichedUsers = usersData.map(formatClientData);
+      
+//       setUsers(enrichedUsers);
+//       setFilteredUsers(enrichedUsers);
+//       setStats(statsResponse.data);
+      
+//       if (enrichedUsers.length > 0 && !selectedUser) {
+//         setSelectedUser(enrichedUsers[0]);
+//       }
+      
+//       setLastRefresh(new Date());
+//       setError(null);
+//     } catch (err) {
+//       setError(err.response?.data?.error || "Failed to load clients.");
+//       console.error('Error fetching data:', err);
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   }, [isAuthenticated, activeFilter, connectionFilter, routerFilter, searchQuery, selectedUser]);
+
+//   // Fetch users when filters change or on mount
+//   useEffect(() => {
+//     if (!authLoading && isAuthenticated) {
+//       fetchUsers();
+//     }
+//   }, [authLoading, isAuthenticated, fetchUsers]);
+
+//   // Enhanced user selection with detailed data fetch
+//   const handleViewUser = useCallback(async (user) => {
+//     try {
+//       const response = await api.get(`/api/user_management/profiles/${user.id}/`);
+//       const enrichedUser = formatClientData(response.data);
+//       setSelectedUser(enrichedUser);
+//       setActiveTab("overview");
+//       setError(null);
+//     } catch (err) {
+//       setError(err.response?.data?.error || "Failed to load client profile.");
+//     }
+//   }, []);
+
+//   // Refresh data
+//   const handleRefresh = useCallback(() => {
+//     fetchUsers();
+//   }, [fetchUsers]);
+
+//   // Export users to CSV
+//   const exportToCSV = useCallback(() => {
+//     const headers = ["Username", "Phone", "Connection Type", "Status", "Plan", "Total Revenue", "Location", "Device"];
+//     const rows = filteredUsers.map(user => [
+//       user.username,
+//       user.phonenumber,
+//       user.connection_type || 'none',
+//       user.active ? 'Active' : 'Inactive',
+//       user.subscription?.plan?.name || 'No Plan',
+//       `KES ${user.total_revenue || 0}`,
+//       user.location || 'Unknown',
+//       user.device || 'Unknown'
+//     ].join(","));
+    
+//     const csv = [headers.join(","), ...rows].join("\n");
+//     const blob = new Blob([csv], { type: "text/csv" });
+//     const url = window.URL.createObjectURL(blob);
+//     const a = document.createElement("a");
+//     a.setAttribute("href", url);
+//     a.setAttribute("download", `clients_export_${new Date().toISOString().split('T')[0]}.csv`);
+//     a.click();
+//   }, [filteredUsers]);
+
+//   // Clear all filters
+//   const clearFilters = useCallback(() => {
+//     setActiveFilter("all");
+//     setConnectionFilter("all");
+//     setSearchQuery("");
+//     setRouterFilter("all");
+//     setCurrentPage(1);
+//   }, []);
+
+//   // Check if any filters are active
+//   const hasActiveFilters = useMemo(() => {
+//     return activeFilter !== "all" || 
+//            connectionFilter !== "all" || 
+//            searchQuery || 
+//            routerFilter !== "all";
+//   }, [activeFilter, connectionFilter, searchQuery, routerFilter]);
+
+//   // Format last refresh time
+//   const formatLastRefresh = useMemo(() => {
+//     if (!lastRefresh) return "Never";
+//     return lastRefresh.toLocaleTimeString();
+//   }, [lastRefresh]);
+
+//   if (authLoading) {
+//     return (
+//       <div className={`flex justify-center items-center min-h-screen transition-colors duration-300 ${containerClass}`}>
+//         <FaSpinner className="animate-spin text-4xl text-blue-600" />
+//       </div>
+//     );
+//   }
+
+//   if (!isAuthenticated) {
+//     return (
+//       <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${containerClass}`}>
+//         <p className="text-red-500">Please log in to access client profiles.</p>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className={`min-h-screen transition-colors duration-300 ${containerClass}`}>
+//       <div className="p-4 md:p-8 max-w-7xl mx-auto">
+//         {error && (
+//           <div className={`mb-4 p-4 rounded-lg ${
+//             theme === "dark" ? "bg-red-900/20 text-red-300" : "bg-red-100 text-red-700"
+//           }`}>
+//             <div className="flex items-center justify-between">
+//               <span>{error}</span>
+//               <button
+//                 onClick={() => setError(null)}
+//                 className={`ml-4 px-2 py-1 rounded ${
+//                   theme === "dark" ? "hover:bg-red-800" : "hover:bg-red-200"
+//                 }`}
+//               >
+//                 <FiX size={16} />
+//               </button>
+//             </div>
+//           </div>
+//         )}
+        
+//         {/* Header */}
+//         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 gap-4">
+//           <div className="flex-1">
+//             <h1 className={`text-xl md:text-3xl font-bold ${
+//               theme === "dark" ? "text-white" : "text-gray-800"
+//             }`}>
+//               Client Management Dashboard
+//             </h1>
+//             <p className={`${theme === "dark" ? "text-gray-300" : "text-gray-500"}`}>
+//               Monitor and manage client profiles, connections, and subscriptions
+//               {lastRefresh && (
+//                 <span className={`text-xs ml-2 ${theme === "dark" ? "text-gray-400" : "text-gray-400"}`}>
+//                   Last updated: {formatLastRefresh}
+//                 </span>
+//               )}
+//             </p>
+//           </div>
+//           <div className="flex items-center gap-2">
+//             <button
+//               onClick={exportToCSV}
+//               disabled={filteredUsers.length === 0}
+//               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+//                 theme === "dark" 
+//                   ? "bg-green-600 text-white hover:bg-green-700 disabled:bg-green-800 disabled:cursor-not-allowed" 
+//                   : "bg-green-500 text-white hover:bg-green-600 disabled:bg-green-400 disabled:cursor-not-allowed"
+//               }`}
+//             >
+//               <FiDownload size={16} />
+//               Export CSV
+//             </button>
+//             <button
+//               onClick={() => setShowFilters(!showFilters)}
+//               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+//                 theme === "dark" 
+//                   ? "bg-gray-700 text-white hover:bg-gray-600" 
+//                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+//               }`}
+//             >
+//               <FiFilter size={16} />
+//               {showFilters ? 'Hide' : 'Show'} Filters
+//             </button>
+//             <button
+//               onClick={handleRefresh}
+//               disabled={isLoading}
+//               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+//                 theme === "dark" 
+//                   ? "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed" 
+//                   : "bg-blue-500 text-white hover:bg-blue-600 disabled:bg-blue-400 disabled:cursor-not-allowed"
+//               }`}
+//             >
+//               {isLoading ? (
+//                 <FaSpinner className="animate-spin" size={16} />
+//               ) : (
+//                 <FiRefreshCw size={16} />
+//               )}
+//               Refresh
+//             </button>
+//           </div>
+//         </div>
+
+//         {/* Connection Statistics */}
+//         <div className="mb-6">
+//           <ConnectionStats stats={stats} isLoading={isLoading} />
+//         </div>
+
+//         {/* Quick Stats Bar */}
+//         {stats && (
+//           <div className={`mb-6 p-4 rounded-xl border ${
+//             theme === "dark" ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+//           }`}>
+//             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+//               <div>
+//                 <div className={`text-2xl font-bold ${
+//                   theme === "dark" ? "text-white" : "text-gray-800"
+//                 }`}>
+//                   {stats.total_clients}
+//                 </div>
+//                 <div className={`text-sm ${
+//                   theme === "dark" ? "text-gray-400" : "text-gray-500"
+//                 }`}>
+//                   Total Clients
+//                 </div>
+//               </div>
+//               <div>
+//                 <div className={`text-2xl font-bold text-green-500`}>
+//                   {stats.active_connections}
+//                 </div>
+//                 <div className={`text-sm ${
+//                   theme === "dark" ? "text-gray-400" : "text-gray-500"
+//                 }`}>
+//                   Active Connections
+//                 </div>
+//               </div>
+//               <div>
+//                 <div className={`text-2xl font-bold text-orange-500`}>
+//                   {stats.hotspot_users?.active || 0}
+//                 </div>
+//                 <div className={`text-sm ${
+//                   theme === "dark" ? "text-gray-400" : "text-gray-500"
+//                 }`}>
+//                   Hotspot Users
+//                 </div>
+//               </div>
+//               <div>
+//                 <div className={`text-2xl font-bold text-purple-500`}>
+//                   {stats.pppoe_users?.active || 0}
+//                 </div>
+//                 <div className={`text-sm ${
+//                   theme === "dark" ? "text-gray-400" : "text-gray-500"
+//                 }`}>
+//                   PPPoE Users
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
+//         )}
+
+//         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+//           {/* Left Sidebar - Filters and Client List */}
+//           {showFilters && (
+//             <div className="xl:col-span-1 space-y-6">
+//               {/* Advanced Filters */}
+//               <AdvancedFilters
+//                 activeFilter={activeFilter}
+//                 setActiveFilter={setActiveFilter}
+//                 connectionFilter={connectionFilter}
+//                 setConnectionFilter={setConnectionFilter}
+//                 searchQuery={searchQuery}
+//                 setSearchQuery={setSearchQuery}
+//                 routerFilter={routerFilter}
+//                 setRouterFilter={setRouterFilter}
+//                 hasActiveFilters={hasActiveFilters}
+//                 onClearFilters={clearFilters}
+//               />
+
+//               {/* Client List */}
+//               <ClientList
+//                 users={filteredUsers}
+//                 selectedUser={selectedUser}
+//                 onUserSelect={handleViewUser}
+//                 isLoading={isLoading}
+//                 currentPage={currentPage}
+//                 setCurrentPage={setCurrentPage}
+//                 usersPerPage={usersPerPage}
+//                 totalUsers={filteredUsers.length}
+//                 activeUsers={filteredUsers.filter(u => u.active).length}
+//               />
+//             </div>
+//           )}
+
+//           {/* Right Panel - Client Details */}
+//           <div className={showFilters ? "xl:col-span-3" : "xl:col-span-4"}>
+//             {selectedUser ? (
+//               <ClientProfile
+//                 user={selectedUser}
+//                 onUserUpdate={setSelectedUser}
+//                 activeTab={activeTab}
+//                 setActiveTab={setActiveTab}
+//                 onRefresh={handleRefresh}
+//                 onUserListRefresh={fetchUsers}
+//               />
+//             ) : (
+//               <div className={`rounded-xl shadow-sm border p-8 text-center ${
+//                 theme === "dark" ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+//               }`}>
+//                 <FiUsers size={48} className={`mx-auto mb-4 ${
+//                   theme === "dark" ? "text-gray-600" : "text-gray-400"
+//                 }`} />
+//                 <h3 className={`text-lg font-semibold mb-2 ${
+//                   theme === "dark" ? "text-white" : "text-gray-800"
+//                 }`}>
+//                   No Client Selected
+//                 </h3>
+//                 <p className={theme === "dark" ? "text-gray-400" : "text-gray-500"}>
+//                   Select a client from the list to view detailed information
+//                 </p>
+//                 {filteredUsers.length === 0 && !isLoading && (
+//                   <button
+//                     onClick={clearFilters}
+//                     className={`mt-4 px-4 py-2 rounded-lg transition-colors ${
+//                       theme === "dark" 
+//                         ? "bg-blue-600 text-white hover:bg-blue-700" 
+//                         : "bg-blue-500 text-white hover:bg-blue-600"
+//                     }`}
+//                   >
+//                     Clear Filters
+//                   </button>
+//                 )}
+//               </div>
+//             )}
+//           </div>
+//         </div>
+
+//         {/* Loading Overlay */}
+//         {isLoading && (
+//           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+//             <div className={`p-6 rounded-xl ${
+//               theme === "dark" ? "bg-gray-800" : "bg-white"
+//             }`}>
+//               <div className="flex items-center gap-3">
+//                 <FaSpinner className="animate-spin text-blue-600" size={24} />
+//                 <span className={theme === "dark" ? "text-white" : "text-gray-800"}>
+//                   Loading client data...
+//                 </span>
+//               </div>
+//             </div>
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default Subscribers;
+
+// // Export shared components for use in other files
+// export {
+//   DataUsageBar,
+//   DataUsageIcon,
+//   PaymentStatusIcon,
+//   StatusBadge,
+//   MessageTypeIcon
+// };
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Subscribers.jsx - Enhanced version leveraging network_management data
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext"
 import { FaSpinner } from "react-icons/fa";
-import { 
-  FiDownload, 
-  FiFilter, 
-  FiRefreshCw, 
+import {
+  FiDownload,
+  FiFilter,
+  FiRefreshCw,
   FiUsers,
-  FiX 
+  FiX,
+  FiMessageSquare,
+  FiBarChart2,
+  FiTrendingUp,
+  FiUserCheck,
+  FiUserX
 } from "react-icons/fi";
 import api from "../../api"
 
-// Import new components
+// Import enhanced components
 import ConnectionStats from "../UserManagement/components/ConnectionStats"
 import AdvancedFilters from "../UserManagement/components/AdvancedFilters"
 import ClientList from "../UserManagement/components/ClientList"
@@ -4344,39 +4813,31 @@ import ClientProfile from "../UserManagement/components/ClientProfile"
 // Import utility functions
 import { formatClientData } from "../UserManagement/components/utils/clientDataFormatter"
 
-// Import shared components
-import { 
-  DataUsageBar, 
-  DataUsageIcon, 
-  PaymentStatusIcon, 
-  StatusBadge, 
-  MessageTypeIcon 
-} from "../UserManagement/components/SharedComponents"
-
-const getContainerClass = (theme) => theme === "dark" 
-  ? "bg-gradient-to-br from-gray-900 to-indigo-900 text-white min-h-screen" 
+const getContainerClass = (theme) => theme === "dark"
+  ? "bg-gradient-to-br from-gray-900 to-indigo-900 text-white min-h-screen"
   : "bg-gray-50 text-gray-800 min-h-screen";
 
 const Subscribers = () => {
   const { isAuthenticated, authLoading } = useAuth();
   const { theme } = useTheme();
-  
+ 
   // Enhanced state management
-  const [users, setUsers] = useState([]);
-  const [filteredUsers, setFilteredUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [clients, setClients] = useState([]);
+  const [filteredClients, setFilteredClients] = useState([]);
+  const [selectedClient, setSelectedClient] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [usersPerPage] = useState(10);
+  const [clientsPerPage] = useState(10);
   const [stats, setStats] = useState(null);
   const [showFilters, setShowFilters] = useState(true);
-
+  
   // Enhanced filtering state
   const [activeFilter, setActiveFilter] = useState("all");
   const [connectionFilter, setConnectionFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [routerFilter, setRouterFilter] = useState("all");
+  const [loyaltyFilter, setLoyaltyFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("overview");
   const [lastRefresh, setLastRefresh] = useState(null);
 
@@ -4384,41 +4845,41 @@ const Subscribers = () => {
   const containerClass = useMemo(() => getContainerClass(theme), [theme]);
 
   // Enhanced fetch function with query parameters
-  const fetchUsers = useCallback(async () => {
+  const fetchClients = useCallback(async () => {
     if (!isAuthenticated) {
       setError("Please log in to view client profiles.");
       setIsLoading(false);
       return;
     }
-
     try {
       setIsLoading(true);
-      
+     
       // Build query parameters
       const params = new URLSearchParams();
       if (activeFilter === 'active') params.append('active', 'true');
       if (activeFilter === 'inactive') params.append('active', 'false');
       if (connectionFilter !== 'all') params.append('connection_type', connectionFilter);
       if (routerFilter !== 'all') params.append('router_id', routerFilter);
+      if (loyaltyFilter !== 'all') params.append('loyalty_tier', loyaltyFilter);
       if (searchQuery) params.append('search', searchQuery);
       params.append('page_size', '100');
 
-      const [usersResponse, statsResponse] = await Promise.all([
+      const [clientsResponse, statsResponse] = await Promise.all([
         api.get(`/api/user_management/profiles/?${params}`),
         api.get('/api/user_management/connection-stats/')
       ]);
 
-      const usersData = usersResponse.data.results || usersResponse.data;
-      const enrichedUsers = usersData.map(formatClientData);
-      
-      setUsers(enrichedUsers);
-      setFilteredUsers(enrichedUsers);
+      const clientsData = clientsResponse.data.results || clientsResponse.data;
+      const enrichedClients = clientsData.map(formatClientData);
+     
+      setClients(enrichedClients);
+      setFilteredClients(enrichedClients);
       setStats(statsResponse.data);
-      
-      if (enrichedUsers.length > 0 && !selectedUser) {
-        setSelectedUser(enrichedUsers[0]);
+     
+      if (enrichedClients.length > 0 && !selectedClient) {
+        setSelectedClient(enrichedClients[0]);
       }
-      
+     
       setLastRefresh(new Date());
       setError(null);
     } catch (err) {
@@ -4427,21 +4888,21 @@ const Subscribers = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, activeFilter, connectionFilter, routerFilter, searchQuery, selectedUser]);
+  }, [isAuthenticated, activeFilter, connectionFilter, routerFilter, loyaltyFilter, searchQuery, selectedClient]);
 
-  // Fetch users when filters change or on mount
+  // Fetch clients when filters change or on mount
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      fetchUsers();
+      fetchClients();
     }
-  }, [authLoading, isAuthenticated, fetchUsers]);
+  }, [authLoading, isAuthenticated, fetchClients]);
 
-  // Enhanced user selection with detailed data fetch
-  const handleViewUser = useCallback(async (user) => {
+  // Enhanced client selection with detailed data fetch
+  const handleViewClient = useCallback(async (client) => {
     try {
-      const response = await api.get(`/api/user_management/profiles/${user.id}/`);
-      const enrichedUser = formatClientData(response.data);
-      setSelectedUser(enrichedUser);
+      const response = await api.get(`/api/user_management/profiles/${client.id}/`);
+      const enrichedClient = formatClientData(response.data);
+      setSelectedClient(enrichedClient);
       setActiveTab("overview");
       setError(null);
     } catch (err) {
@@ -4451,23 +4912,23 @@ const Subscribers = () => {
 
   // Refresh data
   const handleRefresh = useCallback(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    fetchClients();
+  }, [fetchClients]);
 
-  // Export users to CSV
+  // Export clients to CSV
   const exportToCSV = useCallback(() => {
-    const headers = ["Username", "Phone", "Connection Type", "Status", "Plan", "Total Revenue", "Location", "Device"];
-    const rows = filteredUsers.map(user => [
-      user.username,
-      user.phonenumber,
-      user.connection_type || 'none',
-      user.active ? 'Active' : 'Inactive',
-      user.subscription?.plan?.name || 'No Plan',
-      `KES ${user.total_revenue || 0}`,
-      user.location || 'Unknown',
-      user.device || 'Unknown'
+    const headers = ["Username", "Phone", "Email", "Connection Type", "Status", "Loyalty Tier", "Total Revenue", "Customer Since"];
+    const rows = filteredClients.map(client => [
+      client.username,
+      client.phonenumber,
+      client.email || 'N/A',
+      client.connection_info?.connection_type || 'none',
+      client.active ? 'Active' : 'Inactive',
+      client.loyalty_tier_display || client.loyalty_tier,
+      `KES ${client.total_revenue || 0}`,
+      new Date(client.customer_since).toLocaleDateString()
     ].join(","));
-    
+   
     const csv = [headers.join(","), ...rows].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
@@ -4475,7 +4936,7 @@ const Subscribers = () => {
     a.setAttribute("href", url);
     a.setAttribute("download", `clients_export_${new Date().toISOString().split('T')[0]}.csv`);
     a.click();
-  }, [filteredUsers]);
+  }, [filteredClients]);
 
   // Clear all filters
   const clearFilters = useCallback(() => {
@@ -4483,22 +4944,34 @@ const Subscribers = () => {
     setConnectionFilter("all");
     setSearchQuery("");
     setRouterFilter("all");
+    setLoyaltyFilter("all");
     setCurrentPage(1);
   }, []);
 
   // Check if any filters are active
   const hasActiveFilters = useMemo(() => {
-    return activeFilter !== "all" || 
-           connectionFilter !== "all" || 
-           searchQuery || 
-           routerFilter !== "all";
-  }, [activeFilter, connectionFilter, searchQuery, routerFilter]);
+    return activeFilter !== "all" ||
+           connectionFilter !== "all" ||
+           searchQuery ||
+           routerFilter !== "all" ||
+           loyaltyFilter !== "all";
+  }, [activeFilter, connectionFilter, searchQuery, routerFilter, loyaltyFilter]);
 
   // Format last refresh time
   const formatLastRefresh = useMemo(() => {
     if (!lastRefresh) return "Never";
     return lastRefresh.toLocaleTimeString();
   }, [lastRefresh]);
+
+  // Enhanced loyalty tier stats
+  const loyaltyStats = useMemo(() => {
+    if (!stats?.loyalty_distribution) return null;
+    return Object.entries(stats.loyalty_distribution).map(([tier, data]) => ({
+      tier,
+      count: data.count,
+      percentage: data.percentage
+    }));
+  }, [stats]);
 
   if (authLoading) {
     return (
@@ -4536,17 +5009,17 @@ const Subscribers = () => {
             </div>
           </div>
         )}
-        
+       
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 gap-4">
           <div className="flex-1">
             <h1 className={`text-xl md:text-3xl font-bold ${
               theme === "dark" ? "text-white" : "text-gray-800"
             }`}>
-              Client Management Dashboard
+              Enhanced Client Management
             </h1>
             <p className={`${theme === "dark" ? "text-gray-300" : "text-gray-500"}`}>
-              Monitor and manage client profiles, connections, and subscriptions
+              Monitor and manage client profiles with network_management integration
               {lastRefresh && (
                 <span className={`text-xs ml-2 ${theme === "dark" ? "text-gray-400" : "text-gray-400"}`}>
                   Last updated: {formatLastRefresh}
@@ -4557,10 +5030,10 @@ const Subscribers = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={exportToCSV}
-              disabled={filteredUsers.length === 0}
+              disabled={filteredClients.length === 0}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                theme === "dark" 
-                  ? "bg-green-600 text-white hover:bg-green-700 disabled:bg-green-800 disabled:cursor-not-allowed" 
+                theme === "dark"
+                  ? "bg-green-600 text-white hover:bg-green-700 disabled:bg-green-800 disabled:cursor-not-allowed"
                   : "bg-green-500 text-white hover:bg-green-600 disabled:bg-green-400 disabled:cursor-not-allowed"
               }`}
             >
@@ -4570,8 +5043,8 @@ const Subscribers = () => {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                theme === "dark" 
-                  ? "bg-gray-700 text-white hover:bg-gray-600" 
+                theme === "dark"
+                  ? "bg-gray-700 text-white hover:bg-gray-600"
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
@@ -4582,8 +5055,8 @@ const Subscribers = () => {
               onClick={handleRefresh}
               disabled={isLoading}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                theme === "dark" 
-                  ? "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed" 
+                theme === "dark"
+                  ? "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed"
                   : "bg-blue-500 text-white hover:bg-blue-600 disabled:bg-blue-400 disabled:cursor-not-allowed"
               }`}
             >
@@ -4597,17 +5070,17 @@ const Subscribers = () => {
           </div>
         </div>
 
-        {/* Connection Statistics */}
+        {/* Enhanced Connection Statistics */}
         <div className="mb-6">
           <ConnectionStats stats={stats} isLoading={isLoading} />
         </div>
 
-        {/* Quick Stats Bar */}
+        {/* Enhanced Quick Stats Bar */}
         {stats && (
           <div className={`mb-6 p-4 rounded-xl border ${
             theme === "dark" ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
           }`}>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
               <div>
                 <div className={`text-2xl font-bold ${
                   theme === "dark" ? "text-white" : "text-gray-800"
@@ -4650,6 +5123,88 @@ const Subscribers = () => {
                   PPPoE Users
                 </div>
               </div>
+              <div>
+                <div className={`text-2xl font-bold text-blue-500`}>
+                  KES {stats.total_revenue ? Math.round(stats.total_revenue).toLocaleString() : 0}
+                </div>
+                <div className={`text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}>
+                  Total Revenue
+                </div>
+              </div>
+            </div>
+            
+            {/* Enhanced Router Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="text-center">
+                <div className={`text-lg font-semibold ${
+                  theme === "dark" ? "text-blue-400" : "text-blue-600"
+                }`}>
+                  {stats.total_routers || 0}
+                </div>
+                <div className={`text-xs ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}>
+                  Total Routers
+                </div>
+              </div>
+              <div className="text-center">
+                <div className={`text-lg font-semibold ${
+                  theme === "dark" ? "text-green-400" : "text-green-600"
+                }`}>
+                  {stats.online_routers || 0}
+                </div>
+                <div className={`text-xs ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}>
+                  Online Routers
+                </div>
+              </div>
+              <div className="text-center">
+                <div className={`text-lg font-semibold ${
+                  theme === "dark" ? "text-yellow-400" : "text-yellow-600"
+                }`}>
+                  {stats.connection_ratio || 0}%
+                </div>
+                <div className={`text-xs ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}>
+                  Connection Ratio
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Loyalty Distribution */}
+        {loyaltyStats && (
+          <div className={`mb-6 p-4 rounded-xl border ${
+            theme === "dark" ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+          }`}>
+            <h3 className={`font-semibold mb-3 flex items-center gap-2 ${
+              theme === "dark" ? "text-white" : "text-gray-800"
+            }`}>
+              <FiTrendingUp size={18} />
+              Loyalty Distribution
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {loyaltyStats.map((stat) => (
+                <div key={stat.tier} className="text-center">
+                  <div className={`text-xl font-bold ${
+                    stat.tier === 'vip' ? 'text-purple-500' :
+                    stat.tier === 'premium' ? 'text-yellow-500' :
+                    stat.tier === 'regular' ? 'text-blue-500' : 'text-green-500'
+                  }`}>
+                    {stat.count}
+                  </div>
+                  <div className={`text-sm capitalize ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}>
+                    {stat.tier} ({stat.percentage}%)
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -4658,7 +5213,7 @@ const Subscribers = () => {
           {/* Left Sidebar - Filters and Client List */}
           {showFilters && (
             <div className="xl:col-span-1 space-y-6">
-              {/* Advanced Filters */}
+              {/* Enhanced Advanced Filters */}
               <AdvancedFilters
                 activeFilter={activeFilter}
                 setActiveFilter={setActiveFilter}
@@ -4668,35 +5223,37 @@ const Subscribers = () => {
                 setSearchQuery={setSearchQuery}
                 routerFilter={routerFilter}
                 setRouterFilter={setRouterFilter}
+                loyaltyFilter={loyaltyFilter}
+                setLoyaltyFilter={setLoyaltyFilter}
                 hasActiveFilters={hasActiveFilters}
                 onClearFilters={clearFilters}
               />
-
-              {/* Client List */}
+              
+              {/* Enhanced Client List */}
               <ClientList
-                users={filteredUsers}
-                selectedUser={selectedUser}
-                onUserSelect={handleViewUser}
+                clients={filteredClients}
+                selectedClient={selectedClient}
+                onClientSelect={handleViewClient}
                 isLoading={isLoading}
                 currentPage={currentPage}
                 setCurrentPage={setCurrentPage}
-                usersPerPage={usersPerPage}
-                totalUsers={filteredUsers.length}
-                activeUsers={filteredUsers.filter(u => u.active).length}
+                clientsPerPage={clientsPerPage}
+                totalClients={filteredClients.length}
+                activeClients={filteredClients.filter(c => c.active).length}
               />
             </div>
           )}
 
           {/* Right Panel - Client Details */}
           <div className={showFilters ? "xl:col-span-3" : "xl:col-span-4"}>
-            {selectedUser ? (
+            {selectedClient ? (
               <ClientProfile
-                user={selectedUser}
-                onUserUpdate={setSelectedUser}
+                client={selectedClient}
+                onClientUpdate={setSelectedClient}
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
                 onRefresh={handleRefresh}
-                onUserListRefresh={fetchUsers}
+                onClientListRefresh={fetchClients}
               />
             ) : (
               <div className={`rounded-xl shadow-sm border p-8 text-center ${
@@ -4713,12 +5270,12 @@ const Subscribers = () => {
                 <p className={theme === "dark" ? "text-gray-400" : "text-gray-500"}>
                   Select a client from the list to view detailed information
                 </p>
-                {filteredUsers.length === 0 && !isLoading && (
+                {filteredClients.length === 0 && !isLoading && (
                   <button
                     onClick={clearFilters}
                     className={`mt-4 px-4 py-2 rounded-lg transition-colors ${
-                      theme === "dark" 
-                        ? "bg-blue-600 text-white hover:bg-blue-700" 
+                      theme === "dark"
+                        ? "bg-blue-600 text-white hover:bg-blue-700"
                         : "bg-blue-500 text-white hover:bg-blue-600"
                     }`}
                   >
@@ -4751,12 +5308,3 @@ const Subscribers = () => {
 };
 
 export default Subscribers;
-
-// Export shared components for use in other files
-export {
-  DataUsageBar,
-  DataUsageIcon,
-  PaymentStatusIcon,
-  StatusBadge,
-  MessageTypeIcon
-};

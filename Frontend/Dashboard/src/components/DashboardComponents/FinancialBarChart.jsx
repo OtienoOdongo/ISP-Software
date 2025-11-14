@@ -1,135 +1,10 @@
 
-// import React, { useState, useEffect } from "react";
-// import Chart from "react-apexcharts";
-// import { FaSpinner } from "react-icons/fa";
-
-// const FinancialBarChart = () => {
-//   const [options, setOptions] = useState({
-//     chart: { type: "bar", stacked: true, height: 350, fontFamily: "Inter, sans-serif" },
-//     xaxis: {
-//       categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"],
-//       title: { text: "Months", style: { fontSize: "14px", fontWeight: "600" } },
-//     },
-//     yaxis: {
-//       title: { text: "Amount (KES)", style: { fontSize: "14px", fontWeight: "600" } },
-//       labels: { formatter: (value) => `KES ${value.toLocaleString()}` },
-//     },
-//     plotOptions: { bar: { horizontal: false, dataLabels: { total: { enabled: false } } } },
-//     stroke: { width: 1, colors: ["#fff"] },
-//     legend: { position: "top", horizontalAlign: "left", offsetX: 40, fontSize: "12px" },
-//     dataLabels: { enabled: false },
-//     colors: ["#A20ACC", "#34CC0A", "#F40B49"],
-//   });
-
-//   const [series, setSeries] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-
-//   useEffect(() => {
-//     // Mock data for financial performance
-//     const mockData = [
-//       { income: 500000, profit: 200000, expenses: 300000 },
-//       { income: 550000, profit: 220000, expenses: 330000 },
-//       { income: 600000, profit: 240000, expenses: 360000 },
-//       { income: 650000, profit: 260000, expenses: 390000 },
-//       { income: 700000, profit: 280000, expenses: 420000 },
-//       { income: 750000, profit: 300000, expenses: 450000 },
-//       { income: 800000, profit: 320000, expenses: 480000 },
-//       { income: 850000, profit: 340000, expenses: 510000 },
-//       { income: 900000, profit: 360000, expenses: 540000 },
-//       { income: 950000, profit: 380000, expenses: 570000 },
-//       { income: 1000000, profit: 400000, expenses: 600000 },
-//       { income: 1050000, profit: 420000, expenses: 630000 },
-//     ];
-
-//     setSeries([
-//       { name: "Income", data: mockData.map((item) => item.income), color: "#A20ACC" },
-//       { name: "Profit", data: mockData.map((item) => item.profit), color: "#34CC0A" },
-//       { name: "Expenses", data: mockData.map((item) => item.expenses), color: "#F40B49" },
-//     ]);
-//     setLoading(false);
-//   }, []);
-
-//   return (
-//     <div>
-//       <h2 className="text-xl font-semibold text-gray-800 text-center mb-4">Financial Performance</h2>
-//       {loading ? (
-//         <div className="flex justify-center items-center h-64">
-//           <FaSpinner className="animate-spin text-3xl text-blue-600" />
-//           <span className="ml-2 text-gray-600 font-medium">Calculating Metrics...</span>
-//         </div>
-//       ) : error ? (
-//         <p className="text-center text-red-600 font-medium">{error}</p>
-//       ) : (
-//         <Chart options={options} series={series} type="bar" height={400} />
-//       )}
-//     </div>
-//   );
-// };
-
-// export default FinancialBarChart;
 
 
 
 
 
 
-
-// import React from "react";
-// import Chart from "react-apexcharts";
-// import PropTypes from "prop-types";
-
-// const FinancialBarChart = ({ data }) => {
-//   const options = {
-//     chart: { type: "bar", stacked: true, height: 350, fontFamily: "Inter, sans-serif" },
-//     xaxis: {
-//       categories: data.map(item => item.month),
-//       title: { text: "Months", style: { fontSize: "14px", fontWeight: "600" } },
-//     },
-//     yaxis: {
-//       title: { text: "Amount (KES)", style: { fontSize: "14px", fontWeight: "600" } },
-//       labels: { formatter: (value) => `KES ${value.toLocaleString()}` },
-//     },
-//     plotOptions: { bar: { horizontal: false, dataLabels: { total: { enabled: false } } } },
-//     stroke: { width: 1, colors: ["#fff"] },
-//     legend: { position: "top", horizontalAlign: "left", offsetX: 40, fontSize: "12px" },
-//     dataLabels: { enabled: false },
-//     colors: ["#A20ACC", "#34CC0A", "#F40B49"],
-//   };
-
-//   const series = [
-//     { name: "Income", data: data.map(item => item.income) },
-//     { name: "Profit", data: data.map(item => item.profit) },
-//     { name: "Expenses", data: data.map(item => item.expenses) },
-//   ];
-
-//   return (
-//     <div>
-//       <h2 className="text-xl font-semibold text-gray-800 text-center mb-4">Financial Performance</h2>
-//       <Chart options={options} series={series} type="bar" height={400} />
-//     </div>
-//   );
-// };
-
-// FinancialBarChart.propTypes = {
-//   data: PropTypes.arrayOf(
-//     PropTypes.shape({
-//       month: PropTypes.string.isRequired,
-//       income: PropTypes.number.isRequired,
-//       profit: PropTypes.number.isRequired,
-//       expenses: PropTypes.number.isRequired,
-//     })
-//   ).isRequired,
-// };
-
-// export default FinancialBarChart;
-
-
-
-
-
-
-// // FinancialBarChart.jsx
 // import React from "react";
 // import Chart from "react-apexcharts";
 // import PropTypes from "prop-types";
@@ -139,10 +14,22 @@
 //     chart: { 
 //       type: "bar", 
 //       stacked: true, 
-//       height: 350, 
+//       height: "100%",
 //       fontFamily: "Inter, sans-serif",
 //       background: "transparent",
 //       foreColor: theme === "dark" ? "#F9FAFB" : "#1F2937",
+//       toolbar: {
+//         show: true,
+//         tools: {
+//           download: true,
+//           selection: true,
+//           zoom: true,
+//           zoomin: true,
+//           zoomout: true,
+//           pan: true,
+//           reset: true,
+//         },
+//       },
 //     },
 //     xaxis: {
 //       categories: data.map(item => item.month),
@@ -157,6 +44,7 @@
 //       labels: {
 //         style: {
 //           colors: theme === "dark" ? "#D1D5DB" : "#6B7280",
+//           fontSize: "12px",
 //         }
 //       }
 //     },
@@ -173,16 +61,27 @@
 //         formatter: (value) => `KES ${value.toLocaleString()}`,
 //         style: {
 //           colors: theme === "dark" ? "#D1D5DB" : "#6B7280",
+//           fontSize: "12px",
 //         }
 //       },
 //     },
-//     plotOptions: { bar: { horizontal: false, dataLabels: { total: { enabled: false } } } },
+//     plotOptions: { 
+//       bar: { 
+//         horizontal: false, 
+//         columnWidth: "60%",
+//         borderRadius: 4,
+//         borderRadiusApplication: 'end'
+//       } 
+//     },
 //     stroke: { width: 1, colors: [theme === "dark" ? "#111827" : "#FFFFFF"] },
 //     legend: { 
 //       position: "top", 
-//       horizontalAlign: "left", 
-//       offsetX: 40, 
+//       horizontalAlign: "center", 
 //       fontSize: "12px",
+//       itemMargin: {
+//         horizontal: 10,
+//         vertical: 5
+//       },
 //       labels: {
 //         colors: theme === "dark" ? "#F9FAFB" : "#1F2937",
 //       }
@@ -191,9 +90,56 @@
 //     colors: ["#A20ACC", "#34CC0A", "#F40B49"],
 //     grid: {
 //       borderColor: theme === "dark" ? "#374151" : "#E5E7EB",
-//       strokeDashArray: 4,
-//       padding: { top: 20, right: 20, bottom: 0, left: 20 },
+//       strokeDashArray: 3,
+//       padding: { top: 10, right: 10, bottom: 0, left: 10 },
 //     },
+//     responsive: [{
+//       breakpoint: 768,
+//       options: {
+//         chart: {
+//           height: 300,
+//           toolbar: {
+//             tools: {
+//               download: true,
+//               selection: false,
+//               zoom: false,
+//               zoomin: false,
+//               zoomout: false,
+//               pan: false,
+//             }
+//           }
+//         },
+//         plotOptions: {
+//           bar: {
+//             columnWidth: "70%"
+//           }
+//         },
+//         legend: {
+//           position: "bottom",
+//           horizontalAlign: "center",
+//           fontSize: "10px",
+//           itemMargin: {
+//             horizontal: 5,
+//             vertical: 2
+//           }
+//         },
+//         xaxis: {
+//           labels: {
+//             style: {
+//               fontSize: "10px"
+//             }
+//           }
+//         },
+//         yaxis: {
+//           labels: {
+//             formatter: (value) => `KES ${value > 1000 ? (value/1000).toFixed(0) + 'K' : value}`,
+//             style: {
+//               fontSize: "10px"
+//             }
+//           }
+//         }
+//       }
+//     }]
 //   };
 
 //   const series = [
@@ -203,11 +149,17 @@
 //   ];
 
 //   return (
-//     <div>
-//       <h2 className={`text-xl font-semibold text-center mb-4 ${
+//     <div className="w-full h-full">
+//       <h2 className={`text-lg sm:text-xl font-semibold text-center mb-3 sm:mb-4 ${
 //         theme === "dark" ? "text-white" : "text-gray-800"
 //       }`}>Financial Performance</h2>
-//       <Chart options={options} series={series} type="bar" height={400} />
+//       <Chart 
+//         options={options} 
+//         series={series} 
+//         type="bar" 
+//         height={350}
+//         width="100%"
+//       />
 //     </div>
 //   );
 // };
@@ -232,11 +184,57 @@
 
 
 
-import React from "react";
+
+import React, { useState, useEffect } from "react";
 import Chart from "react-apexcharts";
 import PropTypes from "prop-types";
+import { FiAlertCircle } from "react-icons/fi";
 
-const FinancialBarChart = ({ data, theme }) => {
+const FinancialBarChart = ({ data, theme, onLoad, onError }) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      if (onLoad) onLoad();
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [onLoad]);
+
+  useEffect(() => {
+    if (!data || data.length === 0) {
+      setHasError(true);
+      if (onError) onError("No data available for Financial Bar Chart");
+    } else {
+      setHasError(false);
+    }
+  }, [data, onError]);
+
+  if (hasError) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center">
+        <FiAlertCircle className={`text-2xl mb-2 ${
+          theme === "dark" ? "text-gray-500" : "text-gray-400"
+        }`} />
+        <p className={`text-sm ${
+          theme === "dark" ? "text-gray-400" : "text-gray-500"
+        }`}>No financial data available</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <div className={`animate-pulse w-full h-64 rounded ${
+          theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+        }`} />
+      </div>
+    );
+  }
+
   const options = {
     chart: { 
       type: "bar", 
@@ -256,6 +254,11 @@ const FinancialBarChart = ({ data, theme }) => {
           pan: true,
           reset: true,
         },
+      },
+      animations: {
+        enabled: true,
+        easing: 'easeinout',
+        speed: 800,
       },
     },
     xaxis: {
@@ -300,11 +303,19 @@ const FinancialBarChart = ({ data, theme }) => {
         borderRadiusApplication: 'end'
       } 
     },
-    stroke: { width: 1, colors: [theme === "dark" ? "#111827" : "#FFFFFF"] },
+    stroke: { 
+      width: 1, 
+      colors: [theme === "dark" ? "#111827" : "#FFFFFF"] 
+    },
     legend: { 
       position: "top", 
       horizontalAlign: "center", 
       fontSize: "12px",
+      markers: {
+        radius: 6,
+        width: 6,
+        height: 6,
+      },
       itemMargin: {
         horizontal: 10,
         vertical: 5
@@ -319,6 +330,21 @@ const FinancialBarChart = ({ data, theme }) => {
       borderColor: theme === "dark" ? "#374151" : "#E5E7EB",
       strokeDashArray: 3,
       padding: { top: 10, right: 10, bottom: 0, left: 10 },
+    },
+    tooltip: {
+      enabled: true,
+      shared: true,
+      intersect: false,
+      y: {
+        formatter: function (value) {
+          return `KES ${value.toLocaleString()}`;
+        }
+      },
+      style: {
+        fontSize: '12px',
+        fontFamily: 'Inter, sans-serif'
+      },
+      theme: theme === 'dark' ? 'dark' : 'light'
     },
     responsive: [{
       breakpoint: 768,
@@ -370,16 +396,13 @@ const FinancialBarChart = ({ data, theme }) => {
   };
 
   const series = [
-    { name: "Income", data: data.map(item => item.income) },
-    { name: "Profit", data: data.map(item => item.profit) },
-    { name: "Expenses", data: data.map(item => item.expenses) },
+    { name: "Income", data: data.map(item => item.income || 0) },
+    { name: "Profit", data: data.map(item => item.profit || 0) },
+    { name: "Expenses", data: data.map(item => item.expenses || 0) },
   ];
 
   return (
     <div className="w-full h-full">
-      <h2 className={`text-lg sm:text-xl font-semibold text-center mb-3 sm:mb-4 ${
-        theme === "dark" ? "text-white" : "text-gray-800"
-      }`}>Financial Performance</h2>
       <Chart 
         options={options} 
         series={series} 
@@ -401,6 +424,14 @@ FinancialBarChart.propTypes = {
     })
   ).isRequired,
   theme: PropTypes.oneOf(["light", "dark"]).isRequired,
+  onLoad: PropTypes.func,
+  onError: PropTypes.func,
+};
+
+FinancialBarChart.defaultProps = {
+  data: [],
+  onLoad: () => {},
+  onError: () => {},
 };
 
 export default FinancialBarChart;

@@ -208,9 +208,10 @@ const SideBar = ({ onMobileMenuClose, isMobileMenuOpen }) => {
                 {/* Active Dot for Dashboard */}
                 {location.pathname === "/dashboard" && (
                   <span
-                    className={`absolute right-6 top-1/2 transform -translate-y-1/2 w-2.5 h-2.5 rounded-full ${
-                      theme === "dark" ? "bg-indigo-600" : "bg-indigi-400"
-                    }`}
+                    className={`absolute right-12 top-1/2 transform -translate-y-1/2 w-2.5 h-2.5 rounded-full ${
+                        theme === "dark" ? "bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]"
+                         : "bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]"
+                      }`}
                   />
                 )}
               </NavLink>
@@ -260,7 +261,7 @@ const SideBar = ({ onMobileMenuClose, isMobileMenuOpen }) => {
                   {/* Active Dot (submenus) */}
                   {activeMenuIndex === index && (
                     <span
-                      className={`absolute right-6 top-1/2 transform -translate-y-1/2 w-2.5 h-2.5 rounded-full ${
+                      className={`absolute right-12 top-1/2 transform -translate-y-1/2 w-2.5 h-2.5 rounded-full ${
                         theme === "dark" ? "bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]"
                          : "bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]"
                       }`}
