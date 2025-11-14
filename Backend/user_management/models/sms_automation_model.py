@@ -1,3 +1,7 @@
+
+
+
+
 # from django.db import models
 # from django.utils import timezone
 # from account.models.admin_model import Client
@@ -92,18 +96,23 @@
 
 
 
+
+# sms_automation_models.py 
 from django.db import models
 from django.utils import timezone
 from account.models.admin_model import Client
 from network_management.models.router_management_model import Router
 from internet_plans.models.create_plan_models import Subscription
 from payments.models.payment_config_model import Transaction
+import uuid
 
 class SMSTrigger(models.Model):
     TRIGGER_TYPES = (
-        ('data_usage', 'Data Usage'),
-        ('plan_expiry', 'Plan Expiry'),
-        ('onboarding', 'Onboarding'),
+        ('data_usage', 'Data Usage Alert'),
+        ('plan_expiry', 'Plan Expiry Warning'),
+        ('onboarding', 'Onboarding Message'),
+        ('payment', 'Payment Confirmation'),
+        ('system', 'System Notification'),
     )
 
     ONBOARDING_EVENTS = (
@@ -114,8 +123,8 @@ class SMSTrigger(models.Model):
 
     name = models.CharField(max_length=100)
     trigger_type = models.CharField(max_length=20, choices=TRIGGER_TYPES)
-    threshold = models.PositiveIntegerField(null=True, blank=True)
-    days_before = models.PositiveIntegerField(null=True, blank=True)
+    threshold = models.PositiveIntegerField(null=True, blank=True, help_text="Percentage for data usage alerts")
+    days_before = models.PositiveIntegerField(null=True, blank=True, help_text="Days before plan expiry")
     event = models.CharField(max_length=20, choices=ONBOARDING_EVENTS, null=True, blank=True)
     message = models.TextField(max_length=160)
     enabled = models.BooleanField(default=True)
@@ -126,13 +135,17 @@ class SMSTrigger(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        verbose_name = 'SMS Trigger'
+        verbose_name_plural = 'SMS Triggers'
 
     def __str__(self):
         return self.name
 
     @property
     def success_rate(self):
-        return round((self.success_count / self.sent_count * 100), 1) if self.sent_count > 0 else 0
+        if self.sent_count == 0:
+            return 0
+        return round((self.success_count / self.sent_count) * 100, 1)
 
 
 class SMSAutomationSettings(models.Model):
@@ -162,6 +175,13 @@ class SMSAutomationSettings(models.Model):
     def __str__(self):
         return 'SMS Automation Settings'
 
+    def can_send_message(self):
+        """Check if we can send messages based on time and balance"""
+        current_time = timezone.now().time()
+        return (self.enabled and 
+                self.send_time_start <= current_time <= self.send_time_end and
+                self.sms_balance > 0)
+
 
 class SMSAnalytics(models.Model):
     date = models.DateField(unique=True)
@@ -179,4 +199,29 @@ class SMSAnalytics(models.Model):
 
     @property
     def success_rate(self):
-        return round((self.successful_messages / self.total_messages * 100), 2) if self.total_messages > 0 else 0
+        if self.total_messages == 0:
+            return 0
+        return round((self.successful_messages / self.total_messages) * 100, 2)
+
+
+class ScheduledMessage(models.Model):
+    STATUS_CHOICES = (
+        ('scheduled', 'Scheduled'),
+        ('sent', 'Sent'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
+    )
+
+    trigger = models.ForeignKey(SMSTrigger, on_delete=models.CASCADE, related_name='scheduled_messages')
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='scheduled_messages')
+    message = models.TextField()
+    scheduled_for = models.DateTimeField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='scheduled')
+    created_at = models.DateTimeField(default=timezone.now)
+    sent_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['scheduled_for']
+
+    def __str__(self):
+        return f"Scheduled message for {self.client.user.username} at {self.scheduled_for}"
