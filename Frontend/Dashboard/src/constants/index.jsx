@@ -34,6 +34,7 @@ export const menuItems = [
     submenu: true,
     submenuItems: [
       { title: "Plan Management" },
+      { title: "Service Operations" },
     ],
   },
   {

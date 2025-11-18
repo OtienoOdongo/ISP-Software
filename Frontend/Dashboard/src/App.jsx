@@ -547,6 +547,7 @@ import BulkActions from "./Pages/UserManagement/BulkActions";
 
 // Service Plans
 import PlanManagement from "./Pages/ServiceManagement/PlanManagement"; 
+import ServiceOperations from "./Pages/ServiceManagement/ServiceOperations"
 
 // Network Management
 import RouterManagement from "./Pages/NetworkManagement/RouterManagement";
@@ -595,6 +596,7 @@ const routeConfig = {
       children: [
         { index: true, element: <Navigate to="plan-management" replace /> },
         { path: "plan-management", element: <PlanManagement /> }, 
+        { path: "service-operations", element: <ServiceOperations /> },
       ],
     },
     // Updated to match "Network Infrastructure" menu
