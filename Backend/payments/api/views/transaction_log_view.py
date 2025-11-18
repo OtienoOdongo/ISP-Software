@@ -1,10 +1,15 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
-from django.db.models import Q, Sum, Count
-from django.utils import timezone
-from django.core.paginator import Paginator, EmptyPage
+
+
+
+
+
+# from rest_framework.views import APIView
+# from rest_framework.response import Response
+# from rest_framework.permissions import IsAuthenticated
+# from rest_framework import status
+# from django.db.models import Q, Sum, Count
+# from django.utils import timezone
+# from django.core.paginator import Paginator, EmptyPage
 # from datetime import datetime, timedelta
 # import logging
 
@@ -42,25 +47,25 @@ from django.core.paginator import Paginator, EmptyPage
             
 #             filters = filter_serializer.validated_data
             
-#             # Build base query
+#             # Build base query - FIXED: Use 'internet_plan' instead of 'plan'
 #             queryset = TransactionLog.objects.select_related(
-#                 'client', 'client__user', 'user'
+#                 'client', 'client__user', 'user', 'subscription', 'subscription__internet_plan'
 #             ).all()
             
-#             # Apply date filter
+#             # Apply date filter with timezone awareness
 #             start_date = filters.get('start_date')
 #             end_date = filters.get('end_date')
             
 #             if start_date and end_date:
-#                 # Convert to datetime with time components
-#                 start_dt = datetime.combine(start_date, datetime.min.time())
-#                 end_dt = datetime.combine(end_date, datetime.max.time())
+#                 # Convert to timezone-aware datetime objects
+#                 start_dt = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
+#                 end_dt = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))
 #                 queryset = queryset.filter(created_at__range=[start_dt, end_dt])
 #             elif start_date:
-#                 start_dt = datetime.combine(start_date, datetime.min.time())
+#                 start_dt = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
 #                 queryset = queryset.filter(created_at__gte=start_dt)
 #             elif end_date:
-#                 end_dt = datetime.combine(end_date, datetime.max.time())
+#                 end_dt = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))
 #                 queryset = queryset.filter(created_at__lte=end_dt)
 #             else:
 #                 # Default: last 7 days
@@ -86,7 +91,8 @@ from django.core.paginator import Paginator, EmptyPage
 #                     Q(client__user__username__icontains=search_term) |
 #                     Q(client__user__first_name__icontains=search_term) |
 #                     Q(client__user__last_name__icontains=search_term) |
-#                     Q(reference_number__icontains=search_term)
+#                     Q(reference_number__icontains=search_term) |
+#                     Q(subscription__internet_plan__name__icontains=search_term)  # ✅ FIXED: Use internet_plan__name
 #                 )
             
 #             # Apply sorting
@@ -154,7 +160,7 @@ from django.core.paginator import Paginator, EmptyPage
 #             "success": success,
 #             "pending": pending,
 #             "failed": failed,
-#             "total_amount": total_amount
+#             "totalAmount": float(total_amount)  # ✅ CHANGED: Match frontend camelCase
 #         }
 
 # class TransactionLogStatsView(APIView):
@@ -181,8 +187,8 @@ from django.core.paginator import Paginator, EmptyPage
 #             daily_stats = []
 #             for i in range(6, -1, -1):
 #                 date = timezone.now() - timedelta(days=i)
-#                 start_of_day = datetime.combine(date, datetime.min.time())
-#                 end_of_day = datetime.combine(date, datetime.max.time())
+#                 start_of_day = timezone.make_aware(datetime.combine(date, datetime.min.time()))
+#                 end_of_day = timezone.make_aware(datetime.combine(date, datetime.max.time()))
                 
 #                 day_stats = TransactionLog.objects.filter(
 #                     created_at__range=[start_of_day, end_of_day]
@@ -230,7 +236,7 @@ from django.core.paginator import Paginator, EmptyPage
 #         """
 #         try:
 #             transaction_log = TransactionLog.objects.select_related(
-#                 'client', 'client__user', 'user', 'transaction'
+#                 'client', 'client__user', 'user', 'transaction', 'subscription', 'subscription__internet_plan'
 #             ).get(transaction_id=transaction_id)
             
 #             serializer = TransactionLogSerializer(transaction_log)
@@ -303,7 +309,8 @@ from django.core.paginator import Paginator, EmptyPage
 #                     "payment_method": transaction.get_payment_method_display(),
 #                     "reference_number": transaction.reference_number,
 #                     "description": transaction.description,
-#                     "date_time": transaction.created_at.strftime("%Y-%m-%d %H:%M:%S")
+#                     "date_time": transaction.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+#                     "subscription_plan": transaction.subscription_plan_name,  # ✅ NEW: Subscription plan in export
 #                 })
             
 #             return Response({
@@ -324,22 +331,22 @@ from django.core.paginator import Paginator, EmptyPage
 #     def _build_filtered_queryset(self, filters):
 #         """Build filtered queryset (same logic as TransactionLogView)"""
 #         queryset = TransactionLog.objects.select_related(
-#             'client', 'client__user', 'user'
+#             'client', 'client__user', 'user', 'subscription', 'subscription__internet_plan'
 #         ).all()
         
-#         # Date filter
+#         # Date filter with timezone awareness
 #         start_date = filters.get('start_date')
 #         end_date = filters.get('end_date')
         
 #         if start_date and end_date:
-#             start_dt = datetime.combine(start_date, datetime.min.time())
-#             end_dt = datetime.combine(end_date, datetime.max.time())
+#             start_dt = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
+#             end_dt = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))
 #             queryset = queryset.filter(created_at__range=[start_dt, end_dt])
 #         elif start_date:
-#             start_dt = datetime.combine(start_date, datetime.min.time())
+#             start_dt = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
 #             queryset = queryset.filter(created_at__gte=start_dt)
 #         elif end_date:
-#             end_dt = datetime.combine(end_date, datetime.max.time())
+#             end_dt = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))
 #             queryset = queryset.filter(created_at__lte=end_dt)
         
 #         # Status filter
@@ -356,10 +363,14 @@ from django.core.paginator import Paginator, EmptyPage
 #                 Q(client__user__username__icontains=search_term) |
 #                 Q(client__user__first_name__icontains=search_term) |
 #                 Q(client__user__last_name__icontains=search_term) |
-#                 Q(reference_number__icontains=search_term)
+#                 Q(reference_number__icontains=search_term) |
+#                 Q(subscription__internet_plan__name__icontains=search_term)  # ✅ FIXED: Use internet_plan__name
 #             )
         
 #         return queryset.order_by('-created_at')
+
+
+
 
 
 
@@ -376,8 +387,6 @@ from django.core.paginator import Paginator, EmptyPage
 from datetime import datetime, timedelta
 import logging
 
-from payments.models.payment_config_model import Transaction
-from account.models.admin_model import Client
 from payments.models.transaction_log_model import TransactionLog, TransactionLogHistory
 from payments.serializers.transaction_log_serializer import (
     TransactionLogSerializer,
@@ -391,7 +400,6 @@ logger = logging.getLogger(__name__)
 class TransactionLogView(APIView):
     """
     API endpoint for transaction log management
-    Supports filtering, sorting, and pagination
     """
     permission_classes = [IsAuthenticated]
     
@@ -410,9 +418,9 @@ class TransactionLogView(APIView):
             
             filters = filter_serializer.validated_data
             
-            # Build base query - FIXED: Use 'internet_plan' instead of 'plan'
+            # Build base query
             queryset = TransactionLog.objects.select_related(
-                'client', 'client__user', 'user', 'subscription', 'subscription__internet_plan'
+                'client', 'client__user', 'user', 'payment_transaction'
             ).all()
             
             # Apply date filter with timezone awareness
@@ -420,7 +428,6 @@ class TransactionLogView(APIView):
             end_date = filters.get('end_date')
             
             if start_date and end_date:
-                # Convert to timezone-aware datetime objects
                 start_dt = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
                 end_dt = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))
                 queryset = queryset.filter(created_at__range=[start_dt, end_dt])
@@ -454,8 +461,7 @@ class TransactionLogView(APIView):
                     Q(client__user__username__icontains=search_term) |
                     Q(client__user__first_name__icontains=search_term) |
                     Q(client__user__last_name__icontains=search_term) |
-                    Q(reference_number__icontains=search_term) |
-                    Q(subscription__internet_plan__name__icontains=search_term)  # ✅ FIXED: Use internet_plan__name
+                    Q(reference_number__icontains=search_term)
                 )
             
             # Apply sorting
@@ -471,7 +477,7 @@ class TransactionLogView(APIView):
             
             # Pagination
             page = filters.get('page', 1)
-            page_size = min(filters.get('page_size', 20), 100)  # Cap at 100 per page
+            page_size = min(filters.get('page_size', 20), 100)
             
             paginator = Paginator(queryset, page_size)
             
@@ -523,7 +529,7 @@ class TransactionLogView(APIView):
             "success": success,
             "pending": pending,
             "failed": failed,
-            "totalAmount": float(total_amount)  # ✅ CHANGED: Match frontend camelCase
+            "totalAmount": float(total_amount)
         }
 
 class TransactionLogStatsView(APIView):
@@ -599,7 +605,7 @@ class TransactionLogDetailView(APIView):
         """
         try:
             transaction_log = TransactionLog.objects.select_related(
-                'client', 'client__user', 'user', 'transaction', 'subscription', 'subscription__internet_plan'
+                'client', 'client__user', 'user', 'payment_transaction'
             ).get(transaction_id=transaction_id)
             
             serializer = TransactionLogSerializer(transaction_log)
@@ -626,108 +632,3 @@ class TransactionLogDetailView(APIView):
                 {"error": "Failed to fetch transaction details", "details": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
-class TransactionLogExportView(APIView):
-    """
-    API endpoint for exporting transaction logs
-    """
-    permission_classes = [IsAuthenticated]
-    
-    def get(self, request):
-        """
-        Export transaction logs in various formats
-        """
-        try:
-            # Apply same filters as main view
-            filter_serializer = TransactionLogFilterSerializer(data=request.query_params)
-            if not filter_serializer.is_valid():
-                return Response(
-                    {"error": "Invalid filter parameters", "details": filter_serializer.errors},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            filters = filter_serializer.validated_data
-            
-            # Build query (same as TransactionLogView)
-            queryset = self._build_filtered_queryset(filters)
-            
-            # Get all results (no pagination for export)
-            transactions = list(queryset)
-            
-            if not transactions:
-                return Response(
-                    {"error": "No transactions found for export"},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            
-            # Prepare export data
-            export_data = []
-            for transaction in transactions:
-                export_data.append({
-                    "transaction_id": transaction.transaction_id,
-                    "user_name": transaction.user_name,
-                    "phone": transaction.formatted_phone,
-                    "amount": float(transaction.amount),
-                    "status": transaction.get_status_display(),
-                    "payment_method": transaction.get_payment_method_display(),
-                    "reference_number": transaction.reference_number,
-                    "description": transaction.description,
-                    "date_time": transaction.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                    "subscription_plan": transaction.subscription_plan_name,  # ✅ NEW: Subscription plan in export
-                })
-            
-            return Response({
-                "format": "json",
-                "count": len(export_data),
-                "data": export_data,
-                "filters": filters,
-                "exported_at": timezone.now().isoformat()
-            })
-            
-        except Exception as e:
-            logger.error(f"Failed to export transaction logs: {str(e)}", exc_info=True)
-            return Response(
-                {"error": "Failed to export transaction logs", "details": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-    
-    def _build_filtered_queryset(self, filters):
-        """Build filtered queryset (same logic as TransactionLogView)"""
-        queryset = TransactionLog.objects.select_related(
-            'client', 'client__user', 'user', 'subscription', 'subscription__internet_plan'
-        ).all()
-        
-        # Date filter with timezone awareness
-        start_date = filters.get('start_date')
-        end_date = filters.get('end_date')
-        
-        if start_date and end_date:
-            start_dt = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
-            end_dt = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))
-            queryset = queryset.filter(created_at__range=[start_dt, end_dt])
-        elif start_date:
-            start_dt = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
-            queryset = queryset.filter(created_at__gte=start_dt)
-        elif end_date:
-            end_dt = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))
-            queryset = queryset.filter(created_at__lte=end_dt)
-        
-        # Status filter
-        status_filter = filters.get('status')
-        if status_filter and status_filter != 'all':
-            queryset = queryset.filter(status=status_filter)
-        
-        # Search filter
-        search_term = filters.get('search')
-        if search_term:
-            queryset = queryset.filter(
-                Q(transaction_id__icontains=search_term) |
-                Q(phone_number__icontains=search_term) |
-                Q(client__user__username__icontains=search_term) |
-                Q(client__user__first_name__icontains=search_term) |
-                Q(client__user__last_name__icontains=search_term) |
-                Q(reference_number__icontains=search_term) |
-                Q(subscription__internet_plan__name__icontains=search_term)  # ✅ FIXED: Use internet_plan__name
-            )
-        
-        return queryset.order_by('-created_at')
