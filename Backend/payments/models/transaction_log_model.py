@@ -3,6 +3,10 @@
 
 
 
+
+
+
+
 # from django.db import models
 # from django.core.validators import MinValueValidator
 # from django.utils import timezone
@@ -27,7 +31,6 @@
     
 #     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 #     transaction_id = models.CharField(max_length=20, unique=True, editable=False)
-
 #     payment_transaction = models.ForeignKey(
 #         'payments.Transaction', 
 #         on_delete=models.CASCADE, 
@@ -35,22 +38,12 @@
 #         null=True,
 #         blank=True
 #     )
-
 #     client = models.ForeignKey(
 #         'account.Client',
 #         on_delete=models.CASCADE,
 #         related_name='transaction_logs'
 #     )
-
-#     #  link each transaction to a subscription
-#     subscription = models.ForeignKey(
-#         'internet_plans.Subscription',
-#         on_delete=models.SET_NULL,
-#         null=True,
-#         blank=True,
-#         related_name='transactions'
-#     )
-
+#     subscription_id = models.CharField(max_length=100, blank=True, null=True)
 #     user = models.ForeignKey(
 #         User,
 #         on_delete=models.SET_NULL,
@@ -58,13 +51,11 @@
 #         blank=True,
 #         related_name='transaction_logs'
 #     )
-
 #     amount = models.DecimalField(
 #         max_digits=12,
 #         decimal_places=2,
 #         validators=[MinValueValidator(0)]
 #     )
-
 #     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
 #     payment_method = models.CharField(max_length=15, choices=PAYMENT_METHODS, default='mpesa')
 #     phone_number = models.CharField(max_length=15, blank=True, null=True)
@@ -84,7 +75,7 @@
 #             models.Index(fields=['created_at']),
 #             models.Index(fields=['client', 'payment_method']),
 #             models.Index(fields=['phone_number']),
-#             models.Index(fields=['subscription']),   # ✅ added index for subscription lookups
+#             models.Index(fields=['subscription_id']),
 #         ]
     
 #     def __str__(self):
@@ -126,16 +117,7 @@
 #             elif phone.startswith('+254') and len(phone) == 13:
 #                 return phone[1:]
 #         return self.phone_number
-    
-#     @property
-#     def subscription_plan_name(self):
-#         """Get subscription plan name with fallback"""
-#         if self.subscription and hasattr(self.subscription, 'internet_plan') and self.subscription.internet_plan:
-#             return self.subscription.internet_plan.name
-#         elif self.subscription:
-#             # Try to get plan name from other possible fields
-#             return getattr(self.subscription, 'plan_name', 'N/A')
-#         return 'N/A'
+
 
 # class TransactionLogHistory(models.Model):
 #     ACTIONS = (
@@ -180,13 +162,224 @@
 
 
 
+# from django.db import models
+# from django.core.validators import MinValueValidator
+# from django.utils import timezone
+# from django.contrib.auth import get_user_model
+# import uuid
+
+# User = get_user_model()
+
+# class TransactionLog(models.Model):
+#     STATUS_CHOICES = (
+#         ('pending', 'Pending'),
+#         ('success', 'Success'),
+#         ('failed', 'Failed'),
+#         ('refunded', 'Refunded'),
+#     )
+    
+#     PAYMENT_METHODS = (
+#         ('mpesa', 'M-Pesa'),
+#         ('paypal', 'PayPal'),
+#         ('bank_transfer', 'Bank Transfer'),
+#     )
+    
+#     ACCESS_TYPES = (
+#         ('hotspot', 'Hotspot'),
+#         ('pppoe', 'PPPoE'),
+#         ('both', 'Both'),
+#     )
+    
+#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+#     transaction_id = models.CharField(max_length=20, unique=True, editable=False)
+#     payment_transaction = models.ForeignKey(
+#         'payments.Transaction', 
+#         on_delete=models.CASCADE, 
+#         related_name='logs',
+#         null=True,
+#         blank=True
+#     )
+#     client = models.ForeignKey(
+#         'account.Client',
+#         on_delete=models.CASCADE,
+#         related_name='transaction_logs'
+#     )
+#     subscription = models.ForeignKey(
+#         'internet_plans.Subscription',
+#         on_delete=models.SET_NULL,
+#         null=True,
+#         blank=True,
+#         related_name='transaction_logs'
+#     )
+#     internet_plan = models.ForeignKey(
+#         'internet_plans.InternetPlan',
+#         on_delete=models.SET_NULL,
+#         null=True,
+#         blank=True,
+#         related_name='transaction_logs'
+#     )
+#     access_type = models.CharField(
+#         max_length=10, 
+#         choices=ACCESS_TYPES, 
+#         default='hotspot',
+#         help_text='Type of access method (Hotspot/PPPoE)'
+#     )
+#     user = models.ForeignKey(
+#         User,
+#         on_delete=models.SET_NULL,
+#         null=True,
+#         blank=True,
+#         related_name='transaction_logs'
+#     )
+#     amount = models.DecimalField(
+#         max_digits=12,
+#         decimal_places=2,
+#         validators=[MinValueValidator(0)]
+#     )
+#     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+#     payment_method = models.CharField(max_length=15, choices=PAYMENT_METHODS, default='mpesa')
+#     phone_number = models.CharField(max_length=15, blank=True, null=True)
+#     reference_number = models.CharField(max_length=100, blank=True, null=True)
+#     description = models.TextField(blank=True, null=True)
+#     metadata = models.JSONField(default=dict, blank=True)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+    
+#     class Meta:
+#         verbose_name = "Transaction Log"
+#         verbose_name_plural = "Transaction Logs"
+#         ordering = ['-created_at']
+#         indexes = [
+#             models.Index(fields=['transaction_id']),
+#             models.Index(fields=['status']),
+#             models.Index(fields=['created_at']),
+#             models.Index(fields=['client', 'payment_method']),
+#             models.Index(fields=['phone_number']),
+#             models.Index(fields=['access_type']),
+#             models.Index(fields=['internet_plan']),
+#             models.Index(fields=['subscription']),
+#         ]
+    
+#     def __str__(self):
+#         return f"{self.transaction_id} - {self.get_access_type_display()} - {self.get_status_display()} ({self.amount})"
+    
+#     def save(self, *args, **kwargs):
+#         if not self.transaction_id:
+#             self.transaction_id = self._generate_transaction_id()
+        
+#         # Auto-populate user from client if not set
+#         if not self.user and self.client:
+#             self.user = self.client.user
+            
+#         # Auto-populate access_type from subscription if available
+#         if not self.access_type and self.subscription:
+#             self.access_type = self.subscription.access_method
+            
+#         # Auto-populate internet_plan from subscription if available
+#         if not self.internet_plan and self.subscription:
+#             self.internet_plan = self.subscription.internet_plan
+            
+#         super().save(*args, **kwargs)
+    
+#     def _generate_transaction_id(self):
+#         timestamp = timezone.now().strftime("%y%m%d")
+#         random_part = str(uuid.uuid4().int)[:6]
+#         return f"TX{timestamp}{random_part}"
+    
+#     @property
+#     def user_name(self):
+#         """Get user's full name for frontend display"""
+#         if self.user:
+#             return f"{self.user.first_name} {self.user.last_name}".strip() or self.user.username
+#         elif self.client and self.client.user:
+#             return f"{self.client.user.first_name} {self.client.user.last_name}".strip() or self.client.user.username
+#         return "Unknown User"
+    
+#     @property
+#     def formatted_phone(self):
+#         """Format phone number for display"""
+#         if self.phone_number:
+#             phone = self.phone_number.replace('+', '').replace(' ', '')
+#             if phone.startswith('0') and len(phone) == 10:
+#                 return f"254{phone[1:]}"
+#             elif phone.startswith('254') and len(phone) == 12:
+#                 return phone
+#             elif phone.startswith('+254') and len(phone) == 13:
+#                 return phone[1:]
+#         return self.phone_number
+    
+#     @property
+#     def plan_name(self):
+#         """Get plan name for display"""
+#         if self.internet_plan:
+#             return self.internet_plan.name
+#         elif self.subscription and self.subscription.internet_plan:
+#             return self.subscription.internet_plan.name
+#         return self.metadata.get('plan_name', 'N/A')
+    
+#     @property
+#     def access_type_display(self):
+#         """Get formatted access type for display"""
+#         return self.get_access_type_display()
+
+
+# class TransactionLogHistory(models.Model):
+#     ACTIONS = (
+#         ('create', 'Create'),
+#         ('update', 'Update'),
+#         ('status_change', 'Status Change'),
+#         ('refund', 'Refund'),
+#     )
+    
+#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+#     transaction_log = models.ForeignKey(
+#         TransactionLog,
+#         on_delete=models.CASCADE,
+#         related_name='history'
+#     )
+#     action = models.CharField(max_length=15, choices=ACTIONS)
+#     old_status = models.CharField(max_length=10, choices=TransactionLog.STATUS_CHOICES, blank=True, null=True)
+#     new_status = models.CharField(max_length=10, choices=TransactionLog.STATUS_CHOICES, blank=True, null=True)
+#     old_access_type = models.CharField(max_length=10, choices=TransactionLog.ACCESS_TYPES, blank=True, null=True)
+#     new_access_type = models.CharField(max_length=10, choices=TransactionLog.ACCESS_TYPES, blank=True, null=True)
+#     changes = models.JSONField(default=dict)
+#     performed_by = models.ForeignKey(
+#         User,
+#         on_delete=models.SET_NULL,
+#         null=True,
+#         blank=True
+#     )
+#     notes = models.TextField(blank=True, null=True)
+#     timestamp = models.DateTimeField(auto_now_add=True)
+    
+#     class Meta:
+#         verbose_name = "Transaction Log History"
+#         verbose_name_plural = "Transaction Log Histories"
+#         ordering = ['-timestamp']
+    
+#     def __str__(self):
+#         return f"{self.get_action_display()} on {self.transaction_log.transaction_id}"
+
+
+
+
+
+
+
+
+
+
 
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.db.models.signals import post_save, pre_save
+from django.dispatch import receiver
 import uuid
+import logging
 
+logger = logging.getLogger(__name__)
 User = get_user_model()
 
 class TransactionLog(models.Model):
@@ -203,6 +396,12 @@ class TransactionLog(models.Model):
         ('bank_transfer', 'Bank Transfer'),
     )
     
+    ACCESS_TYPES = (
+        ('hotspot', 'Hotspot'),
+        ('pppoe', 'PPPoE'),
+        ('both', 'Both'),
+    )
+    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     transaction_id = models.CharField(max_length=20, unique=True, editable=False)
     payment_transaction = models.ForeignKey(
@@ -217,7 +416,26 @@ class TransactionLog(models.Model):
         on_delete=models.CASCADE,
         related_name='transaction_logs'
     )
-    subscription_id = models.CharField(max_length=100, blank=True, null=True)
+    subscription = models.ForeignKey(
+        'internet_plans.Subscription',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='transaction_logs'
+    )
+    internet_plan = models.ForeignKey(
+        'internet_plans.InternetPlan',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='transaction_logs'
+    )
+    access_type = models.CharField(
+        max_length=10, 
+        choices=ACCESS_TYPES, 
+        default='hotspot',
+        help_text='Type of access method (Hotspot/PPPoE)'
+    )
     user = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -249,11 +467,13 @@ class TransactionLog(models.Model):
             models.Index(fields=['created_at']),
             models.Index(fields=['client', 'payment_method']),
             models.Index(fields=['phone_number']),
-            models.Index(fields=['subscription_id']),
+            models.Index(fields=['access_type']),
+            models.Index(fields=['internet_plan']),
+            models.Index(fields=['subscription']),
         ]
     
     def __str__(self):
-        return f"{self.transaction_id} - {self.get_status_display()} ({self.amount})"
+        return f"{self.transaction_id} - {self.get_access_type_display()} - {self.get_status_display()} ({self.amount})"
     
     def save(self, *args, **kwargs):
         if not self.transaction_id:
@@ -262,6 +482,14 @@ class TransactionLog(models.Model):
         # Auto-populate user from client if not set
         if not self.user and self.client:
             self.user = self.client.user
+            
+        # Auto-populate access_type from subscription if available
+        if not self.access_type and self.subscription:
+            self.access_type = self.subscription.access_method
+            
+        # Auto-populate internet_plan from subscription if available
+        if not self.internet_plan and self.subscription:
+            self.internet_plan = self.subscription.internet_plan
             
         super().save(*args, **kwargs)
     
@@ -291,6 +519,20 @@ class TransactionLog(models.Model):
             elif phone.startswith('+254') and len(phone) == 13:
                 return phone[1:]
         return self.phone_number
+    
+    @property
+    def plan_name(self):
+        """Get plan name for display"""
+        if self.internet_plan:
+            return self.internet_plan.name
+        elif self.subscription and self.subscription.internet_plan:
+            return self.subscription.internet_plan.name
+        return self.metadata.get('plan_name', 'N/A')
+    
+    @property
+    def access_type_display(self):
+        """Get formatted access type for display"""
+        return self.get_access_type_display()
 
 
 class TransactionLogHistory(models.Model):
@@ -310,6 +552,8 @@ class TransactionLogHistory(models.Model):
     action = models.CharField(max_length=15, choices=ACTIONS)
     old_status = models.CharField(max_length=10, choices=TransactionLog.STATUS_CHOICES, blank=True, null=True)
     new_status = models.CharField(max_length=10, choices=TransactionLog.STATUS_CHOICES, blank=True, null=True)
+    old_access_type = models.CharField(max_length=10, choices=TransactionLog.ACCESS_TYPES, blank=True, null=True)
+    new_access_type = models.CharField(max_length=10, choices=TransactionLog.ACCESS_TYPES, blank=True, null=True)
     changes = models.JSONField(default=dict)
     performed_by = models.ForeignKey(
         User,
@@ -327,3 +571,199 @@ class TransactionLogHistory(models.Model):
     
     def __str__(self):
         return f"{self.get_action_display()} on {self.transaction_log.transaction_id}"
+
+
+# Enhanced Signal Handlers for automatic transaction log creation
+@receiver(post_save, sender='payments.Transaction')
+def create_transaction_log_on_payment_completion(sender, instance, created, **kwargs):
+    """
+    Automatically create transaction log when payment transaction is completed
+    Handles ALL payment methods: M-Pesa Paybill, M-Pesa Till, PayPal, Bank Transfer
+    """
+    from payments.models.transaction_log_model import TransactionLog
+    
+    # Only process completed payments that don't have transaction logs
+    if instance.status == 'completed' and not instance.logs.exists():
+        try:
+            # Determine access type based on payment method
+            access_type = _determine_access_type(instance)
+            
+            # Determine payment method display name
+            payment_method = _determine_payment_method(instance)
+            
+            # Get phone number from client or metadata for M-Pesa transactions
+            phone_number = _extract_phone_number(instance)
+            
+            # Create transaction log with all relevant data
+            transaction_log = TransactionLog.objects.create(
+                payment_transaction=instance,
+                client=instance.client,
+                amount=instance.amount,
+                status='success',
+                payment_method=payment_method,
+                access_type=access_type,
+                user=instance.client.user,
+                internet_plan=instance.plan,
+                subscription=instance.subscription,
+                phone_number=phone_number,
+                reference_number=instance.reference,
+                description=_generate_description(instance),
+                metadata=_build_metadata(instance)
+            )
+            
+            logger.info(f"Auto-created transaction log {transaction_log.transaction_id} for payment {instance.reference}")
+            
+        except Exception as e:
+            logger.error(f"Failed to auto-create transaction log for {instance.reference}: {str(e)}", exc_info=True)
+
+
+def _determine_access_type(transaction_instance):
+    """
+    Determine access type based on payment gateway with COMPLETE coverage
+    """
+    if not transaction_instance.gateway:
+        return 'hotspot'  # Default fallback
+    
+    gateway_name = transaction_instance.gateway.name
+    
+    # COMPLETE access type mapping for ALL payment methods
+    access_type_mapping = {
+        'mpesa_paybill': 'hotspot',    # M-Pesa Paybill → Hotspot
+        'mpesa_till': 'hotspot',       # M-Pesa Till → Hotspot  
+        'bank_transfer': 'pppoe',      # Bank Transfer → PPPoE
+        'paypal': 'both'               # PayPal → Both access types
+    }
+    
+    return access_type_mapping.get(gateway_name, 'hotspot')  # Default to hotspot
+
+
+def _determine_payment_method(transaction_instance):
+    """
+    Determine payment method display name with COMPLETE coverage
+    """
+    if not transaction_instance.gateway:
+        return 'unknown'
+    
+    gateway_name = transaction_instance.gateway.name
+    
+    # COMPLETE payment method mapping
+    payment_method_mapping = {
+        'mpesa_paybill': 'mpesa',
+        'mpesa_till': 'mpesa', 
+        'bank_transfer': 'bank_transfer',
+        'paypal': 'paypal'
+    }
+    
+    return payment_method_mapping.get(gateway_name, 'unknown')
+
+
+def _extract_phone_number(transaction_instance):
+    """
+    Extract phone number from transaction metadata or client
+    Especially important for M-Pesa transactions
+    """
+    # Try to get from transaction metadata first (M-Pesa callback data)
+    if transaction_instance.metadata:
+        mpesa_phone = transaction_instance.metadata.get('phone_number')
+        if mpesa_phone:
+            return mpesa_phone
+        
+        # Check callback data
+        callback_data = transaction_instance.metadata.get('callback_data', {})
+        if isinstance(callback_data, dict):
+            body_data = callback_data.get('Body', {})
+            stk_callback = body_data.get('stkCallback', {})
+            callback_metadata = stk_callback.get('CallbackMetadata', {})
+            items = callback_metadata.get('Item', [])
+            for item in items:
+                if item.get('Name') == 'PhoneNumber':
+                    return item.get('Value')
+    
+    # Fallback to client's phone number
+    if (transaction_instance.client and 
+        transaction_instance.client.user and 
+        transaction_instance.client.user.phone_number):
+        return transaction_instance.client.user.phone_number
+    
+    return None
+
+
+def _generate_description(transaction_instance):
+    """
+    Generate appropriate description based on payment method
+    """
+    gateway_display = transaction_instance.gateway.get_name_display() if transaction_instance.gateway else 'Unknown Gateway'
+    
+    description_templates = {
+        'mpesa_paybill': f"M-Pesa Paybill payment completed",
+        'mpesa_till': f"M-Pesa Till payment completed", 
+        'bank_transfer': f"Bank transfer payment completed",
+        'paypal': f"PayPal payment completed"
+    }
+    
+    gateway_name = transaction_instance.gateway.name if transaction_instance.gateway else 'unknown'
+    base_description = description_templates.get(gateway_name, f"Payment completed via {gateway_display}")
+    
+    # Add plan information if available
+    if transaction_instance.plan:
+        base_description += f" for {transaction_instance.plan.name}"
+    
+    return base_description
+
+
+def _build_metadata(transaction_instance):
+    """
+    Build comprehensive metadata for transaction log
+    """
+    metadata = {
+        'auto_created': True,
+        'payment_reference': transaction_instance.reference,
+        'original_payment_id': str(transaction_instance.id),
+        'gateway_type': transaction_instance.gateway.name if transaction_instance.gateway else 'unknown',
+        'idempotency_key': transaction_instance.idempotency_key,
+        'callback_attempts': transaction_instance.callback_attempts
+    }
+    
+    # Add gateway-specific metadata
+    if transaction_instance.gateway:
+        metadata.update({
+            'gateway_name_display': transaction_instance.gateway.get_name_display(),
+            'gateway_security_level': transaction_instance.gateway.security_level
+        })
+    
+    # Add M-Pesa specific data if available
+    if (transaction_instance.gateway and 
+        transaction_instance.gateway.name in ['mpesa_paybill', 'mpesa_till'] and 
+        transaction_instance.metadata):
+        
+        mpesa_data = {
+            'mpesa_receipt': transaction_instance.metadata.get('mpesa_receipt'),
+            'checkout_request_id': transaction_instance.metadata.get('checkout_request_id'),
+            'transaction_date': transaction_instance.metadata.get('transaction_date')
+        }
+        metadata.update(mpesa_data)
+    
+    # Add PayPal specific data if available  
+    if (transaction_instance.gateway and 
+        transaction_instance.gateway.name == 'paypal' and 
+        transaction_instance.metadata):
+        
+        paypal_data = {
+            'paypal_order_id': transaction_instance.metadata.get('paypal_order_id'),
+            'paypal_capture_id': transaction_instance.metadata.get('paypal_capture_id')
+        }
+        metadata.update(paypal_data)
+    
+    # Add bank transfer specific data if available
+    if (transaction_instance.gateway and 
+        transaction_instance.gateway.name == 'bank_transfer' and 
+        transaction_instance.metadata):
+        
+        bank_data = {
+            'verified_by': transaction_instance.metadata.get('verified_by'),
+            'verified_at': transaction_instance.metadata.get('verified_at'),
+            'proof_url': transaction_instance.metadata.get('proof_url')
+        }
+        metadata.update(bank_data)
+    
+    return metadata

@@ -1,3 +1,10 @@
+
+
+
+
+
+
+
 # from django.db import models
 # from django.core.validators import MinValueValidator
 # from django.utils import timezone
@@ -60,6 +67,7 @@
 #             # Tax is added on top of the price
 #             return amount * (self.rate / 100)
 
+
 # class ExpenseCategory(models.Model):
 #     """Categories for expenses"""
 #     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -82,6 +90,7 @@
     
 #     def __str__(self):
 #         return self.name
+
 
 # class ManualExpense(models.Model):
 #     """Manually added expenses for reconciliation"""
@@ -132,6 +141,7 @@
 #         random_part = str(uuid.uuid4().int)[:6]
 #         return f"EX{timestamp}{random_part}"
 
+
 # class ReconciliationReport(models.Model):
 #     """Generated reconciliation reports"""
 #     REPORT_TYPES = (
@@ -176,6 +186,7 @@
 #         random_part = str(uuid.uuid4().int)[:6]
 #         return f"RP{timestamp}{random_part}"
 
+
 # class ReconciliationStats(models.Model):
 #     """Daily statistics for reconciliation dashboard"""
 #     date = models.DateField(unique=True)
@@ -207,16 +218,19 @@
 
 
 
+
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 import uuid
+from django.core.cache import cache
+import json
 
 User = get_user_model()
 
 class TaxConfiguration(models.Model):
-    """Tax configuration for payment reconciliation"""
+    """Enhanced tax configuration with access type support"""
     TAX_TYPES = (
         ('vat', 'VAT'),
         ('withholding', 'Withholding Tax'),
@@ -227,6 +241,13 @@ class TaxConfiguration(models.Model):
         ('revenue', 'Revenue'),
         ('expenses', 'Expenses'),
         ('both', 'Both'),
+    )
+    
+    ACCESS_TYPE_CHOICES = (
+        ('all', 'All Access Types'),
+        ('hotspot', 'Hotspot Only'),
+        ('pppoe', 'PPPoE Only'),
+        ('both', 'Both Access Types'),
     )
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -240,6 +261,7 @@ class TaxConfiguration(models.Model):
     )
     description = models.TextField(blank=True, null=True)
     applies_to = models.CharField(max_length=10, choices=APPLIES_TO_CHOICES, default='revenue')
+    access_type = models.CharField(max_length=10, choices=ACCESS_TYPE_CHOICES, default='all')
     is_enabled = models.BooleanField(default=True)
     is_included_in_price = models.BooleanField(default=False)
     created_by = models.ForeignKey(
@@ -255,19 +277,32 @@ class TaxConfiguration(models.Model):
         verbose_name = "Tax Configuration"
         verbose_name_plural = "Tax Configurations"
         ordering = ['name']
+        indexes = [
+            models.Index(fields=['access_type', 'is_enabled']),
+        ]
     
     def __str__(self):
-        return f"{self.name} ({self.rate}%)"
+        return f"{self.name} ({self.rate}%) - {self.get_access_type_display()}"
     
-    def calculate_tax(self, amount):
-        """Calculate tax amount for given base amount"""
+    def calculate_tax(self, amount, access_type='hotspot'):
+        """Calculate tax amount with access type consideration"""
+        if not self._applies_to_access_type(access_type):
+            return 0
+            
         if self.is_included_in_price:
-            # Tax is included in the price, so we need to extract it
             taxable_amount = amount / (1 + (self.rate / 100))
             return taxable_amount * (self.rate / 100)
         else:
-            # Tax is added on top of the price
             return amount * (self.rate / 100)
+    
+    def _applies_to_access_type(self, access_type):
+        """Check if tax applies to specific access type"""
+        if self.access_type == 'all':
+            return True
+        elif self.access_type == 'both':
+            return access_type in ['hotspot', 'pppoe', 'both']
+        else:
+            return self.access_type == access_type
 
 
 class ExpenseCategory(models.Model):
@@ -296,6 +331,13 @@ class ExpenseCategory(models.Model):
 
 class ManualExpense(models.Model):
     """Manually added expenses for reconciliation"""
+    ACCESS_TYPE_CHOICES = (
+        ('hotspot', 'Hotspot'),
+        ('pppoe', 'PPPoE'),
+        ('both', 'Both'),
+        ('general', 'General'),
+    )
+    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     expense_id = models.CharField(max_length=20, unique=True, editable=False)
     description = models.CharField(max_length=255)
@@ -309,6 +351,7 @@ class ManualExpense(models.Model):
         on_delete=models.PROTECT,
         related_name='expenses'
     )
+    access_type = models.CharField(max_length=10, choices=ACCESS_TYPE_CHOICES, default='general')
     date = models.DateField()
     reference_number = models.CharField(max_length=100, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
@@ -328,6 +371,7 @@ class ManualExpense(models.Model):
             models.Index(fields=['expense_id']),
             models.Index(fields=['date']),
             models.Index(fields=['category']),
+            models.Index(fields=['access_type']),
         ]
     
     def __str__(self):
@@ -345,7 +389,7 @@ class ManualExpense(models.Model):
 
 
 class ReconciliationReport(models.Model):
-    """Generated reconciliation reports"""
+    """Enhanced reconciliation reports with access type breakdown"""
     REPORT_TYPES = (
         ('daily', 'Daily'),
         ('weekly', 'Weekly'),
@@ -358,11 +402,34 @@ class ReconciliationReport(models.Model):
     report_type = models.CharField(max_length=10, choices=REPORT_TYPES, default='custom')
     start_date = models.DateField()
     end_date = models.DateField()
+    
+    # Revenue breakdown by access type
     total_revenue = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    hotspot_revenue = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    pppoe_revenue = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    both_revenue = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    
+    # Expense breakdown by access type
     total_expenses = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    hotspot_expenses = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    pppoe_expenses = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    both_expenses = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    general_expenses = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    
+    # Tax breakdown
     total_tax = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    hotspot_tax = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    pppoe_tax = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    both_tax = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    
     net_profit = models.DecimalField(max_digits=15, decimal_places=2, default=0)
-    tax_configuration = models.JSONField(default=dict)  # Snapshot of tax config at report time
+    
+    # Detailed breakdown
+    revenue_breakdown = models.JSONField(default=dict)
+    expense_breakdown = models.JSONField(default=dict)
+    tax_breakdown = models.JSONField(default=dict)
+    
+    tax_configuration = models.JSONField(default=dict)
     generated_by = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -390,14 +457,34 @@ class ReconciliationReport(models.Model):
 
 
 class ReconciliationStats(models.Model):
-    """Daily statistics for reconciliation dashboard"""
+    """Enhanced daily statistics with access type breakdown"""
     date = models.DateField(unique=True)
+    
+    # Revenue statistics
     total_revenue = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    hotspot_revenue = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    pppoe_revenue = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    both_revenue = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    
+    # Expense statistics
     total_expenses = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    hotspot_expenses = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    pppoe_expenses = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    both_expenses = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    general_expenses = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    
+    # Tax statistics
     total_tax = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     net_profit = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    
     transaction_count = models.PositiveIntegerField(default=0)
     expense_count = models.PositiveIntegerField(default=0)
+    
+    # Access type counts
+    hotspot_count = models.PositiveIntegerField(default=0)
+    pppoe_count = models.PositiveIntegerField(default=0)
+    both_count = models.PositiveIntegerField(default=0)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -411,3 +498,31 @@ class ReconciliationStats(models.Model):
     
     def __str__(self):
         return f"Stats for {self.date}: Revenue: {self.total_revenue}, Profit: {self.net_profit}"
+    
+    @classmethod
+    def get_cached_stats(cls, days=30):
+        """Get cached statistics for dashboard"""
+        cache_key = f"reconciliation_stats_{days}"
+        cached_data = cache.get(cache_key)
+        
+        if cached_data:
+            return cached_data
+        
+        end_date = timezone.now().date()
+        start_date = end_date - timedelta(days=days)
+        
+        stats = cls.objects.filter(
+            date__range=[start_date, end_date]
+        ).order_by('date')
+        
+        # Process and cache data
+        data = {
+            'dates': [stat.date.isoformat() for stat in stats],
+            'hotspot_revenue': [float(stat.hotspot_revenue) for stat in stats],
+            'pppoe_revenue': [float(stat.pppoe_revenue) for stat in stats],
+            'both_revenue': [float(stat.both_revenue) for stat in stats],
+            'total_revenue': [float(stat.total_revenue) for stat in stats],
+        }
+        
+        cache.set(cache_key, data, 300)  # Cache for 5 minutes
+        return data
