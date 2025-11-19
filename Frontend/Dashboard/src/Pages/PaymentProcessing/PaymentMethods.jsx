@@ -2356,6 +2356,832 @@
 
 
 
+// // src/components/PaymentProcessing/PaymentMethod.jsx
+// import React, { useState, useEffect, useCallback } from 'react';
+// import {
+//   FiSave, FiRefreshCw, FiCheckCircle, FiPlus, FiTrash2,
+//   FiSmartphone, FiDollarSign, FiHome, FiEye, FiEyeOff, FiCode,
+//   FiInfo, FiShield, FiSettings, FiClipboard, FiEdit2, FiCopy,
+//   FiChevronRight, FiAlertCircle, FiZap, FiArrowLeft, FiCreditCard,
+//   FiBarChart2
+// } from 'react-icons/fi';
+// import { Toaster } from 'react-hot-toast';
+
+// import api from '../../api';
+// import { useTheme } from '../../context/ThemeContext';
+// import ErrorBoundary from '../../components/PaymentConfiguration/ErrorBoundary';
+// import { LoadingSpinner } from '../../components/PaymentConfiguration/LoadingSpinner';
+// import PaymentConfigurationHeaderWithModal from '../../components/PaymentConfiguration/PaymentConfigurationHeaderWithModal';
+// import PaymentMethodForm from '../../components/PaymentConfiguration/PaymentMethodForm';
+// import PaymentMethodCard from '../../components/PaymentConfiguration/PaymentMethodCard';
+// import { validatePaymentMethod } from '../../components/PaymentConfiguration/Utils/validation';
+// import { PAYMENT_METHODS } from '../../components/PaymentConfiguration/Utils/paymentConstants';
+// import { getMethodLabel } from '../../components/PaymentConfiguration/Utils/paymentUtils';
+
+// const PaymentMethod = () => {
+//   const { theme } = useTheme();
+//   const [config, setConfig] = useState({ paymentMethods: [], lastUpdated: new Date().toISOString() });
+//   const [savedConfig, setSavedConfig] = useState(null);
+//   const [loading, setLoading] = useState(true);
+//   const [saving, setSaving] = useState(false);
+//   const [error, setError] = useState(null);
+//   const [showEditForm, setShowEditForm] = useState(false);
+//   const [activeTab, setActiveTab] = useState(0);
+//   const [showSecrets, setShowSecrets] = useState({});
+//   const [showAdvanced, setShowAdvanced] = useState({});
+//   const [history, setHistory] = useState([]);
+//   const [stats, setStats] = useState(null);
+//   const [showAddModal, setShowAddModal] = useState(false);
+//   const [methodToAdd, setMethodToAdd] = useState(null);
+//   const [validationErrors, setValidationErrors] = useState({});
+
+//   // Theme-based CSS classes
+//   const containerClass = theme === 'dark' 
+//     ? 'bg-gradient-to-br from-gray-900 to-indigo-900 text-white min-h-screen transition-colors duration-300'
+//     : 'bg-gray-50 text-gray-800 min-h-screen transition-colors duration-300';
+
+//   const cardClass = theme === 'dark'
+//     ? 'bg-gray-800/80 backdrop-blur-md border border-gray-700'
+//     : 'bg-white border border-gray-200';
+
+//   // Check if all methods are added
+//   const allMethodsAdded = config.paymentMethods.length >= Object.values(PAYMENT_METHODS).length;
+
+//   // Load initial data with proper error handling
+//   useEffect(() => {
+//     const loadData = async () => {
+//       try {
+//         setLoading(true);
+//         setError(null);
+        
+//         console.log('Loading payment configuration data...');
+
+//         // Load payment gateways
+//         let gatewaysResponse;
+//         try {
+//           gatewaysResponse = await Promise.race([
+//             api.get('/api/payments/gateways/'),
+//             new Promise((_, reject) => 
+//               setTimeout(() => reject(new Error('Request timeout: Gateways loading took too long')), 10000)
+//             )
+//           ]);
+          
+//           if (!gatewaysResponse?.data) {
+//             throw new Error('Invalid response from gateways endpoint');
+//           }
+          
+//           console.log('Gateways response received:', gatewaysResponse.data);
+//         } catch (gatewayError) {
+//           console.error('Error loading gateways:', gatewayError);
+//           throw new Error(`Failed to load payment gateways: ${gatewayError.message}`);
+//         }
+
+//         const gatewaysData = gatewaysResponse.data.gateways || [];
+
+//         // Load analytics with error handling
+//         let statsResponse;
+//         try {
+//           statsResponse = await api.get('/api/payments/analytics/revenue/').catch(err => {
+//             console.warn('Analytics endpoint failed, using defaults:', err);
+//             return { data: null };
+//           });
+//         } catch (analyticsError) {
+//           console.warn('Analytics request failed:', analyticsError);
+//         }
+
+//         // Set stats with defaults
+//         const statsData = statsResponse?.data || {
+//           time_range: '30d',
+//           access_type: null,
+//           total_revenue: 0,
+//           success_rate: 0,
+//           total_transactions: 0
+//         };
+
+//         setStats(statsData);
+//         setHistory([]);
+
+//         // Transform backend data to frontend format
+//         const transformedConfig = transformBackendToFrontend(gatewaysData);
+        
+//         console.log('Transformed config:', transformedConfig);
+        
+//         setConfig(transformedConfig);
+//         setSavedConfig(transformedConfig);
+//         setShowEditForm(false);
+
+//         console.log('Payment configuration loaded successfully');
+
+//       } catch (err) {
+//         console.error('Error loading payment configuration:', err);
+//         const errorMessage = err.response?.data?.error || err.message || 'Failed to load payment configuration';
+//         setError(errorMessage);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     loadData();
+//   }, []);
+
+//   // Transform backend data to frontend format
+//   const transformBackendToFrontend = (gatewaysData) => {
+//     if (!Array.isArray(gatewaysData)) {
+//       console.warn('Gateways data is not an array:', gatewaysData);
+//       return {
+//         paymentMethods: [],
+//         lastUpdated: new Date().toISOString()
+//       };
+//     }
+
+//     return {
+//       paymentMethods: gatewaysData.map(gateway => {
+//         if (!gateway) {
+//           console.warn('Null gateway encountered');
+//           return null;
+//         }
+
+//         const baseMethod = {
+//           id: gateway.id || null,
+//           type: gateway.name || 'unknown',
+//           isActive: gateway.is_active !== undefined ? gateway.is_active : true,
+//           sandboxMode: gateway.sandbox_mode !== undefined ? gateway.sandbox_mode : false,
+//           autoSettle: gateway.auto_settle !== undefined ? gateway.auto_settle : true,
+//           transactionLimit: gateway.transaction_limit || '100000',
+//           securityLevel: gateway.security_level || 'medium',
+//           webhookSecret: gateway.webhook_secret || ''
+//         };
+
+//         const gatewayConfig = gateway.config || {};
+
+//         console.log(`Processing gateway ${gateway.name}:`, gatewayConfig);
+
+//         // Map specific configuration based on gateway type
+//         if (gateway.name === 'mpesa_paybill' || gateway.name === 'mpesa_till') {
+//           return {
+//             ...baseMethod,
+//             shortCode: gatewayConfig.paybill_number || gatewayConfig.till_number || '',
+//             passKey: gatewayConfig.passkey || '',
+//             callbackURL: gatewayConfig.callback_url || '',
+//             consumerKey: gatewayConfig.consumer_key || '',
+//             consumerSecret: gatewayConfig.consumer_secret || ''
+//           };
+//         } else if (gateway.name === 'paypal') {
+//           return {
+//             ...baseMethod,
+//             clientId: gatewayConfig.client_id || '',
+//             secret: gatewayConfig.secret || '',
+//             merchantId: gatewayConfig.merchant_id || '',
+//             callbackURL: gatewayConfig.callback_url || ''
+//           };
+//         } else if (gateway.name === 'bank_transfer') {
+//           const bankConfig = {
+//             ...baseMethod,
+//             bankName: gatewayConfig.bank_name || '',
+//             accountNumber: gatewayConfig.account_number || '',
+//             accountName: gatewayConfig.account_name || '',
+//             branchCode: gatewayConfig.branch_code || '',
+//             swiftCode: gatewayConfig.swift_code || '',
+//             iban: gatewayConfig.iban || '',
+//             routingNumber: gatewayConfig.routing_number || '',
+//             bankAddress: gatewayConfig.bank_address || '',
+//             accountType: gatewayConfig.account_type || 'checking',
+//             currency: gatewayConfig.currency || 'KES',
+//             callbackURL: gatewayConfig.callback_url || '',
+//             bankCode: gatewayConfig.bank_code || ''
+//           };
+//           console.log('Bank transfer config mapped:', bankConfig);
+//           return bankConfig;
+//         } else {
+//           return baseMethod;
+//         }
+//       }).filter(method => method !== null),
+//       lastUpdated: new Date().toISOString()
+//     };
+//   };
+
+//   // Transform frontend data to backend format
+//   const transformFrontendToBackend = (method) => {
+//     if (!method) {
+//       console.error('Null method provided to transformFrontendToBackend');
+//       return { baseData: {}, configData: {} };
+//     }
+
+//     const baseData = {
+//       name: method.type || 'unknown',
+//       is_active: method.isActive !== undefined ? method.isActive : true,
+//       sandbox_mode: method.sandboxMode !== undefined ? method.sandboxMode : false,
+//       transaction_limit: method.transactionLimit || '100000',
+//       auto_settle: method.autoSettle !== undefined ? method.autoSettle : true,
+//       security_level: method.securityLevel || 'medium'
+//     };
+
+//     let configData = {};
+    
+//     if (method.type === 'mpesa_paybill' || method.type === 'mpesa_till') {
+//       configData = {
+//         paybill_number: method.type === 'mpesa_paybill' ? (method.shortCode || '') : null,
+//         till_number: method.type === 'mpesa_till' ? (method.tillNumber || method.shortCode || '') : null,
+//         passkey: method.passKey || '',
+//         callback_url: method.callbackURL || '',
+//         consumer_key: method.consumerKey || '',
+//         consumer_secret: method.consumerSecret || ''
+//       };
+//     } else if (method.type === 'paypal') {
+//       configData = {
+//         client_id: method.clientId || '',
+//         secret: method.secret || '',
+//         merchant_id: method.merchantId || '',
+//         callback_url: method.callbackURL || ''
+//       };
+//     } else if (method.type === 'bank_transfer') {
+//       configData = {
+//         bank_name: method.bankName || '',
+//         account_number: method.accountNumber || '',
+//         account_name: method.accountName || '',
+//         branch_code: method.branchCode || '',
+//         swift_code: method.swiftCode || '',
+//         iban: method.iban || '',
+//         routing_number: method.routingNumber || '',
+//         bank_address: method.bankAddress || '',
+//         account_type: method.accountType || 'checking',
+//         currency: method.currency || 'KES',
+//         callback_url: method.callbackURL || '',
+//         bank_code: method.bankCode || ''
+//       };
+//       console.log('Saving bank transfer config:', configData);
+//     }
+
+//     return { baseData, configData };
+//   };
+
+//   // UNIVERSAL HANDLE CHANGE - FIXED VERSION
+//   const handleChange = useCallback((index, name, value) => {
+//     // Validate inputs
+//     if (index == null || index < 0 || index >= config.paymentMethods.length) {
+//       console.warn(`Invalid index in handleChange: ${index}`);
+//       return;
+//     }
+
+//     if (!name || typeof name !== 'string') {
+//       console.warn(`Invalid field name in handleChange: ${name}`);
+//       return;
+//     }
+
+//     if (value === undefined) {
+//       console.warn(`Undefined value in handleChange for field: ${name}`);
+//       return;
+//     }
+
+//     setConfig(prev => {
+//       const updatedMethods = [...prev.paymentMethods];
+      
+//       // Safely update the method
+//       if (updatedMethods[index]) {
+//         updatedMethods[index] = {
+//           ...updatedMethods[index],
+//           [name]: value
+//         };
+//       }
+
+//       return {
+//         ...prev,
+//         paymentMethods: updatedMethods,
+//         lastUpdated: new Date().toISOString()
+//       };
+//     });
+
+//     // Clear validation error for this field
+//     const errorKey = `${index}-${name}`;
+//     if (validationErrors[errorKey]) {
+//       setValidationErrors(prev => ({
+//         ...prev,
+//         [errorKey]: ''
+//       }));
+//     }
+//   }, [config.paymentMethods.length, validationErrors]);
+
+//   // EVENT-BASED HANDLE CHANGE - SAFE VERSION
+//   const handleChangeWithEvent = useCallback((index, event) => {
+//     // Handle cases where event might be undefined or null
+//     if (!event) {
+//       // Silently return if no event (to avoid console clutter; check caller for improper usage, e.g., missing arrow function in onChange binding)
+//       return;
+//     }
+
+//     // Handle both React synthetic events and custom events
+//     let target;
+//     if (event.target) {
+//       target = event.target;
+//     } else if (event.currentTarget) {
+//       target = event.currentTarget;
+//     } else {
+//       console.warn('Event has no target property:', event);
+//       return;
+//     }
+
+//     const { name, value, type, checked } = target;
+
+//     if (!name) {
+//       console.warn('Form element has no name attribute:', target);
+//       return;
+//     }
+
+//     // Determine the actual value based on input type
+//     const actualValue = type === 'checkbox' ? checked : value;
+
+//     // Call the universal handleChange
+//     handleChange(index, name, actualValue);
+//   }, [handleChange]);
+
+//   // DIRECT VALUE HANDLER (for non-event usage)
+//   const handleDirectChange = useCallback((index, fieldName, value) => {
+//     handleChange(index, fieldName, value);
+//   }, [handleChange]);
+
+//   // Toggle secret visibility
+//   const toggleSecretVisibility = useCallback((index) => {
+//     setShowSecrets(prev => ({ 
+//       ...prev, 
+//       [index]: !prev[index] 
+//     }));
+//   }, []);
+
+//   // Toggle advanced settings
+//   const toggleAdvancedSettings = useCallback((index) => {
+//     setShowAdvanced(prev => ({ 
+//       ...prev, 
+//       [index]: !prev[index] 
+//     }));
+//   }, []);
+
+//   // Handle method type change
+//   const handleMethodTypeChange = useCallback((index, value) => {
+//     if (!value) {
+//       console.warn('No value provided to handleMethodTypeChange');
+//       return;
+//     }
+
+//     setConfig(prev => ({
+//       ...prev,
+//       paymentMethods: prev.paymentMethods.map((method, i) =>
+//         i === index ? {
+//           ...method,
+//           type: value,
+//           isActive: method.isActive !== undefined ? method.isActive : true,
+//           sandboxMode: false,
+//           autoSettle: true,
+//           ...getDefaultValues(value)
+//         } : method
+//       ),
+//       lastUpdated: new Date().toISOString()
+//     }));
+//   }, []);
+
+//   // Get default values for new payment methods
+//   const getDefaultValues = (type) => {
+//     const defaults = {
+//       mpesa_paybill: {
+//         shortCode: '',
+//         passKey: '',
+//         callbackURL: '',
+//         consumerKey: '',
+//         consumerSecret: '',
+//         transactionLimit: '500000'
+//       },
+//       mpesa_till: {
+//         tillNumber: '',
+//         passKey: '',
+//         callbackURL: '',
+//         consumerKey: '',
+//         consumerSecret: '',
+//         transactionLimit: '200000'
+//       },
+//       paypal: {
+//         clientId: '',
+//         secret: '',
+//         merchantId: '',
+//         callbackURL: '',
+//         transactionLimit: '10000'
+//       },
+//       bank_transfer: {
+//         bankName: '',
+//         accountNumber: '',
+//         accountName: '',
+//         branchCode: '',
+//         swiftCode: '',
+//         iban: '',
+//         routingNumber: '',
+//         bankAddress: '',
+//         accountType: 'checking',
+//         currency: 'KES',
+//         callbackURL: '',
+//         bankCode: '',
+//         transactionLimit: '1000000'
+//       }
+//     };
+
+//     return defaults[type] || {};
+//   };
+
+//   // Generate callback URL
+//   const generateCallbackUrl = useCallback(async (index) => {
+//     try {
+//       const method = config.paymentMethods[index];
+//       if (!method) {
+//         console.warn(`No method found at index: ${index}`);
+//         return;
+//       }
+
+//       const baseUrl = window.location.origin;
+//       const callbackUrl = `${baseUrl}/api/payments/callback/${method.type === 'mpesa_paybill' ? 'mpesa' : method.type}/`;
+      
+//       handleDirectChange(index, 'callbackURL', callbackUrl);
+
+//     } catch (error) {
+//       console.error('Error generating callback URL:', error);
+//     }
+//   }, [config.paymentMethods, handleDirectChange]);
+
+//   // Copy to clipboard
+//   const copyToClipboard = useCallback(async (text) => {
+//     if (!text) {
+//       console.warn('No text provided to copyToClipboard');
+//       return false;
+//     }
+    
+//     try {
+//       await navigator.clipboard.writeText(text);
+//       return true;
+//     } catch (err) {
+//       console.error('Failed to copy to clipboard:', err);
+      
+//       // Fallback for older browsers
+//       try {
+//         const textArea = document.createElement('textarea');
+//         textArea.value = text;
+//         document.body.appendChild(textArea);
+//         textArea.select();
+//         document.execCommand('copy');
+//         document.body.removeChild(textArea);
+//         return true;
+//       } catch (fallbackErr) {
+//         console.error('Fallback copy also failed:', fallbackErr);
+//         return false;
+//       }
+//     }
+//   }, []);
+
+//   // Add payment method - FIXED VERSION
+//   const confirmAddPaymentMethod = useCallback((methodType) => {
+//     if (!methodType) {
+//       console.warn('No method type provided to confirmAddPaymentMethod');
+//       return;
+//     }
+
+//     const newMethod = {
+//       type: methodType,
+//       isActive: true,
+//       sandboxMode: false,
+//       autoSettle: true,
+//       ...getDefaultValues(methodType)
+//     };
+
+//     setConfig(prevConfig => {
+//       const newPaymentMethods = [...prevConfig.paymentMethods, newMethod];
+//       const newIndex = newPaymentMethods.length - 1; // Get the index of the newly added method
+      
+//       // Set active tab to the new method
+//       setActiveTab(newIndex);
+      
+//       return {
+//         ...prevConfig,
+//         paymentMethods: newPaymentMethods,
+//         lastUpdated: new Date().toISOString()
+//       };
+//     });
+
+//     setShowAddModal(false);
+//     setMethodToAdd(null);
+    
+//     // Switch to edit form to configure the new method
+//     setShowEditForm(true);
+//   }, []);
+
+//   // Remove payment method
+//   const removePaymentMethod = useCallback(async (index) => {
+//     if (index < 0 || index >= config.paymentMethods.length) {
+//       console.warn(`Invalid index in removePaymentMethod: ${index}`);
+//       return;
+//     }
+
+//     if (config.paymentMethods.length <= 1) {
+//       console.warn('Cannot remove the last payment method');
+//       return;
+//     }
+
+//     const method = config.paymentMethods[index];
+//     if (!method) {
+//       console.warn('Method not found at index:', index);
+//       return;
+//     }
+
+//     try {
+//       if (method.id) {
+//         await api.delete(`/api/payments/gateways/${method.id}/`);
+//       }
+
+//       setConfig(prev => ({
+//         ...prev,
+//         paymentMethods: prev.paymentMethods.filter((_, i) => i !== index),
+//         lastUpdated: new Date().toISOString()
+//       }));
+
+//       // Update active tab
+//       setActiveTab(prevActiveTab => {
+//         if (prevActiveTab >= index) {
+//           return Math.max(0, prevActiveTab - 1);
+//         }
+//         return prevActiveTab;
+//       });
+
+//     } catch (error) {
+//       console.error('Error removing payment method:', error);
+//       setError(`Failed to remove payment method: ${error.message}`);
+//     }
+//   }, [config.paymentMethods]);
+
+//   // Validate configuration
+//   const validateConfig = useCallback(() => {
+//     const errors = {};
+//     let hasErrors = false;
+
+//     config.paymentMethods.forEach((method, index) => {
+//       if (!method || !method.isActive) return;
+
+//       const methodErrors = validatePaymentMethod(method);
+//       Object.keys(methodErrors).forEach(field => {
+//         errors[`${index}-${field}`] = methodErrors[field];
+//         hasErrors = true;
+//       });
+//     });
+
+//     setValidationErrors(errors);
+//     return !hasErrors;
+//   }, [config.paymentMethods]);
+
+//   // Save configuration
+//   const handleSubmit = useCallback(async (e) => {
+//     // Safely handle event prevention
+//     if (e && typeof e.preventDefault === 'function') {
+//       e.preventDefault();
+//     }
+    
+//     if (!validateConfig()) {
+//       console.warn('Configuration validation failed');
+//       return;
+//     }
+
+//     setSaving(true);
+//     setError(null);
+    
+//     try {
+//       // Save each payment method to backend
+//       const savePromises = config.paymentMethods.map(async (method) => {
+//         if (!method) {
+//           console.warn('Skipping null method during save');
+//           return null;
+//         }
+
+//         const { baseData, configData } = transformFrontendToBackend(method);
+        
+//         let gatewayId = method.id;
+        
+//         try {
+//           if (method.id) {
+//             // Update existing gateway
+//             await api.put(`/api/payments/gateways/${method.id}/`, baseData);
+//           } else {
+//             // Create new gateway
+//             const response = await api.post('/api/payments/gateways/', baseData);
+//             gatewayId = response.data.id;
+//           }
+
+//           // Update specific configuration using the new endpoints
+//           if (method.type === 'mpesa_paybill' || method.type === 'mpesa_till') {
+//             await api.patch(`/api/payments/gateways/${gatewayId}/mpesa/`, configData);
+//           } else if (method.type === 'paypal') {
+//             await api.patch(`/api/payments/gateways/${gatewayId}/paypal/`, configData);
+//           } else if (method.type === 'bank_transfer') {
+//             await api.patch(`/api/payments/gateways/${gatewayId}/bank/`, configData);
+//           }
+
+//           return gatewayId;
+//         } catch (methodError) {
+//           console.error(`Error saving method ${method.type}:`, methodError);
+//           throw new Error(`Failed to save ${getMethodLabel(method.type)}: ${methodError.message}`);
+//         }
+//       });
+
+//       await Promise.all(savePromises);
+
+//       // Reload data to get updated configuration
+//       const gatewaysResponse = await api.get('/api/payments/gateways/');
+//       const gatewaysData = gatewaysResponse.data.gateways || [];
+//       const transformedConfig = transformBackendToFrontend(gatewaysData);
+
+//       setSavedConfig(transformedConfig);
+//       setConfig(transformedConfig);
+//       setShowEditForm(false);
+//       setValidationErrors({});
+
+//       console.log('Payment configuration saved successfully');
+
+//     } catch (err) {
+//       console.error('Error saving configuration:', err);
+//       const errorMessage = err.response?.data?.error || err.message || 'Failed to save configuration';
+//       setError(errorMessage);
+//     } finally {
+//       setSaving(false);
+//     }
+//   }, [config, validateConfig]);
+
+//   // Reset to last saved state
+//   const handleReset = useCallback(() => {
+//     if (!savedConfig) {
+//       console.warn('No saved configuration to reset to');
+//       return;
+//     }
+    
+//     setConfig({ ...savedConfig });
+//     setValidationErrors({});
+//     console.log('Configuration reset to last saved state');
+//   }, [savedConfig]);
+
+//   // Handle edit method
+//   const handleEditMethod = useCallback((index) => {
+//     if (index < 0 || index >= (config.paymentMethods?.length || 0)) {
+//       console.warn(`Invalid index in handleEditMethod: ${index}`);
+//       return;
+//     }
+    
+//     setActiveTab(index);
+//     setShowEditForm(true);
+//   }, [config.paymentMethods]);
+
+//   // Handle add method
+//   const handleAddMethod = useCallback(() => {
+//     setShowAddModal(true);
+//   }, []);
+
+//   // Handle back to overview
+//   const handleBackToOverview = useCallback(() => {
+//     setShowEditForm(false);
+//     setActiveTab(0);
+//   }, []);
+
+//   // Loading state
+//   if (loading) {
+//     return (
+//       <div className={`min-h-screen py-8 px-4 sm:px-6 lg:px-8 flex justify-center items-center ${containerClass}`}>
+//         <div className="max-w-7xl mx-auto w-full">
+//           <div className={`rounded-xl shadow-md overflow-hidden ${cardClass}`}>
+//             <div className="text-center py-16">
+//               <div className="inline-flex flex-col items-center justify-center space-y-4">
+//                 <LoadingSpinner size="lg" theme={theme} />
+//                 <div>
+//                   <h3 className={`text-lg font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+//                     Loading Payment Configuration
+//                   </h3>
+//                   <p className={`mt-1 text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+//                     Securely fetching your payment settings...
+//                   </p>
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <ErrorBoundary>
+//       <div className={`py-8 px-4 sm:px-6 lg:px-8 ${containerClass}`}>
+//         <div className="max-w-7xl mx-auto">
+//           <PaymentConfigurationHeaderWithModal 
+//             savedConfig={savedConfig}
+//             showEditForm={showEditForm}
+//             currentMethods={config.paymentMethods}
+//             onAddConfirm={confirmAddPaymentMethod}
+//             onBack={handleBackToOverview}
+//             setShowEditForm={setShowEditForm}
+//             showAddModal={showAddModal}
+//             setShowAddModal={setShowAddModal}
+//             methodToAdd={methodToAdd}
+//             setMethodToAdd={setMethodToAdd}
+//             theme={theme}
+//             allMethodsAdded={allMethodsAdded}
+//           />
+
+//           <div className={`rounded-xl shadow-md overflow-hidden ${cardClass}`}>
+//             {error ? (
+//               <div className={`border-l-4 p-4 rounded-md m-6 ${
+//                 theme === 'dark' ? 'bg-red-900/50 border-red-500' : 'bg-red-50 border-red-500'
+//               }`}>
+//                 <div className="flex items-center">
+//                   <FiAlertCircle className={`h-5 w-5 ${theme === 'dark' ? 'text-red-400' : 'text-red-500'}`} />
+//                   <div className="ml-3">
+//                     <p className={theme === 'dark' ? 'text-red-300' : 'text-red-700'}>{error}</p>
+//                     <button
+//                       onClick={() => setError(null)}
+//                       className={`mt-2 px-4 py-2 rounded text-sm ${
+//                         theme === 'dark' ? 'bg-red-700 hover:bg-red-600 text-white' : 'bg-red-100 hover:bg-red-200 text-red-700'
+//                       }`}
+//                     >
+//                       Dismiss
+//                     </button>
+//                   </div>
+//                 </div>
+//               </div>
+//             ) : showEditForm ? (
+//               <PaymentMethodForm
+//                 config={config}
+//                 activeTab={activeTab}
+//                 validationErrors={validationErrors}
+//                 showSecrets={showSecrets}
+//                 showAdvanced={showAdvanced}
+//                 saving={saving}
+//                 onTabChange={setActiveTab}
+//                 onAddMethod={handleAddMethod}
+//                 onMethodTypeChange={handleMethodTypeChange}
+//                 onChange={handleChangeWithEvent}
+//                 onDirectChange={handleDirectChange}
+//                 onRemoveMethod={removePaymentMethod}
+//                 onToggleSecret={toggleSecretVisibility}
+//                 onToggleAdvanced={toggleAdvancedSettings}
+//                 onGenerateCallback={generateCallbackUrl}
+//                 onCopyToClipboard={copyToClipboard}
+//                 onReset={handleReset}
+//                 onSubmit={handleSubmit}
+//                 theme={theme}
+//                 allMethodsAdded={allMethodsAdded}
+//               />
+//             ) : (
+//               <PaymentMethodCard
+//                 savedConfig={savedConfig}
+//                 activeTab={activeTab}
+//                 history={history}
+//                 stats={stats}
+//                 onTabChange={setActiveTab}
+//                 onEditMethod={handleEditMethod}
+//                 onCopyToClipboard={copyToClipboard}
+//                 theme={theme}
+//               />
+//             )}
+//           </div>
+
+//           {/* React Hot Toast Container */}
+//           <Toaster 
+//             position="top-center"
+//             toastOptions={{
+//               duration: 4000,
+//               style: {
+//                 background: theme === 'dark' ? '#374151' : '#fff',
+//                 color: theme === 'dark' ? '#fff' : '#000',
+//               },
+//               success: {
+//                 duration: 3000,
+//                 iconTheme: {
+//                   primary: '#10B981',
+//                   secondary: theme === 'dark' ? '#374151' : '#fff',
+//                 },
+//               },
+//               error: {
+//                 duration: 5000,
+//                 iconTheme: {
+//                   primary: '#EF4444',
+//                   secondary: theme === 'dark' ? '#374151' : '#fff',
+//                 },
+//               },
+//             }}
+//           />
+//         </div>
+//       </div>
+//     </ErrorBoundary>
+//   );
+// };
+
+// export default PaymentMethod;
+
+
+
+
+
+
+
+
+
 // src/components/PaymentProcessing/PaymentMethod.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -2699,11 +3525,23 @@ const PaymentMethod = () => {
     handleChange(index, fieldName, value);
   }, [handleChange]);
 
-  // Toggle secret visibility
-  const toggleSecretVisibility = useCallback((index) => {
+  // FIXED: Toggle secret visibility - now accepts index and fieldName with proper validation
+  const toggleSecretVisibility = useCallback((index, fieldName) => {
+    // Handle cases where parameters might be passed as an object or incorrectly
+    if (typeof index === 'object') {
+      console.warn('toggleSecretVisibility called with object instead of parameters:', index);
+      return;
+    }
+    
+    if (index == null || fieldName == null) {
+      console.warn('Invalid parameters for toggleSecretVisibility:', { index, fieldName });
+      return;
+    }
+    
+    const key = `${index}-${fieldName}`;
     setShowSecrets(prev => ({ 
       ...prev, 
-      [index]: !prev[index] 
+      [key]: !prev[key] 
     }));
   }, []);
 

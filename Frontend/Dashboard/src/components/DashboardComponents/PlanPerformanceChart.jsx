@@ -1,11 +1,91 @@
 
 
-// import React from "react";
+// import React, { useState, useEffect } from "react";
 // import Chart from "react-apexcharts";
 // import PropTypes from "prop-types";
-// import { FiRefreshCw } from "react-icons/fi";
+// import { FiRefreshCw, FiAlertCircle } from "react-icons/fi";
 
-// const PlanPerformanceChart = ({ data, theme }) => {
+// const PlanPerformanceChart = ({ data, theme, onLoad, onError }) => {
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [hasError, setHasError] = useState(false);
+
+//   useEffect(() => {
+//     const timer = setTimeout(() => {
+//       setIsLoading(false);
+//       if (onLoad) onLoad();
+//     }, 800);
+
+//     return () => clearTimeout(timer);
+//   }, [onLoad]);
+
+//   useEffect(() => {
+//     if (!data || data.length === 0) {
+//       setHasError(true);
+//       if (onError) onError("No data available for Plan Performance Chart");
+//     } else {
+//       setHasError(false);
+//     }
+//   }, [data, onError]);
+
+//   if (hasError) {
+//     return (
+//       <div className={`rounded-xl shadow-sm overflow-hidden h-full flex flex-col ${
+//         theme === "dark" 
+//           ? "bg-gray-800/60 backdrop-blur-md border-gray-700" 
+//           : "bg-white/80 backdrop-blur-md border-gray-200"
+//       } border`}>
+//         <div className={`px-4 sm:px-6 py-4 sm:py-5 border-b ${
+//           theme === "dark" ? "border-gray-700" : "border-gray-200"
+//         } flex justify-between items-center`}>
+//           <div>
+//             <h3 className={`text-lg font-bold ${
+//               theme === "dark" ? "text-white" : "text-gray-900"
+//             }`}>Plan Performance</h3>
+//             <p className={`mt-1 text-sm ${
+//               theme === "dark" ? "text-gray-400" : "text-gray-500"
+//             }`}>Comparison by users, revenue and data usage</p>
+//           </div>
+//         </div>
+//         <div className="flex-1 flex items-center justify-center p-8">
+//           <div className="text-center">
+//             <FiAlertCircle className={`mx-auto text-3xl mb-3 ${
+//               theme === "dark" ? "text-gray-500" : "text-gray-400"
+//             }`} />
+//             <p className={`text-sm ${
+//               theme === "dark" ? "text-gray-400" : "text-gray-500"
+//             }`}>No plan performance data available</p>
+//           </div>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   if (isLoading) {
+//     return (
+//       <div className={`rounded-xl shadow-sm overflow-hidden h-full flex flex-col ${
+//         theme === "dark" 
+//           ? "bg-gray-800/60 backdrop-blur-md border-gray-700" 
+//           : "bg-white/80 backdrop-blur-md border-gray-200"
+//       } border animate-pulse`}>
+//         <div className={`px-4 sm:px-6 py-4 sm:py-5 border-b ${
+//           theme === "dark" ? "border-gray-700" : "border-gray-200"
+//         }`}>
+//           <div className={`h-6 w-48 rounded ${
+//             theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+//           }`} />
+//           <div className={`h-4 w-64 rounded mt-2 ${
+//             theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+//           }`} />
+//         </div>
+//         <div className="flex-1 p-4 sm:p-6">
+//           <div className={`h-64 w-full rounded ${
+//             theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+//           }`} />
+//         </div>
+//       </div>
+//     );
+//   }
+
 //   const options = {
 //     chart: {
 //       type: "bar",
@@ -26,7 +106,11 @@
 //           reset: true,
 //         },
 //       },
-//       animations: { enabled: true, easing: 'easeinout', speed: 800 },
+//       animations: { 
+//         enabled: true, 
+//         easing: 'easeinout', 
+//         speed: 800 
+//       },
 //     },
 //     plotOptions: {
 //       bar: { 
@@ -36,7 +120,10 @@
 //         borderRadiusApplication: 'end' 
 //       },
 //     },
-//     stroke: { width: 1, colors: [theme === "dark" ? "#111827" : "#FFFFFF"] },
+//     stroke: { 
+//       width: 1, 
+//       colors: [theme === "dark" ? "#111827" : "#FFFFFF"] 
+//     },
 //     xaxis: {
 //       categories: data.map(item => item.plan),
 //       labels: { 
@@ -98,7 +185,10 @@
 //           return seriesIndex === 1 ? `KES ${value.toLocaleString()}` : `${Math.round(value)}`;
 //         },
 //       },
-//       style: { fontSize: '12px', fontFamily: 'Inter, sans-serif' },
+//       style: { 
+//         fontSize: '12px', 
+//         fontFamily: 'Inter, sans-serif' 
+//       },
 //       theme: theme === 'dark' ? 'dark' : 'light'
 //     },
 //     colors: ["#3B82F6", "#10B981", "#F59E0B"],
@@ -106,8 +196,14 @@
 //       position: "top",
 //       horizontalAlign: "right",
 //       fontSize: "12px",
-//       markers: { radius: 8, width: 8, height: 8 },
-//       itemMargin: { horizontal: 12 },
+//       markers: { 
+//         radius: 8, 
+//         width: 8, 
+//         height: 8 
+//       },
+//       itemMargin: { 
+//         horizontal: 12 
+//       },
 //       labels: {
 //         colors: theme === "dark" ? "#F9FAFB" : "#1F2937",
 //       }
@@ -176,9 +272,9 @@
 //   };
 
 //   const series = [
-//     { name: "Users", data: data.map(item => item.users) },
-//     { name: "Revenue (KES)", data: data.map(item => item.revenue) },
-//     { name: "Avg. Data Usage (GB)", data: data.map(item => item.avg_data_usage) },
+//     { name: "Users", data: data.map(item => item.users || 0) },
+//     { name: "Revenue (KES)", data: data.map(item => item.revenue || 0) },
+//     { name: "Avg. Data Usage (GB)", data: data.map(item => item.avg_data_usage || 0) },
 //   ];
 
 //   return (
@@ -209,7 +305,13 @@
 //         </button>
 //       </div>
 //       <div className="flex-1 p-4 sm:p-6">
-//         <Chart options={options} series={series} type="bar" height="100%" width="100%" />
+//         <Chart 
+//           options={options} 
+//           series={series} 
+//           type="bar" 
+//           height="100%" 
+//           width="100%" 
+//         />
 //       </div>
 //     </div>
 //   );
@@ -225,15 +327,17 @@
 //     })
 //   ).isRequired,
 //   theme: PropTypes.oneOf(["light", "dark"]).isRequired,
+//   onLoad: PropTypes.func,
+//   onError: PropTypes.func,
+// };
+
+// PlanPerformanceChart.defaultProps = {
+//   data: [],
+//   onLoad: () => {},
+//   onError: () => {},
 // };
 
 // export default PlanPerformanceChart;
-
-
-
-
-
-
 
 
 
@@ -243,7 +347,12 @@ import Chart from "react-apexcharts";
 import PropTypes from "prop-types";
 import { FiRefreshCw, FiAlertCircle } from "react-icons/fi";
 
-const PlanPerformanceChart = ({ data, theme, onLoad, onError }) => {
+const PlanPerformanceChart = ({ 
+  data = [], 
+  theme = "light", 
+  onLoad = () => {}, 
+  onError = () => {} 
+}) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
@@ -563,16 +672,10 @@ PlanPerformanceChart.propTypes = {
       revenue: PropTypes.number.isRequired,
       avg_data_usage: PropTypes.number.isRequired,
     })
-  ).isRequired,
-  theme: PropTypes.oneOf(["light", "dark"]).isRequired,
+  ),
+  theme: PropTypes.oneOf(["light", "dark"]),
   onLoad: PropTypes.func,
   onError: PropTypes.func,
-};
-
-PlanPerformanceChart.defaultProps = {
-  data: [],
-  onLoad: () => {},
-  onError: () => {},
 };
 
 export default PlanPerformanceChart;
