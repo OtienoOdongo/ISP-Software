@@ -175,11 +175,6 @@
 
 
 
-
-
-
-
-
 from django.urls import path
 from payments.api.views.payment_config_view import (
     PaymentGatewayView,
@@ -209,7 +204,9 @@ from payments.api.views.transaction_log_view import (
 from payments.api.views.payment_reconciliation_view import (
     PaymentReconciliationView,
     TaxConfigurationView,
+    TaxConfigurationDetailView,
     ExpenseCategoryView,
+    ExpenseCategoryDetailView,
     ManualExpenseView,
     ReconciliationReportView,
     AccessTypeAnalyticsView,
@@ -261,7 +258,12 @@ urlpatterns = [
     path('reconciliation/', PaymentReconciliationView.as_view(), name='payment-reconciliation'),
     path('reconciliation/analytics/access-type/', AccessTypeAnalyticsView.as_view(), name='access-type-analytics'),
     path('taxes/', TaxConfigurationView.as_view(), name='tax-configuration'),
+    path('taxes/<uuid:tax_id>/', TaxConfigurationDetailView.as_view(), name='tax-configuration-detail'),
+    
+    # Enhanced Expense Management Endpoints
     path('expense-categories/', ExpenseCategoryView.as_view(), name='expense-categories'),
+    path('expense-categories/<uuid:category_id>/', ExpenseCategoryDetailView.as_view(), name='expense-category-detail'),
     path('manual-expenses/', ManualExpenseView.as_view(), name='manual-expenses'),
+    path('manual-expenses/<uuid:expense_id>/', ManualExpenseView.as_view(), name='manual-expense-detail'),
     path('reports/', ReconciliationReportView.as_view(), name='reconciliation-reports'),
 ]
