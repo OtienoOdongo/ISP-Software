@@ -1,9 +1,6 @@
 
 
 
-
-
-
 # from rest_framework import serializers
 # from django.contrib.auth import get_user_model
 # from decimal import Decimal
@@ -26,6 +23,15 @@
 
 # class SafeDecimalField(serializers.DecimalField):
 #     """Enhanced Decimal field that handles conversion errors gracefully"""
+    
+#     def __init__(self, *args, **kwargs):
+#         # Ensure min_value and max_value are Decimal if provided
+#         if 'min_value' in kwargs and not isinstance(kwargs['min_value'], Decimal):
+#             kwargs['min_value'] = Decimal(str(kwargs['min_value']))
+#         if 'max_value' in kwargs and not isinstance(kwargs['max_value'], Decimal):
+#             kwargs['max_value'] = Decimal(str(kwargs['max_value']))
+#         super().__init__(*args, **kwargs)
+    
 #     def to_representation(self, value):
 #         try:
 #             if value is None:
@@ -42,7 +48,7 @@
 #             return Decimal('0')
 
 # class TaxConfigurationSerializer(serializers.ModelSerializer):
-#     """Production-ready serializer for tax configuration with enhanced features"""
+#     """Production-ready serializer for tax configuration with enhanced timestamp handling"""
     
 #     # Display fields
 #     access_type_display = serializers.CharField(source='get_access_type_display', read_only=True)
@@ -54,8 +60,8 @@
 #     rate = SafeDecimalField(
 #         max_digits=7, 
 #         decimal_places=4,
-#         min_value=0,
-#         max_value=100
+#         min_value=Decimal('0.0000'),
+#         max_value=Decimal('100.0000')
 #     )
     
 #     # User information
@@ -144,9 +150,12 @@
 #         return value
 
 #     def validate_effective_from(self, value):
-#         """Validate effective from date"""
-#         if value and value < timezone.now():
-#             raise serializers.ValidationError("Effective date cannot be in the past")
+#         """Validate effective from date - ALLOW user to set any date including past"""
+#         # Allow any valid datetime - don't restrict to future dates
+#         # Frontend will default to current time, but backend respects user choice
+#         if value is None:
+#             raise serializers.ValidationError("Effective from date is required")
+        
 #         return value
 
 #     def validate_effective_to(self, value):
@@ -162,37 +171,108 @@
 #         return value
 
 #     def validate(self, data):
-#         """Cross-field validation"""
-#         effective_from = data.get('effective_from')
-#         effective_to = data.get('effective_to')
+#         """Enhanced cross-field validation with better error handling"""
+#         errors = {}
         
+#         # Get existing values for partial updates
+#         effective_from = data.get('effective_from', getattr(self.instance, 'effective_from', None))
+#         effective_to = data.get('effective_to', getattr(self.instance, 'effective_to', None))
+        
+#         # Validate effective date range
 #         if effective_to and effective_from and effective_to < effective_from:
-#             raise serializers.ValidationError({
-#                 'effective_to': 'End date cannot be before start date'
-#             })
+#             errors['effective_to'] = 'End date cannot be before start date'
         
 #         # Validate that archived taxes cannot be enabled
-#         if data.get('status') == 'archived' and data.get('is_enabled', True):
-#             raise serializers.ValidationError({
-#                 'is_enabled': 'Archived taxes cannot be enabled'
-#             })
+#         status = data.get('status', getattr(self.instance, 'status', 'active'))
+#         is_enabled = data.get('is_enabled', getattr(self.instance, 'is_enabled', True))
+        
+#         if status == 'archived' and is_enabled:
+#             errors['is_enabled'] = 'Archived taxes cannot be enabled'
+        
+#         # Validate rate and approval requirements
+#         rate = data.get('rate', getattr(self.instance, 'rate', Decimal('0')))
+#         requires_approval = data.get('requires_approval', getattr(self.instance, 'requires_approval', False))
+        
+#         if rate > Decimal('50') and not requires_approval:
+#             # This is a warning, not an error - still allow but log it
+#             logger.warning(f"High tax rate {rate}% configured without approval requirement")
+        
+#         # Handle datetime format issues
+#         if 'effective_from' in data and isinstance(data['effective_from'], str):
+#             try:
+#                 # Try to parse the datetime string
+#                 from django.utils.dateparse import parse_datetime
+#                 parsed_dt = parse_datetime(data['effective_from'])
+#                 if parsed_dt is None:
+#                     errors['effective_from'] = 'Invalid datetime format for effective_from'
+#                 else:
+#                     data['effective_from'] = parsed_dt
+#             except (ValueError, TypeError):
+#                 errors['effective_from'] = 'Invalid datetime format for effective_from'
+        
+#         if 'effective_to' in data and data['effective_to'] and isinstance(data['effective_to'], str):
+#             try:
+#                 from django.utils.dateparse import parse_datetime
+#                 parsed_dt = parse_datetime(data['effective_to'])
+#                 if parsed_dt is None:
+#                     errors['effective_to'] = 'Invalid datetime format for effective_to'
+#                 else:
+#                     data['effective_to'] = parsed_dt
+#             except (ValueError, TypeError):
+#                 errors['effective_to'] = 'Invalid datetime format for effective_to'
+        
+#         if errors:
+#             raise serializers.ValidationError(errors)
         
 #         return data
 
+#     def to_internal_value(self, data):
+#         """Enhanced data parsing with better error handling"""
+#         try:
+#             # Handle empty strings for optional fields
+#             if 'description' in data and data['description'] == '':
+#                 data['description'] = None
+#             if 'revision_notes' in data and data['revision_notes'] == '':
+#                 data['revision_notes'] = None
+#             if 'effective_to' in data and data['effective_to'] == '':
+#                 data['effective_to'] = None
+            
+#             # Convert rate to Decimal if it's a string
+#             if 'rate' in data and isinstance(data['rate'], str):
+#                 try:
+#                     data['rate'] = Decimal(data['rate'])
+#                 except (ValueError, TypeError, decimal.InvalidOperation):
+#                     raise serializers.ValidationError({
+#                         'rate': 'Invalid rate format. Must be a number.'
+#                     })
+            
+#             return super().to_internal_value(data)
+#         except (ValueError, TypeError, decimal.InvalidOperation) as e:
+#             logger.error(f"Data conversion error in tax serializer: {str(e)}")
+#             raise serializers.ValidationError({
+#                 'non_field_errors': 'Invalid data format in request'
+#             })
+
 #     def create(self, validated_data):
-#         """Create tax configuration with enhanced validation"""
+#         """Create tax configuration with automatic timestamp handling"""
 #         request = self.context.get('request')
 #         if request and hasattr(request, 'user'):
 #             validated_data['created_by'] = request.user
             
-#         # Set default effective_from if not provided
-#         if 'effective_from' not in validated_data:
-#             validated_data['effective_from'] = timezone.now()
-            
-#         return super().create(validated_data)
+#         # CRITICAL: Use current time for created_at, but respect user's effective_from choice
+#         # Don't override effective_from with current time - respect user's choice
+#         # The frontend will default to current time, but backend should respect user override
+        
+#         # Create the instance - Django will automatically set created_at and updated_at
+#         instance = super().create(validated_data)
+        
+#         logger.info(f"Tax configuration created - ID: {instance.id}, Name: {instance.name}, "
+#                    f"Effective From: {instance.effective_from}, Created At: {instance.created_at}")
+        
+#         return instance
 
 #     def update(self, instance, validated_data):
-#         """Update tax configuration with audit tracking"""
+#         """Update tax configuration with automatic updated_at handling"""
 #         request = self.context.get('request')
 #         if request and hasattr(request, 'user'):
 #             validated_data['updated_by'] = request.user
@@ -213,33 +293,13 @@
 #             if revision_notes:
 #                 validated_data['revision_notes'] = '; '.join(revision_notes)
         
-#         return super().update(instance, validated_data)
-
-# class TaxConfigurationCreateSerializer(serializers.ModelSerializer):
-#     """Serializer specifically for creating tax configurations"""
-    
-#     rate = SafeDecimalField(
-#         max_digits=7, 
-#         decimal_places=4,
-#         min_value=0,
-#         max_value=100
-#     )
-
-#     class Meta:
-#         model = TaxConfiguration
-#         fields = [
-#             'name', 'tax_type', 'rate', 'description', 
-#             'applies_to', 'access_type', 'is_enabled', 
-#             'is_included_in_price', 'requires_approval',
-#             'effective_from', 'effective_to', 'revision_notes'
-#         ]
-
-#     def create(self, validated_data):
-#         """Create with current user"""
-#         request = self.context.get('request')
-#         if request and hasattr(request, 'user'):
-#             validated_data['created_by'] = request.user
-#         return super().create(validated_data)
+#         # Update the instance - Django will automatically update updated_at
+#         updated_instance = super().update(instance, validated_data)
+        
+#         logger.info(f"Tax configuration updated - ID: {updated_instance.id}, Name: {updated_instance.name}, "
+#                    f"Updated At: {updated_instance.updated_at}")
+        
+#         return updated_instance
 
 # class TaxConfigurationListSerializer(serializers.ModelSerializer):
 #     """Lightweight serializer for listing tax configurations"""
@@ -256,7 +316,6 @@
 #             'is_enabled', 'is_active', 'status',
 #             'effective_from', 'effective_to', 'created_at'
 #         ]
-
 
 # class ExpenseCategorySerializer(serializers.ModelSerializer):
 #     """Enhanced serializer for expense categories with predefined support"""
@@ -295,7 +354,11 @@
 #     category_name = serializers.CharField(source='category.name', read_only=True)
 #     created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
 #     access_type_display = serializers.CharField(source='get_access_type_display', read_only=True)
-#     amount = SafeDecimalField(max_digits=12, decimal_places=2)
+#     amount = SafeDecimalField(
+#         max_digits=12, 
+#         decimal_places=2,
+#         min_value=Decimal('0.01')
+#     )
 
 #     class Meta:
 #         model = ManualExpense
@@ -383,7 +446,7 @@
 #     generated_by_name = serializers.CharField(source='generated_by.get_full_name', read_only=True)
 #     revenue_breakdown = serializers.SerializerMethodField()  # Changed to SerializerMethodField
     
-#     # Use SafeDecimalField for all decimal fields
+#     # Use SafeDecimalField for all decimal fields with proper Decimal min/max values
 #     total_revenue = SafeDecimalField(max_digits=15, decimal_places=2)
 #     hotspot_revenue = SafeDecimalField(max_digits=15, decimal_places=2)
 #     pppoe_revenue = SafeDecimalField(max_digits=15, decimal_places=2)
@@ -512,6 +575,9 @@
 
 
 
+
+
+
 # from rest_framework import serializers
 # from django.contrib.auth import get_user_model
 # from decimal import Decimal
@@ -558,17 +624,8 @@
 #         except (TypeError, ValueError, decimal.InvalidOperation):
 #             return Decimal('0')
 
-
-
-
-
-
-
-
-
-        
 # class TaxConfigurationSerializer(serializers.ModelSerializer):
-#     """Production-ready serializer for tax configuration with enhanced features"""
+#     """Production-ready serializer for tax configuration with FIXED timestamp handling"""
     
 #     # Display fields
 #     access_type_display = serializers.CharField(source='get_access_type_display', read_only=True)
@@ -576,7 +633,7 @@
 #     applies_to_display = serializers.CharField(source='get_applies_to_display', read_only=True)
 #     status_display = serializers.CharField(source='get_status_display', read_only=True)
     
-#     # Enhanced decimal fields - FIXED: Use Decimal for min/max values
+#     # Enhanced decimal fields
 #     rate = SafeDecimalField(
 #         max_digits=7, 
 #         decimal_places=4,
@@ -670,15 +727,13 @@
 #         return value
 
 #     def validate_effective_from(self, value):
-#         """Validate effective from date - FIXED: Allow past dates for existing records"""
-#         # For new records, ensure effective_from is not in the past
-#         # For existing records, allow past dates (they might be historical records)
-#         if not self.instance and value and value < timezone.now():
-#             # For new tax configurations, set to current time if past date is provided
-#             logger.warning(f"Effective date in past for new tax. Using current time instead.")
-#             return timezone.now()
+#         """Validate effective from date - ALLOW user to set any date including past"""
+#         # CRITICAL FIX: Allow any valid datetime - don't restrict to future dates
+#         # Frontend will default to current time, but backend respects user choice completely
+#         if value is None:
+#             raise serializers.ValidationError("Effective from date is required")
         
-#         # For updates, allow past dates (they might be correcting historical data)
+#         # Allow past dates for historical records and user flexibility
 #         return value
 
 #     def validate_effective_to(self, value):
@@ -729,12 +784,7 @@
 #                 if parsed_dt is None:
 #                     errors['effective_from'] = 'Invalid datetime format for effective_from'
 #                 else:
-#                     # FIXED: Auto-correct past dates for new records
-#                     if not self.instance and parsed_dt < timezone.now():
-#                         logger.info(f"Auto-correcting past effective_from date to current time")
-#                         data['effective_from'] = timezone.now()
-#                     else:
-#                         data['effective_from'] = parsed_dt
+#                     data['effective_from'] = parsed_dt
 #             except (ValueError, TypeError):
 #                 errors['effective_from'] = 'Invalid datetime format for effective_from'
         
@@ -782,22 +832,36 @@
 #             })
 
 #     def create(self, validated_data):
-#         """Create tax configuration with enhanced validation"""
+#         """
+#         FIXED: Create tax configuration with proper timestamp handling
+#         - Respect user's effective_from choice completely
+#         - Let Django handle created_at and updated_at automatically
+#         - No timestamp overrides
+#         """
 #         request = self.context.get('request')
 #         if request and hasattr(request, 'user'):
 #             validated_data['created_by'] = request.user
             
-#         # FIXED: Ensure effective_from is set to current time if not provided or in past
-#         if 'effective_from' not in validated_data:
-#             validated_data['effective_from'] = timezone.now()
-#         elif validated_data['effective_from'] < timezone.now():
-#             logger.info(f"Auto-correcting past effective_from date during creation")
-#             validated_data['effective_from'] = timezone.now()
-            
-#         return super().create(validated_data)
+#         # CRITICAL FIX: Completely respect user's effective_from choice
+#         # Do NOT modify or override effective_from - user can set any date they want
+#         # Django will automatically set created_at and updated_at to current server time
+        
+#         # Create the instance - Django handles created_at and updated_at automatically
+#         instance = super().create(validated_data)
+        
+#         logger.info(f"Tax configuration created - ID: {instance.id}, Name: {instance.name}, "
+#                    f"User Effective From: {instance.effective_from}, "
+#                    f"System Created At: {instance.created_at}, "
+#                    f"System Updated At: {instance.updated_at}")
+        
+#         return instance
 
 #     def update(self, instance, validated_data):
-#         """Update tax configuration with audit tracking"""
+#         """
+#         FIXED: Update tax configuration with proper timestamp handling
+#         - Let Django handle updated_at automatically
+#         - Respect all user date choices
+#         """
 #         request = self.context.get('request')
 #         if request and hasattr(request, 'user'):
 #             validated_data['updated_by'] = request.user
@@ -818,7 +882,14 @@
 #             if revision_notes:
 #                 validated_data['revision_notes'] = '; '.join(revision_notes)
         
-#         return super().update(instance, validated_data)
+#         # CRITICAL FIX: Let Django automatically update updated_at field
+#         # Do NOT modify any timestamp fields manually
+#         updated_instance = super().update(instance, validated_data)
+        
+#         logger.info(f"Tax configuration updated - ID: {updated_instance.id}, Name: {updated_instance.name}, "
+#                    f"Updated At: {updated_instance.updated_at}")
+        
+#         return updated_instance
 
 # class TaxConfigurationListSerializer(serializers.ModelSerializer):
 #     """Lightweight serializer for listing tax configurations"""
@@ -835,10 +906,6 @@
 #             'is_enabled', 'is_active', 'status',
 #             'effective_from', 'effective_to', 'created_at'
 #         ]
-
-
-        
-
 
 # class ExpenseCategorySerializer(serializers.ModelSerializer):
 #     """Enhanced serializer for expense categories with predefined support"""
@@ -1145,7 +1212,7 @@ class SafeDecimalField(serializers.DecimalField):
             return Decimal('0')
 
 class TaxConfigurationSerializer(serializers.ModelSerializer):
-    """Production-ready serializer for tax configuration with enhanced timestamp handling"""
+    """Production-ready serializer for tax configuration with FIXED timezone handling"""
     
     # Display fields
     access_type_display = serializers.CharField(source='get_access_type_display', read_only=True)
@@ -1169,17 +1236,17 @@ class TaxConfigurationSerializer(serializers.ModelSerializer):
     is_active = serializers.BooleanField(read_only=True)
     days_effective = serializers.IntegerField(read_only=True)
     
-    # Date fields with proper formatting
-    effective_from = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S')
+    # FIXED: Date fields with timezone-aware formatting
+    effective_from = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S%z')  # ADD %z for timezone
     effective_to = serializers.DateTimeField(
-        format='%Y-%m-%d %H:%M:%S', 
+        format='%Y-%m-%d %H:%M:%S%z',  # ADD %z for timezone
         required=False, 
         allow_null=True
     )
-    created_at = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', read_only=True)
-    updated_at = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', read_only=True)
+    created_at = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S%z', read_only=True)  # ADD %z
+    updated_at = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S%z', read_only=True)  # ADD %z
     last_audited_at = serializers.DateTimeField(
-        format='%Y-%m-%d %H:%M:%S', 
+        format='%Y-%m-%d %H:%M:%S%z',  # ADD %z for timezone
         required=False, 
         allow_null=True
     )
@@ -1248,19 +1315,33 @@ class TaxConfigurationSerializer(serializers.ModelSerializer):
 
     def validate_effective_from(self, value):
         """Validate effective from date - ALLOW user to set any date including past"""
-        # Allow any valid datetime - don't restrict to future dates
-        # Frontend will default to current time, but backend respects user choice
+        # CRITICAL FIX: Allow any valid datetime - don't restrict to future dates
+        # Frontend will default to current time, but backend respects user choice completely
         if value is None:
             raise serializers.ValidationError("Effective from date is required")
         
+        # FIXED: Make datetime timezone aware if it's naive
+        if value and timezone.is_naive(value):
+            value = timezone.make_aware(value)
+            
+        # Allow past dates for historical records and user flexibility
         return value
 
     def validate_effective_to(self, value):
         """Validate effective to date"""
+        if value:
+            # FIXED: Make datetime timezone aware if it's naive
+            if timezone.is_naive(value):
+                value = timezone.make_aware(value)
+                
         effective_from = self.initial_data.get('effective_from')
         if value and effective_from:
             try:
                 effective_from = serializers.DateTimeField().to_internal_value(effective_from)
+                # FIXED: Make effective_from timezone aware if needed
+                if effective_from and timezone.is_naive(effective_from):
+                    effective_from = timezone.make_aware(effective_from)
+                    
                 if value < effective_from:
                     raise serializers.ValidationError("End date cannot be before start date")
             except (TypeError, ValueError):
@@ -1303,6 +1384,9 @@ class TaxConfigurationSerializer(serializers.ModelSerializer):
                 if parsed_dt is None:
                     errors['effective_from'] = 'Invalid datetime format for effective_from'
                 else:
+                    # FIXED: Make timezone aware
+                    if timezone.is_naive(parsed_dt):
+                        parsed_dt = timezone.make_aware(parsed_dt)
                     data['effective_from'] = parsed_dt
             except (ValueError, TypeError):
                 errors['effective_from'] = 'Invalid datetime format for effective_from'
@@ -1314,6 +1398,9 @@ class TaxConfigurationSerializer(serializers.ModelSerializer):
                 if parsed_dt is None:
                     errors['effective_to'] = 'Invalid datetime format for effective_to'
                 else:
+                    # FIXED: Make timezone aware
+                    if timezone.is_naive(parsed_dt):
+                        parsed_dt = timezone.make_aware(parsed_dt)
                     data['effective_to'] = parsed_dt
             except (ValueError, TypeError):
                 errors['effective_to'] = 'Invalid datetime format for effective_to'
@@ -1351,25 +1438,36 @@ class TaxConfigurationSerializer(serializers.ModelSerializer):
             })
 
     def create(self, validated_data):
-        """Create tax configuration with automatic timestamp handling"""
+        """
+        FIXED: Create tax configuration with proper timestamp handling
+        - Respect user's effective_from choice completely
+        - Let Django handle created_at and updated_at automatically
+        - No timestamp overrides
+        """
         request = self.context.get('request')
         if request and hasattr(request, 'user'):
             validated_data['created_by'] = request.user
             
-        # CRITICAL: Use current time for created_at, but respect user's effective_from choice
-        # Don't override effective_from with current time - respect user's choice
-        # The frontend will default to current time, but backend should respect user override
+        # CRITICAL FIX: Completely respect user's effective_from choice
+        # Do NOT modify or override effective_from - user can set any date they want
+        # Django will automatically set created_at and updated_at to current server time
         
-        # Create the instance - Django will automatically set created_at and updated_at
+        # Create the instance - Django handles created_at and updated_at automatically
         instance = super().create(validated_data)
         
         logger.info(f"Tax configuration created - ID: {instance.id}, Name: {instance.name}, "
-                   f"Effective From: {instance.effective_from}, Created At: {instance.created_at}")
+                   f"User Effective From: {instance.effective_from}, "
+                   f"System Created At: {instance.created_at}, "
+                   f"System Updated At: {instance.updated_at}")
         
         return instance
 
     def update(self, instance, validated_data):
-        """Update tax configuration with automatic updated_at handling"""
+        """
+        FIXED: Update tax configuration with proper timestamp handling
+        - Let Django handle updated_at automatically
+        - Respect all user date choices
+        """
         request = self.context.get('request')
         if request and hasattr(request, 'user'):
             validated_data['updated_by'] = request.user
@@ -1390,7 +1488,8 @@ class TaxConfigurationSerializer(serializers.ModelSerializer):
             if revision_notes:
                 validated_data['revision_notes'] = '; '.join(revision_notes)
         
-        # Update the instance - Django will automatically update updated_at
+        # CRITICAL FIX: Let Django automatically update updated_at field
+        # Do NOT modify any timestamp fields manually
         updated_instance = super().update(instance, validated_data)
         
         logger.info(f"Tax configuration updated - ID: {updated_instance.id}, Name: {updated_instance.name}, "
@@ -1404,6 +1503,11 @@ class TaxConfigurationListSerializer(serializers.ModelSerializer):
     access_type_display = serializers.CharField(source='get_access_type_display', read_only=True)
     tax_type_display = serializers.CharField(source='get_tax_type_display', read_only=True)
     is_active = serializers.BooleanField(read_only=True)
+    
+    # FIXED: Add timezone info to list serializer as well
+    effective_from = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S%z')
+    effective_to = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S%z', required=False, allow_null=True)
+    created_at = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S%z', read_only=True)
     
     class Meta:
         model = TaxConfiguration
@@ -1480,6 +1584,7 @@ class ManualExpenseSerializer(serializers.ModelSerializer):
         if value > timezone.now().date():
             raise serializers.ValidationError("Date cannot be in the future.")
         return value
+
 
 class TransactionSummarySerializer(serializers.Serializer):
     """Enhanced serializer for transaction summary with access type"""
