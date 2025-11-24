@@ -12,13 +12,17 @@
 
 # logger = logging.getLogger(__name__)
 
-
+# # Try to import MikroTik connector with fallback
 # try:
 #     from network_management.utils.mikrotik_connector import MikroTikConnector
 #     MIKROTIK_AVAILABLE = True
-# except ImportError:
+# except ImportError as e:
+#     logger.warning(f"MikroTik connector not available: {e}")
 #     MIKROTIK_AVAILABLE = False
-#     logger.warning("MikroTik connector not available. Please install routeros-api.")
+#     # Create a dummy class for fallback
+#     class MikroTikConnector:
+#         def __init__(self, *args, **kwargs):
+#             raise ImportError("MikroTik connector not available. Please install routeros-api.")
 
 
 # class Router(models.Model):
@@ -165,40 +169,88 @@
 
 #     # NEW: Connection management methods
 #     def test_connection(self):
-#         """Test connection to this router and update status."""
-#         from network_management.utils.mikrotik_connector import MikroTikConnector
-        
-#         connector = MikroTikConnector(
-#             ip=self.ip,
-#             username=self.username,
-#             password=self.password,
-#             port=self.port
-#         )
-        
-#         test_results = connector.test_connection()
-        
-#         # Update connection status based on test results
-#         if test_results.get('system_access'):
-#             self.connection_status = 'connected'
-#             # Update system info if available
-#             if test_results.get('system_info'):
-#                 self.firmware_version = test_results['system_info'].get('version', self.firmware_version)
-#         else:
-#             self.connection_status = 'disconnected'
+#         """Enhanced connection testing with proper error handling."""
+#         if not MIKROTIK_AVAILABLE:
+#             # Create a mock response when connector is not available
+#             from django.utils import timezone
+#             test_results = {
+#                 'system_access': False,
+#                 'response_time': None,
+#                 'system_info': {},
+#                 'error_messages': ['MikroTik connector not available. Install routeros-api package.']
+#             }
             
-#         self.last_connection_test = timezone.now()
-#         self.save()
+#             # Update connection status
+#             self.connection_status = 'disconnected'
+#             self.last_connection_test = timezone.now()
+#             self.save()
+            
+#             # Save test results
+#             RouterConnectionTest.objects.create(
+#                 router=self,
+#                 success=False,
+#                 response_time=None,
+#                 system_info={},
+#                 error_messages=test_results['error_messages']
+#             )
+            
+#             return test_results
         
-#         # Save detailed test results
-#         RouterConnectionTest.objects.create(
-#             router=self,
-#             success=test_results.get('system_access', False),
-#             response_time=test_results.get('response_time'),
-#             system_info=test_results.get('system_info', {}),
-#             error_messages=test_results.get('error_messages', [])
-#         )
-        
-#         return test_results
+#         try:
+#             connector = MikroTikConnector(
+#                 ip=self.ip,
+#                 username=self.username,
+#                 password=self.password,
+#                 port=self.port
+#             )
+            
+#             test_results = connector.test_connection()
+            
+#             # Update connection status based on test results
+#             if test_results.get('system_access'):
+#                 self.connection_status = 'connected'
+#                 # Update system info if available
+#                 if test_results.get('system_info'):
+#                     self.firmware_version = test_results['system_info'].get('version', self.firmware_version)
+#             else:
+#                 self.connection_status = 'disconnected'
+                
+#             self.last_connection_test = timezone.now()
+#             self.save()
+            
+#             # Save detailed test results
+#             RouterConnectionTest.objects.create(
+#                 router=self,
+#                 success=test_results.get('system_access', False),
+#                 response_time=test_results.get('response_time'),
+#                 system_info=test_results.get('system_info', {}),
+#                 error_messages=test_results.get('error_messages', [])
+#             )
+            
+#             return test_results
+            
+#         except Exception as e:
+#             logger.error(f"Connection test failed for router {self.id}: {str(e)}")
+            
+#             # Save failed test
+#             RouterConnectionTest.objects.create(
+#                 router=self,
+#                 success=False,
+#                 response_time=None,
+#                 system_info={},
+#                 error_messages=[f"Connection test failed: {str(e)}"]
+#             )
+            
+#             self.connection_status = 'disconnected'
+#             self.last_connection_test = timezone.now()
+#             self.save()
+            
+#             return {
+#                 'system_access': False,
+#                 'response_time': None,
+#                 'system_info': {},
+#                 'error_messages': [f"Connection test failed: {str(e)}"]
+#             }
 
 #     def get_connection_quality(self):
 #         """Calculate connection quality based on recent tests."""
@@ -877,6 +929,10 @@
 
 
 
+
+
+
+
 from django.db import models
 from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -916,7 +972,7 @@ class Router(models.Model):
         ("error", "Error"),
     )
     
-    # NEW: Connection status fields
+    # Enhanced Connection status fields
     CONNECTION_STATUS_CHOICES = (
         ("connected", "Connected"),
         ("disconnected", "Disconnected"), 
@@ -941,7 +997,7 @@ class Router(models.Model):
     location = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="disconnected")
     
-    # NEW: Enhanced connection management fields
+    # Enhanced connection management fields
     connection_status = models.CharField(
         max_length=25, 
         choices=CONNECTION_STATUS_CHOICES, 
@@ -955,7 +1011,7 @@ class Router(models.Model):
     )
     configuration_type = models.CharField(
         max_length=20, 
-        choices=[("hotspot", "Hotspot"), ("pppoe", "PPPoE"), ("both", "Both")],
+        choices=[("hotspot", "Hotspot"), ("pppoe", "PPPoE"), ("both", "Both"), ("vpn", "VPN")],
         blank=True, 
         null=True
     )
@@ -987,6 +1043,25 @@ class Router(models.Model):
         help_text="Dynamic SSID for hotspot configuration. Leave blank for auto-generation."
     )
     
+    # NEW: VPN configuration fields
+    vpn_enabled = models.BooleanField(default=False)
+    vpn_type = models.CharField(
+        max_length=20,
+        choices=[("openvpn", "OpenVPN"), ("wireguard", "WireGuard"), ("sstp", "SSTP")],
+        blank=True,
+        null=True
+    )
+    vpn_configuration = models.JSONField(default=dict, blank=True)
+    
+    # NEW: Technician workflow tracking
+    last_technician_workflow = models.DateTimeField(null=True, blank=True)
+    workflow_status = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="Status of last technician workflow"
+    )
+    
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -999,10 +1074,11 @@ class Router(models.Model):
             models.Index(fields=['status', 'is_active']),
             models.Index(fields=['type']),
             models.Index(fields=['ssid']),
-            # NEW: Indexes for connection management
+            # Enhanced indexes for connection management
             models.Index(fields=['connection_status']),
             models.Index(fields=['configuration_status']),
             models.Index(fields=['last_connection_test']),
+            models.Index(fields=['vpn_enabled', 'vpn_type']),
         ]
 
     def save(self, *args, **kwargs):
@@ -1010,10 +1086,17 @@ class Router(models.Model):
         if not self.ssid and self.name:
             self.ssid = f"{self.name}-WiFi"
             
+        # Auto-generate callback URL if not provided
+        if not self.callback_url and self.id:
+            from django.conf import settings
+            base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
+            self.callback_url = f"{base_url}/api/payments/mpesa-callbacks/dispatch/{self.id}/"
+            
         super().save(*args, **kwargs)
         self.cache_router_data()
 
     def cache_router_data(self):
+        """Enhanced caching with VPN and connection data."""
         cache_key = f"router:{self.id}:data"
         router_data = {
             'id': self.id,
@@ -1022,15 +1105,20 @@ class Router(models.Model):
             'status': self.status,
             'connection_status': self.connection_status,
             'configuration_status': self.configuration_status,
+            'configuration_type': self.configuration_type,
             'type': self.type,
             'max_clients': self.max_clients,
             'ssid': self.ssid,
+            'vpn_enabled': self.vpn_enabled,
+            'vpn_type': self.vpn_type,
             'last_seen': self.last_seen.isoformat(),
             'last_connection_test': self.last_connection_test.isoformat() if self.last_connection_test else None,
+            'firmware_version': self.firmware_version,
         }
         cache.set(cache_key, router_data, 300)
 
     def get_active_users_count(self):
+        """Enhanced active users count with caching."""
         cache_key = f"router:{self.id}:active_users"
         cached_count = cache.get(cache_key)
         
@@ -1044,12 +1132,11 @@ class Router(models.Model):
         cache.set(cache_key, total_count, 60)
         return total_count
 
-    # NEW: Connection management methods
+    # Enhanced Connection management methods
     def test_connection(self):
         """Enhanced connection testing with proper error handling."""
         if not MIKROTIK_AVAILABLE:
             # Create a mock response when connector is not available
-            from django.utils import timezone
             test_results = {
                 'system_access': False,
                 'response_time': None,
@@ -1148,9 +1235,13 @@ class Router(models.Model):
         successful_tests = recent_tests.filter(success=True).count()
         success_rate = (successful_tests / total_tests) * 100
         
-        avg_response_time = recent_tests.aggregate(
-            avg_response=models.Avg('response_time')
-        )['avg_response'] or 0
+        # Calculate average response time from successful tests only
+        successful_response_times = recent_tests.filter(
+            success=True, 
+            response_time__isnull=False
+        ).values_list('response_time', flat=True)
+        
+        avg_response_time = sum(successful_response_times) / len(successful_response_times) if successful_response_times else 0
         
         # Determine quality level
         if success_rate >= 95 and avg_response_time < 1.0:
@@ -1161,6 +1252,11 @@ class Router(models.Model):
             quality = 'fair'
         else:
             quality = 'poor'
+            
+        # Update router metrics
+        self.average_response_time = avg_response_time
+        self.connection_success_rate = success_rate
+        self.save(update_fields=['average_response_time', 'connection_success_rate'])
             
         return {
             'quality': quality,
@@ -1181,10 +1277,133 @@ class Router(models.Model):
                 self.type == 'mikrotik' and
                 self.configuration_status in ['not_configured', 'partially_configured'])
 
+    def can_configure_vpn(self):
+        """Check if router can be configured for VPN."""
+        return (self.connection_status == 'connected' and
+                self.type == 'mikrotik' and
+                self.configuration_status in ['not_configured', 'partially_configured', 'configured'])
+
+    # NEW: Technician workflow methods
+    def start_technician_workflow(self, workflow_type, technician):
+        """Start a technician workflow on this router."""
+        from network_management.scripts.technician_workflow import TechnicianWorkflowManager
+        
+        workflow_manager = TechnicianWorkflowManager(technician, self.location or "Unknown Site")
+        success, message, workflow_details = workflow_manager.start_workflow(workflow_type, {
+            'host': self.ip,
+            'username': self.username,
+            'password': self.password,
+            'port': self.port,
+            'name': self.name,
+            'vpn_type': 'openvpn',
+            'setup_type': 'hotspot'
+        })
+        
+        # Update router with workflow results
+        self.last_technician_workflow = timezone.now()
+        self.workflow_status = f"{workflow_type}: {'Success' if success else 'Failed'}"
+        self.save()
+        
+        return success, message, workflow_details
+
+    # NEW: VPN management methods
+    def enable_vpn(self, vpn_type="openvpn", configuration=None):
+        """Enable VPN on the router."""
+        try:
+            if not MIKROTIK_AVAILABLE:
+                return False, "MikroTik connector not available"
+                
+            connector = MikroTikConnector(
+                ip=self.ip,
+                username=self.username,
+                password=self.password,
+                port=self.port
+            )
+            
+            # Test connection first
+            test_results = connector.test_connection()
+            if not test_results.get('system_access'):
+                return False, "Router is not accessible"
+            
+            # Configure VPN based on type
+            if vpn_type == "openvpn":
+                success, message, config_details = connector.configure_openvpn_server()
+            elif vpn_type == "wireguard":
+                success, message, config_details = connector.configure_wireguard_server()
+            elif vpn_type == "sstp":
+                success, message, config_details = connector.configure_sstp_server()
+            else:
+                return False, f"Unsupported VPN type: {vpn_type}"
+            
+            if success:
+                self.vpn_enabled = True
+                self.vpn_type = vpn_type
+                self.vpn_configuration = config_details or {}
+                self.configuration_status = 'configured'
+                if not self.configuration_type:
+                    self.configuration_type = 'vpn'
+                elif 'vpn' not in self.configuration_type:
+                    self.configuration_type = f"{self.configuration_type},vpn"
+                self.save()
+                
+            return success, message
+            
+        except Exception as e:
+            logger.error(f"VPN enablement failed for router {self.id}: {str(e)}")
+            return False, f"VPN enablement failed: {str(e)}"
+
+    def disable_vpn(self):
+        """Disable VPN on the router."""
+        self.vpn_enabled = False
+        self.vpn_type = None
+        self.vpn_configuration = {}
+        self.save()
+        return True, "VPN disabled successfully"
+
+    # NEW: Bulk operation support
+    @classmethod
+    def bulk_test_connections(cls, router_ids):
+        """Test connections for multiple routers."""
+        results = {
+            'total': len(router_ids),
+            'successful': 0,
+            'failed': 0,
+            'details': {}
+        }
+        
+        for router_id in router_ids:
+            try:
+                router = cls.objects.get(id=router_id)
+                test_results = router.test_connection()
+                
+                if test_results.get('system_access'):
+                    results['successful'] += 1
+                    results['details'][router_id] = {
+                        'status': 'success',
+                        'message': 'Connection test successful',
+                        'response_time': test_results.get('response_time')
+                    }
+                else:
+                    results['failed'] += 1
+                    results['details'][router_id] = {
+                        'status': 'failed',
+                        'message': test_results.get('error_messages', ['Unknown error'])[0],
+                        'response_time': test_results.get('response_time')
+                    }
+                    
+            except Exception as e:
+                results['failed'] += 1
+                results['details'][router_id] = {
+                    'status': 'error',
+                    'message': str(e)
+                }
+        
+        return results
+
 
 class RouterConnectionTest(models.Model):
     """
-    NEW: Model to store detailed connection test results for routers.
+    Enhanced: Model to store detailed connection test results for routers.
     """
     router = models.ForeignKey(Router, on_delete=models.CASCADE, related_name="connection_tests")
     success = models.BooleanField(default=False)
@@ -1199,11 +1418,27 @@ class RouterConnectionTest(models.Model):
         indexes = [
             models.Index(fields=['router', 'tested_at']),
             models.Index(fields=['success', 'tested_at']),
+            models.Index(fields=['tested_by', 'tested_at']),
         ]
 
     def __str__(self):
         status = "Success" if self.success else "Failed"
         return f"Connection test for {self.router.name} - {status} at {self.tested_at}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.cache_test_results()
+
+    def cache_test_results(self):
+        """Cache test results for quick access."""
+        cache_key = f"router:{self.router.id}:latest_test"
+        test_data = {
+            'success': self.success,
+            'response_time': self.response_time,
+            'tested_at': self.tested_at.isoformat(),
+            'error_messages': self.error_messages
+        }
+        cache.set(cache_key, test_data, 3600)  # Cache for 1 hour
 
 
 class HotspotConfiguration(models.Model):
@@ -1236,10 +1471,16 @@ class HotspotConfiguration(models.Model):
     welcome_message = models.TextField(blank=True, null=True)
     terms_conditions_url = models.URLField(blank=True, null=True)
     
-    # NEW: Configuration status fields
+    # Enhanced Configuration status fields
     configuration_applied = models.BooleanField(default=False)
     last_configuration_attempt = models.DateTimeField(null=True, blank=True)
     configuration_errors = models.JSONField(default=list, blank=True)
+    
+    # NEW: Advanced configuration options
+    ip_pool = models.CharField(max_length=100, default="192.168.100.10-192.168.100.200")
+    dns_servers = models.CharField(max_length=100, default="8.8.8.8,1.1.1.1")
+    rate_limit = models.CharField(max_length=50, default="10M/10M")
+    idle_timeout = models.IntegerField(default=300, help_text="Idle timeout in seconds")
     
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
@@ -1250,6 +1491,10 @@ class HotspotConfiguration(models.Model):
     class Meta:
         verbose_name = "Hotspot Configuration"
         verbose_name_plural = "Hotspot Configurations"
+        indexes = [
+            models.Index(fields=['router', 'ssid']),
+            models.Index(fields=['configuration_applied']),
+        ]
 
     def apply_configuration(self):
         """Enhanced configuration application with error handling."""
@@ -1279,13 +1524,21 @@ class HotspotConfiguration(models.Model):
                 bandwidth_limit=self.bandwidth_limit,
                 session_timeout=self.session_timeout,
                 max_users=self.max_users,
-                redirect_url=self.redirect_url
+                redirect_url=self.redirect_url,
+                ip_pool=self.ip_pool
             )
             
             self.configuration_applied = success
             self.last_configuration_attempt = timezone.now()
             if not success:
                 self.configuration_errors.append(message)
+            
+            # Update router configuration status
+            if success:
+                self.router.configuration_status = 'configured'
+                self.router.configuration_type = 'hotspot'
+                self.router.ssid = self.ssid
+                self.router.save()
             
             self.save()
             return success, message
@@ -1340,7 +1593,7 @@ class PPPoEConfiguration(models.Model):
     ip_range_end = models.GenericIPAddressField(default="192.168.100.200")
     service_type = models.CharField(max_length=20, choices=SERVICE_TYPES, default='standard')
     
-    # NEW: Configuration status fields
+    # Enhanced Configuration status fields
     configuration_applied = models.BooleanField(default=False)
     last_configuration_attempt = models.DateTimeField(null=True, blank=True)
     configuration_errors = models.JSONField(default=list, blank=True)
@@ -1355,6 +1608,10 @@ class PPPoEConfiguration(models.Model):
     class Meta:
         verbose_name = "PPPoE Configuration"
         verbose_name_plural = "PPPoE Configurations"
+        indexes = [
+            models.Index(fields=['router', 'service_name']),
+            models.Index(fields=['configuration_applied']),
+        ]
 
     def save(self, *args, **kwargs):
         # Auto-generate service name if not provided
@@ -1397,6 +1654,12 @@ class PPPoEConfiguration(models.Model):
             if not success:
                 self.configuration_errors.append(message)
             
+            # Update router configuration status
+            if success:
+                self.router.configuration_status = 'configured'
+                self.router.configuration_type = 'pppoe'
+                self.router.save()
+            
             self.save()
             return success, message
             
@@ -1425,6 +1688,10 @@ class RouterStats(models.Model):
     download_speed = models.FloatField(help_text="in Mbps", default=0, validators=[MinValueValidator(0)])
     hotspot_clients = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     pppoe_clients = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    
+    # NEW: VPN-specific metrics
+    vpn_connections = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    vpn_throughput = models.FloatField(help_text="VPN throughput in Mbps", default=0)
 
     def __str__(self):
         return f"Stats for {self.router.name} at {self.timestamp}"
@@ -1433,6 +1700,7 @@ class RouterStats(models.Model):
         ordering = ["-timestamp"]
         indexes = [
             models.Index(fields=['router', 'timestamp']),
+            models.Index(fields=['timestamp']),
         ]
 
     def save(self, *args, **kwargs):
@@ -1447,6 +1715,7 @@ class RouterStats(models.Model):
             'clients': self.connected_clients_count,
             'hotspot_clients': self.hotspot_clients,
             'pppoe_clients': self.pppoe_clients,
+            'vpn_connections': self.vpn_connections,
             'uptime': self.uptime,
             'signal': self.signal,
             'temperature': self.temperature,
@@ -1460,6 +1729,13 @@ class RouterStats(models.Model):
 
 
 class HotspotUser(models.Model):
+    QUALITY_OF_SERVICE_CHOICES = (
+        ('Residential', 'Residential'),
+        ('Business', 'Business'),
+        ('Promotional', 'Promotional'), 
+        ('Enterprise', 'Enterprise'),
+    )
+    
     router = models.ForeignKey(Router, on_delete=models.CASCADE, related_name="hotspot_users")
     client = models.ForeignKey("account.Client", on_delete=models.CASCADE, null=True)
     plan = models.ForeignKey("internet_plans.InternetPlan", on_delete=models.SET_NULL, null=True)
@@ -1478,13 +1754,21 @@ class HotspotUser(models.Model):
     remaining_time = models.IntegerField(default=0, help_text="Remaining time in seconds")
     last_activity = models.DateTimeField(default=timezone.now)
     bandwidth_used = models.JSONField(default=dict, help_text="Upload/download usage in bytes")
-    quality_of_service = models.CharField(max_length=20, default="standard", 
-                                         choices=[
-                                            ('Residential', 'Residential'), 
-                                            ('Business', 'Business'),
-                                            ('Promotional', 'Promotional'),
-                                            ('Enterprise', 'Enterprise'),])
+    quality_of_service = models.CharField(
+        max_length=20, 
+        default="standard", 
+        choices=QUALITY_OF_SERVICE_CHOICES
+    )
     device_info = models.JSONField(default=dict, help_text="Device type, OS, browser info")
+    
+    # NEW: Connection quality tracking
+    connection_quality = models.CharField(max_length=20, default="good", choices=[
+        ('excellent', 'Excellent'),
+        ('good', 'Good'), 
+        ('fair', 'Fair'),
+        ('poor', 'Poor')
+    ])
+    average_signal_strength = models.IntegerField(null=True, blank=True, help_text="Average signal strength in dBm")
 
     def __str__(self):
         return f"{self.client.user.username if self.client else 'Guest'} on {self.router.name}"
@@ -1508,6 +1792,7 @@ class HotspotUser(models.Model):
             'data_used': self.data_used,
             'connected_at': self.connected_at.isoformat(),
             'quality_of_service': self.quality_of_service,
+            'connection_quality': self.connection_quality,
         }
         cache.set(cache_key, session_data, 300)
 
@@ -1522,10 +1807,18 @@ class HotspotUser(models.Model):
             models.Index(fields=["session_id"]),
             models.Index(fields=["active"]),
             models.Index(fields=["client", "active"]),
+            models.Index(fields=["router", "active"]),
+            models.Index(fields=["quality_of_service"]),
         ]
 
 
 class PPPoEUser(models.Model):
+    SERVICE_TYPE_CHOICES = (
+        ("standard", "Standard"), 
+        ("business", "Business"), 
+        ("premium", "Premium")
+    )
+    
     router = models.ForeignKey(Router, on_delete=models.CASCADE, related_name="pppoe_users")
     client = models.ForeignKey("account.Client", on_delete=models.CASCADE, null=True)
     plan = models.ForeignKey("internet_plans.InternetPlan", on_delete=models.SET_NULL, null=True)
@@ -1543,8 +1836,20 @@ class PPPoEUser(models.Model):
     remaining_time = models.IntegerField(default=0, help_text="Remaining time in seconds")
     last_activity = models.DateTimeField(default=timezone.now)
     bandwidth_used = models.JSONField(default=dict, help_text="Upload/download usage in bytes")
-    pppoe_service_type = models.CharField(max_length=50, default="standard",
-                                         choices=[("standard", "Standard"), ("business", "Business"), ("premium", "Premium")])
+    pppoe_service_type = models.CharField(
+        max_length=50, 
+        default="standard",
+        choices=SERVICE_TYPE_CHOICES
+    )
+    
+    # NEW: Connection metrics
+    connection_uptime = models.IntegerField(default=0, help_text="Connection uptime in seconds")
+    connection_quality = models.CharField(max_length=20, default="good", choices=[
+        ('excellent', 'Excellent'),
+        ('good', 'Good'),
+        ('fair', 'Fair'), 
+        ('poor', 'Poor')
+    ])
 
     def __str__(self):
         return f"{self.username} on {self.router.name}"
@@ -1568,6 +1873,7 @@ class PPPoEUser(models.Model):
             'data_used': self.data_used,
             'connected_at': self.connected_at.isoformat(),
             'service_type': self.pppoe_service_type,
+            'connection_quality': self.connection_quality,
         }
         cache.set(cache_key, session_data, 300)
 
@@ -1582,10 +1888,17 @@ class PPPoEUser(models.Model):
             models.Index(fields=["session_id"]),
             models.Index(fields=["active"]),
             models.Index(fields=["client", "active"]),
+            models.Index(fields=["router", "active"]),
+            models.Index(fields=["pppoe_service_type"]),
         ]
 
 
 class ActivationAttempt(models.Model):
+    VERIFICATION_METHOD_CHOICES = (
+        ("automatic", "Automatic"), 
+        ("manual", "Manual")
+    )
+    
     subscription = models.ForeignKey("internet_plans.Subscription", on_delete=models.CASCADE, null=True, blank=True)
     router = models.ForeignKey(Router, on_delete=models.CASCADE)
     attempted_at = models.DateTimeField(auto_now_add=True)
@@ -1595,13 +1908,22 @@ class ActivationAttempt(models.Model):
     user_type = models.CharField(max_length=10, choices=[('hotspot', 'Hotspot'), ('pppoe', 'PPPoE')], default='hotspot')
     payment_verified = models.BooleanField(default=False)
     transaction_reference = models.CharField(max_length=100, blank=True, null=True)
-    verification_method = models.CharField(max_length=20, default="automatic", 
-                                          choices=[("automatic", "Automatic"), ("manual", "Manual")])
+    verification_method = models.CharField(
+        max_length=20, 
+        default="automatic", 
+        choices=VERIFICATION_METHOD_CHOICES
+    )
+    
+    # NEW: Technician workflow association
+    technician = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    workflow_type = models.CharField(max_length=50, blank=True, null=True)
 
     class Meta:
         ordering = ["-attempted_at"]
         indexes = [
             models.Index(fields=['payment_verified', 'success']),
+            models.Index(fields=['router', 'attempted_at']),
+            models.Index(fields=['technician', 'attempted_at']),
         ]
 
 
@@ -1615,6 +1937,7 @@ class RouterSessionHistory(models.Model):
         ("payment_expired", "Payment Expired"),
         ("bandwidth_exceeded", "Bandwidth Exceeded"),
         ("suspicious_activity", "Suspicious Activity"),
+        ("vpn_reconnect", "VPN Reconnect"),
     )
 
     hotspot_user = models.ForeignKey(HotspotUser, on_delete=models.CASCADE, related_name="session_history", null=True, blank=True)
@@ -1629,12 +1952,22 @@ class RouterSessionHistory(models.Model):
     recoverable = models.BooleanField(default=False)
     recovery_attempted = models.BooleanField(default=False)
     recovered_at = models.DateTimeField(null=True, blank=True)
+    
+    # NEW: Session quality metrics
+    average_signal_strength = models.IntegerField(null=True, blank=True)
+    connection_quality = models.CharField(max_length=20, default="good", choices=[
+        ('excellent', 'Excellent'),
+        ('good', 'Good'),
+        ('fair', 'Fair'),
+        ('poor', 'Poor')
+    ])
 
     class Meta:
         ordering = ["-start_time"]
         indexes = [
             models.Index(fields=['recoverable', 'user_type']),
             models.Index(fields=['start_time', 'end_time']),
+            models.Index(fields=['router', 'start_time']),
         ]
 
 
@@ -1648,12 +1981,16 @@ class RouterHealthCheck(models.Model):
     health_score = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
     critical_alerts = models.JSONField(default=list, blank=True)
     performance_metrics = models.JSONField(default=dict, blank=True)
+    
+    # NEW: VPN health metrics
+    vpn_status = models.JSONField(default=dict, blank=True, help_text="VPN connection status and metrics")
 
     class Meta:
         ordering = ["-timestamp"]
         indexes = [
             models.Index(fields=['router', 'timestamp']),
             models.Index(fields=['health_score']),
+            models.Index(fields=['is_online', 'timestamp']),
         ]
 
     def save(self, *args, **kwargs):
@@ -1668,6 +2005,7 @@ class RouterHealthCheck(models.Model):
             'response_time': self.response_time,
             'timestamp': self.timestamp.isoformat(),
             'critical_alerts': self.critical_alerts,
+            'vpn_status': self.vpn_status,
         }
         cache.set(cache_key, health_data, 180)
 
@@ -1690,6 +2028,8 @@ class RouterCallbackConfig(models.Model):
         ('session_expired', 'Session Expired'),
         ('suspicious_activity', 'Suspicious Activity'),
         ('health_alert', 'Health Alert'),
+        ('vpn_status_change', 'VPN Status Change'),
+        ('technician_workflow_completed', 'Technician Workflow Completed'),
     )
     
     router = models.ForeignKey(Router, on_delete=models.CASCADE, related_name="callback_configs")
@@ -1709,6 +2049,7 @@ class RouterCallbackConfig(models.Model):
         unique_together = ['router', 'event']
         indexes = [
             models.Index(fields=['router', 'event', 'is_active']),
+            models.Index(fields=['is_active', 'event']),
         ]
 
 
@@ -1722,15 +2063,26 @@ class RouterAuditLog(models.Model):
         ('status_change', 'Status Change'),
         ('user_activation', 'User Activation'),
         ('user_deactivation', 'User Deactivation'),
+        ('connection_test', 'Connection Test'),
+        ('technician_workflow', 'Technician Workflow'),
+        ('vpn_configuration', 'VPN Configuration'),
+        ('bulk_operation', 'Bulk Operation'),
+        ('audit_cleanup', 'Audit Cleanup'),  
+        ('audit_export', 'Audit Export'),    
     )
     
-    router = models.ForeignKey(Router, on_delete=models.CASCADE, related_name="audit_logs")
+    router = models.ForeignKey(Router, on_delete=models.CASCADE, related_name="audit_logs", null=True, blank=True  )
     action = models.CharField(max_length=20, choices=ACTION_TYPES)
     description = models.TextField()
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.TextField(blank=True)
     changes = models.JSONField(default=dict, blank=True)
+    status_code = models.IntegerField(
+        null=True, 
+        blank=True, 
+        help_text="HTTP status code for API operations"
+    )
     timestamp = models.DateTimeField(default=timezone.now)
 
     class Meta:
@@ -1739,6 +2091,8 @@ class RouterAuditLog(models.Model):
             models.Index(fields=['router', 'action']),
             models.Index(fields=['timestamp']),
             models.Index(fields=['user']),
+            models.Index(fields=['action', 'timestamp']),
+            models.Index(fields=['status_code']),
         ]
 
     def __str__(self):
@@ -1753,6 +2107,10 @@ class BulkOperation(models.Model):
         ('update_firmware', 'Update Firmware'),
         ('backup_config', 'Backup Configuration'),
         ('restore_config', 'Restore Configuration'),
+        ('test_connection', 'Test Connection'),
+        ('auto_configure', 'Auto Configure'),
+        ('technician_workflow', 'Technician Workflow'),
+        ('vpn_configuration', 'VPN Configuration'),
     )
     
     STATUS_CHOICES = (
@@ -1772,12 +2130,17 @@ class BulkOperation(models.Model):
     started_at = models.DateTimeField(default=timezone.now)
     completed_at = models.DateTimeField(null=True, blank=True)
     error_message = models.TextField(blank=True)
+    
+    # NEW: Enhanced operation tracking
+    parameters = models.JSONField(default=dict, blank=True, help_text="Operation parameters")
+    progress = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
 
     class Meta:
         ordering = ["-started_at"]
         indexes = [
             models.Index(fields=['operation_id']),
             models.Index(fields=['operation_type', 'status']),
+            models.Index(fields=['initiated_by', 'started_at']),
         ]
 
     def save(self, *args, **kwargs):
@@ -1789,7 +2152,7 @@ class BulkOperation(models.Model):
         operation_data = {
             'operation_type': self.operation_type,
             'status': self.status,
-            'progress': len(self.results.get('completed', [])),
+            'progress': self.progress,
             'total': self.routers.count(),
             'started_at': self.started_at.isoformat(),
             'initiated_by': self.initiated_by.username if self.initiated_by else "Unknown",

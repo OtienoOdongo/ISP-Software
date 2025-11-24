@@ -1,0 +1,175 @@
+ERROR 2025-11-24 14:33:59,112 audit_middleware 23221 139671396939456 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:33:59,562 audit_middleware 23221 139671885555392 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:33:59,729 audit_middleware 23221 139671934858944 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:33:59,784 audit_middleware 23221 139671893948096 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:34:00,129 audit_middleware 23221 139671926466240 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:34:00,399 audit_middleware 23221 139671934858944 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:34:00,413 audit_middleware 23221 139671893948096 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:34:00,437 audit_middleware 23221 139671396939456 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:34:28,197 audit_middleware 23221 139671934858944 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:34:35,973 audit_middleware 23221 139671885555392 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:34:36,217 audit_middleware 23221 139671885555392 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:34:58,485 audit_middleware 23221 139671904437952 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:35:29,057 audit_middleware 23221 139671904437952 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:35:58,367 audit_middleware 23221 139671885555392 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:36:28,374 audit_middleware 23221 139671885555392 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:36:58,941 audit_middleware 23221 139671934858944 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:37:28,923 audit_middleware 23221 139671885555392 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:38:30,771 audit_middleware 23221 139671934858944 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:39:31,665 audit_middleware 23221 139671904437952 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:40:23,402 audit_middleware 23221 139671904437952 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:40:30,622 audit_middleware 23221 139671934858944 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:40:58,599 audit_middleware 23221 139671934858944 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:41:28,333 audit_middleware 23221 139671885555392 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:41:59,308 audit_middleware 23221 139671904437952 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:42:44,616 audit_middleware 23221 139671904437952 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:43:44,416 audit_middleware 23221 139671904437952 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:44:45,865 audit_middleware 23221 139671934858944 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:45:44,129 audit_middleware 23221 139671904437952 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:46:44,243 audit_middleware 23221 139671885555392 Audit logging failed: RouterAuditLog() got unexpected keyword arguments: 'status_code'
+ERROR 2025-11-24 14:50:51,058 audit_middleware 28872 139989771687616 Audit logging failed: (1054, "Unknown column 'status_code' in 'field list'")
+ERROR 2025-11-24 14:51:46,638 audit_middleware 29418 139890437060288 Audit logging failed: (1054, "Unknown column 'status_code' in 'field list'")
+ERROR 2025-11-24 14:52:44,221 audit_middleware 29418 139890437060288 Audit logging failed: (1054, "Unknown column 'status_code' in 'field list'")
+ERROR 2025-11-24 14:53:44,479 audit_middleware 29418 139890437060288 Audit logging failed: (1054, "Unknown column 'status_code' in 'field list'")
+ERROR 2025-11-24 14:56:57,314 audit_middleware 30461 140081382184640 Audit logging failed: (1054, "Unknown column 'status_code' in 'field list'")
+ERROR 2025-11-24 14:57:43,943 audit_middleware 30461 140081390577344 Audit logging failed: (1054, "Unknown column 'status_code' in 'field list'")
+ERROR 2025-11-24 14:58:44,834 audit_middleware 30461 140081390577344 Audit logging failed: (1054, "Unknown column 'status_code' in 'field list'")
+ERROR 2025-11-24 15:01:02,116 audit_middleware 31430 139734545327808 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:01:59,592 audit_middleware 31430 139734553720512 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:01:59,744 audit_middleware 31430 139734506514112 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:01:59,879 audit_middleware 31430 139734536935104 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:02:00,501 audit_middleware 31430 139734506514112 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:02:00,697 audit_middleware 31430 139734553720512 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:02:00,715 audit_middleware 31430 139734514906816 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:02:00,867 audit_middleware 31430 139734494975680 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:02:01,535 audit_middleware 31430 139734494975680 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:02:28,957 audit_middleware 31430 139734523299520 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:02:58,981 audit_middleware 31430 139734494975680 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:03:28,961 audit_middleware 31430 139734506514112 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:04:00,723 audit_middleware 31430 139734523299520 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:04:29,003 audit_middleware 31430 139734523299520 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:04:59,097 audit_middleware 31430 139734506514112 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:05:29,007 audit_middleware 31430 139734506514112 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:06:37,292 audit_middleware 31430 139734506514112 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:07:38,300 audit_middleware 31430 139734494975680 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:08:39,202 audit_middleware 31430 139734494975680 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:14:46,035 audit_middleware 1070 139767289722560 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:15:47,145 audit_middleware 1070 139767298115264 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:16:44,607 audit_middleware 1070 139767289722560 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+ERROR 2025-11-24 15:17:45,506 audit_middleware 1070 139767298115264 Audit logging failed: (1048, "Column 'router_id' cannot be null")
+INFO 2025-11-24 15:34:02,258 audit_middleware 3521 139683317139136 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-24 15:34:02,264 audit_middleware 3521 139683342317248 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:34:02,278 audit_middleware 3521 139683308746432 Audit log created: audit_view - Audit logs accessed by Anonymous
+INFO 2025-11-24 15:34:02,280 audit_middleware 3521 139683325531840 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-24 15:34:02,977 audit_middleware 3521 139683325531840 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-24 15:34:03,293 audit_middleware 3521 139683333924544 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-24 15:34:03,578 audit_middleware 3521 139683308746432 Audit log created: audit_view - Audit logs accessed by Anonymous
+INFO 2025-11-24 15:34:03,809 audit_middleware 3521 139683342317248 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:34:27,431 audit_middleware 3521 139683317139136 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:34:57,234 audit_middleware 3521 139683317139136 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:35:27,184 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:35:57,823 audit_middleware 3521 139683342317248 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:36:27,965 audit_middleware 3521 139683317139136 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:36:57,356 audit_middleware 3521 139683342317248 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:37:44,831 audit_middleware 3521 139683342317248 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:38:45,579 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:49:43,409 audit_middleware 3521 139683434182336 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-24 15:49:43,500 audit_middleware 3521 139683317139136 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:49:44,144 audit_middleware 3521 139683325531840 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-24 15:49:45,748 audit_middleware 3521 139683342317248 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-24 15:49:46,049 audit_middleware 3521 139683317139136 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:49:46,117 audit_middleware 3521 139683434182336 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-24 15:49:46,523 audit_middleware 3521 139683325531840 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-24 15:49:47,637 audit_middleware 3521 139683308746432 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-24 15:50:13,311 audit_middleware 3521 139683308746432 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:50:45,951 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:51:12,168 audit_middleware 3521 139683308746432 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:51:19,489 audit_middleware 3521 139683308746432 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-24 15:51:21,697 audit_middleware 3521 139683317139136 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-24 15:51:42,098 audit_middleware 3521 139683308746432 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:52:11,615 audit_middleware 3521 139683317139136 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:52:41,603 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:53:13,619 audit_middleware 3521 139683317139136 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:53:42,977 audit_middleware 3521 139683317139136 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:54:38,096 audit_middleware 3521 139683317139136 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:54:42,542 audit_middleware 3521 139683317139136 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:55:12,513 audit_middleware 3521 139683308746432 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:55:45,828 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:56:47,362 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:57:44,816 audit_middleware 3521 139683308746432 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:58:44,480 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 15:59:44,403 audit_middleware 3521 139683308746432 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:00:44,114 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:01:44,571 audit_middleware 3521 139683308746432 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:02:44,296 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:03:46,081 audit_middleware 3521 139683308746432 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:04:45,017 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:05:21,155 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:05:43,508 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:07:02,591 audit_middleware 3521 139683308746432 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:07:04,853 audit_middleware 3521 139683342317248 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-24 16:07:05,886 audit_middleware 3521 139683333924544 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-24 16:07:06,085 audit_middleware 3521 139683300353728 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:07:08,829 audit_middleware 3521 139683325531840 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-24 16:07:09,803 audit_middleware 3521 139683342317248 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-24 16:07:15,102 audit_middleware 3521 139683317139136 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-24 16:07:22,047 audit_middleware 3521 139683317139136 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-24 16:07:31,512 audit_middleware 3521 139683317139136 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:08:01,734 audit_middleware 3521 139683317139136 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:08:31,536 audit_middleware 3521 139683342317248 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:09:01,950 audit_middleware 3521 139683317139136 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:09:32,430 audit_middleware 3521 139683342317248 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:10:02,574 audit_middleware 3521 139683317139136 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:10:31,190 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:11:33,375 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:12:34,774 audit_middleware 3521 139683342317248 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:13:35,256 audit_middleware 3521 139683317139136 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:14:36,398 audit_middleware 3521 139683342317248 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:15:01,470 audit_middleware 3521 139683317139136 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:15:32,260 audit_middleware 3521 139683342317248 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:16:44,472 audit_middleware 3521 139683317139136 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:17:44,323 audit_middleware 3521 139683342317248 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:18:45,632 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:19:44,428 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:20:44,651 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:21:48,142 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:22:46,350 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:23:52,965 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:24:47,188 audit_middleware 3521 139683317139136 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:24:50,615 audit_middleware 3521 139682872555200 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:24:52,535 audit_middleware 3521 139683308746432 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-24 16:25:05,635 audit_middleware 3521 139683300353728 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-24 16:26:24,939 audit_middleware 3521 139683342317248 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-24 16:26:26,018 audit_middleware 3521 139683291961024 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:26:29,171 audit_middleware 3521 139683325531840 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:26:31,657 audit_middleware 3521 139683291961024 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-24 16:26:32,338 audit_middleware 3521 139683333924544 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-24 16:26:55,397 audit_middleware 3521 139682872555200 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-24 16:26:56,348 audit_middleware 3521 139683291961024 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-24 16:34:36,387 audit_middleware 3521 139683308746432 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-24 16:35:58,228 audit_middleware 3521 139682864162496 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:35:58,345 audit_middleware 3521 139682352436928 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:35:58,350 audit_middleware 3521 139683342317248 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:35:58,942 audit_middleware 3521 139682855769792 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:35:58,353 audit_middleware 3521 139682830591680 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:35:59,222 audit_middleware 3521 139683325531840 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:35:59,225 audit_middleware 3521 139682369222336 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:35:59,455 audit_middleware 3521 139682402793152 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:36:00,465 audit_middleware 3521 139682394400448 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:44:35,301 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:44:35,352 audit_middleware 3521 139683291961024 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-24 16:44:38,283 audit_middleware 3521 139683333924544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:44:38,290 audit_middleware 3521 139683291961024 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-24 16:45:02,739 audit_middleware 3521 139683291961024 Audit log created: health_check - Health check performed by None
+ERROR 2025-11-24 16:46:18,466 audit_middleware 3521 139683325531840 Audit log created for exception: Timeout writing to socket
+INFO 2025-11-24 16:51:08,803 audit_middleware 3521 139682838984384 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:51:25,569 audit_middleware 3521 139683291961024 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:51:25,642 audit_middleware 3521 139682855769792 Audit log created: health_check - Health check performed by None
+ERROR 2025-11-24 16:51:25,638 audit_middleware 3521 139683333924544 Audit log created for exception: Timeout writing to socket
+INFO 2025-11-24 16:51:29,602 audit_middleware 3521 139682872555200 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:51:31,758 audit_middleware 3521 139682822198976 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:52:31,013 audit_middleware 3521 139683342317248 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-24 16:52:44,548 audit_middleware 3521 139682402793152 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:52:53,939 audit_middleware 3521 139682369222336 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:52:57,178 audit_middleware 3521 139682386007744 Audit log created: health_check - Health check performed by None
+INFO 2025-11-24 16:53:16,307 audit_middleware 3521 139683317139136 Audit log created: audit_view - Audit logs accessed by None

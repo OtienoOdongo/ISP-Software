@@ -2,10 +2,6 @@
 
 
 
-
-
-
-
 # """
 # Enhanced Router Management Serializers
 
@@ -18,13 +14,16 @@
 #     Router, RouterStats, HotspotUser, PPPoEUser, ActivationAttempt, 
 #     RouterSessionHistory, RouterHealthCheck, RouterCallbackConfig,
 #     RouterAuditLog, BulkOperation, HotspotConfiguration, PPPoEConfiguration,
-#     RouterConnectionTest  # NEW: Import the new model
+#     RouterConnectionTest
 # )
 # from account.serializers.admin_serializer import ClientSerializer
 # from payments.serializers.payment_config_serializer import TransactionSerializer
 # from django.utils import timezone
 # from datetime import timedelta
 # from django.core.cache import cache
+# import logging
+
+# logger = logging.getLogger(__name__)
 
 
 # # NEW: Router Connection Test Serializer
@@ -119,6 +118,7 @@
 #     configuration_status = serializers.SerializerMethodField()
 #     can_apply_configuration = serializers.SerializerMethodField()
 #     last_configuration_status = serializers.SerializerMethodField()
+#     configuration_errors_summary = serializers.SerializerMethodField()
     
 #     class Meta:
 #         model = HotspotConfiguration
@@ -131,7 +131,7 @@
 #             # NEW: Configuration status fields
 #             'configuration_applied', 'last_configuration_attempt', 'configuration_errors',
 #             'configuration_status', 'can_apply_configuration', 'last_configuration_status',
-#             'created_at', 'updated_at'
+#             'configuration_errors_summary', 'created_at', 'updated_at'
 #         ]
 #         read_only_fields = [
 #             'id', 'created_at', 'updated_at', 'landing_page_url', 
@@ -175,6 +175,19 @@
         
 #         return f"{status} - {time_str}"
 
+#     def get_configuration_errors_summary(self, obj):
+#         """Get a summary of configuration errors."""
+#         if not obj.configuration_errors:
+#             return "No errors"
+        
+#         if len(obj.configuration_errors) == 1:
+#             error = obj.configuration_errors[0]
+#             if len(error) > 100:
+#                 return error[:100] + "..."
+#             return error
+        
+#         return f"{len(obj.configuration_errors)} errors"
+
 #     def validate_ssid(self, value):
 #         """Validate SSID format and uniqueness."""
 #         if not value or value.strip() == "":
@@ -206,6 +219,7 @@
 #     configuration_status = serializers.SerializerMethodField()
 #     can_apply_configuration = serializers.SerializerMethodField()
 #     last_configuration_status = serializers.SerializerMethodField()
+#     configuration_errors_summary = serializers.SerializerMethodField()
     
 #     class Meta:
 #         model = PPPoEConfiguration
@@ -218,7 +232,7 @@
 #             # NEW: Configuration status fields
 #             'configuration_applied', 'last_configuration_attempt', 'configuration_errors',
 #             'configuration_status', 'can_apply_configuration', 'last_configuration_status',
-#             'created_at', 'updated_at'
+#             'configuration_errors_summary', 'created_at', 'updated_at'
 #         ]
 #         read_only_fields = [
 #             'id', 'created_at', 'updated_at',
@@ -262,6 +276,19 @@
 #             time_str = f"{time_ago.seconds // 60} minutes ago"
         
 #         return f"{status} - {time_str}"
+
+#     def get_configuration_errors_summary(self, obj):
+#         """Get a summary of configuration errors."""
+#         if not obj.configuration_errors:
+#             return "No errors"
+        
+#         if len(obj.configuration_errors) == 1:
+#             error = obj.configuration_errors[0]
+#             if len(error) > 100:
+#                 return error[:100] + "..."
+#             return error
+        
+#         return f"{len(obj.configuration_errors)} errors"
 
 #     def validate_service_name(self, value):
 #         """Validate PPPoE service name."""
@@ -338,8 +365,8 @@
 #     callback_configs = RouterCallbackConfigSerializer(many=True, read_only=True)
 #     stats = RouterStatsSerializer(many=True, read_only=True)
 #     health_checks = RouterHealthCheckSerializer(many=True, read_only=True)
-#     hotspot_configuration = HotspotConfigurationSerializer(read_only=True)
-#     pppoe_configuration = PPPoEConfigurationSerializer(read_only=True)
+#     hotspot_configurations = HotspotConfigurationSerializer(many=True, read_only=True)
+#     pppoe_configurations = PPPoEConfigurationSerializer(many=True, read_only=True)
     
 #     # NEW: Connection test data
 #     connection_tests = RouterConnectionTestSerializer(many=True, read_only=True)
@@ -366,6 +393,7 @@
 #     # NEW: Connection test counts
 #     connection_tests_count = serializers.SerializerMethodField()
 #     successful_connection_tests = serializers.SerializerMethodField()
+#     connection_test_success_rate = serializers.SerializerMethodField()
 
 #     class Meta:
 #         model = Router
@@ -383,21 +411,21 @@
 #             "max_clients", "description", "firmware_version", "ssid",
 #             "created_at", "updated_at",
 #             # Related objects
-#             "callback_configs", "stats", "health_checks", "hotspot_configuration", "pppoe_configuration",
+#             "callback_configs", "stats", "health_checks", "hotspot_configurations", "pppoe_configurations",
 #             "connection_tests", "latest_connection_test",
 #             # Computed fields
 #             "active_users_count", "health_score", "system_metrics",
 #             "hotspot_users_count", "pppoe_users_count", "audit_logs_count",
-#             "connection_tests_count", "successful_connection_tests",
+#             "connection_tests_count", "successful_connection_tests", "connection_test_success_rate",
 #             "connection_quality", "can_configure_hotspot", "can_configure_pppoe"
 #         ]
 #         read_only_fields = [
 #             "id", "last_seen", "created_at", "updated_at", "active_users_count", 
 #             "health_score", "system_metrics", "hotspot_users_count", "pppoe_users_count", 
 #             "audit_logs_count", "callback_configs", "stats", "health_checks",
-#             "hotspot_configuration", "pppoe_configuration", "connection_tests",
-#             "connection_tests_count", "successful_connection_tests", "connection_quality",
-#             "can_configure_hotspot", "can_configure_pppoe", "latest_connection_test",
+#             "hotspot_configurations", "pppoe_configurations", "connection_tests",
+#             "connection_tests_count", "successful_connection_tests", "connection_test_success_rate",
+#             "connection_quality", "can_configure_hotspot", "can_configure_pppoe", "latest_connection_test",
 #             "connection_status", "configuration_status", "last_connection_test",
 #             "average_response_time", "connection_success_rate"
 #         ]
@@ -447,6 +475,14 @@
 
 #     def get_successful_connection_tests(self, obj):
 #         return obj.connection_tests.filter(success=True).count()
+
+#     def get_connection_test_success_rate(self, obj):
+#         total_tests = self.get_connection_tests_count(obj)
+#         successful_tests = self.get_successful_connection_tests(obj)
+        
+#         if total_tests == 0:
+#             return 0
+#         return round((successful_tests / total_tests) * 100, 2)
 
 #     def get_latest_connection_test(self, obj):
 #         latest_test = obj.connection_tests.order_by('-tested_at').first()
@@ -498,8 +534,6 @@
                 
 #             except Exception as e:
 #                 # Log error but don't fail creation
-#                 import logging
-#                 logger = logging.getLogger(__name__)
 #                 logger.error(f"Auto-connection test failed for new router {router.id}: {str(e)}")
         
 #         return router
@@ -600,7 +634,7 @@
 #     transaction = TransactionSerializer(read_only=True)
 #     router_name = serializers.CharField(source='router.name', read_only=True)
 #     router_ip = serializers.CharField(source='router.ip', read_only=True)
-#     router_service_name = serializers.CharField(source='router.pppoe_configuration.service_name', read_only=True)
+#     router_service_name = serializers.CharField(source='router.pppoe_configurations.service_name', read_only=True)
 #     router_connection_status = serializers.CharField(source='router.connection_status', read_only=True)
     
 #     # Computed fields
@@ -692,6 +726,7 @@
     
 #     # NEW: Connection quality context
 #     connection_quality = serializers.SerializerMethodField()
+#     router_configuration_status = serializers.CharField(source='router.configuration_status', read_only=True)
 
 #     class Meta:
 #         model = ActivationAttempt
@@ -699,7 +734,7 @@
 #             "id", "subscription", "router", "router_name", "router_ip", "router_connection_status",
 #             "attempted_at", "success", "error_message", "retry_count", "user_type", "user_type_display",
 #             "payment_verified", "transaction_reference", "verification_method", "verification_method_display",
-#             "connection_quality"
+#             "connection_quality", "router_configuration_status"
 #         ]
 #         read_only_fields = ["id", "attempted_at"]
 
@@ -717,18 +752,30 @@
     
 #     # NEW: Session recovery context
 #     can_recover = serializers.SerializerMethodField()
+#     recovery_status = serializers.SerializerMethodField()
 
 #     class Meta:
 #         model = RouterSessionHistory
 #         fields = [
 #             "id", "hotspot_user", "pppoe_user", "router", "router_name", "router_ip", "router_connection_status",
 #             "start_time", "end_time", "data_used", "duration", "disconnected_reason", "disconnected_reason_display",
-#             "user_type", "user_type_display", "recoverable", "recovery_attempted", "recovered_at", "can_recover"
+#             "user_type", "user_type_display", "recoverable", "recovery_attempted", "recovered_at", "can_recover",
+#             "recovery_status"
 #         ]
 #         read_only_fields = ["id", "start_time"]
 
 #     def get_can_recover(self, obj):
 #         return obj.recoverable and not obj.recovery_attempted
+
+#     def get_recovery_status(self, obj):
+#         if obj.recovered_at:
+#             return "Recovered"
+#         elif obj.recovery_attempted:
+#             return "Recovery Failed"
+#         elif obj.recoverable:
+#             return "Recoverable"
+#         else:
+#             return "Not Recoverable"
 
 
 # # Enhanced Router Audit Log Serializer
@@ -739,14 +786,32 @@
 #     user_username = serializers.CharField(source='user.username', read_only=True)
 #     user_email = serializers.CharField(source='user.email', read_only=True)
 #     action_display = serializers.CharField(source='get_action_display', read_only=True)
+    
+#     # NEW: Enhanced change tracking
+#     changes_summary = serializers.SerializerMethodField()
 
 #     class Meta:
 #         model = RouterAuditLog
 #         fields = [
 #             "id", "router", "router_name", "router_ip", "router_connection_status", "action", "action_display",
-#             "description", "user", "user_username", "user_email", "ip_address", "user_agent", "changes", "timestamp"
+#             "description", "user", "user_username", "user_email", "ip_address", "user_agent", "changes", "changes_summary", "timestamp"
 #         ]
 #         read_only_fields = ["id", "timestamp"]
+
+#     def get_changes_summary(self, obj):
+#         """Create a summary of changes made."""
+#         if not obj.changes:
+#             return "No changes"
+        
+#         changes_list = []
+#         for field, values in obj.changes.items():
+#             if isinstance(values, list) and len(values) == 2:
+#                 old_val, new_val = values
+#                 changes_list.append(f"{field}: {old_val} → {new_val}")
+#             else:
+#                 changes_list.append(f"{field}: {values}")
+        
+#         return "; ".join(changes_list[:3]) + ("..." if len(changes_list) > 3 else "")
 
 
 # # Enhanced Bulk Operation Serializer
@@ -759,13 +824,16 @@
 #     # NEW: Connection management operations
 #     routers_count = serializers.SerializerMethodField()
 #     success_rate = serializers.SerializerMethodField()
+#     progress_percentage = serializers.SerializerMethodField()
+#     estimated_completion = serializers.SerializerMethodField()
 
 #     class Meta:
 #         model = BulkOperation
 #         fields = [
 #             "id", "operation_id", "operation_type", "operation_type_display", "routers", 
 #             "initiated_by", "initiated_by_username", "initiated_by_email", "status", "status_display",
-#             "results", "started_at", "completed_at", "error_message", "routers_count", "success_rate"
+#             "results", "started_at", "completed_at", "error_message", "routers_count", "success_rate",
+#             "progress_percentage", "estimated_completion"
 #         ]
 #         read_only_fields = ["id", "operation_id", "started_at"]
 
@@ -784,6 +852,41 @@
         
 #         return round((completed / total) * 100, 2)
 
+#     def get_progress_percentage(self, obj):
+#         if not obj.results:
+#             return 0
+        
+#         completed = len(obj.results.get('completed', []))
+#         failed = len(obj.results.get('failed', []))
+#         total = obj.routers.count()
+        
+#         if total == 0:
+#             return 0
+        
+#         return round(((completed + failed) / total) * 100, 2)
+
+#     def get_estimated_completion(self, obj):
+#         if obj.status == 'completed' and obj.completed_at:
+#             return obj.completed_at
+        
+#         if obj.status != 'running' or not obj.results:
+#             return None
+        
+#         completed = len(obj.results.get('completed', []))
+#         if completed == 0:
+#             return None
+        
+#         # Estimate based on average time per operation
+#         time_elapsed = (timezone.now() - obj.started_at).total_seconds()
+#         avg_time_per_op = time_elapsed / completed if completed > 0 else 0
+#         remaining_ops = obj.routers.count() - completed
+        
+#         if avg_time_per_op > 0 and remaining_ops > 0:
+#             estimated_seconds = avg_time_per_op * remaining_ops
+#             return timezone.now() + timedelta(seconds=estimated_seconds)
+        
+#         return None
+
 
 # # Enhanced List Serializers with connection status
 # class RouterListSerializer(serializers.ModelSerializer):
@@ -798,6 +901,7 @@
 #     # NEW: Connection quality indicator
 #     connection_quality = serializers.SerializerMethodField()
 #     last_connection_test = serializers.SerializerMethodField()
+#     connection_test_success_rate = serializers.SerializerMethodField()
 
 #     class Meta:
 #         model = Router
@@ -806,7 +910,8 @@
 #             'status', 'status_display', 'connection_status', 'connection_status_display',
 #             'configuration_status', 'configuration_status_display', 'ssid',
 #             'last_seen', 'last_connection_test', 'is_active', 'max_clients', 'firmware_version',
-#             'active_users_count', 'health_score', 'latest_stats', 'connection_quality'
+#             'active_users_count', 'health_score', 'latest_stats', 'connection_quality',
+#             'connection_test_success_rate'
 #         ]
 
 #     def get_active_users_count(self, obj):
@@ -842,6 +947,14 @@
 #                 return f"{time_ago.seconds // 60}m ago"
 #         return "Never"
 
+#     def get_connection_test_success_rate(self, obj):
+#         total_tests = obj.connection_tests.count()
+#         successful_tests = obj.connection_tests.filter(success=True).count()
+        
+#         if total_tests == 0:
+#             return 0
+#         return round((successful_tests / total_tests) * 100, 2)
+
 
 # class HotspotUserListSerializer(serializers.ModelSerializer):
 #     client_name = serializers.CharField(source='client.user.username', read_only=True)
@@ -852,13 +965,14 @@
 #     plan_name = serializers.CharField(source='plan.name', read_only=True)
 #     remaining_time_formatted = serializers.SerializerMethodField()
 #     session_duration = serializers.SerializerMethodField()
+#     quality_of_service_display = serializers.SerializerMethodField()
 
 #     class Meta:
 #         model = HotspotUser
 #         fields = [
 #             'id', 'mac', 'ip', 'client_name', 'client_phone', 'router_name', 'router_ssid', 'router_connection_status',
 #             'plan_name', 'connected_at', 'data_used', 'active', 'remaining_time', 
-#             'remaining_time_formatted', 'session_duration', 'quality_of_service'
+#             'remaining_time_formatted', 'session_duration', 'quality_of_service', 'quality_of_service_display'
 #         ]
 
 #     def get_remaining_time_formatted(self, obj):
@@ -876,24 +990,34 @@
 #         hours = int(duration // 3600)
 #         minutes = int((duration % 3600) // 60)
 #         return f"{hours}h {minutes}m"
+
+#     def get_quality_of_service_display(self, obj):
+#         quality_map = {
+#             "Residential": "Residential",
+#             "Business": "Business", 
+#             "Promotional": "Promotional",
+#             "Enterprise": "Enterprise"
+#         }
+#         return quality_map.get(obj.quality_of_service, obj.quality_of_service)
 
 
 # class PPPoEUserListSerializer(serializers.ModelSerializer):
 #     client_name = serializers.CharField(source='client.user.username', read_only=True)
 #     client_phone = serializers.CharField(source='client.user.phone_number', read_only=True)
 #     router_name = serializers.CharField(source='router.name', read_only=True)
-#     router_service_name = serializers.CharField(source='router.pppoe_configuration.service_name', read_only=True)
+#     router_service_name = serializers.CharField(source='router.pppoe_configurations.service_name', read_only=True)
 #     router_connection_status = serializers.CharField(source='router.connection_status', read_only=True)
 #     plan_name = serializers.CharField(source='plan.name', read_only=True)
 #     remaining_time_formatted = serializers.SerializerMethodField()
 #     session_duration = serializers.SerializerMethodField()
+#     pppoe_service_type_display = serializers.SerializerMethodField()
 
 #     class Meta:
 #         model = PPPoEUser
 #         fields = [
 #             'id', 'username', 'ip_address', 'client_name', 'client_phone', 'router_name', 
 #             'router_service_name', 'router_connection_status', 'plan_name', 'connected_at', 'data_used', 'active', 
-#             'remaining_time', 'remaining_time_formatted', 'session_duration', 'pppoe_service_type'
+#             'remaining_time', 'remaining_time_formatted', 'session_duration', 'pppoe_service_type', 'pppoe_service_type_display'
 #         ]
 
 #     def get_remaining_time_formatted(self, obj):
@@ -911,6 +1035,14 @@
 #         hours = int(duration // 3600)
 #         minutes = int((duration % 3600) // 60)
 #         return f"{hours}h {minutes}m"
+
+#     def get_pppoe_service_type_display(self, obj):
+#         service_map = {
+#             "standard": "Standard",
+#             "business": "Business",
+#             "premium": "Premium"
+#         }
+#         return service_map.get(obj.pppoe_service_type, obj.pppoe_service_type)
 
 
 # # NEW: Connection Test Request Serializer
@@ -922,6 +1054,10 @@
 #     username = serializers.CharField(required=False)
 #     password = serializers.CharField(required=False)
 #     port = serializers.IntegerField(default=8728, min_value=1, max_value=65535)
+#     test_type = serializers.ChoiceField(
+#         choices=[('basic', 'Basic'), ('extended', 'Extended'), ('full', 'Full')],
+#         default='basic'
+#     )
     
 #     def validate(self, data):
 #         """Validate that either router_id or connection details are provided."""
@@ -936,7 +1072,7 @@
 # class AutoConfigurationRequestSerializer(serializers.Serializer):
 #     """Serializer for auto-configuration requests."""
     
-#     configuration_type = serializers.ChoiceField(choices=[('hotspot', 'Hotspot'), ('pppoe', 'PPPoE')])
+#     configuration_type = serializers.ChoiceField(choices=[('hotspot', 'Hotspot'), ('pppoe', 'PPPoE'), ('both', 'Both')])
 #     ssid = serializers.CharField(required=False, max_length=32)
 #     configuration_template = serializers.CharField(required=False)
 #     auto_detect = serializers.BooleanField(default=True)
@@ -957,14 +1093,32 @@
 #         """Validate configuration parameters based on type."""
 #         config_type = data.get('configuration_type')
         
-#         if config_type == 'hotspot' and not data.get('ssid'):
+#         if config_type in ['hotspot', 'both'] and not data.get('ssid'):
 #             # Auto-generate SSID if not provided
 #             data['ssid'] = "Hotspot-WiFi"
             
-#         if config_type == 'pppoe' and not data.get('service_name'):
+#         if config_type in ['pppoe', 'both'] and not data.get('service_name'):
 #             # Auto-generate service name if not provided
 #             data['service_name'] = "PPPoE-Service"
             
+#         return data
+
+
+# # NEW: Configuration Apply Request Serializer
+# class ConfigurationApplyRequestSerializer(serializers.Serializer):
+#     """Serializer for applying configurations to routers."""
+    
+#     configuration_id = serializers.IntegerField(required=True)
+#     configuration_type = serializers.ChoiceField(
+#         choices=[('hotspot', 'Hotspot'), ('pppoe', 'PPPoE')],
+#         required=True
+#     )
+#     force_apply = serializers.BooleanField(default=False)
+#     test_connection_first = serializers.BooleanField(default=True)
+    
+#     def validate(self, data):
+#         """Validate configuration application request."""
+#         # Additional validation can be added here based on configuration type
 #         return data
 
 
@@ -986,12 +1140,14 @@
 #     connection_success_rate = serializers.FloatField()
 #     average_response_time = serializers.FloatField()
 #     configuration_status = serializers.DictField()
+#     connection_quality_distribution = serializers.DictField()
 
 
 # class RouterStatusUpdateSerializer(serializers.Serializer):
 #     status = serializers.ChoiceField(choices=Router.STATUS_CHOICES)
 #     connection_status = serializers.ChoiceField(choices=Router.CONNECTION_STATUS_CHOICES, required=False)
 #     last_seen = serializers.DateTimeField(required=False)
+#     firmware_version = serializers.CharField(required=False, allow_blank=True)
 
 
 # class UserSessionSerializer(serializers.Serializer):
@@ -1005,6 +1161,7 @@
 #     router_ssid = serializers.CharField(required=False)
 #     router_service_name = serializers.CharField(required=False)
 #     router_connection_status = serializers.CharField(required=False)
+#     router_configuration_status = serializers.CharField(required=False)
 
 
 # class SessionRecoverySerializer(serializers.Serializer):
@@ -1015,6 +1172,7 @@
 #         choices=[('auto', 'Auto'), ('manual', 'Manual')],
 #         default='auto'
 #     )
+#     router_id = serializers.IntegerField(required=False)
 
 #     def validate(self, data):
 #         if not data.get('mac_address') and not data.get('username'):
@@ -1036,7 +1194,8 @@
 #             ('update_firmware', 'Update Firmware'),
 #             # NEW: Connection management actions
 #             ('test_connection', 'Test Connection'),
-#             ('auto_configure', 'Auto Configure')
+#             ('auto_configure', 'Auto Configure'),
+#             ('apply_configuration', 'Apply Configuration')
 #         ],
 #         required=True
 #     )
@@ -1051,16 +1210,18 @@
 #         choices=[('automatic', 'Automatic'), ('manual', 'Manual')],
 #         default='automatic'
 #     )
+#     router_id = serializers.IntegerField(required=False)
+
 
 
 
 
 
 """
-Enhanced Router Management Serializers
+Enhanced Router Management Serializers - COMPLETE
 
 This module provides comprehensive serializers for router management with
-connection testing, dynamic SSID support, and configuration status tracking.
+connection testing, dynamic SSID support, VPN configuration, and technician workflow tracking.
 """
 
 from rest_framework import serializers
@@ -1078,6 +1239,117 @@ from django.core.cache import cache
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+# NEW: Technician Workflow Serializers
+class TechnicianWorkflowSerializer(serializers.Serializer):
+    """Serializer for technician workflow requests."""
+    
+    workflow_type = serializers.ChoiceField(
+        choices=[('new_router_deployment', 'New Router Deployment'), 
+                ('vpn_enablement', 'VPN Enablement'),
+                ('troubleshooting', 'Troubleshooting')],
+        required=True
+    )
+    deployment_site = serializers.CharField(max_length=100, required=True)
+    router_config = serializers.DictField(required=False)
+    vpn_type = serializers.ChoiceField(
+        choices=[('openvpn', 'OpenVPN'), ('wireguard', 'WireGuard'), ('sstp', 'SSTP')],
+        default='openvpn',
+        required=False
+    )
+    setup_type = serializers.ChoiceField(
+        choices=[('hotspot', 'Hotspot'), ('pppoe', 'PPPoE'), ('both', 'Both')],
+        default='hotspot',
+        required=False
+    )
+    
+    def validate(self, data):
+        """Validate workflow parameters."""
+        workflow_type = data.get('workflow_type')
+        
+        if workflow_type == 'new_router_deployment' and not data.get('router_config'):
+            raise serializers.ValidationError(
+                "router_config is required for new router deployment"
+            )
+        
+        return data
+
+
+class DeploymentRequestSerializer(serializers.Serializer):
+    """Serializer for deployment requests."""
+    
+    site = serializers.CharField(max_length=100, required=True)
+    workflow_type = serializers.ChoiceField(
+        choices=[('new_router_deployment', 'New Router Deployment'), 
+                ('vpn_enablement', 'VPN Enablement'),
+                ('troubleshooting', 'Troubleshooting')],
+        required=True
+    )
+    router_config = serializers.DictField(required=True)
+    
+    def validate_router_config(self, value):
+        """Validate router configuration."""
+        required_fields = ['host', 'username', 'password']
+        for field in required_fields:
+            if field not in value:
+                raise serializers.ValidationError(
+                    f"router_config must contain '{field}' field"
+                )
+        return value
+
+
+# NEW: VPN Configuration Serializers
+class VPNConfigurationSerializer(serializers.Serializer):
+    """Serializer for VPN configuration requests."""
+    
+    vpn_type = serializers.ChoiceField(
+        choices=[('openvpn', 'OpenVPN'), ('wireguard', 'WireGuard'), ('sstp', 'SSTP')],
+        required=True
+    )
+    configuration = serializers.DictField(required=False)
+    certificate_info = serializers.DictField(required=False)
+    generate_certificates = serializers.BooleanField(default=True)
+    
+    def validate(self, data):
+        """Validate VPN configuration."""
+        vpn_type = data.get('vpn_type')
+        
+        if vpn_type == 'openvpn' and data.get('generate_certificates', True):
+            # Ensure certificate info is provided or can be generated
+            if not data.get('certificate_info'):
+                # Auto-generate certificate info if not provided
+                data['certificate_info'] = {
+                    'auto_generate': True,
+                    'validity_years': 5
+                }
+        
+        return data
+
+
+class CertificateInfoSerializer(serializers.Serializer):
+    """Serializer for certificate information."""
+    
+    certificate_id = serializers.CharField(read_only=True)
+    router_name = serializers.CharField(read_only=True)
+    router_ip = serializers.CharField(read_only=True)
+    certificate_path = serializers.CharField(read_only=True)
+    private_key_path = serializers.CharField(read_only=True)
+    ca_certificate_path = serializers.CharField(read_only=True)
+    valid_until = serializers.CharField(read_only=True)
+    generated_at = serializers.CharField(read_only=True)
+    is_valid = serializers.BooleanField(read_only=True)
+    days_remaining = serializers.IntegerField(read_only=True)
+
+
+class VPNTestRequestSerializer(serializers.Serializer):
+    """Serializer for VPN test requests."""
+    
+    vpn_type = serializers.ChoiceField(
+        choices=[('openvpn', 'OpenVPN'), ('wireguard', 'WireGuard'), ('sstp', 'SSTP')],
+        required=True
+    )
+    client_config = serializers.DictField(required=False)
 
 
 # NEW: Router Connection Test Serializer
@@ -1149,13 +1421,14 @@ class RouterConfigurationTemplateSerializer(serializers.Serializer):
     description = serializers.CharField()
     hotspot_config = serializers.DictField(required=False)
     pppoe_config = serializers.DictField(required=False)
+    vpn_config = serializers.DictField(required=False)
     recommended_for = serializers.ListField(child=serializers.CharField())
     
     def validate(self, data):
         """Validate that at least one configuration type is provided."""
-        if not data.get('hotspot_config') and not data.get('pppoe_config'):
+        if not data.get('hotspot_config') and not data.get('pppoe_config') and not data.get('vpn_config'):
             raise serializers.ValidationError(
-                "At least one of hotspot_config or pppoe_config must be provided"
+                "At least one of hotspot_config, pppoe_config, or vpn_config must be provided"
             )
         return data
 
@@ -1185,7 +1458,10 @@ class HotspotConfigurationSerializer(serializers.ModelSerializer):
             # NEW: Configuration status fields
             'configuration_applied', 'last_configuration_attempt', 'configuration_errors',
             'configuration_status', 'can_apply_configuration', 'last_configuration_status',
-            'configuration_errors_summary', 'created_at', 'updated_at'
+            'configuration_errors_summary', 
+            # NEW: Advanced configuration options
+            'ip_pool', 'dns_servers', 'rate_limit', 'idle_timeout',
+            'created_at', 'updated_at'
         ]
         read_only_fields = [
             'id', 'created_at', 'updated_at', 'landing_page_url', 
@@ -1381,7 +1657,7 @@ class RouterStatsSerializer(serializers.ModelSerializer):
             "id", "router", "router_name", "router_ip", "router_status", "router_connection_status",
             "cpu", "memory", "connected_clients_count", "uptime", "signal", "temperature", 
             "throughput", "disk", "timestamp", "upload_speed", "download_speed", 
-            "hotspot_clients", "pppoe_clients"
+            "hotspot_clients", "pppoe_clients", "vpn_connections", "vpn_throughput"
         ]
         read_only_fields = ["id", "router", "timestamp"]
 
@@ -1393,13 +1669,15 @@ class RouterHealthCheckSerializer(serializers.ModelSerializer):
     router_status = serializers.CharField(source='router.status', read_only=True)
     router_connection_status = serializers.CharField(source='router.connection_status', read_only=True)
     health_status = serializers.SerializerMethodField()
+    vpn_status_summary = serializers.SerializerMethodField()
 
     class Meta:
         model = RouterHealthCheck
         fields = [
             "id", "router", "router_name", "router_ip", "router_status", "router_connection_status",
             "timestamp", "is_online", "response_time", "error_message", "system_metrics", 
-            "health_score", "critical_alerts", "performance_metrics", "health_status"
+            "health_score", "critical_alerts", "performance_metrics", "vpn_status",
+            "health_status", "vpn_status_summary"
         ]
         read_only_fields = ["id", "timestamp"]
 
@@ -1413,8 +1691,20 @@ class RouterHealthCheckSerializer(serializers.ModelSerializer):
         else:
             return "Poor"
 
+    def get_vpn_status_summary(self, obj):
+        """Get VPN status summary."""
+        if not obj.vpn_status:
+            return "Not Configured"
+        
+        vpn_status = obj.vpn_status
+        if vpn_status.get('enabled', False):
+            connections = vpn_status.get('active_connections', 0)
+            return f"Enabled ({connections} connections)"
+        else:
+            return "Disabled"
 
-# ENHANCED: Main Router Serializer with Connection Management
+
+# ENHANCED: Main Router Serializer with Connection Management and VPN Support
 class RouterSerializer(serializers.ModelSerializer):
     callback_configs = RouterCallbackConfigSerializer(many=True, read_only=True)
     stats = RouterStatsSerializer(many=True, read_only=True)
@@ -1438,6 +1728,7 @@ class RouterSerializer(serializers.ModelSerializer):
     connection_quality = serializers.SerializerMethodField()
     can_configure_hotspot = serializers.SerializerMethodField()
     can_configure_pppoe = serializers.SerializerMethodField()
+    can_configure_vpn = serializers.SerializerMethodField()
     
     # Related counts
     hotspot_users_count = serializers.SerializerMethodField()
@@ -1448,6 +1739,11 @@ class RouterSerializer(serializers.ModelSerializer):
     connection_tests_count = serializers.SerializerMethodField()
     successful_connection_tests = serializers.SerializerMethodField()
     connection_test_success_rate = serializers.SerializerMethodField()
+    
+    # NEW: VPN fields
+    vpn_type_display = serializers.SerializerMethodField()
+    vpn_status_summary = serializers.SerializerMethodField()
+    technician_workflow_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Router
@@ -1463,6 +1759,10 @@ class RouterSerializer(serializers.ModelSerializer):
             # Original fields
             "last_seen", "is_default", "captive_portal_enabled", "is_active", "callback_url", 
             "max_clients", "description", "firmware_version", "ssid",
+            # NEW: VPN configuration fields
+            "vpn_enabled", "vpn_type", "vpn_type_display", "vpn_configuration", "vpn_status_summary",
+            # NEW: Technician workflow tracking
+            "last_technician_workflow", "workflow_status", "technician_workflow_status",
             "created_at", "updated_at",
             # Related objects
             "callback_configs", "stats", "health_checks", "hotspot_configurations", "pppoe_configurations",
@@ -1471,7 +1771,7 @@ class RouterSerializer(serializers.ModelSerializer):
             "active_users_count", "health_score", "system_metrics",
             "hotspot_users_count", "pppoe_users_count", "audit_logs_count",
             "connection_tests_count", "successful_connection_tests", "connection_test_success_rate",
-            "connection_quality", "can_configure_hotspot", "can_configure_pppoe"
+            "connection_quality", "can_configure_hotspot", "can_configure_pppoe", "can_configure_vpn"
         ]
         read_only_fields = [
             "id", "last_seen", "created_at", "updated_at", "active_users_count", 
@@ -1479,9 +1779,10 @@ class RouterSerializer(serializers.ModelSerializer):
             "audit_logs_count", "callback_configs", "stats", "health_checks",
             "hotspot_configurations", "pppoe_configurations", "connection_tests",
             "connection_tests_count", "successful_connection_tests", "connection_test_success_rate",
-            "connection_quality", "can_configure_hotspot", "can_configure_pppoe", "latest_connection_test",
-            "connection_status", "configuration_status", "last_connection_test",
-            "average_response_time", "connection_success_rate"
+            "connection_quality", "can_configure_hotspot", "can_configure_pppoe", "can_configure_vpn", 
+            "latest_connection_test", "connection_status", "configuration_status", "last_connection_test",
+            "average_response_time", "connection_success_rate", "vpn_type_display", "vpn_status_summary",
+            "technician_workflow_status"
         ]
         extra_kwargs = {
             'password': {'write_only': True}
@@ -1511,6 +1812,7 @@ class RouterSerializer(serializers.ModelSerializer):
                 'uptime': latest_stats.uptime,
                 'upload_speed': latest_stats.upload_speed,
                 'download_speed': latest_stats.download_speed,
+                'vpn_connections': latest_stats.vpn_connections,
             }
         return {}
 
@@ -1553,11 +1855,56 @@ class RouterSerializer(serializers.ModelSerializer):
     def get_can_configure_pppoe(self, obj):
         return obj.can_configure_pppoe()
 
+    def get_can_configure_vpn(self, obj):
+        return obj.can_configure_vpn()
+
+    def get_vpn_type_display(self, obj):
+        """Get VPN type display name."""
+        vpn_types = {
+            "openvpn": "OpenVPN",
+            "wireguard": "WireGuard", 
+            "sstp": "SSTP"
+        }
+        return vpn_types.get(obj.vpn_type, obj.vpn_type)
+
+    def get_vpn_status_summary(self, obj):
+        """Get VPN status summary."""
+        if not obj.vpn_enabled:
+            return "Disabled"
+        
+        latest_health = obj.health_checks.order_by('-timestamp').first()
+        if latest_health and latest_health.vpn_status:
+            connections = latest_health.vpn_status.get('active_connections', 0)
+            return f"Enabled ({connections} connections)"
+        else:
+            return "Enabled"
+
+    def get_technician_workflow_status(self, obj):
+        """Get technician workflow status summary."""
+        if not obj.last_technician_workflow:
+            return "No recent workflows"
+        
+        time_ago = timezone.now() - obj.last_technician_workflow
+        if time_ago.days > 0:
+            time_str = f"{time_ago.days} days ago"
+        elif time_ago.seconds > 3600:
+            time_str = f"{time_ago.seconds // 3600} hours ago"
+        else:
+            time_str = f"{time_ago.seconds // 60} minutes ago"
+        
+        return f"{obj.workflow_status or 'Unknown'} - {time_str}"
+
     def validate(self, data):
         """Validate router data with connection testing support."""
         # Auto-generate SSID if not provided
         if not data.get('ssid') and data.get('name'):
             data['ssid'] = f"{data['name']}-WiFi"
+        
+        # Auto-generate callback URL if not provided
+        if not data.get('callback_url') and data.get('id'):
+            from django.conf import settings
+            base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
+            data['callback_url'] = f"{base_url}/api/payments/mpesa-callbacks/dispatch/{data['id']}/"
         
         return data
 
@@ -1609,6 +1956,7 @@ class HotspotUserSerializer(serializers.ModelSerializer):
     session_duration_seconds = serializers.SerializerMethodField()
     bandwidth_usage = serializers.SerializerMethodField()
     quality_of_service_display = serializers.SerializerMethodField()
+    connection_quality_display = serializers.SerializerMethodField()
 
     class Meta:
         model = HotspotUser
@@ -1619,12 +1967,14 @@ class HotspotUserSerializer(serializers.ModelSerializer):
             "total_session_time", "remaining_time", "remaining_time_formatted",
             "last_activity", "session_duration", "session_duration_seconds",
             "bandwidth_used", "bandwidth_usage", "quality_of_service", "quality_of_service_display",
+            "connection_quality", "connection_quality_display", "average_signal_strength",
             "device_info"
         ]
         read_only_fields = [
             "id", "router", "connected_at", "disconnected_at", "session_id", 
             "last_activity", "remaining_time_formatted", "session_duration", 
-            "session_duration_seconds", "bandwidth_usage", "quality_of_service_display"
+            "session_duration_seconds", "bandwidth_usage", "quality_of_service_display",
+            "connection_quality_display"
         ]
 
     def get_plan(self, obj):
@@ -1680,6 +2030,15 @@ class HotspotUserSerializer(serializers.ModelSerializer):
         }
         return quality_map.get(obj.quality_of_service, obj.quality_of_service)
 
+    def get_connection_quality_display(self, obj):
+        quality_map = {
+            "excellent": "Excellent",
+            "good": "Good",
+            "fair": "Fair",
+            "poor": "Poor"
+        }
+        return quality_map.get(obj.connection_quality, obj.connection_quality)
+
 
 # Enhanced PPPoE User Serializer
 class PPPoEUserSerializer(serializers.ModelSerializer):
@@ -1697,6 +2056,7 @@ class PPPoEUserSerializer(serializers.ModelSerializer):
     session_duration_seconds = serializers.SerializerMethodField()
     bandwidth_usage = serializers.SerializerMethodField()
     pppoe_service_type_display = serializers.SerializerMethodField()
+    connection_quality_display = serializers.SerializerMethodField()
 
     class Meta:
         model = PPPoEUser
@@ -1706,12 +2066,14 @@ class PPPoEUserSerializer(serializers.ModelSerializer):
             "disconnected_at", "data_used", "active", "session_id", "total_session_time", 
             "remaining_time", "remaining_time_formatted", "last_activity", "session_duration",
             "session_duration_seconds", "bandwidth_used", "bandwidth_usage", 
-            "pppoe_service_type", "pppoe_service_type_display"
+            "pppoe_service_type", "pppoe_service_type_display", "connection_uptime",
+            "connection_quality", "connection_quality_display"
         ]
         read_only_fields = [
             "id", "router", "connected_at", "disconnected_at", "session_id", 
             "last_activity", "remaining_time_formatted", "session_duration",
-            "session_duration_seconds", "bandwidth_usage", "pppoe_service_type_display"
+            "session_duration_seconds", "bandwidth_usage", "pppoe_service_type_display",
+            "connection_quality_display"
         ]
         extra_kwargs = {
             'password': {'write_only': True}
@@ -1769,6 +2131,15 @@ class PPPoEUserSerializer(serializers.ModelSerializer):
         }
         return service_map.get(obj.pppoe_service_type, obj.pppoe_service_type)
 
+    def get_connection_quality_display(self, obj):
+        quality_map = {
+            "excellent": "Excellent",
+            "good": "Good",
+            "fair": "Fair",
+            "poor": "Poor"
+        }
+        return quality_map.get(obj.connection_quality, obj.connection_quality)
+
 
 # Enhanced Activation Attempt Serializer
 class ActivationAttemptSerializer(serializers.ModelSerializer):
@@ -1781,6 +2152,9 @@ class ActivationAttemptSerializer(serializers.ModelSerializer):
     # NEW: Connection quality context
     connection_quality = serializers.SerializerMethodField()
     router_configuration_status = serializers.CharField(source='router.configuration_status', read_only=True)
+    
+    # NEW: Technician workflow association
+    technician_username = serializers.CharField(source='technician.username', read_only=True)
 
     class Meta:
         model = ActivationAttempt
@@ -1788,7 +2162,7 @@ class ActivationAttemptSerializer(serializers.ModelSerializer):
             "id", "subscription", "router", "router_name", "router_ip", "router_connection_status",
             "attempted_at", "success", "error_message", "retry_count", "user_type", "user_type_display",
             "payment_verified", "transaction_reference", "verification_method", "verification_method_display",
-            "connection_quality", "router_configuration_status"
+            "connection_quality", "router_configuration_status", "technician", "technician_username", "workflow_type"
         ]
         read_only_fields = ["id", "attempted_at"]
 
@@ -1807,6 +2181,7 @@ class RouterSessionHistorySerializer(serializers.ModelSerializer):
     # NEW: Session recovery context
     can_recover = serializers.SerializerMethodField()
     recovery_status = serializers.SerializerMethodField()
+    connection_quality_display = serializers.SerializerMethodField()
 
     class Meta:
         model = RouterSessionHistory
@@ -1814,7 +2189,7 @@ class RouterSessionHistorySerializer(serializers.ModelSerializer):
             "id", "hotspot_user", "pppoe_user", "router", "router_name", "router_ip", "router_connection_status",
             "start_time", "end_time", "data_used", "duration", "disconnected_reason", "disconnected_reason_display",
             "user_type", "user_type_display", "recoverable", "recovery_attempted", "recovered_at", "can_recover",
-            "recovery_status"
+            "recovery_status", "average_signal_strength", "connection_quality", "connection_quality_display"
         ]
         read_only_fields = ["id", "start_time"]
 
@@ -1831,26 +2206,50 @@ class RouterSessionHistorySerializer(serializers.ModelSerializer):
         else:
             return "Not Recoverable"
 
+    def get_connection_quality_display(self, obj):
+        quality_map = {
+            "excellent": "Excellent",
+            "good": "Good",
+            "fair": "Fair",
+            "poor": "Poor"
+        }
+        return quality_map.get(obj.connection_quality, obj.connection_quality)
 
-# Enhanced Router Audit Log Serializer
+
+
 class RouterAuditLogSerializer(serializers.ModelSerializer):
-    router_name = serializers.CharField(source='router.name', read_only=True)
-    router_ip = serializers.CharField(source='router.ip', read_only=True)
-    router_connection_status = serializers.CharField(source='router.connection_status', read_only=True)
+    router_name = serializers.SerializerMethodField()
+    router_ip = serializers.SerializerMethodField()
+    router_connection_status = serializers.SerializerMethodField()
+    
     user_username = serializers.CharField(source='user.username', read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
     action_display = serializers.CharField(source='get_action_display', read_only=True)
     
     # NEW: Enhanced change tracking
     changes_summary = serializers.SerializerMethodField()
+    
+    # Status code field
+    status_code_display = serializers.SerializerMethodField()
 
     class Meta:
         model = RouterAuditLog
         fields = [
             "id", "router", "router_name", "router_ip", "router_connection_status", "action", "action_display",
-            "description", "user", "user_username", "user_email", "ip_address", "user_agent", "changes", "changes_summary", "timestamp"
+            "description", "user", "user_username", "user_email", "ip_address", "user_agent", "changes", "changes_summary", 
+            "status_code", "status_code_display", "timestamp"
         ]
         read_only_fields = ["id", "timestamp"]
+
+  
+    def get_router_name(self, obj):
+        return obj.router.name if obj.router else "System"
+
+    def get_router_ip(self, obj):
+        return obj.router.ip if obj.router else "N/A"
+
+    def get_router_connection_status(self, obj):
+        return obj.router.connection_status if obj.router else "N/A"
 
     def get_changes_summary(self, obj):
         """Create a summary of changes made."""
@@ -1859,13 +2258,32 @@ class RouterAuditLogSerializer(serializers.ModelSerializer):
         
         changes_list = []
         for field, values in obj.changes.items():
-            if isinstance(values, list) and len(values) == 2:
+            if isinstance(values, dict) and 'old' in values and 'new' in values:
+                changes_list.append(f"{field}: {values['old']} → {values['new']}")
+            elif isinstance(values, list) and len(values) == 2:
                 old_val, new_val = values
                 changes_list.append(f"{field}: {old_val} → {new_val}")
             else:
                 changes_list.append(f"{field}: {values}")
         
         return "; ".join(changes_list[:3]) + ("..." if len(changes_list) > 3 else "")
+
+    def get_status_code_display(self, obj):
+        """Get human-readable status code description."""
+        if not obj.status_code:
+            return "N/A"
+        
+        status_codes = {
+            200: "OK",
+            201: "Created", 
+            204: "No Content",
+            400: "Bad Request",
+            401: "Unauthorized",
+            403: "Forbidden",
+            404: "Not Found",
+            500: "Internal Server Error"
+        }
+        return status_codes.get(obj.status_code, f"HTTP {obj.status_code}")
 
 
 # Enhanced Bulk Operation Serializer
@@ -1886,8 +2304,8 @@ class BulkOperationSerializer(serializers.ModelSerializer):
         fields = [
             "id", "operation_id", "operation_type", "operation_type_display", "routers", 
             "initiated_by", "initiated_by_username", "initiated_by_email", "status", "status_display",
-            "results", "started_at", "completed_at", "error_message", "routers_count", "success_rate",
-            "progress_percentage", "estimated_completion"
+            "results", "started_at", "completed_at", "error_message", "parameters", "progress",
+            "routers_count", "success_rate", "progress_percentage", "estimated_completion"
         ]
         read_only_fields = ["id", "operation_id", "started_at"]
 
@@ -1907,37 +2325,23 @@ class BulkOperationSerializer(serializers.ModelSerializer):
         return round((completed / total) * 100, 2)
 
     def get_progress_percentage(self, obj):
-        if not obj.results:
-            return 0
-        
-        completed = len(obj.results.get('completed', []))
-        failed = len(obj.results.get('failed', []))
-        total = obj.routers.count()
-        
-        if total == 0:
-            return 0
-        
-        return round(((completed + failed) / total) * 100, 2)
+        return obj.progress
 
     def get_estimated_completion(self, obj):
         if obj.status == 'completed' and obj.completed_at:
             return obj.completed_at
         
-        if obj.status != 'running' or not obj.results:
+        if obj.status != 'running' or obj.progress == 0:
             return None
         
-        completed = len(obj.results.get('completed', []))
-        if completed == 0:
-            return None
-        
-        # Estimate based on average time per operation
+        # Estimate based on progress
         time_elapsed = (timezone.now() - obj.started_at).total_seconds()
-        avg_time_per_op = time_elapsed / completed if completed > 0 else 0
-        remaining_ops = obj.routers.count() - completed
-        
-        if avg_time_per_op > 0 and remaining_ops > 0:
-            estimated_seconds = avg_time_per_op * remaining_ops
-            return timezone.now() + timedelta(seconds=estimated_seconds)
+        if obj.progress > 0:
+            total_time_estimated = (time_elapsed / obj.progress) * 100
+            remaining_time = total_time_estimated - time_elapsed
+            
+            if remaining_time > 0:
+                return timezone.now() + timedelta(seconds=remaining_time)
         
         return None
 
@@ -1956,6 +2360,10 @@ class RouterListSerializer(serializers.ModelSerializer):
     connection_quality = serializers.SerializerMethodField()
     last_connection_test = serializers.SerializerMethodField()
     connection_test_success_rate = serializers.SerializerMethodField()
+    
+    # NEW: VPN status
+    vpn_enabled = serializers.BooleanField(read_only=True)
+    vpn_type_display = serializers.SerializerMethodField()
 
     class Meta:
         model = Router
@@ -1965,7 +2373,7 @@ class RouterListSerializer(serializers.ModelSerializer):
             'configuration_status', 'configuration_status_display', 'ssid',
             'last_seen', 'last_connection_test', 'is_active', 'max_clients', 'firmware_version',
             'active_users_count', 'health_score', 'latest_stats', 'connection_quality',
-            'connection_test_success_rate'
+            'connection_test_success_rate', 'vpn_enabled', 'vpn_type_display'
         ]
 
     def get_active_users_count(self, obj):
@@ -1983,6 +2391,7 @@ class RouterListSerializer(serializers.ModelSerializer):
                 'memory': latest_stats.memory,
                 'clients': latest_stats.connected_clients_count,
                 'uptime': latest_stats.uptime,
+                'vpn_connections': latest_stats.vpn_connections,
             }
         return None
 
@@ -2009,6 +2418,15 @@ class RouterListSerializer(serializers.ModelSerializer):
             return 0
         return round((successful_tests / total_tests) * 100, 2)
 
+    def get_vpn_type_display(self, obj):
+        """Get VPN type display name."""
+        vpn_types = {
+            "openvpn": "OpenVPN",
+            "wireguard": "WireGuard", 
+            "sstp": "SSTP"
+        }
+        return vpn_types.get(obj.vpn_type, obj.vpn_type)
+
 
 class HotspotUserListSerializer(serializers.ModelSerializer):
     client_name = serializers.CharField(source='client.user.username', read_only=True)
@@ -2020,13 +2438,15 @@ class HotspotUserListSerializer(serializers.ModelSerializer):
     remaining_time_formatted = serializers.SerializerMethodField()
     session_duration = serializers.SerializerMethodField()
     quality_of_service_display = serializers.SerializerMethodField()
+    connection_quality_display = serializers.SerializerMethodField()
 
     class Meta:
         model = HotspotUser
         fields = [
             'id', 'mac', 'ip', 'client_name', 'client_phone', 'router_name', 'router_ssid', 'router_connection_status',
             'plan_name', 'connected_at', 'data_used', 'active', 'remaining_time', 
-            'remaining_time_formatted', 'session_duration', 'quality_of_service', 'quality_of_service_display'
+            'remaining_time_formatted', 'session_duration', 'quality_of_service', 'quality_of_service_display',
+            'connection_quality', 'connection_quality_display', 'average_signal_strength'
         ]
 
     def get_remaining_time_formatted(self, obj):
@@ -2054,6 +2474,15 @@ class HotspotUserListSerializer(serializers.ModelSerializer):
         }
         return quality_map.get(obj.quality_of_service, obj.quality_of_service)
 
+    def get_connection_quality_display(self, obj):
+        quality_map = {
+            "excellent": "Excellent",
+            "good": "Good",
+            "fair": "Fair",
+            "poor": "Poor"
+        }
+        return quality_map.get(obj.connection_quality, obj.connection_quality)
+
 
 class PPPoEUserListSerializer(serializers.ModelSerializer):
     client_name = serializers.CharField(source='client.user.username', read_only=True)
@@ -2065,13 +2494,15 @@ class PPPoEUserListSerializer(serializers.ModelSerializer):
     remaining_time_formatted = serializers.SerializerMethodField()
     session_duration = serializers.SerializerMethodField()
     pppoe_service_type_display = serializers.SerializerMethodField()
+    connection_quality_display = serializers.SerializerMethodField()
 
     class Meta:
         model = PPPoEUser
         fields = [
             'id', 'username', 'ip_address', 'client_name', 'client_phone', 'router_name', 
             'router_service_name', 'router_connection_status', 'plan_name', 'connected_at', 'data_used', 'active', 
-            'remaining_time', 'remaining_time_formatted', 'session_duration', 'pppoe_service_type', 'pppoe_service_type_display'
+            'remaining_time', 'remaining_time_formatted', 'session_duration', 'pppoe_service_type', 'pppoe_service_type_display',
+            'connection_quality', 'connection_quality_display', 'connection_uptime'
         ]
 
     def get_remaining_time_formatted(self, obj):
@@ -2097,6 +2528,15 @@ class PPPoEUserListSerializer(serializers.ModelSerializer):
             "premium": "Premium"
         }
         return service_map.get(obj.pppoe_service_type, obj.pppoe_service_type)
+
+    def get_connection_quality_display(self, obj):
+        quality_map = {
+            "excellent": "Excellent",
+            "good": "Good",
+            "fair": "Fair",
+            "poor": "Poor"
+        }
+        return quality_map.get(obj.connection_quality, obj.connection_quality)
 
 
 # NEW: Connection Test Request Serializer
@@ -2126,7 +2566,9 @@ class ConnectionTestRequestSerializer(serializers.Serializer):
 class AutoConfigurationRequestSerializer(serializers.Serializer):
     """Serializer for auto-configuration requests."""
     
-    configuration_type = serializers.ChoiceField(choices=[('hotspot', 'Hotspot'), ('pppoe', 'PPPoE'), ('both', 'Both')])
+    configuration_type = serializers.ChoiceField(
+        choices=[('hotspot', 'Hotspot'), ('pppoe', 'PPPoE'), ('both', 'Both')]
+    )
     ssid = serializers.CharField(required=False, max_length=32)
     configuration_template = serializers.CharField(required=False)
     auto_detect = serializers.BooleanField(default=True)
@@ -2176,6 +2618,18 @@ class ConfigurationApplyRequestSerializer(serializers.Serializer):
         return data
 
 
+# NEW: VPN Configuration Request Serializer
+class VPNConfigurationRequestSerializer(serializers.Serializer):
+    """Serializer for VPN configuration requests."""
+    
+    vpn_type = serializers.ChoiceField(
+        choices=[('openvpn', 'OpenVPN'), ('wireguard', 'WireGuard'), ('sstp', 'SSTP')],
+        required=True
+    )
+    configuration = serializers.DictField(required=False)
+    enable_vpn = serializers.BooleanField(default=True)
+
+
 # Dashboard and Utility Serializers with enhanced connection data
 class RouterDashboardStatsSerializer(serializers.Serializer):
     total_routers = serializers.IntegerField()
@@ -2195,6 +2649,11 @@ class RouterDashboardStatsSerializer(serializers.Serializer):
     average_response_time = serializers.FloatField()
     configuration_status = serializers.DictField()
     connection_quality_distribution = serializers.DictField()
+    
+    # NEW: VPN statistics
+    vpn_enabled_routers = serializers.IntegerField()
+    vpn_connections = serializers.IntegerField()
+    vpn_types_distribution = serializers.DictField()
 
 
 class RouterStatusUpdateSerializer(serializers.Serializer):
@@ -2249,7 +2708,10 @@ class BulkActionSerializer(serializers.Serializer):
             # NEW: Connection management actions
             ('test_connection', 'Test Connection'),
             ('auto_configure', 'Auto Configure'),
-            ('apply_configuration', 'Apply Configuration')
+            ('apply_configuration', 'Apply Configuration'),
+            ('enable_vpn', 'Enable VPN'),
+            ('disable_vpn', 'Disable VPN'),
+            ('technician_workflow', 'Technician Workflow')
         ],
         required=True
     )
