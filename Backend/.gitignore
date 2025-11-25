@@ -1,3 +1,142 @@
+# Environment variables - NEVER commit these!
 .env
-debug.
+.env.local
+.env.production
+.env.development
+.env.staging
+.env.example  
+.env.backup
+
+# Debug files
+debug.*
+*.debug
+
+# Django specific
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+db.sqlite3
+db.sqlite3-*
+
+# Directories
 field_keys/
+logs/
+media/
+staticfiles/
+.staticfiles/
+templates/generated/ 
+
+# Log files
+*.log
+logs/websocket.log
+logs/django.log
+*.log.*
+logfile
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Redis
+dump.rdb
+redis-data/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+.tox/
+.nox/
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyCharm
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Other IDEs
+.project
+.pydevproject
+.settings/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Database backups (if any)
+*.dump
+*.sql
+backup/
+
+# Docker (if you use it)
+docker-compose.override.yml
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# MkDocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json

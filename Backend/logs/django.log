@@ -173,3 +173,282 @@ INFO 2025-11-24 16:52:44,548 audit_middleware 3521 139682402793152 Audit log cre
 INFO 2025-11-24 16:52:53,939 audit_middleware 3521 139682369222336 Audit log created: health_check - Health check performed by None
 INFO 2025-11-24 16:52:57,178 audit_middleware 3521 139682386007744 Audit log created: health_check - Health check performed by None
 INFO 2025-11-24 16:53:16,307 audit_middleware 3521 139683317139136 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 09:42:26,634 audit_middleware 9350 140181742839488 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 09:42:28,299 audit_middleware 9350 140181751232192 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 09:42:28,981 audit_middleware 9350 140181742839488 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 09:42:30,081 audit_middleware 9350 140181751232192 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 09:45:15,213 audit_middleware 9350 140181734446784 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 09:46:17,392 audit_middleware 9350 140181183039168 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 09:48:29,553 audit_middleware 9350 140181222979264 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 09:48:35,970 audit_middleware 9350 140181300680384 Audit log created: health_check - Health check performed by None
+ERROR 2025-11-25 09:48:36,223 audit_middleware 9350 140181357196992 Audit log created for exception: Timeout writing to socket
+ERROR 2025-11-25 09:49:41,519 audit_middleware 9350 140181703993024 Audit log created for exception: Timeout reading from socket
+ERROR 2025-11-25 09:49:44,685 audit_middleware 9350 140181742839488 Audit log created for exception: Timeout writing to socket
+INFO 2025-11-25 09:49:45,315 audit_middleware 9350 140181173597888 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:15:12,336 audit_middleware 13570 139885138671296 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 10:15:12,359 audit_middleware 13570 139885358634688 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:15:18,703 audit_middleware 13570 139885138671296 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 10:15:18,854 audit_middleware 13570 139885358634688 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:15:42,615 audit_middleware 13570 139885370173120 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:16:04,978 audit_middleware 13570 139885378565824 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 10:16:10,282 audit_middleware 13570 139885370173120 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:16:12,863 audit_middleware 13570 139885358634688 Audit log created: audit_view - Audit logs accessed by None
+ERROR 2025-11-25 10:16:16,298 audit_middleware 13570 139885350241984 Audit log created for exception: Timeout writing to socket
+INFO 2025-11-25 10:18:59,252 audit_middleware 13570 139885370173120 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:19:09,643 audit_middleware 13570 139885130278592 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:19:20,752 audit_middleware 13570 139884928952000 Audit log created: health_check - Health check performed by None
+ERROR 2025-11-25 10:19:20,852 audit_middleware 13570 139885138671296 Audit log created for exception: Timeout writing to socket
+INFO 2025-11-25 10:19:49,993 audit_middleware 13570 139884895381184 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:19:50,202 audit_middleware 13570 139884912166592 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:19:51,531 audit_middleware 13570 139884803126976 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:19:54,257 audit_middleware 13570 139884700632768 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:20:07,325 audit_middleware 13570 139885086291648 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:21:52,372 audit_middleware 13570 139885086291648 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:21:55,248 audit_middleware 13570 139884903773888 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:22:18,483 audit_middleware 13570 139884903773888 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:22:40,736 audit_middleware 13570 139884700632768 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:22:45,067 audit_middleware 13570 139884903773888 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 10:22:45,618 audit_middleware 13570 139884700632768 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 10:23:07,256 audit_middleware 13570 139885358634688 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:23:37,249 audit_middleware 13570 139885358634688 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:24:08,428 audit_middleware 13570 139885358634688 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:24:37,234 audit_middleware 13570 139885358634688 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:25:34,089 audit_middleware 13570 139885138671296 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 10:25:41,477 audit_middleware 13570 139885138671296 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:26:03,395 audit_middleware 13570 139885350241984 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 10:26:41,164 audit_middleware 13570 139885138671296 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:27:41,808 audit_middleware 13570 139885138671296 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:28:41,714 audit_middleware 13570 139885138671296 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:29:42,716 audit_middleware 13570 139885138671296 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:30:40,416 audit_middleware 13570 139885138671296 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:31:40,221 audit_middleware 13570 139884700632768 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:32:40,206 audit_middleware 13570 139885350241984 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:33:50,525 audit_middleware 13570 139884700632768 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:34:40,203 audit_middleware 13570 139884700632768 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:35:40,095 audit_middleware 13570 139885350241984 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:36:40,551 audit_middleware 13570 139885350241984 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:37:47,635 audit_middleware 13570 139884700632768 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:38:40,834 audit_middleware 13570 139884700632768 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:39:40,104 audit_middleware 13570 139885350241984 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:40:40,054 audit_middleware 13570 139885350241984 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:41:39,919 audit_middleware 13570 139885138671296 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:42:41,071 audit_middleware 13570 139885138671296 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:43:41,325 audit_middleware 13570 139885350241984 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:44:13,087 audit_middleware 13570 139885138671296 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:44:49,821 audit_middleware 13570 139884700632768 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:45:09,781 audit_middleware 13570 139885372257984 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 10:45:18,274 audit_middleware 13570 139885138671296 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:45:18,725 audit_middleware 13570 139884700632768 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 10:45:23,918 audit_middleware 13570 139885118740160 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:45:51,323 audit_middleware 13570 139884700632768 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:46:06,559 audit_middleware 13570 139885118740160 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:46:07,156 audit_middleware 13570 139885086291648 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 10:46:28,366 audit_middleware 13570 139884928952000 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 10:46:31,994 audit_middleware 13570 139884928952000 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 10:46:33,771 audit_middleware 13570 139885372257984 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 10:46:34,572 audit_middleware 13570 139885130278592 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 10:46:34,880 audit_middleware 13570 139884937344704 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 10:46:35,258 audit_middleware 13570 139885358634688 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 10:46:35,348 audit_middleware 13570 139885350241984 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 10:46:37,480 audit_middleware 13570 139885372257984 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:46:49,405 audit_middleware 13570 139885372257984 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 10:46:50,568 audit_middleware 13570 139885372257984 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 10:47:05,267 audit_middleware 13570 139885358634688 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:47:11,019 audit_middleware 13570 139885358634688 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 10:47:12,387 audit_middleware 13570 139885372257984 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 10:47:36,052 audit_middleware 13570 139885358634688 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:48:06,228 audit_middleware 13570 139885372257984 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:48:35,867 audit_middleware 13570 139884928952000 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:49:39,957 audit_middleware 13570 139885358634688 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:50:39,908 audit_middleware 13570 139885372257984 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:50:53,565 audit_middleware 13570 139884928952000 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 10:50:54,541 audit_middleware 13570 139885372257984 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 10:51:05,211 audit_middleware 13570 139885372257984 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:51:37,039 audit_middleware 13570 139885372257984 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:52:06,062 audit_middleware 13570 139885372257984 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:52:35,566 audit_middleware 13570 139884928952000 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:53:06,126 audit_middleware 13570 139885358634688 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:53:35,987 audit_middleware 13570 139884928952000 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:54:36,835 audit_middleware 13570 139885372257984 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:55:38,061 audit_middleware 13570 139885358634688 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:56:38,969 audit_middleware 13570 139885372257984 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:57:39,566 audit_middleware 13570 139885358634688 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:58:39,873 audit_middleware 13570 139885358634688 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 10:59:39,813 audit_middleware 13570 139884928952000 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:00:29,593 audit_middleware 13570 139885372257984 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:00:35,861 audit_middleware 13570 139884928952000 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:00:48,485 audit_middleware 13570 139885358634688 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:00:49,658 audit_middleware 13570 139885130278592 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 11:01:37,136 audit_middleware 13570 139885130278592 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:01:38,185 audit_middleware 13570 139885118740160 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 11:01:59,921 audit_middleware 13570 139885118740160 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:02:01,479 audit_middleware 13570 139885130278592 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 11:02:11,011 audit_middleware 13570 139885130278592 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:02:35,141 audit_middleware 13570 139885118740160 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 11:02:42,930 audit_middleware 13570 139885138671296 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 11:02:44,071 audit_middleware 13570 139885372257984 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 11:02:44,137 audit_middleware 13570 139885130278592 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 11:02:54,629 audit_middleware 13570 139884920559296 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:02:56,749 audit_middleware 13570 139885086291648 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 11:03:01,809 audit_middleware 13570 139884928952000 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 11:04:53,016 audit_middleware 13570 139885358634688 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 11:04:53,186 audit_middleware 13570 139885350241984 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 11:05:16,819 audit_middleware 13570 139885138671296 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:05:16,956 audit_middleware 13570 139885086291648 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:05:33,011 audit_middleware 13570 139884912166592 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:05:36,682 audit_middleware 13570 139885118740160 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:06:07,157 audit_middleware 13570 139884912166592 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:06:36,937 audit_middleware 13570 139885118740160 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:07:39,895 audit_middleware 13570 139884912166592 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:08:39,886 audit_middleware 13570 139884912166592 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:09:39,979 audit_middleware 13570 139884937344704 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:10:39,886 audit_middleware 13570 139884937344704 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:11:40,036 audit_middleware 13570 139885118740160 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:12:40,006 audit_middleware 13570 139884937344704 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:13:40,246 audit_middleware 13570 139884937344704 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:14:08,355 audit_middleware 13570 139884912166592 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:14:31,360 audit_middleware 13570 139885118740160 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:14:39,610 audit_middleware 13570 139885358634688 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 11:15:14,811 audit_middleware 13570 139885138671296 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 11:15:16,230 audit_middleware 13570 139884920559296 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:15:17,330 audit_middleware 13570 139885358634688 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 11:15:28,977 audit_middleware 13570 139884920559296 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:15:54,394 audit_middleware 13570 139885138671296 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:16:57,498 audit_middleware 13570 139885138671296 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:17:10,823 audit_middleware 13570 139885130278592 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:17:45,737 audit_middleware 13570 139885138671296 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:18:12,342 audit_middleware 13570 139885086291648 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:18:33,774 audit_middleware 13570 139885138671296 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:18:50,693 audit_middleware 13570 139885138671296 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:19:26,765 audit_middleware 13570 139884912166592 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 11:19:29,612 audit_middleware 13570 139885130278592 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:41:02,234 audit_middleware 22291 140454758708928 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:41:02,369 audit_middleware 22291 140454733530816 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 11:41:04,068 audit_middleware 22291 140454733530816 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 11:41:04,082 audit_middleware 22291 140454758708928 Audit log created: health_check - Health check performed by None
+ERROR 2025-11-25 11:42:36,961 audit_middleware 22291 140454851679936 Audit log created for exception: Timeout writing to socket
+ERROR 2025-11-25 11:44:21,744 audit_middleware 22291 140454750316224 Audit log created for exception: Timeout writing to socket
+INFO 2025-11-25 11:44:40,827 audit_middleware 22291 140454843287232 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:44:40,845 audit_middleware 22291 140454382802624 Audit log created: health_check - Health check performed by None
+ERROR 2025-11-25 11:44:41,402 audit_middleware 22291 140454733530816 Audit log created for exception: Timeout writing to socket
+INFO 2025-11-25 11:44:48,388 audit_middleware 22291 140454288946880 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:48:35,094 audit_middleware 22291 140454034282176 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:48:40,942 audit_middleware 22291 140453542356672 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:49:29,092 audit_middleware 22291 140454288946880 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:49:30,357 audit_middleware 22291 140454232635072 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:49:34,304 audit_middleware 22291 140454758708928 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 11:49:39,875 audit_middleware 22291 140453517178560 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:50:09,373 audit_middleware 22291 140454843287232 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 11:50:15,016 audit_middleware 22291 140454042674880 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:24:01,142 audit_middleware 8627 140512731326144 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:24:21,522 audit_middleware 8627 140512713492160 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 13:24:22,957 audit_middleware 8627 140512696706752 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:24:25,544 audit_middleware 8627 140512705099456 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:25:25,314 audit_middleware 8627 140512705099456 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:25:34,459 audit_middleware 8627 140512696706752 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:26:05,792 audit_middleware 8627 140512696706752 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:26:22,366 audit_middleware 8627 140512696706752 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:26:57,547 audit_middleware 8627 140512696706752 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:27:28,492 audit_middleware 8627 140512696706752 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:28:36,982 audit_middleware 8627 140512696706752 Audit log created: health_check - Health check performed by None
+ERROR 2025-11-25 13:28:40,957 audit_middleware 8627 140512971454144 Audit log created for exception: Timeout writing to socket
+ERROR 2025-11-25 13:28:42,075 audit_middleware 8627 140512963061440 Audit log created for exception: Timeout writing to socket
+INFO 2025-11-25 13:28:44,456 audit_middleware 8627 140512722933440 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:32:28,340 audit_middleware 8627 140512686216896 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:32:28,780 audit_middleware 8627 140512733427392 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:32:28,819 audit_middleware 8627 140512705099456 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:32:40,843 audit_middleware 8627 140512705099456 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:35:25,314 audit_middleware 8627 140512705099456 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:35:47,657 audit_middleware 8627 140512733427392 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:35:54,390 audit_middleware 8627 140512722937536 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:36:41,646 audit_middleware 8627 140512705099456 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:37:40,919 audit_middleware 8627 140512722937536 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:38:09,497 audit_middleware 8627 140512971454144 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 13:38:40,328 audit_middleware 8627 140512705099456 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:38:41,917 audit_middleware 8627 140512963061440 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 13:39:42,775 audit_middleware 8627 140512971454144 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:40:40,425 audit_middleware 8627 140512705099456 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:41:40,500 audit_middleware 8627 140512713492160 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 13:42:40,417 audit_middleware 8627 140512705099456 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 14:52:42,071 audit_middleware 16257 139622264858304 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 14:52:42,074 audit_middleware 16257 139622501652160 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 14:53:12,826 audit_middleware 16257 139622264858304 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 14:53:13,111 audit_middleware 16257 139622501652160 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 14:53:15,035 audit_middleware 16257 139622248072896 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 14:53:47,270 audit_middleware 16257 139622239680192 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 14:54:28,449 audit_middleware 16257 139622501652160 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 14:54:41,575 audit_middleware 16257 139622501652160 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 14:55:15,306 audit_middleware 16257 139622248072896 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 14:55:50,123 audit_middleware 16257 139622510044864 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 14:55:51,126 audit_middleware 16257 139622256465600 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 14:55:53,134 audit_middleware 16257 139622248072896 Audit log created: health_check - Health check performed by None
+ERROR 2025-11-25 14:58:00,725 audit_middleware 16257 139622491162304 Audit log created for exception: Timeout writing to socket
+ERROR 2025-11-25 14:58:01,496 audit_middleware 16257 139622273251008 Audit log created for exception: Timeout writing to socket
+INFO 2025-11-25 14:58:01,504 audit_middleware 16257 139622510044864 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 14:58:01,508 audit_middleware 16257 139622501652160 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 14:58:01,728 audit_middleware 16257 139621849306816 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:06:54,760 audit_middleware 16257 139621824128704 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:06:54,468 audit_middleware 16257 139621832521408 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:06:54,410 audit_middleware 16257 139621695780544 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:06:55,428 audit_middleware 16257 139621758363328 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:06:55,788 audit_middleware 16257 139621849306816 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:13:19,096 audit_middleware 16257 139622273251008 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 15:13:19,096 audit_middleware 16257 139622491162304 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 15:15:27,005 audit_middleware 16257 139622248072896 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 15:15:27,821 audit_middleware 16257 139621845419712 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:15:27,860 audit_middleware 16257 139622239680192 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:15:28,240 audit_middleware 16257 139622256465600 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:15:31,705 audit_middleware 16257 139621870597824 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:15:43,485 mac_detection 16257 139621870597824 Using cached MAC detection for 127.0.0.1
+INFO 2025-11-25 15:16:03,394 audit_middleware 16257 139621853812416 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:16:15,742 audit_middleware 16257 139622273251008 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 15:16:16,043 audit_middleware 16257 139622491162304 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 15:16:16,048 audit_middleware 16257 139622231287488 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 15:16:28,146 audit_middleware 16257 139622231287488 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:16:57,532 audit_middleware 16257 139622231287488 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:17:27,410 audit_middleware 16257 139622491162304 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:17:57,582 audit_middleware 16257 139622231287488 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:18:27,558 audit_middleware 16257 139622231287488 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:18:57,437 audit_middleware 16257 139622231287488 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:31:44,417 audit_middleware 16257 139622273251008 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:31:48,332 audit_middleware 16257 139622248076992 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:31:48,400 audit_middleware 16257 139622491162304 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 15:31:48,917 audit_middleware 16257 139622491162304 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 15:31:54,691 audit_middleware 16257 139622256469696 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 15:32:06,967 audit_middleware 16257 139622231291584 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 15:32:07,373 audit_middleware 16257 139622256469696 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 15:32:07,376 audit_middleware 16257 139622239684288 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 15:32:14,277 audit_middleware 16257 139622256469696 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:32:44,099 audit_middleware 16257 139622231291584 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:33:13,877 audit_middleware 16257 139622239684288 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:33:43,971 audit_middleware 16257 139622256469696 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:34:13,926 audit_middleware 16257 139622256469696 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:34:43,922 audit_middleware 16257 139622231291584 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:35:13,901 audit_middleware 16257 139622231291584 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:35:43,953 audit_middleware 16257 139622231291584 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:36:13,949 audit_middleware 16257 139622256469696 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:36:43,882 audit_middleware 16257 139622239684288 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:37:13,967 audit_middleware 16257 139622239684288 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:37:44,093 audit_middleware 16257 139622256469696 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:38:13,997 audit_middleware 16257 139622239684288 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:38:44,009 audit_middleware 16257 139622256469696 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:39:13,930 audit_middleware 16257 139622239684288 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:39:43,956 audit_middleware 16257 139622256469696 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:40:14,220 audit_middleware 16257 139622239684288 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:40:44,356 audit_middleware 16257 139622231291584 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:41:16,126 audit_middleware 16257 139622239684288 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:41:44,313 audit_middleware 16257 139622231291584 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:42:14,038 audit_middleware 16257 139622231291584 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:42:43,876 audit_middleware 16257 139622248076992 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:49:11,353 audit_middleware 16257 139622239684288 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:49:11,790 audit_middleware 16257 139622231291584 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 15:49:15,122 audit_middleware 16257 139622248076992 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:49:15,374 audit_middleware 16257 139622231291584 Audit log created: bulk_operations_view - Bulk operations history viewed by None
+INFO 2025-11-25 15:49:42,409 audit_middleware 16257 139622248076992 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:50:09,424 audit_middleware 16257 139622256469696 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 15:50:09,437 audit_middleware 16257 139622231291584 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 15:50:29,553 audit_middleware 16257 139622231291584 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:50:35,448 audit_middleware 16257 139621870597824 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 15:55:28,808 audit_middleware 16257 139622491162304 Audit log created: audit_view - Audit logs accessed by None
+INFO 2025-11-25 15:57:35,244 audit_middleware 16257 139622273251008 Audit log created: health_check - Health check performed by None
+INFO 2025-11-25 15:57:35,639 audit_middleware 16257 139622248076992 Audit log created: health_check - Health check performed by None

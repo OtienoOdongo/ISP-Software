@@ -1,9 +1,6 @@
 
 
 
-
-
-
 # from django.contrib import admin
 # from django.urls import path, include, re_path
 # from django.conf import settings
@@ -56,6 +53,21 @@
 #     # Media files
 # ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
+# # FIX: Ensure WebSocket URLs are loaded in production too
+# # Remove the development-only condition
+
+# # ADD WebSocket routing to main urlpatterns (not just in development)
+# try:
+#     from network_management.routing import websocket_urlpatterns
+#     urlpatterns += [
+#         path('ws/', include(websocket_urlpatterns)),
+#     ]
+#     logger.info("WebSocket URLs configured")
+# except ImportError as e:
+#     logger.warning(f"WebSocket routing not available: {e}")
+# except Exception as e:
+#     logger.error(f"Error configuring WebSocket URLs: {e}")
+
 # # DEVELOPMENT-ONLY URL PATTERNS
 # if settings.DEBUG:
 #     logger.info("Loading development URL patterns...")
@@ -67,18 +79,6 @@
 #         ]
 #     except Exception as e:
 #         logger.warning(f"Health checks not available: {e}")
-
-#     # WebSocket routing (development)
-#     try:
-#         from network_management.routing import websocket_urlpatterns
-#         urlpatterns += [
-#             path('ws/', include(websocket_urlpatterns)),
-#         ]
-#         logger.info("WebSocket URLs configured for development")
-#     except ImportError as e:
-#         logger.warning(f"WebSocket routing not available: {e}")
-#     except Exception as e:
-#         logger.error(f"Error configuring WebSocket URLs: {e}")
 
 #     # Debug toolbar
 #     try:
@@ -165,17 +165,11 @@
 #         re_path(r'^(?!api/|admin/|media/).*$', lambda r: serve_frontend(r)),
 #     ]
 
-
-
-
 # # Custom error handlers
 # handler400 = 'interlink_logic.views.error_handlers.bad_request'
 # handler403 = 'interlink_logic.views.error_handlers.permission_denied'
 # handler404 = 'interlink_logic.views.error_handlers.page_not_found'
 # handler500 = 'interlink_logic.views.error_handlers.server_error'
-
-
-
 
 
 
@@ -217,7 +211,6 @@ urlpatterns = [
     # API routes
     path('api/auth/', include('authentication.urls')),
     path('api/user_management/', include('user_management.api.urls')),
-    # path('api/support/', include('support.urls')),
     path('api/payments/', include('payments.api.urls')),
     path('api/network_management/', include('network_management.api.urls')),
     path('api/internet_plans/', include('internet_plans.api.urls')),
@@ -225,6 +218,7 @@ urlpatterns = [
     path('api/account/', include('account.api.urls')),
     path('api/otp/', include('otp_auth.urls')),
 
+    # Health checks
     path('health/', include(('health_check.urls', 'health_check'), namespace='app_health_check')),
 
     # API Documentation with drf-spectacular
@@ -235,42 +229,42 @@ urlpatterns = [
     # Media files
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# FIX: Ensure WebSocket URLs are loaded in production too
-# Remove the development-only condition
-
-# ADD WebSocket routing to main urlpatterns (not just in development)
+# FIXED: WebSocket URL configuration - Load in all environments
 try:
-    from network_management.routing import websocket_urlpatterns
+    # First try main app routing
+    from interlink_logic.routing import websocket_urlpatterns
+    logger.info("✅ WebSocket URLs configured from interlink_logic.routing")
+except ImportError:
+    # Fallback to network_management routing
+    try:
+        from network_management.routing import websocket_urlpatterns
+        logger.info("✅ WebSocket URLs configured from network_management.routing")
+    except ImportError as e:
+        logger.warning(f"⚠️ WebSocket routing not available: {e}")
+        websocket_urlpatterns = []
+
+# Add WebSocket URLs if available
+if websocket_urlpatterns:
     urlpatterns += [
         path('ws/', include(websocket_urlpatterns)),
     ]
-    logger.info("WebSocket URLs configured")
-except ImportError as e:
-    logger.warning(f"WebSocket routing not available: {e}")
-except Exception as e:
-    logger.error(f"Error configuring WebSocket URLs: {e}")
+    logger.info(f"✅ WebSocket URLs added with {len(websocket_urlpatterns)} patterns")
+else:
+    logger.warning("⚠️ No WebSocket URL patterns available")
 
 # DEVELOPMENT-ONLY URL PATTERNS
 if settings.DEBUG:
     logger.info("Loading development URL patterns...")
     
-    # Health Checks
-    try:
-        urlpatterns += [
-            path('health/', include('health_check.urls')),
-        ]
-    except Exception as e:
-        logger.warning(f"Health checks not available: {e}")
-
     # Debug toolbar
     try:
         import debug_toolbar
         urlpatterns = [
             path('__debug__/', include(debug_toolbar.urls)),
         ] + urlpatterns
-        logger.info("Django Debug Toolbar enabled")
+        logger.info("✅ Django Debug Toolbar enabled")
     except ImportError:
-        logger.warning("Django Debug Toolbar not installed")
+        logger.warning("⚠️ Django Debug Toolbar not installed")
 
     # Development static file serving
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
@@ -309,6 +303,7 @@ if settings.DEBUG:
                     <li><a href="/dashboard/">Dashboard</a></li>
                     <li><a href="/landing/">Landing Page</a></li>
                     <li><a href="/health/">Health Checks</a></li>
+                    <li><a href="/ws/routers/">WebSocket Test</a></li>
                 </ul>
             </body>
         </html>
@@ -344,15 +339,15 @@ else:
         }),
 
         # Catch-all fallback to dashboard SPA
-        re_path(r'^(?!api/|admin/|media/).*$', lambda r: serve_frontend(r)),
+        re_path(r'^(?!api/|admin/|media/|ws/).*$', lambda r: serve_frontend(r)),
     ]
 
-# Custom error handlers
+# FIXED: Use the correct error handler imports
 handler400 = 'interlink_logic.views.error_handlers.bad_request'
 handler403 = 'interlink_logic.views.error_handlers.permission_denied'
 handler404 = 'interlink_logic.views.error_handlers.page_not_found'
 handler500 = 'interlink_logic.views.error_handlers.server_error'
 
-
-
-
+# Log final URL configuration
+logger.info(f"✅ URL configuration complete - {len(urlpatterns)} total URL patterns")
+logger.info(f"✅ WebSocket support: {'Enabled' if any('ws/' in str(pattern) for pattern in urlpatterns) else 'Disabled'}")
