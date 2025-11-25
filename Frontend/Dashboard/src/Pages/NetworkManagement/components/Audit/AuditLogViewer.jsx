@@ -1,8 +1,5 @@
 
 
-
-
-
 // // src/Pages/NetworkManagement/components/Audit/AuditLogViewer.jsx
 // import React, { useState, useCallback, useEffect } from 'react';
 // import { motion, AnimatePresence } from 'framer-motion';
@@ -10,15 +7,18 @@
 //   Search, Filter, Download, Calendar, User, Server, 
 //   RefreshCw, FileText, Trash2, Eye, ChevronDown, ChevronUp,
 //   AlertCircle, CheckCircle, XCircle, Info, Clock, MoreVertical,
-//   Settings, Wifi, Shield, Network // Added missing imports
+//   Settings, Wifi, Shield, Network
 // } from 'lucide-react';
 // import CustomButton from '../Common/CustomButton';
 // import InputField from '../Common/InputField';
 // import { getThemeClasses } from '../../../../components/ServiceManagement/Shared/components';
 // import { toast } from 'react-toastify';
+// import { useAuth } from '../../../../context/AuthContext'
+// import api from '../../../../api'
 
 // const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }) => {
 //   const themeClasses = getThemeClasses(theme);
+//   const { isAuthenticated, logout } = useAuth(); // Get auth state
 //   const [logs, setLogs] = useState([]);
 //   const [loading, setLoading] = useState(false);
 //   const [exporting, setExporting] = useState(false);
@@ -68,6 +68,11 @@
 //   ];
 
 //   const fetchAuditLogs = useCallback(async (page = 1) => {
+//     if (!isAuthenticated) {
+//       toast.error('Please log in to view audit logs');
+//       return;
+//     }
+
 //     setLoading(true);
 //     try {
 //       const params = new URLSearchParams({
@@ -82,17 +87,10 @@
 //       if (filters.search) params.append('search', filters.search);
 //       if (filters.status) params.append('status', filters.status);
 
-//       const response = await fetch(`/api/network_management/audit-logs/?${params}`, {
-//         headers: {
-//           'Authorization': `Bearer ${localStorage.getItem('token')}`
-//         }
-//       });
+//       // Use your api instance instead of fetch
+//       const response = await api.get(`/api/network_management/audit-logs/?${params}`);
       
-//       if (!response.ok) {
-//         throw new Error(`HTTP error! status: ${response.status}`);
-//       }
-      
-//       const data = await response.json();
+//       const data = response.data;
       
 //       // Handle different response formats
 //       let logsArray = [];
@@ -124,14 +122,24 @@
       
 //     } catch (error) {
 //       console.error('Error fetching audit logs:', error);
-//       toast.error('Failed to fetch audit logs');
+//       if (error.response?.status === 401) {
+//         toast.error('Session expired. Please log in again.');
+//         logout();
+//       } else {
+//         toast.error('Failed to fetch audit logs');
+//       }
 //       setLogs([]);
 //     } finally {
 //       setLoading(false);
 //     }
-//   }, [filters, pagination.page_size]);
+//   }, [filters, pagination.page_size, isAuthenticated, logout]);
 
 //   const exportLogs = async (format = 'json') => {
+//     if (!isAuthenticated) {
+//       toast.error('Please log in to export audit logs');
+//       return;
+//     }
+
 //     setExporting(true);
 //     try {
 //       const params = new URLSearchParams({ format });
@@ -139,17 +147,11 @@
 //       if (filters.router_id) params.append('router_id', filters.router_id);
 //       if (filters.days) params.append('days', filters.days);
 
-//       const response = await fetch(`/api/network_management/audit-logs/export/?${params}`, {
-//         headers: {
-//           'Authorization': `Bearer ${localStorage.getItem('token')}`
-//         }
+//       const response = await api.get(`/api/network_management/audit-logs/export/?${params}`, {
+//         responseType: 'blob' // Important for file downloads
 //       });
       
-//       if (!response.ok) {
-//         throw new Error(`Export failed with status ${response.status}`);
-//       }
-      
-//       const blob = await response.blob();
+//       const blob = new Blob([response.data]);
 //       const url = window.URL.createObjectURL(blob);
 //       const a = document.createElement('a');
 //       a.href = url;
@@ -162,40 +164,51 @@
 //       toast.success(`Audit logs exported as ${format.toUpperCase()}`);
 //     } catch (error) {
 //       console.error('Export error:', error);
-//       toast.error('Failed to export audit logs');
+//       if (error.response?.status === 401) {
+//         toast.error('Session expired. Please log in again.');
+//         logout();
+//       } else {
+//         toast.error('Failed to export audit logs');
+//       }
 //     } finally {
 //       setExporting(false);
 //     }
 //   };
 
 //   const clearLogs = async () => {
+//     if (!isAuthenticated) {
+//       toast.error('Please log in to clear audit logs');
+//       return;
+//     }
+
 //     if (!window.confirm('Are you sure you want to clear all audit logs? This action cannot be undone.')) {
 //       return;
 //     }
 
 //     try {
-//       const response = await fetch('/api/network_management/audit-logs/clear/', {
-//         method: 'POST',
-//         headers: {
-//           'Authorization': `Bearer ${localStorage.getItem('token')}`
-//         }
+//       await api.post('/api/network_management/audit-logs/cleanup/', {
+//         dry_run: false,
+//         retention_days: 0 // This will trigger complete cleanup
 //       });
 
-//       if (response.ok) {
-//         toast.success('Audit logs cleared successfully');
-//         fetchAuditLogs(1);
-//       } else {
-//         throw new Error('Failed to clear logs');
-//       }
+//       toast.success('Audit logs cleared successfully');
+//       fetchAuditLogs(1);
 //     } catch (error) {
 //       console.error('Clear logs error:', error);
-//       toast.error('Failed to clear audit logs');
+//       if (error.response?.status === 401) {
+//         toast.error('Session expired. Please log in again.');
+//         logout();
+//       } else {
+//         toast.error('Failed to clear audit logs');
+//       }
 //     }
 //   };
 
 //   useEffect(() => {
-//     fetchAuditLogs(1);
-//   }, [fetchAuditLogs]);
+//     if (isAuthenticated) {
+//       fetchAuditLogs(1);
+//     }
+//   }, [fetchAuditLogs, isAuthenticated]);
 
 //   const getActionConfig = (action) => {
 //     return actionTypes.find(a => a.value === action) || { label: action, color: 'gray', icon: FileText };
@@ -260,6 +273,12 @@
 //                 <span className="font-medium text-xs truncate">{log.user_agent}</span>
 //               </div>
 //             )}
+//             {log.status_code && (
+//               <div className="flex justify-between">
+//                 <span className="text-gray-600 dark:text-gray-400">Status Code:</span>
+//                 <span className="font-medium">{log.status_code}</span>
+//               </div>
+//             )}
 //           </div>
 //         </div>
         
@@ -277,7 +296,7 @@
 //     </motion.div>
 //   );
 
-//   // Simple select component since EnhancedSelect might not be available
+//   // Simple select component
 //   const SimpleSelect = ({ label, value, onChange, options, placeholder, theme }) => (
 //     <div>
 //       {label && (
@@ -303,6 +322,22 @@
 //       </select>
 //     </div>
 //   );
+
+//   if (!isAuthenticated) {
+//     return (
+//       <div className={`p-6 rounded-xl border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+//         <div className="text-center py-12">
+//           <AlertCircle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+//           <h3 className={`text-lg font-semibold mb-2 ${themeClasses.text.primary}`}>
+//             Authentication Required
+//           </h3>
+//           <p className={themeClasses.text.tertiary}>
+//             Please log in to view audit logs
+//           </p>
+//         </div>
+//       </div>
+//     );
+//   }
 
 //   return (
 //     <div className={`p-6 rounded-xl border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
@@ -484,10 +519,15 @@
 //                           {actionConfig.label}
 //                         </span>
                         
-//                         {log.status && (
+//                         {log.status_code && (
 //                           <div className="flex items-center">
-//                             {getStatusIcon(log.status)}
-//                             <span className="ml-1 text-xs capitalize">{log.status}</span>
+//                             {log.status_code >= 200 && log.status_code < 300 ? 
+//                               <CheckCircle className="w-3 h-3 text-green-500 mr-1" /> :
+//                               log.status_code >= 400 && log.status_code < 500 ?
+//                               <AlertCircle className="w-3 h-3 text-yellow-500 mr-1" /> :
+//                               <XCircle className="w-3 h-3 text-red-500 mr-1" />
+//                             }
+//                             <span className="text-xs">HTTP {log.status_code}</span>
 //                           </div>
 //                         )}
 //                       </div>
@@ -584,6 +624,7 @@
 
 
 
+
 // src/Pages/NetworkManagement/components/Audit/AuditLogViewer.jsx
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -595,7 +636,7 @@ import {
 } from 'lucide-react';
 import CustomButton from '../Common/CustomButton';
 import InputField from '../Common/InputField';
-import { getThemeClasses } from '../../../../components/ServiceManagement/Shared/components';
+import { getThemeClasses, EnhancedSelect } from '../../../../components/ServiceManagement/Shared/components';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../../../context/AuthContext'
 import api from '../../../../api'
@@ -880,33 +921,6 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
     </motion.div>
   );
 
-  // Simple select component
-  const SimpleSelect = ({ label, value, onChange, options, placeholder, theme }) => (
-    <div>
-      {label && (
-        <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-          {label}
-        </label>
-      )}
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={`w-full p-2 border rounded-lg ${
-          theme === 'dark' 
-            ? 'bg-gray-700 border-gray-600 text-white' 
-            : 'bg-white border-gray-300 text-gray-900'
-        }`}
-      >
-        <option value="">{placeholder || 'Select...'}</option>
-        {options.map(option => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-
   if (!isAuthenticated) {
     return (
       <div className={`p-6 rounded-xl border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
@@ -984,41 +998,66 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
           className={`p-4 rounded-lg border mb-6 ${themeClasses.bg.card} ${themeClasses.border.medium}`}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            <SimpleSelect
-              label="Action Type"
-              value={filters.action}
-              onChange={(value) => setFilters(prev => ({ ...prev, action: value }))}
-              options={actionTypes.map(a => ({ value: a.value, label: a.label }))}
-              placeholder="All Actions"
-              theme={theme}
-            />
+            {/* Action Type Filter - Using EnhancedSelect */}
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
+                Action Type
+              </label>
+              <EnhancedSelect
+                value={filters.action}
+                onChange={(value) => setFilters(prev => ({ ...prev, action: value }))}
+                options={actionTypes.map(a => ({ value: a.value, label: a.label }))}
+                placeholder="All Actions"
+                theme={theme}
+                className="w-full"
+              />
+            </div>
             
-            <SimpleSelect
-              label="Time Range"
-              value={filters.days}
-              onChange={(value) => setFilters(prev => ({ ...prev, days: value }))}
-              options={timeRanges}
-              theme={theme}
-            />
+            {/* Time Range Filter - Using EnhancedSelect */}
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
+                Time Range
+              </label>
+              <EnhancedSelect
+                value={filters.days}
+                onChange={(value) => setFilters(prev => ({ ...prev, days: value }))}
+                options={timeRanges}
+                placeholder="Select time range"
+                theme={theme}
+                className="w-full"
+              />
+            </div>
 
-            <SimpleSelect
-              label="Status"
-              value={filters.status}
-              onChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
-              options={statusTypes}
-              placeholder="All Status"
-              theme={theme}
-            />
+            {/* Status Filter - Using EnhancedSelect */}
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
+                Status
+              </label>
+              <EnhancedSelect
+                value={filters.status}
+                onChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
+                options={statusTypes}
+                placeholder="All Status"
+                theme={theme}
+                className="w-full"
+              />
+            </div>
 
-            <InputField
-              label="Search"
-              value={filters.search}
-              onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-              placeholder="Search logs..."
-              icon={<Search className="w-4 h-4" />}
-              theme={theme}
-            />
+            {/* Search Input */}
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
+                Search
+              </label>
+              <InputField
+                value={filters.search}
+                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                placeholder="Search logs..."
+                icon={<Search className="w-4 h-4" />}
+                theme={theme}
+              />
+            </div>
 
+            {/* Clear Filters Button */}
             <div className="flex items-end">
               <CustomButton
                 onClick={() => setFilters({

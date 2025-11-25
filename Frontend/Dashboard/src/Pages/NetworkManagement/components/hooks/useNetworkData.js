@@ -1,12 +1,21 @@
-// // src/hooks/useNetworkData.js
+
+
+
+
+
+
+
+
+
+
+// // src/hooks/useNetworkData.js - ENHANCED VERSION
 // import { useState, useEffect, useCallback } from 'react';
 // import { calculatePerformanceMetrics } from '../../utils/networkUtils'
 
-// // API service for network management
+// // Enhanced API service with responsive data loading
 // const networkAPI = {
-//   // Get router statistics
 //   async getRouterStats(routerId) {
-//     const response = await fetch(`/api/network_management/routers/${routerId}/stats/`, {
+//     const response = await fetch(`/api/network_management/routers/${routerId}/status/`, {
 //       headers: {
 //         'Authorization': `Bearer ${localStorage.getItem('token')}`,
 //         'Content-Type': 'application/json'
@@ -20,9 +29,10 @@
 //     return await response.json();
 //   },
 
-//   // Get health monitoring data
-//   async getHealthMonitoring() {
-//     const response = await fetch('/api/network_management/health-monitoring/', {
+//   // Optimized health monitoring with reduced data on mobile
+//   async getHealthMonitoring(optimizeForMobile = false) {
+//     const params = optimizeForMobile ? '?fields=basic' : '';
+//     const response = await fetch(`/api/network_management/health-monitoring/${params}`, {
 //       headers: {
 //         'Authorization': `Bearer ${localStorage.getItem('token')}`,
 //         'Content-Type': 'application/json'
@@ -36,9 +46,10 @@
 //     return await response.json();
 //   },
 
-//   // Get router list
-//   async getRouters() {
-//     const response = await fetch('/api/network_management/routers/', {
+//   // Optimized router list for different screen sizes
+//   async getRouters(optimizeForMobile = false) {
+//     const params = optimizeForMobile ? '?fields=id,name,ip,connection_status' : '';
+//     const response = await fetch(`/api/network_management/routers/${params}`, {
 //       headers: {
 //         'Authorization': `Bearer ${localStorage.getItem('token')}`,
 //         'Content-Type': 'application/json'
@@ -47,22 +58,6 @@
     
 //     if (!response.ok) {
 //       throw new Error(`Failed to fetch routers: ${response.statusText}`);
-//     }
-    
-//     return await response.json();
-//   },
-
-//   // Get historical stats for trends
-//   async getHistoricalStats(routerId, days = 7) {
-//     const response = await fetch(`/api/network_management/routers/${routerId}/stats/?days=${days}`, {
-//       headers: {
-//         'Authorization': `Bearer ${localStorage.getItem('token')}`,
-//         'Content-Type': 'application/json'
-//       }
-//     });
-    
-//     if (!response.ok) {
-//       throw new Error(`Failed to fetch historical stats: ${response.statusText}`);
 //     }
     
 //     return await response.json();
@@ -89,40 +84,66 @@
 //   const [webSocketConnected, setWebSocketConnected] = useState(false);
 //   const [isLoading, setIsLoading] = useState(false);
 //   const [error, setError] = useState(null);
+//   const [screenSize, setScreenSize] = useState('desktop');
 
-//   // Fetch initial data
+//   // Detect screen size for responsive data loading
+//   useEffect(() => {
+//     const checkScreenSize = () => {
+//       const width = window.innerWidth;
+//       if (width < 640) setScreenSize('mobile');
+//       else if (width < 1024) setScreenSize('tablet');
+//       else setScreenSize('desktop');
+//     };
+
+//     checkScreenSize();
+//     window.addEventListener('resize', checkScreenSize);
+//     return () => window.removeEventListener('resize', checkScreenSize);
+//   }, []);
+
+//   // Optimize data loading based on screen size
 //   const fetchInitialData = useCallback(async () => {
 //     setIsLoading(true);
 //     setError(null);
     
 //     try {
-//       // Fetch routers if not provided
+//       const optimizeForMobile = screenSize === 'mobile';
+      
+//       // Fetch routers with optimized fields for mobile
 //       let routersData = routers;
 //       if (!routers.length) {
-//         routersData = await networkAPI.getRouters();
+//         routersData = await networkAPI.getRouters(optimizeForMobile);
 //       }
 
-//       // Fetch health monitoring data
-//       const healthData = await networkAPI.getHealthMonitoring();
+//       // Fetch health monitoring data with optimization
+//       const healthData = await networkAPI.getHealthMonitoring(optimizeForMobile);
 //       setHealthData(healthData);
 
 //       // Calculate system-wide metrics
 //       const systemMetrics = calculatePerformanceMetrics(routersData);
       
+//       // Only fetch detailed metrics on larger screens or when needed
+//       let realTimeMetrics = {};
+//       if (screenSize !== 'mobile' || activeRouterId) {
+//         realTimeMetrics = await networkAPI.getRealTimeMetrics();
+//       }
+      
 //       setNetworkData(prev => ({ 
 //         ...prev, 
 //         ...systemMetrics,
+//         ...realTimeMetrics,
 //         lastUpdate: new Date()
 //       }));
 
-//       // Fetch stats for active router if specified
+//       // Fetch stats for active router if specified (always fetch for active router)
 //       if (activeRouterId) {
 //         const stats = await networkAPI.getRouterStats(activeRouterId);
-//         setRouterStats(stats);
+//         setRouterStats(prev => ({ ...prev, [activeRouterId]: stats }));
 
-//         // Fetch historical data for trends
-//         const historical = await networkAPI.getHistoricalStats(activeRouterId);
-//         setHistoricalData(historical);
+//         // Only fetch historical data on larger screens
+//         if (screenSize !== 'mobile') {
+//           const historical = await networkAPI.getHistoricalStats(activeRouterId);
+//           setHistoricalData(prev => ({ ...prev, [activeRouterId]: historical }));
+//         }
 //       }
 
 //     } catch (err) {
@@ -131,20 +152,19 @@
 //     } finally {
 //       setIsLoading(false);
 //     }
-//   }, [routers, activeRouterId]);
+//   }, [routers, activeRouterId, screenSize]);
 
-//   // Refresh data function
+//   // Refresh data function with screen size awareness
 //   const refreshData = useCallback(async () => {
 //     await fetchInitialData();
 //   }, [fetchInitialData]);
 
-//   // WebSocket connection for real-time updates
+//   // Enhanced WebSocket connection with mobile optimization
 //   useEffect(() => {
 //     const connectWebSocket = () => {
 //       console.log('🔌 Connecting to network WebSocket...');
-//       setWebSocketConnected(true);
       
-//       // In a real implementation, this would connect to your WebSocket endpoints
+//       // Use the correct WebSocket endpoint from backend
 //       const ws = new WebSocket(`ws://${window.location.host}/ws/routers/`);
       
 //       ws.onopen = () => {
@@ -156,11 +176,18 @@
 //         try {
 //           const data = JSON.parse(event.data);
           
-//           // Handle different message types
+//           // Handle different message types from backend
 //           switch (data.type) {
 //             case 'router_update':
 //               // Update specific router data
+//               if (data.router_id) {
+//                 setRouterStats(prev => ({
+//                   ...prev,
+//                   [data.router_id]: { ...prev[data.router_id], ...data.data }
+//                 }));
+//               }
 //               break;
+              
 //             case 'health_update':
 //               // Update health data
 //               setHealthData(prev => 
@@ -169,12 +196,29 @@
 //                 )
 //               );
 //               break;
-//             case 'stats_update':
-//               // Update router stats
+              
+//             case 'connection_test_update':
+//               // Update connection test results
 //               if (data.router_id === activeRouterId) {
-//                 setRouterStats(prev => ({ ...prev, latest: data.data }));
+//                 setRouterStats(prev => ({
+//                   ...prev,
+//                   [data.router_id]: { 
+//                     ...prev[data.router_id], 
+//                     connection_test: data.data 
+//                   }
+//                 }));
 //               }
 //               break;
+              
+//             case 'system_metrics_update':
+//               // Update system-wide metrics
+//               setNetworkData(prev => ({
+//                 ...prev,
+//                 ...data.data,
+//                 lastUpdate: new Date()
+//               }));
+//               break;
+              
 //             default:
 //               console.log('Unknown WebSocket message type:', data.type);
 //           }
@@ -187,10 +231,11 @@
 //         console.log('WebSocket disconnected');
 //         setWebSocketConnected(false);
         
-//         // Attempt reconnection after 5 seconds
+//         // Attempt reconnection with longer delay on mobile
+//         const reconnectDelay = screenSize === 'mobile' ? 10000 : 5000;
 //         setTimeout(() => {
 //           connectWebSocket();
-//         }, 5000);
+//         }, reconnectDelay);
 //       };
       
 //       ws.onerror = (error) => {
@@ -203,23 +248,28 @@
 //       };
 //     };
 
-//     const cleanup = connectWebSocket();
-//     return cleanup;
-//   }, [activeRouterId]);
+//     // Only connect WebSocket on larger screens or when specifically needed
+//     if (screenSize !== 'mobile' || activeRouterId) {
+//       const cleanup = connectWebSocket();
+//       return cleanup;
+//     }
+//   }, [activeRouterId, screenSize]);
 
 //   // Initial data fetch
 //   useEffect(() => {
 //     fetchInitialData();
 //   }, [fetchInitialData]);
 
-//   // Auto-refresh every 30 seconds
+//   // Auto-refresh with different intervals based on screen size
 //   useEffect(() => {
+//     const refreshInterval = screenSize === 'mobile' ? 60000 : 30000; // 60s on mobile, 30s on larger screens
+    
 //     const interval = setInterval(() => {
 //       refreshData();
-//     }, 30000);
+//     }, refreshInterval);
 
 //     return () => clearInterval(interval);
-//   }, [refreshData]);
+//   }, [refreshData, screenSize]);
 
 //   return {
 //     networkData,
@@ -230,7 +280,8 @@
 //     isLoading,
 //     error,
 //     refreshData,
-//     setNetworkData
+//     setNetworkData,
+//     screenSize // Export screen size for components to use
 //   };
 // };
 
@@ -238,19 +289,19 @@
 
 
 
-// src/hooks/useNetworkData.js
+// src/hooks/useNetworkData.js - FIXED VERSION
 import { useState, useEffect, useCallback } from 'react';
-import { calculatePerformanceMetrics } from '../../utils/networkUtils'
+import { calculatePerformanceMetrics } from '../../utils/networkUtils';
 
-// Enhanced API service for network management
+// Enhanced API service with proper error handling
 const networkAPI = {
-  // Get router statistics - FIXED endpoint
   async getRouterStats(routerId) {
     const response = await fetch(`/api/network_management/routers/${routerId}/status/`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
         'Content-Type': 'application/json'
-      }
+      },
+      timeout: 10000 // 10 second timeout
     });
     
     if (!response.ok) {
@@ -260,13 +311,14 @@ const networkAPI = {
     return await response.json();
   },
 
-  // Get health monitoring data - FIXED endpoint
-  async getHealthMonitoring() {
-    const response = await fetch('/api/network_management/health-monitoring/', {
+  async getHealthMonitoring(optimizeForMobile = false) {
+    const params = optimizeForMobile ? '?fields=basic' : '';
+    const response = await fetch(`/api/network_management/health-monitoring/${params}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
         'Content-Type': 'application/json'
-      }
+      },
+      timeout: 15000
     });
     
     if (!response.ok) {
@@ -276,49 +328,18 @@ const networkAPI = {
     return await response.json();
   },
 
-  // Get router list - FIXED endpoint
-  async getRouters() {
-    const response = await fetch('/api/network_management/routers/', {
+  async getRouters(optimizeForMobile = false) {
+    const params = optimizeForMobile ? '?fields=id,name,ip,connection_status' : '';
+    const response = await fetch(`/api/network_management/routers/${params}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
         'Content-Type': 'application/json'
-      }
+      },
+      timeout: 10000
     });
     
     if (!response.ok) {
       throw new Error(`Failed to fetch routers: ${response.statusText}`);
-    }
-    
-    return await response.json();
-  },
-
-  // Get historical stats for trends - FIXED endpoint
-  async getHistoricalStats(routerId, days = 7) {
-    const response = await fetch(`/api/network_management/routers/${routerId}/connection-history/?days=${days}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch historical stats: ${response.statusText}`);
-    }
-    
-    return await response.json();
-  },
-
-  // NEW: Get real-time metrics
-  async getRealTimeMetrics() {
-    const response = await fetch('/api/network_management/real-time-metrics/', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch real-time metrics: ${response.statusText}`);
     }
     
     return await response.json();
@@ -345,33 +366,48 @@ export const useNetworkData = (routers = [], activeRouterId = null) => {
   const [webSocketConnected, setWebSocketConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [screenSize, setScreenSize] = useState('desktop');
+  const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const maxReconnectAttempts = 5;
 
-  // Fetch initial data
+  // Detect screen size for responsive data loading
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      if (width < 640) setScreenSize('mobile');
+      else if (width < 1024) setScreenSize('tablet');
+      else setScreenSize('desktop');
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
+  // Optimize data loading based on screen size
   const fetchInitialData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      // Fetch routers if not provided
+      const optimizeForMobile = screenSize === 'mobile';
+      
+      // Fetch routers with optimized fields for mobile
       let routersData = routers;
       if (!routers.length) {
-        routersData = await networkAPI.getRouters();
+        routersData = await networkAPI.getRouters(optimizeForMobile);
       }
 
-      // Fetch health monitoring data
-      const healthData = await networkAPI.getHealthMonitoring();
+      // Fetch health monitoring data with optimization
+      const healthData = await networkAPI.getHealthMonitoring(optimizeForMobile);
       setHealthData(healthData);
 
       // Calculate system-wide metrics
       const systemMetrics = calculatePerformanceMetrics(routersData);
       
-      // Fetch real-time metrics
-      const realTimeMetrics = await networkAPI.getRealTimeMetrics();
-      
       setNetworkData(prev => ({ 
         ...prev, 
         ...systemMetrics,
-        ...realTimeMetrics,
         lastUpdate: new Date()
       }));
 
@@ -379,130 +415,174 @@ export const useNetworkData = (routers = [], activeRouterId = null) => {
       if (activeRouterId) {
         const stats = await networkAPI.getRouterStats(activeRouterId);
         setRouterStats(prev => ({ ...prev, [activeRouterId]: stats }));
-
-        // Fetch historical data for trends
-        const historical = await networkAPI.getHistoricalStats(activeRouterId);
-        setHistoricalData(prev => ({ ...prev, [activeRouterId]: historical }));
       }
 
     } catch (err) {
       console.error('Error fetching network data:', err);
       setError(err.message);
+      
+      // Don't show error toast for timeouts, just log
+      if (!err.message.includes('timeout')) {
+        console.error('Network data fetch error:', err);
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [routers, activeRouterId]);
+  }, [routers, activeRouterId, screenSize]);
 
-  // Refresh data function
+  // Refresh data function with screen size awareness
   const refreshData = useCallback(async () => {
     await fetchInitialData();
   }, [fetchInitialData]);
 
-  // Enhanced WebSocket connection for real-time updates
+  // FIXED WebSocket connection with proper URL and error handling
   useEffect(() => {
-    const connectWebSocket = () => {
-      console.log('🔌 Connecting to network WebSocket...');
-      
-      // Use the correct WebSocket endpoint from backend
-      const ws = new WebSocket(`ws://${window.location.host}/ws/routers/`);
-      
-      ws.onopen = () => {
-        console.log('WebSocket connected');
-        setWebSocketConnected(true);
-      };
-      
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          
-          // Handle different message types from backend
-          switch (data.type) {
-            case 'router_update':
-              // Update specific router data
-              if (data.router_id) {
-                setRouterStats(prev => ({
-                  ...prev,
-                  [data.router_id]: { ...prev[data.router_id], ...data.data }
-                }));
-              }
-              break;
-              
-            case 'health_update':
-              // Update health data
-              setHealthData(prev => 
-                prev.map(health => 
-                  health.router_id === data.router_id ? { ...health, ...data.data } : health
-                )
-              );
-              break;
-              
-            case 'connection_test_update':
-              // Update connection test results
-              if (data.router_id === activeRouterId) {
-                setRouterStats(prev => ({
-                  ...prev,
-                  [data.router_id]: { 
-                    ...prev[data.router_id], 
-                    connection_test: data.data 
-                  }
-                }));
-              }
-              break;
-              
-            case 'system_metrics_update':
-              // Update system-wide metrics
-              setNetworkData(prev => ({
-                ...prev,
-                ...data.data,
-                lastUpdate: new Date()
-              }));
-              break;
-              
-            default:
-              console.log('Unknown WebSocket message type:', data.type);
-          }
-        } catch (err) {
-          console.error('Error processing WebSocket message:', err);
-        }
-      };
-      
-      ws.onclose = () => {
-        console.log('WebSocket disconnected');
-        setWebSocketConnected(false);
-        
-        // Attempt reconnection after 5 seconds
-        setTimeout(() => {
-          connectWebSocket();
-        }, 5000);
-      };
-      
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setWebSocketConnected(false);
-      };
+    let ws = null;
+    let reconnectTimeout = null;
 
-      return () => {
-        ws.close();
-      };
+    const connectWebSocket = () => {
+      // FIX: Use the correct WebSocket URL - connect to backend port (8000), not frontend (5173)
+      const isProduction = import.meta.env.PROD;
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      
+      // FIX: Always connect to backend on port 8000 in development
+      let wsUrl;
+      if (isProduction) {
+        wsUrl = `${protocol}//${window.location.host}/ws/routers/`;
+      } else {
+        // In development, frontend runs on 5173, backend on 8000
+        wsUrl = 'ws://localhost:8000/ws/routers/';
+      }
+
+      console.log('🔌 Connecting to WebSocket:', wsUrl);
+      
+      try {
+        ws = new WebSocket(wsUrl);
+        
+        ws.onopen = () => {
+          console.log('✅ WebSocket connected successfully');
+          setWebSocketConnected(true);
+          setReconnectAttempts(0); // Reset reconnect attempts on successful connection
+        };
+        
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log('📨 WebSocket message received:', data.type);
+            
+            // Handle different message types from backend
+            switch (data.type) {
+              case 'router_update':
+                if (data.router_id) {
+                  setRouterStats(prev => ({
+                    ...prev,
+                    [data.router_id]: { ...prev[data.router_id], ...data.data }
+                  }));
+                }
+                break;
+                
+              case 'health_update':
+                setHealthData(prev => 
+                  prev.map(health => 
+                    health.router_id === data.router_id ? { ...health, ...data.data } : health
+                  )
+                );
+                break;
+                
+              case 'connection_test_update':
+                if (data.router_id === activeRouterId) {
+                  setRouterStats(prev => ({
+                    ...prev,
+                    [data.router_id]: { 
+                      ...prev[data.router_id], 
+                      connection_test: data.data 
+                    }
+                  }));
+                }
+                break;
+                
+              case 'system_metrics_update':
+                setNetworkData(prev => ({
+                  ...prev,
+                  ...data.data,
+                  lastUpdate: new Date()
+                }));
+                break;
+                
+              case 'connection_established':
+                console.log('✅ WebSocket connection confirmed by server');
+                break;
+                
+              default:
+                console.log('Unknown WebSocket message type:', data.type);
+            }
+          } catch (err) {
+            console.error('❌ Error processing WebSocket message:', err);
+          }
+        };
+        
+        ws.onclose = (event) => {
+          console.log('🔌 WebSocket disconnected:', event.code, event.reason);
+          setWebSocketConnected(false);
+          
+          // Only attempt reconnection if we haven't exceeded max attempts
+          if (reconnectAttempts < maxReconnectAttempts) {
+            const reconnectDelay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+            console.log(`🔄 Attempting reconnection in ${reconnectDelay}ms (attempt ${reconnectAttempts + 1}/${maxReconnectAttempts})`);
+            
+            reconnectTimeout = setTimeout(() => {
+              setReconnectAttempts(prev => prev + 1);
+              connectWebSocket();
+            }, reconnectDelay);
+          } else {
+            console.error('❌ Max reconnection attempts reached. WebSocket connection failed.');
+          }
+        };
+        
+        ws.onerror = (error) => {
+          console.error('❌ WebSocket error:', error);
+          setWebSocketConnected(false);
+        };
+
+      } catch (error) {
+        console.error('❌ Failed to create WebSocket connection:', error);
+        setWebSocketConnected(false);
+      }
     };
 
-    const cleanup = connectWebSocket();
-    return cleanup;
-  }, [activeRouterId]);
+    // Only connect WebSocket on larger screens or when specifically needed
+    if (screenSize !== 'mobile' || activeRouterId) {
+      connectWebSocket();
+    }
+
+    // Cleanup function
+    return () => {
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
+      if (ws) {
+        ws.close(1000, 'Component unmounting');
+      }
+    };
+  }, [activeRouterId, screenSize, reconnectAttempts]);
 
   // Initial data fetch
   useEffect(() => {
     fetchInitialData();
   }, [fetchInitialData]);
 
-  // Auto-refresh every 30 seconds
+  // Auto-refresh with different intervals based on screen size
   useEffect(() => {
+    const refreshInterval = screenSize === 'mobile' ? 60000 : 30000;
+    
     const interval = setInterval(() => {
-      refreshData();
-    }, 30000);
+      if (!isLoading) {
+        refreshData();
+      }
+    }, refreshInterval);
 
     return () => clearInterval(interval);
-  }, [refreshData]);
+  }, [refreshData, screenSize, isLoading]);
 
   return {
     networkData,
@@ -513,6 +593,9 @@ export const useNetworkData = (routers = [], activeRouterId = null) => {
     isLoading,
     error,
     refreshData,
-    setNetworkData
+    setNetworkData,
+    screenSize,
+    reconnectAttempts,
+    maxReconnectAttempts
   };
 };
