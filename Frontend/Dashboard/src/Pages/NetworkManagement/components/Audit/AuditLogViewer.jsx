@@ -1,5 +1,8 @@
 
 
+
+
+
 // // src/Pages/NetworkManagement/components/Audit/AuditLogViewer.jsx
 // import React, { useState, useCallback, useEffect } from 'react';
 // import { motion, AnimatePresence } from 'framer-motion';
@@ -11,7 +14,7 @@
 // } from 'lucide-react';
 // import CustomButton from '../Common/CustomButton';
 // import InputField from '../Common/InputField';
-// import { getThemeClasses } from '../../../../components/ServiceManagement/Shared/components';
+// import { getThemeClasses, EnhancedSelect } from '../../../../components/ServiceManagement/Shared/components';
 // import { toast } from 'react-toastify';
 // import { useAuth } from '../../../../context/AuthContext'
 // import api from '../../../../api'
@@ -296,33 +299,6 @@
 //     </motion.div>
 //   );
 
-//   // Simple select component
-//   const SimpleSelect = ({ label, value, onChange, options, placeholder, theme }) => (
-//     <div>
-//       {label && (
-//         <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-//           {label}
-//         </label>
-//       )}
-//       <select
-//         value={value}
-//         onChange={(e) => onChange(e.target.value)}
-//         className={`w-full p-2 border rounded-lg ${
-//           theme === 'dark' 
-//             ? 'bg-gray-700 border-gray-600 text-white' 
-//             : 'bg-white border-gray-300 text-gray-900'
-//         }`}
-//       >
-//         <option value="">{placeholder || 'Select...'}</option>
-//         {options.map(option => (
-//           <option key={option.value} value={option.value}>
-//             {option.label}
-//           </option>
-//         ))}
-//       </select>
-//     </div>
-//   );
-
 //   if (!isAuthenticated) {
 //     return (
 //       <div className={`p-6 rounded-xl border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
@@ -400,41 +376,66 @@
 //           className={`p-4 rounded-lg border mb-6 ${themeClasses.bg.card} ${themeClasses.border.medium}`}
 //         >
 //           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-//             <SimpleSelect
-//               label="Action Type"
-//               value={filters.action}
-//               onChange={(value) => setFilters(prev => ({ ...prev, action: value }))}
-//               options={actionTypes.map(a => ({ value: a.value, label: a.label }))}
-//               placeholder="All Actions"
-//               theme={theme}
-//             />
+//             {/* Action Type Filter - Using EnhancedSelect */}
+//             <div>
+//               <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
+//                 Action Type
+//               </label>
+//               <EnhancedSelect
+//                 value={filters.action}
+//                 onChange={(value) => setFilters(prev => ({ ...prev, action: value }))}
+//                 options={actionTypes.map(a => ({ value: a.value, label: a.label }))}
+//                 placeholder="All Actions"
+//                 theme={theme}
+//                 className="w-full"
+//               />
+//             </div>
             
-//             <SimpleSelect
-//               label="Time Range"
-//               value={filters.days}
-//               onChange={(value) => setFilters(prev => ({ ...prev, days: value }))}
-//               options={timeRanges}
-//               theme={theme}
-//             />
+//             {/* Time Range Filter - Using EnhancedSelect */}
+//             <div>
+//               <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
+//                 Time Range
+//               </label>
+//               <EnhancedSelect
+//                 value={filters.days}
+//                 onChange={(value) => setFilters(prev => ({ ...prev, days: value }))}
+//                 options={timeRanges}
+//                 placeholder="Select time range"
+//                 theme={theme}
+//                 className="w-full"
+//               />
+//             </div>
 
-//             <SimpleSelect
-//               label="Status"
-//               value={filters.status}
-//               onChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
-//               options={statusTypes}
-//               placeholder="All Status"
-//               theme={theme}
-//             />
+//             {/* Status Filter - Using EnhancedSelect */}
+//             <div>
+//               <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
+//                 Status
+//               </label>
+//               <EnhancedSelect
+//                 value={filters.status}
+//                 onChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
+//                 options={statusTypes}
+//                 placeholder="All Status"
+//                 theme={theme}
+//                 className="w-full"
+//               />
+//             </div>
 
-//             <InputField
-//               label="Search"
-//               value={filters.search}
-//               onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-//               placeholder="Search logs..."
-//               icon={<Search className="w-4 h-4" />}
-//               theme={theme}
-//             />
+//             {/* Search Input */}
+//             <div>
+//               <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
+//                 Search
+//               </label>
+//               <InputField
+//                 value={filters.search}
+//                 onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+//                 placeholder="Search logs..."
+//                 icon={<Search className="w-4 h-4" />}
+//                 theme={theme}
+//               />
+//             </div>
 
+//             {/* Clear Filters Button */}
 //             <div className="flex items-end">
 //               <CustomButton
 //                 onClick={() => setFilters({
@@ -624,29 +625,33 @@
 
 
 
-
-// src/Pages/NetworkManagement/components/Audit/AuditLogViewer.jsx
+// src/Pages/NetworkManagement/components/Audit/AuditLogViewer.jsx - COMPLETELY REWRITTEN
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Filter, Download, Calendar, User, Server, 
   RefreshCw, FileText, Trash2, Eye, ChevronDown, ChevronUp,
   AlertCircle, CheckCircle, XCircle, Info, Clock, MoreVertical,
-  Settings, Wifi, Shield, Network
+  Settings, Wifi, Shield, Network, AlertTriangle
 } from 'lucide-react';
 import CustomButton from '../Common/CustomButton';
 import InputField from '../Common/InputField';
 import { getThemeClasses, EnhancedSelect } from '../../../../components/ServiceManagement/Shared/components';
-import { toast } from 'react-toastify';
+import { toast } from 'react-hot-toast';
 import { useAuth } from '../../../../context/AuthContext'
 import api from '../../../../api'
 
 const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }) => {
   const themeClasses = getThemeClasses(theme);
-  const { isAuthenticated, logout } = useAuth(); // Get auth state
+  const { isAuthenticated, logout } = useAuth();
+  
+  // Enhanced state with loading and error states
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  
   const [filters, setFilters] = useState({
     action: '',
     router_id: routerId || '',
@@ -655,6 +660,7 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
     search: '',
     status: ''
   });
+  
   const [expandedLog, setExpandedLog] = useState(null);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -663,7 +669,7 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
     total_pages: 1
   });
 
-  // Fixed action types with proper icons
+  // Action types with proper icons
   const actionTypes = [
     { value: 'create', label: 'Create', icon: CheckCircle, color: 'green' },
     { value: 'update', label: 'Update', icon: RefreshCw, color: 'blue' },
@@ -692,13 +698,19 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
     { value: 90, label: 'Last 90 days' }
   ];
 
-  const fetchAuditLogs = useCallback(async (page = 1) => {
+  // Enhanced fetch with error handling and retry logic
+  const fetchAuditLogs = useCallback(async (page = 1, isRetry = false) => {
     if (!isAuthenticated) {
       toast.error('Please log in to view audit logs');
       return;
     }
 
-    setLoading(true);
+    // Don't show loading toast for retries
+    if (!isRetry) {
+      setLoading(true);
+      setHasError(false);
+    }
+
     try {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -712,12 +724,19 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
       if (filters.search) params.append('search', filters.search);
       if (filters.status) params.append('status', filters.status);
 
-      // Use your api instance instead of fetch
-      const response = await api.get(`/api/network_management/audit-logs/?${params}`);
+      // Use smart fetch with fallback
+      const response = await api.smartFetch({
+        method: 'get',
+        url: `/api/network_management/audit-logs/?${params}`
+      }, {
+        retries: 2,
+        fallbackData: { logs: [], total_count: 0 },
+        showToast: !isRetry
+      });
       
-      const data = response.data;
+      const data = response;
       
-      // Handle different response formats
+      // Handle different response formats gracefully
       let logsArray = [];
       let totalCount = 0;
       
@@ -735,6 +754,10 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
         const possibleArrays = Object.values(data).filter(item => Array.isArray(item));
         logsArray = possibleArrays.length > 0 ? possibleArrays[0] : [];
         totalCount = data.total_count || logsArray.length;
+      } else {
+        // Fallback to empty array
+        logsArray = [];
+        totalCount = 0;
       }
       
       setLogs(logsArray);
@@ -745,17 +768,32 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
         total_pages: Math.ceil(totalCount / prev.page_size)
       }));
       
+      setRetryCount(0);
+      
+      // Show success message only for first load or after retry
+      if (isRetry && logsArray.length > 0) {
+        toast.success('Audit logs loaded successfully');
+      }
+      
     } catch (error) {
       console.error('Error fetching audit logs:', error);
+      
+      if (!isRetry) {
+        setHasError(true);
+        setRetryCount(prev => prev + 1);
+      }
+      
+      // Don't show duplicate toasts (interceptor already shows them)
       if (error.response?.status === 401) {
         toast.error('Session expired. Please log in again.');
         logout();
-      } else {
-        toast.error('Failed to fetch audit logs');
       }
+      
       setLogs([]);
     } finally {
-      setLoading(false);
+      if (!isRetry) {
+        setLoading(false);
+      }
     }
   }, [filters, pagination.page_size, isAuthenticated, logout]);
 
@@ -766,6 +804,8 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
     }
 
     setExporting(true);
+    const toastId = toast.loading(`Exporting audit logs as ${format.toUpperCase()}...`);
+    
     try {
       const params = new URLSearchParams({ format });
       if (filters.action) params.append('action', filters.action);
@@ -773,7 +813,8 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
       if (filters.days) params.append('days', filters.days);
 
       const response = await api.get(`/api/network_management/audit-logs/export/?${params}`, {
-        responseType: 'blob' // Important for file downloads
+        responseType: 'blob',
+        timeout: 45000 // Longer timeout for exports
       });
       
       const blob = new Blob([response.data]);
@@ -786,14 +827,15 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       
-      toast.success(`Audit logs exported as ${format.toUpperCase()}`);
+      toast.success(`Audit logs exported as ${format.toUpperCase()}`, { id: toastId });
     } catch (error) {
       console.error('Export error:', error);
+      
       if (error.response?.status === 401) {
-        toast.error('Session expired. Please log in again.');
+        toast.error('Session expired. Please log in again.', { id: toastId });
         logout();
       } else {
-        toast.error('Failed to export audit logs');
+        toast.error('Failed to export audit logs', { id: toastId });
       }
     } finally {
       setExporting(false);
@@ -810,24 +852,39 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
       return;
     }
 
+    const toastId = toast.loading('Clearing audit logs...');
+    
     try {
       await api.post('/api/network_management/audit-logs/cleanup/', {
         dry_run: false,
-        retention_days: 0 // This will trigger complete cleanup
+        retention_days: 0
       });
 
-      toast.success('Audit logs cleared successfully');
+      toast.success('Audit logs cleared successfully', { id: toastId });
       fetchAuditLogs(1);
     } catch (error) {
       console.error('Clear logs error:', error);
+      
       if (error.response?.status === 401) {
-        toast.error('Session expired. Please log in again.');
+        toast.error('Session expired. Please log in again.', { id: toastId });
         logout();
       } else {
-        toast.error('Failed to clear audit logs');
+        toast.error('Failed to clear audit logs', { id: toastId });
       }
     }
   };
+
+  // Auto-retry on error
+  useEffect(() => {
+    if (hasError && retryCount < 3) {
+      const timer = setTimeout(() => {
+        toast.loading('Retrying to load audit logs...');
+        fetchAuditLogs(pagination.page, true);
+      }, 3000 * retryCount); // Exponential backoff
+      
+      return () => clearTimeout(timer);
+    }
+  }, [hasError, retryCount, pagination.page, fetchAuditLogs]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -921,6 +978,30 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
     </motion.div>
   );
 
+  // Skeleton loader for better UX
+  const SkeletonLoader = () => (
+    <div className="space-y-3">
+      {[...Array(5)].map((_, index) => (
+        <div key={index} className={`p-4 rounded-lg border ${themeClasses.bg.card} ${themeClasses.border.medium} animate-pulse`}>
+          <div className="flex items-start justify-between">
+            <div className="flex items-start space-x-3 flex-1">
+              <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-1/4"></div>
+                <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
+                <div className="flex space-x-4">
+                  <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-20"></div>
+                  <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-16"></div>
+                </div>
+              </div>
+            </div>
+            <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-24"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   if (!isAuthenticated) {
     return (
       <div className={`p-6 rounded-xl border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
@@ -947,7 +1028,7 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
             Audit Logs
           </h3>
           <p className={`text-sm ${themeClasses.text.tertiary} mt-1`}>
-            {pagination.total_count} total logs • Tracking system activities and changes
+            {loading ? 'Loading...' : `${pagination.total_count} total logs`} • Tracking system activities and changes
           </p>
         </div>
         
@@ -959,6 +1040,7 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
             variant="secondary"
             size="sm"
             loading={exporting}
+            disabled={logs.length === 0}
             theme={theme}
           />
           <CustomButton
@@ -968,6 +1050,7 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
             variant="secondary"
             size="sm"
             loading={exporting}
+            disabled={logs.length === 0}
             theme={theme}
           />
           <CustomButton
@@ -990,15 +1073,47 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
         </div>
       </div>
 
+      {/* Error State */}
+      {hasError && retryCount >= 3 && (
+        <div className={`mb-6 p-4 rounded-lg border ${
+          theme === 'dark' ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'
+        }`}>
+          <div className="flex items-center">
+            <AlertTriangle className="w-5 h-5 text-red-500 mr-3" />
+            <div>
+              <h4 className={`font-medium ${theme === 'dark' ? 'text-red-300' : 'text-red-800'}`}>
+                Unable to load audit logs
+              </h4>
+              <p className={`text-sm mt-1 ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>
+                Please check your connection and try again.
+              </p>
+              <button
+                onClick={() => {
+                  setHasError(false);
+                  setRetryCount(0);
+                  fetchAuditLogs(1);
+                }}
+                className={`mt-2 px-4 py-2 rounded text-sm ${
+                  theme === 'dark' 
+                    ? 'bg-red-700 hover:bg-red-600 text-white' 
+                    : 'bg-red-100 hover:bg-red-200 text-red-700'
+                }`}
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Filters */}
-      {showFilters && (
+      {showFilters && !hasError && (
         <motion.div 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className={`p-4 rounded-lg border mb-6 ${themeClasses.bg.card} ${themeClasses.border.medium}`}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {/* Action Type Filter - Using EnhancedSelect */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
                 Action Type
@@ -1013,7 +1128,6 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
               />
             </div>
             
-            {/* Time Range Filter - Using EnhancedSelect */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
                 Time Range
@@ -1028,7 +1142,6 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
               />
             </div>
 
-            {/* Status Filter - Using EnhancedSelect */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
                 Status
@@ -1043,7 +1156,6 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
               />
             </div>
 
-            {/* Search Input */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
                 Search
@@ -1057,7 +1169,6 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
               />
             </div>
 
-            {/* Clear Filters Button */}
             <div className="flex items-end">
               <CustomButton
                 onClick={() => setFilters({
@@ -1082,11 +1193,14 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
       {/* Logs List */}
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="text-center">
-              <RefreshCw className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-4" />
-              <p className={themeClasses.text.tertiary}>Loading audit logs...</p>
-            </div>
+          <SkeletonLoader />
+        ) : hasError ? (
+          <div className="text-center py-12">
+            <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+            <h4 className={`font-medium mb-2 ${themeClasses.text.primary}`}>Temporary Issue</h4>
+            <p className={themeClasses.text.tertiary}>
+              We're having trouble loading audit logs. Please try refreshing.
+            </p>
           </div>
         ) : (Array.isArray(logs) && logs.length === 0) ? (
           <div className="text-center py-12">
@@ -1201,13 +1315,13 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
         ) : (
           <div className="text-center py-8">
             <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-            <p className={themeClasses.text.tertiary}>Invalid data format received from server</p>
+            <p className={themeClasses.text.tertiary}>Unable to display audit logs at this time</p>
           </div>
         )}
       </div>
 
       {/* Pagination */}
-      {pagination.total_pages > 1 && (
+      {pagination.total_pages > 1 && !hasError && (
         <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
           <p className={`text-sm ${themeClasses.text.tertiary}`}>
             Showing page {pagination.page} of {pagination.total_pages}
@@ -1218,7 +1332,7 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
               label="Previous"
               variant="secondary"
               size="sm"
-              disabled={pagination.page <= 1}
+              disabled={pagination.page <= 1 || loading}
               theme={theme}
             />
             <CustomButton
@@ -1226,7 +1340,7 @@ const AuditLogViewer = ({ theme = "light", routerId = null, showFilters = true }
               label="Next"
               variant="secondary"
               size="sm"
-              disabled={pagination.page >= pagination.total_pages}
+              disabled={pagination.page >= pagination.total_pages || loading}
               theme={theme}
             />
           </div>
