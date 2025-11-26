@@ -1,12 +1,5 @@
 
 
-
-
-
-
-
-
-
 # from rest_framework.views import APIView
 # from rest_framework.response import Response
 # from rest_framework.permissions import IsAuthenticated
@@ -484,14 +477,35 @@
         
 #         return summary
 
-
-
-
 # class TaxConfigurationView(APIView):
 #     """
 #     Enterprise Tax Configuration Management System
 #     """
 #     permission_classes = [IsAuthenticated]
+
+#     def _get_client_ip(self, request):
+#         """Get client IP address for audit logging - FIXED: Made instance method"""
+#         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+#         if x_forwarded_for:
+#             ip = x_forwarded_for.split(',')[0]
+#         else:
+#             ip = request.META.get('REMOTE_ADDR')
+#         return ip
+
+#     def _create_audit_log(self, user, action, description, tax_id, request=None):
+#         """Create audit log entry - FIXED: Added request parameter"""
+#         audit_data = {
+#             'user_id': user.id,
+#             'action': action,
+#             'description': description,
+#             'tax_id': tax_id,
+#             'timestamp': timezone.now(),
+#             'ip_address': self._get_client_ip(request) if request else 'Unknown'
+#         }
+        
+#         # Store in cache or database-based audit log
+#         audit_key = f"audit_tax_{tax_id}_{uuid.uuid4()}"
+#         cache.set(audit_key, audit_data, 86400)  # Store for 24 hours
 
 #     def get(self, request):
 #         """
@@ -619,12 +633,13 @@
 #                     # Save with audit information
 #                     tax_instance = serializer.save()
                     
-#                     # Create audit log
+#                     # Create audit log - FIXED: Pass request parameter
 #                     self._create_audit_log(
 #                         request.user,
 #                         'CREATE',
 #                         f"Created tax configuration: {tax_instance.name}",
-#                         tax_instance.id
+#                         tax_instance.id,
+#                         request
 #                     )
                     
 #                     # Clear relevant caches
@@ -830,27 +845,19 @@
 #         cache.set(cache_key, recent_creations + 1, 60)  # 1 minute window
 #         return False
 
-#     def _create_audit_log(self, user, action, description, tax_id):
-#         """Create audit log entry"""
-#         audit_data = {
-#             'user_id': user.id,
-#             'action': action,
-#             'description': description,
-#             'tax_id': tax_id,
-#             'timestamp': timezone.now(),
-#             'ip_address': self._get_client_ip(request)
-#         }
-        
-#         # Store in cache or database-based audit log
-#         audit_key = f"audit_tax_{tax_id}_{uuid.uuid4()}"
-#         cache.set(audit_key, audit_data, 86400)  # Store for 24 hours
-
 #     def _invalidate_related_caches(self, user_id):
 #         """Invalidate all related caches"""
 #         cache.delete_pattern(f"tax_configurations_{user_id}_*")
 #         cache.delete_pattern('reconciliation_*')
 #         cache.delete_pattern('access_type_analytics_*')
 #         cache.delete_pattern('dashboard_stats_*')
+
+
+# class TaxConfigurationDetailView(APIView):
+#     """
+#     Enterprise Tax Configuration Detail Management
+#     """
+#     permission_classes = [IsAuthenticated]
 
 #     def _get_client_ip(self, request):
 #         """Get client IP address for audit logging"""
@@ -861,12 +868,20 @@
 #             ip = request.META.get('REMOTE_ADDR')
 #         return ip
 
-
-# class TaxConfigurationDetailView(APIView):
-#     """
-#     Enterprise Tax Configuration Detail Management
-#     """
-#     permission_classes = [IsAuthenticated]
+#     def _create_audit_log(self, user, action, description, tax_id, request=None):
+#         """Create audit log entry"""
+#         audit_data = {
+#             'user_id': user.id,
+#             'action': action,
+#             'description': description,
+#             'tax_id': tax_id,
+#             'timestamp': timezone.now(),
+#             'ip_address': self._get_client_ip(request) if request else 'Unknown'
+#         }
+        
+#         # Store in cache or database-based audit log
+#         audit_key = f"audit_tax_{tax_id}_{uuid.uuid4()}"
+#         cache.set(audit_key, audit_data, 86400)  # Store for 24 hours
 
 #     def get_object(self, tax_id):
 #         """
@@ -874,7 +889,7 @@
 #         """
 #         try:
 #             # Use select_related for performance
-#             return TaxConfiguration.objects.select_related('created_by').get(id=tax_id)
+#             return TaxConfiguration.objects.select_related('created_by', 'updated_by').get(id=tax_id)
 #         except TaxConfiguration.DoesNotExist:
 #             logger.warning(f"Tax configuration not found - Tax ID: {tax_id}")
 #             raise Http404({
@@ -943,17 +958,19 @@
 
 #     def _update_tax_configuration(self, request, tax_id, partial=False):
 #         """
-#         Unified update method for PUT and PATCH requests
+#         Unified update method for PUT and PATCH requests with enhanced error handling
 #         """
 #         try:
 #             tax = self.get_object(tax_id)
             
-#             # Clean the data - remove read-only fields
+#             # Enhanced data cleaning with logging
 #             cleaned_data = self._clean_request_data(request.data)
+#             logger.info(f"Tax update request - Tax ID: {tax_id}, Data: {cleaned_data}")
             
 #             # Business rule validation
 #             validation_errors = self._validate_business_rules(cleaned_data)
 #             if validation_errors:
+#                 logger.warning(f"Business rule validation failed for tax {tax_id}: {validation_errors}")
 #                 return Response(
 #                     {
 #                         "error": "Business rule validation failed",
@@ -965,53 +982,60 @@
             
 #             # Use atomic transaction for data consistency
 #             with transaction.atomic():
-#                 serializer = TaxConfigurationSerializer(
-#                     tax, 
-#                     data=cleaned_data, 
-#                     partial=partial,
-#                     context={'request': request}
-#                 )
-                
-#                 if serializer.is_valid():
-#                     # Save with audit information
-#                     updated_tax = serializer.save()
-                    
-#                     # Create audit log
-#                     action = 'UPDATE' if partial else 'FULL_UPDATE'
-#                     self._create_audit_log(
-#                         request.user,
-#                         action,
-#                         f"Updated tax configuration: {updated_tax.name}",
-#                         tax_id
+#                 try:
+#                     serializer = TaxConfigurationSerializer(
+#                         tax, 
+#                         data=cleaned_data, 
+#                         partial=partial,
+#                         context={'request': request}
 #                     )
                     
-#                     # Clear relevant caches
-#                     self._invalidate_related_caches(request.user.id)
-                    
-#                     # Prepare success response
-#                     response_data = {
-#                         "data": serializer.data,
-#                         "message": f"Tax configuration '{updated_tax.name}' updated successfully",
-#                         "audit_id": str(uuid.uuid4()),
-#                         "changes": self._get_changes(tax, updated_tax) if not partial else None
-#                     }
-                    
-#                     logger.info(
-#                         f"Tax configuration updated successfully - "
-#                         f"Tax ID: {tax_id}, User: {request.user.id}, "
-#                         f"Name: {updated_tax.name}"
-#                     )
-                    
-#                     return Response(response_data)
-#                 else:
-#                     return Response(
-#                         {
-#                             "error": "Validation failed",
-#                             "code": "VALIDATION_ERROR",
-#                             "details": serializer.errors
-#                         },
-#                         status=status.HTTP_400_BAD_REQUEST
-#                     )
+#                     if serializer.is_valid():
+#                         # Save with audit information - updated_by will be set automatically in serializer
+#                         updated_tax = serializer.save()
+                        
+#                         # Create audit log
+#                         action = 'UPDATE' if partial else 'FULL_UPDATE'
+#                         self._create_audit_log(
+#                             request.user,
+#                             action,
+#                             f"Updated tax configuration: {updated_tax.name}",
+#                             tax_id,
+#                             request
+#                         )
+                        
+#                         # Clear relevant caches
+#                         self._invalidate_related_caches(request.user.id)
+                        
+#                         # Prepare success response
+#                         response_data = {
+#                             "data": serializer.data,
+#                             "message": f"Tax configuration '{updated_tax.name}' updated successfully",
+#                             "audit_id": str(uuid.uuid4()),
+#                             "changes": self._get_changes(tax, updated_tax) if not partial else None
+#                         }
+                        
+#                         logger.info(
+#                             f"Tax configuration updated successfully - "
+#                             f"Tax ID: {tax_id}, User: {request.user.id}, "
+#                             f"Name: {updated_tax.name}"
+#                         )
+                        
+#                         return Response(response_data)
+#                     else:
+#                         logger.warning(f"Serializer validation failed for tax {tax_id}: {serializer.errors}")
+#                         return Response(
+#                             {
+#                                 "error": "Validation failed",
+#                                 "code": "VALIDATION_ERROR",
+#                                 "details": serializer.errors
+#                             },
+#                             status=status.HTTP_400_BAD_REQUEST
+#                         )
+                        
+#                 except Exception as serializer_error:
+#                     logger.error(f"Serializer error for tax {tax_id}: {str(serializer_error)}")
+#                     raise serializer_error
                     
 #         except Http404 as e:
 #             return Response(e.args[0], status=status.HTTP_404_NOT_FOUND)
@@ -1021,11 +1045,23 @@
 #                 f"Tax ID: {tax_id}, User: {request.user.id}, Error: {str(e)}",
 #                 exc_info=True
 #             )
+            
+#             # Provide more specific error messages
+#             error_message = "Failed to update tax configuration"
+#             error_details = "Please check your input and try again"
+            
+#             if "datetime" in str(e).lower():
+#                 error_message = "Invalid date format"
+#                 error_details = "Please check the effective date formats"
+#             elif "decimal" in str(e).lower():
+#                 error_message = "Invalid rate format"
+#                 error_details = "Tax rate must be a valid number"
+            
 #             return Response(
 #                 {
-#                     "error": "Failed to update tax configuration",
+#                     "error": error_message,
 #                     "code": "TAX_UPDATE_ERROR",
-#                     "details": "Please check your input and try again"
+#                     "details": error_details
 #                 },
 #                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
 #             )
@@ -1045,7 +1081,8 @@
 #                     request.user,
 #                     'DELETE',
 #                     f"Deleted tax configuration: {tax_name} (Rate: {tax.rate}%, Type: {tax.tax_type})",
-#                     tax_id
+#                     tax_id,
+#                     request
 #                 )
                 
 #                 # Capture tax details for response
@@ -1099,7 +1136,10 @@
 #             )
 
 #     def _clean_request_data(self, data):
-#         """Clean request data by removing read-only and invalid fields"""
+#         """Enhanced data cleaning with better handling of different data types"""
+#         if not isinstance(data, dict):
+#             return data
+            
 #         cleaned_data = data.copy()
         
 #         # Remove read-only fields that should not be sent in requests
@@ -1113,15 +1153,46 @@
 #             if field in cleaned_data:
 #                 del cleaned_data[field]
         
-#         # Handle empty strings for optional fields
-#         if 'description' in cleaned_data and cleaned_data['description'] == '':
-#             cleaned_data['description'] = None
-            
-#         if 'revision_notes' in cleaned_data and cleaned_data['revision_notes'] == '':
-#             cleaned_data['revision_notes'] = None
-            
-#         if 'effective_to' in cleaned_data and cleaned_data['effective_to'] == '':
-#             cleaned_data['effective_to'] = None
+#         # Handle empty strings for optional fields - convert to None
+#         optional_fields = ['description', 'revision_notes', 'effective_to']
+#         for field in optional_fields:
+#             if field in cleaned_data and cleaned_data[field] == '':
+#                 cleaned_data[field] = None
+        
+#         # Handle boolean fields - ensure they are proper booleans
+#         boolean_fields = ['is_enabled', 'is_included_in_price', 'requires_approval']
+#         for field in boolean_fields:
+#             if field in cleaned_data:
+#                 if isinstance(cleaned_data[field], str):
+#                     cleaned_data[field] = cleaned_data[field].lower() in ['true', '1', 'yes']
+        
+#         # Handle rate field - ensure it's properly formatted
+#         if 'rate' in cleaned_data:
+#             try:
+#                 if isinstance(cleaned_data['rate'], str):
+#                     # Remove any non-numeric characters except decimal point
+#                     cleaned_data['rate'] = ''.join(c for c in cleaned_data['rate'] if c.isdigit() or c == '.')
+#                 cleaned_data['rate'] = Decimal(str(cleaned_data['rate']))
+#             except (ValueError, TypeError, decimal.InvalidOperation):
+#                 # If rate conversion fails, remove it and let validation handle it
+#                 del cleaned_data['rate']
+        
+#         # IMPORTANT: Don't auto-correct effective_from - let user set their own date
+#         # The frontend will default to current time, but backend respects user's choice
+#         if 'effective_from' in cleaned_data and isinstance(cleaned_data['effective_from'], str):
+#             try:
+#                 from django.utils.dateparse import parse_datetime
+#                 parsed_dt = parse_datetime(cleaned_data['effective_from'])
+#                 # Allow past dates for historical records and user flexibility
+#                 if parsed_dt:
+#                     # Just ensure it's a valid datetime, don't auto-correct
+#                     cleaned_data['effective_from'] = parsed_dt.strftime('%Y-%m-%d %H:%M:%S')
+#             except (ValueError, TypeError):
+#                 # If parsing fails, let the serializer handle the error
+#                 pass
+        
+#         # Log the cleaned data for debugging
+#         logger.debug(f"Cleaned tax data: {cleaned_data}")
         
 #         return cleaned_data
 
@@ -1151,15 +1222,38 @@
         
 #         return changes
 
-#     # Reuse helper methods from TaxConfigurationView
 #     def _validate_business_rules(self, data):
-#         return TaxConfigurationView()._validate_business_rules(data)
-    
-#     def _create_audit_log(self, user, action, description, tax_id):
-#         return TaxConfigurationView()._create_audit_log(user, action, description, tax_id)
+#         """Validate business rules for tax configuration"""
+#         errors = []
+        
+#         # Rate validation
+#         if 'rate' in data:
+#             try:
+#                 rate = float(data['rate'])
+#                 if rate > 50 and not data.get('requires_approval', False):
+#                     errors.append("Tax rates above 50% require special approval")
+#                 if rate <= 0:
+#                     errors.append("Tax rate must be greater than 0")
+#             except (ValueError, TypeError):
+#                 errors.append("Invalid tax rate format")
+        
+#         # Name validation
+#         if 'name' in data and len(data['name']) > 100:
+#             errors.append("Tax name cannot exceed 100 characters")
+        
+#         # Access type validation
+#         valid_access_types = ['all', 'hotspot', 'pppoe', 'both']
+#         if 'access_type' in data and data['access_type'] not in valid_access_types:
+#             errors.append(f"Invalid access type. Must be one of: {', '.join(valid_access_types)}")
+        
+#         return errors
     
 #     def _invalidate_related_caches(self, user_id):
-#         return TaxConfigurationView()._invalidate_related_caches(user_id)
+#         """Invalidate all related caches"""
+#         cache.delete_pattern(f"tax_configurations_{user_id}_*")
+#         cache.delete_pattern('reconciliation_*')
+#         cache.delete_pattern('access_type_analytics_*')
+#         cache.delete_pattern('dashboard_stats_*')
 
 
 
@@ -1256,6 +1350,7 @@
 #                 {"error": "Failed to create expense category", "details": str(e)},
 #                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
 #             )
+
 
 # class ExpenseCategoryDetailView(APIView):
 #     """Enhanced view for managing individual expense categories with deletion support"""
@@ -1650,9 +1745,6 @@
 
 
 
-
-
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -1835,25 +1927,25 @@ class PaymentReconciliationView(APIView):
 
     def _calculate_enhanced_tax_breakdown(self, queryset, taxes, record_type):
         """Calculate enhanced tax breakdown with access type support"""
-        total_amount = queryset.aggregate(total=Sum('amount'))['total'] or 0
+        total_amount = queryset.aggregate(total=Sum('amount'))['total'] or Decimal('0')
         
         # Calculate amounts by access type
         access_type_totals = {}
         for item in queryset:
             access_type = getattr(item, 'access_type', 'general')
             if access_type not in access_type_totals:
-                access_type_totals[access_type] = 0
-            access_type_totals[access_type] += float(item.amount)
+                access_type_totals[access_type] = Decimal('0')
+            access_type_totals[access_type] += Decimal(str(item.amount))
         
         tax_breakdown = []
         for tax in taxes:
-            total_tax_amount = 0
+            total_tax_amount = Decimal('0')
             access_type_tax = {}
             
             for access_type, amount in access_type_totals.items():
                 if tax._applies_to_access_type(access_type):
                     tax_amount = tax.calculate_tax(amount, access_type)
-                    total_tax_amount += tax_amount
+                    total_tax_amount += Decimal(str(tax_amount))
                     access_type_tax[access_type] = float(tax_amount)
             
             tax_breakdown.append({
@@ -1866,24 +1958,28 @@ class PaymentReconciliationView(APIView):
                 'access_type_tax': access_type_tax
             })
         
-        net_amount = total_amount
+        net_amount = Decimal(str(total_amount))
         if record_type == 'revenue':
             # For revenue, subtract included taxes to get net
             included_taxes = [t for t in tax_breakdown if t['is_included']]
             for tax in included_taxes:
-                net_amount -= tax['tax_amount']
+                # Convert tax_amount to Decimal before subtraction
+                tax_amount_decimal = Decimal(str(tax['tax_amount']))
+                net_amount -= tax_amount_decimal
         else:
             # For expenses, add excluded taxes to get gross
             excluded_taxes = [t for t in tax_breakdown if not t['is_included']]
             for tax in excluded_taxes:
-                net_amount += tax['tax_amount']
+                # Convert tax_amount to Decimal before addition
+                tax_amount_decimal = Decimal(str(tax['tax_amount']))
+                net_amount += tax_amount_decimal
         
         return {
             'total_amount': float(total_amount),
             'net_amount': float(net_amount),
             'tax_breakdown': tax_breakdown,
             'record_count': queryset.count(),
-            'access_type_totals': access_type_totals
+            'access_type_totals': {k: float(v) for k, v in access_type_totals.items()}
         }
 
     def _calculate_access_type_breakdown(self, transactions, expenses):
