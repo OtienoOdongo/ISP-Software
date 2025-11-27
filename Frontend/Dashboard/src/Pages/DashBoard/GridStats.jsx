@@ -731,6 +731,10 @@
 
 
 
+
+
+
+
 // GridStats.jsx - COMPLETE FIXED VERSION
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import PropTypes from "prop-types";
@@ -750,6 +754,7 @@ import {
 import { FaSpinner, FaUserCheck, FaCircle } from "react-icons/fa";
 import { IoMdAlert } from "react-icons/io";
 import { toast, Toaster } from "react-hot-toast";
+import { isCancel } from "axios";
 import SystemLoadMonitor from "../../components/DashboardComponents/SystemLoadMonitor.jsx";
 import SalesChart from "../../components/DashboardComponents/SalesChart.jsx";
 import RevenueChart from "../../components/DashboardComponents/RevenueChart.jsx";
@@ -1124,7 +1129,7 @@ const GridStats = () => {
       
     } catch (err) {
       // Handle cancellation
-      if (err.name === 'AbortError' || err.message === 'canceled') {
+      if (isCancel(err)) {
         return;
       }
       
