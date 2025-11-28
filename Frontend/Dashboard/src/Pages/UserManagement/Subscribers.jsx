@@ -5016,7 +5016,7 @@ const Subscribers = () => {
             <h1 className={`text-xl md:text-3xl font-bold ${
               theme === "dark" ? "text-white" : "text-gray-800"
             }`}>
-              Enhanced Client Management
+               Client Management
             </h1>
             <p className={`${theme === "dark" ? "text-gray-300" : "text-gray-500"}`}>
               Monitor and manage client profiles with network_management integration

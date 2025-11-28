@@ -479,7 +479,7 @@
 
 
 
-// context/AuthContext.jsx - FIXED VERSION
+// context/AuthContext.js
 import React, {
   createContext,
   useContext,
@@ -489,7 +489,7 @@ import React, {
   useMemo,
   useRef,
 } from 'react';
-import api, { AuthError } from '../api'; // Import AuthError
+import api, { AuthError } from '../api'; 
 import { ACCESS_TOKEN, REFRESH_TOKEN } from '../constants/index';
 
 const AuthContext = createContext();

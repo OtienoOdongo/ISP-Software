@@ -761,7 +761,7 @@
 
 
 
-// api.js - FIXED VERSION WITH INCREASED TIMEOUT
+// api.js 
 import axios, { isCancel } from "axios";
 import { toast } from 'react-hot-toast';
 import { ACCESS_TOKEN } from "./constants/index";
