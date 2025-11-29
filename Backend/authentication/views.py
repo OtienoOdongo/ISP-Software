@@ -199,10 +199,6 @@
 
 
 
-
-
-
-
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -217,12 +213,16 @@ from typing import Dict, Any, List
 import time
 from django.utils import timezone
 from functools import lru_cache
+import logging
 
 from .models import UserAccount
 from .serializers import (
     HotspotClientCreateSerializer, PPPoEClientCreateSerializer, 
     PPPoECredentialSerializer, UserMeSerializer
 )
+
+logger = logging.getLogger(__name__)
+
 
 def rate_limited(max_calls=100, period=60):
     def decorator(view_func):
@@ -469,3 +469,73 @@ def bulk_user_operation(request):
     cache.delete('user_stats_global')
     
     return Response({'updated': updated})
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@rate_limited(max_calls=50, period=60)
+def pppoe_authenticate(request):
+    """
+    Authenticate PPPoE users for router login
+    """
+    try:
+        username = request.data.get('username', '').strip()
+        password = request.data.get('password', '').strip()
+        
+        logger.info(f"PPPoE authentication attempt for username: {username}")
+        
+        if not username or not password:
+            return Response(
+                {'error': 'Username and password are required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Find user by PPPoE username
+        try:
+            user = UserAccount.objects.get(
+                pppoe_username=username,
+                connection_type='pppoe',
+                is_active=True
+            )
+        except UserAccount.DoesNotExist:
+            logger.warning(f"PPPoE user not found: {username}")
+            return Response(
+                {'error': 'Invalid PPPoE credentials'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        # Verify password
+        decrypted_password = user.get_pppoe_password_decrypted()
+        if decrypted_password and password == decrypted_password:
+            # Update last login and activate PPPoE
+            user.last_pppoe_login = timezone.now()
+            user.pppoe_active = True
+            user.save()
+            
+            logger.info(f"PPPoE authentication successful for: {username}")
+            
+            return Response({
+                'authenticated': True,
+                'message': 'PPPoE authentication successful',
+                'client': {
+                    'id': user.id,
+                    'client_id': user.client_id,
+                    'phone_number': str(user.phone_number),
+                    'username': user.pppoe_username,
+                    'connection_type': user.connection_type,
+                }
+            })
+        else:
+            logger.warning(f"PPPoE authentication failed for: {username}")
+            return Response(
+                {'error': 'Invalid PPPoE credentials'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+            
+    except Exception as e:
+        logger.error(f"PPPoE authentication error: {str(e)}", exc_info=True)
+        return Response(
+            {'error': 'Authentication service temporarily unavailable'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+

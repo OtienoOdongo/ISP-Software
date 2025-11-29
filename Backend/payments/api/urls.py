@@ -210,6 +210,7 @@ from payments.api.views.payment_reconciliation_view import (
     ManualExpenseView,
     ReconciliationReportView,
     AccessTypeAnalyticsView,
+    ClientRevenueAnalyticsView
 )
 
 urlpatterns = [
@@ -234,6 +235,7 @@ urlpatterns = [
     # Analytics
     path('analytics/revenue/', PaymentAnalyticsView.as_view(), name='payment_analytics_revenue'),
     path('analytics/success-rate/', PaymentAnalyticsView.as_view(), name='payment_analytics_success_rate'),
+    path('analytics/revenue/by-client/', ClientRevenueAnalyticsView.as_view(), name='client-revenue-analytics'),
     
     # Verification
     path('verify/', PaymentVerificationView.as_view(), name='payment_verification'),

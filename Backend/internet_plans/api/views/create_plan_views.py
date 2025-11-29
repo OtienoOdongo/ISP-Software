@@ -1170,38 +1170,6 @@ class InternetPlanDetailView(APIView):
         plan.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-# class PublicInternetPlanListView(APIView):
-#     permission_classes = [AllowAny]
-
-#     def get(self, request):
-#         try:
-#             queryset = InternetPlan.objects.filter(active=True)
-            
-#             access_type = request.query_params.get('access_type')
-#             if access_type:
-#                 if access_type == 'hotspot':
-#                     queryset = queryset.filter(access_methods__hotspot__enabled=True)
-#                 elif access_type == 'pppoe':
-#                     queryset = queryset.filter(access_methods__pppoe__enabled=True)
-            
-#             if category := request.query_params.get('category'):
-#                 queryset = queryset.filter(category=category)
-            
-#             queryset = queryset.filter(
-#                 Q(access_methods__hotspot__enabled=True) | 
-#                 Q(access_methods__pppoe__enabled=True)
-#             )
-            
-#             serializer = ClientPlanSerializer(queryset, many=True)
-#             return Response(serializer.data, status=status.HTTP_200_OK)
-#         except Exception as e:
-#             logger.error(f"Failed to load public plans: {e}")
-#             return Response(
-#                 {'error': 'Failed to load plans', 'details': str(e)}, 
-#                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
-#             )
-
-
 
 
 class PublicInternetPlanListView(APIView):

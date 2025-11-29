@@ -547,7 +547,8 @@ from network_management.api.views.router_management.router_user_management_views
     HotspotUsersView, 
     HotspotUserDetailView,
     PPPoEUsersView, 
-    PPPoEUserDetailView
+    PPPoEUserDetailView,
+    PPPoEUsersByClientView 
 )
 
 from network_management.api.views.router_management.router_callback_views import (
@@ -633,6 +634,7 @@ urlpatterns = [
     path("routers/<int:pk>/pppoe-users/", PPPoEUsersView.as_view(), name="pppoe-users"),
     path("hotspot-users/<int:pk>/", HotspotUserDetailView.as_view(), name="hotspot-user-detail"),
     path("pppoe-users/<int:pk>/", PPPoEUserDetailView.as_view(), name="pppoe-user-detail"),
+    path("pppoe-users/by-client/", PPPoEUsersByClientView.as_view(), name="pppoe-users-by-client"),
     
     # Configuration Management
     path("routers/<int:pk>/hotspot-config/", HotspotConfigView.as_view(), name="hotspot-config"),

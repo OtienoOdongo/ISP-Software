@@ -1749,7 +1749,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from django.db.models import Q, Sum, Count, Avg
+from django.db.models import Q, Sum, Count, Avg, Min, Max
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage
 from datetime import datetime, timedelta
@@ -1766,6 +1766,7 @@ import uuid
 
 from payments.models.payment_config_model import Transaction
 from payments.models.transaction_log_model import TransactionLog
+from payments.serializers.transaction_log_serializer import TransactionLogSerializer
 from payments.models.payment_reconciliation_model import (
     TaxConfiguration,
     ExpenseCategory,
@@ -3485,3 +3486,246 @@ class ReconciliationReportView(APIView):
                 {"error": "Failed to fetch reconciliation reports"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        
+
+
+class ClientRevenueAnalyticsView(APIView):
+    """
+    Production-ready Client Revenue Analytics View with comprehensive insights
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """
+        Get comprehensive revenue analytics for a specific client
+        """
+        try:
+            client_id = request.query_params.get('client_id')
+            
+            # Validate required parameter
+            if not client_id:
+                return Response(
+                    {
+                        "error": "client_id parameter is required",
+                        "code": "MISSING_CLIENT_ID"
+                    }, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Validate client_id format
+            try:
+                client_id_int = int(client_id)
+            except (ValueError, TypeError):
+                return Response(
+                    {
+                        "error": "Invalid client_id format. Must be a valid integer.",
+                        "code": "INVALID_CLIENT_ID"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Generate cache key
+            cache_key = f"client_revenue_{client_id}_{request.GET.urlencode()}"
+            cached_data = cache.get(cache_key)
+            
+            if cached_data:
+                logger.info(f"Cache hit for client revenue analytics - Client: {client_id}")
+                return Response(cached_data)
+            
+            # Time period for analytics (default: all time)
+            days = int(request.query_params.get('days', 0))  # 0 means all time
+            
+            # Build base query
+            base_query = TransactionLog.objects.filter(
+                client_id=client_id_int,
+                status='success'
+            ).select_related('internet_plan')
+            
+            # Apply time filter if specified
+            if days > 0:
+                start_date = timezone.now() - timedelta(days=days)
+                base_query = base_query.filter(created_at__gte=start_date)
+            
+            # Calculate comprehensive analytics
+            analytics = self._calculate_comprehensive_analytics(base_query, client_id_int, days)
+            
+            response_data = {
+                "client_id": client_id_int,
+                "analytics_period": f"last_{days}_days" if days > 0 else "all_time",
+                **analytics
+            }
+            
+            # Cache for 5 minutes (analytics data)
+            cache.set(cache_key, response_data, 300)
+            
+            logger.info(
+                f"Client revenue analytics fetched successfully - "
+                f"Client: {client_id}, "
+                f"User: {request.user.id}, "
+                f"Period: {days} days"
+            )
+            
+            return Response(response_data)
+            
+        except Exception as e:
+            logger.error(
+                f"Failed to fetch client revenue analytics - "
+                f"Client: {client_id}, "
+                f"User: {request.user.id}, "
+                f"Error: {str(e)}",
+                exc_info=True
+            )
+            return Response(
+                {
+                    "error": "Failed to fetch client revenue analytics",
+                    "code": "REVENUE_ANALYTICS_ERROR",
+                    "details": "Please try again or contact support"
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    def _calculate_comprehensive_analytics(self, queryset, client_id, days):
+        """Calculate comprehensive revenue analytics for a client"""
+        try:
+            # Basic revenue metrics
+            revenue_metrics = queryset.aggregate(
+                total_revenue=Sum('amount'),
+                transaction_count=Count('id'),
+                avg_transaction_value=Avg('amount'),
+                max_transaction_value=Max('amount'),
+                min_transaction_value=Min('amount')
+            )
+            
+            # Access type breakdown
+            access_type_breakdown = list(queryset.values('access_type').annotate(
+                revenue=Sum('amount'),
+                count=Count('id'),
+                avg_value=Avg('amount')
+            ).order_by('-revenue'))
+            
+            # Payment method breakdown
+            payment_method_breakdown = list(queryset.values('payment_method').annotate(
+                revenue=Sum('amount'),
+                count=Count('id'),
+                avg_value=Avg('amount')
+            ).order_by('-revenue'))
+            
+            # Plan breakdown
+            plan_breakdown = list(queryset.values('internet_plan__name').annotate(
+                revenue=Sum('amount'),
+                count=Count('id'),
+                avg_value=Avg('amount')
+            ).order_by('-revenue')[:10])  # Top 10 plans
+            
+            # Monthly trend (last 12 months)
+            monthly_trend = self._calculate_monthly_trend(client_id, days)
+            
+            # Recent transactions
+            recent_transactions = queryset.order_by('-created_at')[:10]
+            recent_serializer = TransactionLogSerializer(recent_transactions, many=True)
+            
+            # Convert to structured format
+            access_type_dict = {}
+            for stat in access_type_breakdown:
+                access_type_dict[stat['access_type']] = {
+                    'revenue': float(stat['revenue'] or 0),
+                    'count': stat['count'],
+                    'avg_value': float(stat['avg_value'] or 0),
+                    'percentage': (float(stat['revenue'] or 0) / float(revenue_metrics['total_revenue'] or 1) * 100) if revenue_metrics['total_revenue'] else 0
+                }
+            
+            payment_method_dict = {}
+            for stat in payment_method_breakdown:
+                payment_method_dict[stat['payment_method']] = {
+                    'revenue': float(stat['revenue'] or 0),
+                    'count': stat['count'],
+                    'avg_value': float(stat['avg_value'] or 0)
+                }
+            
+            plan_dict = {}
+            for stat in plan_breakdown:
+                plan_name = stat['internet_plan__name'] or 'Unknown'
+                plan_dict[plan_name] = {
+                    'revenue': float(stat['revenue'] or 0),
+                    'count': stat['count'],
+                    'avg_value': float(stat['avg_value'] or 0)
+                }
+            
+            return {
+                "revenue_metrics": {
+                    "total_revenue": float(revenue_metrics['total_revenue'] or 0),
+                    "transaction_count": revenue_metrics['transaction_count'],
+                    "avg_transaction_value": float(revenue_metrics['avg_transaction_value'] or 0),
+                    "max_transaction_value": float(revenue_metrics['max_transaction_value'] or 0),
+                    "min_transaction_value": float(revenue_metrics['min_transaction_value'] or 0),
+                    "customer_lifetime_value": float(revenue_metrics['total_revenue'] or 0)  # Simple CLV calculation
+                },
+                "breakdowns": {
+                    "by_access_type": access_type_dict,
+                    "by_payment_method": payment_method_dict,
+                    "by_plan": plan_dict
+                },
+                "trends": {
+                    "monthly": monthly_trend
+                },
+                "recent_transactions": recent_serializer.data
+            }
+            
+        except Exception as e:
+            logger.error(f"Error calculating comprehensive analytics: {str(e)}")
+            return {
+                "revenue_metrics": {
+                    "total_revenue": 0,
+                    "transaction_count": 0,
+                    "avg_transaction_value": 0,
+                    "max_transaction_value": 0,
+                    "min_transaction_value": 0,
+                    "customer_lifetime_value": 0
+                },
+                "breakdowns": {
+                    "by_access_type": {},
+                    "by_payment_method": {},
+                    "by_plan": {}
+                },
+                "trends": {
+                    "monthly": []
+                },
+                "recent_transactions": []
+            }
+    
+    def _calculate_monthly_trend(self, client_id, days):
+        """Calculate monthly revenue trend for the client"""
+        try:
+            from django.db.models.functions import TruncMonth
+            
+            # Determine date range
+            if days > 0:
+                start_date = timezone.now() - timedelta(days=days)
+            else:
+                # Default to last 12 months
+                start_date = timezone.now() - timedelta(days=365)
+            
+            monthly_data = TransactionLog.objects.filter(
+                client_id=client_id,
+                status='success',
+                created_at__gte=start_date
+            ).annotate(
+                month=TruncMonth('created_at')
+            ).values('month').annotate(
+                revenue=Sum('amount'),
+                count=Count('id')
+            ).order_by('month')
+            
+            trend = []
+            for data in monthly_data:
+                trend.append({
+                    "month": data['month'].strftime('%Y-%m'),
+                    "revenue": float(data['revenue'] or 0),
+                    "transactions": data['count']
+                })
+            
+            return trend
+            
+        except Exception as e:
+            logger.error(f"Error calculating monthly trend: {str(e)}")
+            return []

@@ -253,7 +253,7 @@
 
 
 
-
+# internet_plans/serializers/create_plans_serilaizers
 
 from rest_framework import serializers
 from internet_plans.models.create_plan_models import InternetPlan, Subscription, PlanTemplate

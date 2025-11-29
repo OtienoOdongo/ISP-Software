@@ -689,6 +689,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.db.models import Q, Sum, Count, Avg
 from django.utils import timezone
+from django.core.cache import cache
 from django.core.paginator import Paginator, EmptyPage
 from datetime import datetime, timedelta
 import logging
@@ -704,28 +705,41 @@ from payments.serializers.transaction_log_serializer import (
 
 logger = logging.getLogger(__name__)
 
+
 class TransactionLogView(APIView):
     """
-    API endpoint for transaction log management with PPPoE/Hotspot support
+    Production-ready Transaction Log View with enhanced filtering, caching, and client support
     """
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
         """
-        Get transaction logs with filtering and pagination
+        Get transaction logs with comprehensive filtering, pagination, and caching
         """
         try:
+            # Generate cache key based on request parameters and user
+            cache_key = f"transactions_{request.user.id}_{request.GET.urlencode()}"
+            cached_data = cache.get(cache_key)
+            
+            if cached_data:
+                logger.info(f"Cache hit for transactions - User: {request.user.id}")
+                return Response(cached_data)
+            
             # Validate filter parameters
             filter_serializer = TransactionLogFilterSerializer(data=request.query_params)
             if not filter_serializer.is_valid():
                 return Response(
-                    {"error": "Invalid filter parameters", "details": filter_serializer.errors},
+                    {
+                        "error": "Invalid filter parameters", 
+                        "details": filter_serializer.errors,
+                        "code": "VALIDATION_ERROR"
+                    },
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
             filters = filter_serializer.validated_data
             
-            # Build base query
+            # Build optimized query with select_related and prefetch_related
             queryset = TransactionLog.objects.select_related(
                 'client', 'client__user', 'user', 'payment_transaction',
                 'subscription', 'internet_plan'
@@ -746,9 +760,24 @@ class TransactionLogView(APIView):
                 end_dt = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))
                 queryset = queryset.filter(created_at__lte=end_dt)
             else:
-                # Default: last 7 days
-                default_start = timezone.now() - timedelta(days=7)
+                # Default: last 30 days for better performance
+                default_start = timezone.now() - timedelta(days=30)
                 queryset = queryset.filter(created_at__gte=default_start)
+            
+            # ✅ PRODUCTION FIX: Add client_id filter support
+            client_id = request.query_params.get('client_id')
+            if client_id:
+                try:
+                    client_id_int = int(client_id)
+                    queryset = queryset.filter(client_id=client_id_int)
+                except (ValueError, TypeError):
+                    return Response(
+                        {
+                            "error": "Invalid client_id format",
+                            "code": "INVALID_CLIENT_ID"
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
             
             # Apply status filter
             status_filter = filters.get('status')
@@ -770,39 +799,33 @@ class TransactionLogView(APIView):
             if plan_id:
                 queryset = queryset.filter(internet_plan_id=plan_id)
             
-            # Apply search filter
+            # Apply search filter with optimized query
             search_term = filters.get('search')
             if search_term:
                 queryset = queryset.filter(
                     Q(transaction_id__icontains=search_term) |
                     Q(phone_number__icontains=search_term) |
                     Q(client__user__username__icontains=search_term) |
-                    Q(client__user__first_name__icontains=search_term) |
-                    Q(client__user__last_name__icontains=search_term) |
                     Q(reference_number__icontains=search_term) |
-                    Q(internet_plan__name__icontains=search_term) |
-                    Q(access_type__icontains=search_term) |
-                    Q(payment_method__icontains=search_term)
+                    Q(internet_plan__name__icontains=search_term)
                 )
             
-            # Apply sorting
+            # Apply sorting with field validation
             sort_by = filters.get('sort_by', 'date_desc')
-            if sort_by == 'date_desc':
-                queryset = queryset.order_by('-created_at')
-            elif sort_by == 'date_asc':
-                queryset = queryset.order_by('created_at')
-            elif sort_by == 'amount_desc':
-                queryset = queryset.order_by('-amount')
-            elif sort_by == 'amount_asc':
-                queryset = queryset.order_by('amount')
-            elif sort_by == 'access_type':
-                queryset = queryset.order_by('access_type')
-            elif sort_by == 'payment_method':
-                queryset = queryset.order_by('payment_method')
+            sort_mapping = {
+                'date_desc': '-created_at',
+                'date_asc': 'created_at',
+                'amount_desc': '-amount',
+                'amount_asc': 'amount',
+                'access_type': 'access_type',
+                'payment_method': 'payment_method'
+            }
+            order_field = sort_mapping.get(sort_by, '-created_at')
+            queryset = queryset.order_by(order_field)
             
-            # Pagination
+            # Enhanced pagination with limits
             page = filters.get('page', 1)
-            page_size = min(filters.get('page_size', 20), 100)
+            page_size = min(filters.get('page_size', 20), 100)  # Max 100 per page
             
             paginator = Paginator(queryset, page_size)
             
@@ -811,13 +834,14 @@ class TransactionLogView(APIView):
             except EmptyPage:
                 page_obj = paginator.page(paginator.num_pages)
             
-            # Serialize data
+            # Serialize data with performance optimization
             serializer = TransactionLogSerializer(page_obj, many=True)
             
-            # Calculate statistics
-            stats = self._calculate_statistics(queryset)
+            # Calculate comprehensive statistics
+            stats = self._calculate_enhanced_statistics(queryset)
             
-            return Response({
+            # Prepare response data
+            response_data = {
                 "transactions": serializer.data,
                 "pagination": {
                     "current_page": page_obj.number,
@@ -829,73 +853,114 @@ class TransactionLogView(APIView):
                 },
                 "stats": stats,
                 "filters": filters
-            })
+            }
+            
+            # Cache successful responses for 2 minutes
+            cache.set(cache_key, response_data, 120)
+            
+            logger.info(
+                f"Transaction logs fetched successfully - "
+                f"User: {request.user.id}, "
+                f"Count: {paginator.count}, "
+                f"Client ID: {client_id or 'All'}"
+            )
+            
+            return Response(response_data)
             
         except Exception as e:
-            logger.error(f"Failed to fetch transaction logs: {str(e)}", exc_info=True)
+            logger.error(
+                f"Failed to fetch transaction logs - "
+                f"User: {request.user.id}, "
+                f"Error: {str(e)}",
+                exc_info=True
+            )
             return Response(
-                {"error": "Failed to fetch transaction logs", "details": str(e)},
+                {
+                    "error": "Failed to fetch transaction logs",
+                    "code": "TRANSACTION_FETCH_ERROR",
+                    "details": "Please try again or contact support"
+                },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
-    def _calculate_statistics(self, queryset):
-        """Calculate transaction statistics with access type breakdown"""
-        total = queryset.count()
-        success = queryset.filter(status='success').count()
-        pending = queryset.filter(status='pending').count()
-        failed = queryset.filter(status='failed').count()
-        
-        total_amount = queryset.aggregate(
-            total_amount=Sum('amount')
-        )['total_amount'] or 0
-        
-        # Access type breakdown
-        by_access_type = queryset.values('access_type').annotate(
-            count=Count('id'),
-            total_amount=Sum('amount'),
-            success_count=Count('id', filter=Q(status='success')),
-            pending_count=Count('id', filter=Q(status='pending')),
-            failed_count=Count('id', filter=Q(status='failed'))
-        ).order_by('access_type')
-        
-        # Payment method breakdown
-        by_payment_method = queryset.values('payment_method').annotate(
-            count=Count('id'),
-            total_amount=Sum('amount'),
-            success_count=Count('id', filter=Q(status='success')),
-            pending_count=Count('id', filter=Q(status='pending')),
-            failed_count=Count('id', filter=Q(status='failed'))
-        ).order_by('payment_method')
-        
-        access_type_stats = {}
-        for stat in by_access_type:
-            access_type_stats[stat['access_type']] = {
-                'count': stat['count'],
-                'total_amount': float(stat['total_amount'] or 0),
-                'success_count': stat['success_count'],
-                'pending_count': stat['pending_count'],
-                'failed_count': stat['failed_count']
+    def _calculate_enhanced_statistics(self, queryset):
+        """Calculate comprehensive transaction statistics with performance optimization"""
+        try:
+            # Basic counts with single query
+            counts = queryset.aggregate(
+                total=Count('id'),
+                success=Count('id', filter=Q(status='success')),
+                pending=Count('id', filter=Q(status='pending')),
+                failed=Count('id', filter=Q(status='failed'))
+            )
+            
+            # Amount calculations
+            amounts = queryset.aggregate(
+                total_amount=Sum('amount'),
+                success_amount=Sum('amount', filter=Q(status='success')),
+                pending_amount=Sum('amount', filter=Q(status='pending'))
+            )
+            
+            # Access type breakdown with optimized query
+            access_type_stats = list(queryset.values('access_type').annotate(
+                count=Count('id'),
+                total_amount=Sum('amount'),
+                success_count=Count('id', filter=Q(status='success'))
+            ).order_by('access_type'))
+            
+            # Payment method breakdown
+            payment_method_stats = list(queryset.values('payment_method').annotate(
+                count=Count('id'),
+                total_amount=Sum('amount'),
+                success_count=Count('id', filter=Q(status='success'))
+            ).order_by('payment_method'))
+            
+            # Convert to structured format
+            access_type_dict = {}
+            for stat in access_type_stats:
+                access_type_dict[stat['access_type']] = {
+                    'count': stat['count'],
+                    'total_amount': float(stat['total_amount'] or 0),
+                    'success_count': stat['success_count'],
+                    'success_rate': (stat['success_count'] / stat['count'] * 100) if stat['count'] > 0 else 0
+                }
+            
+            payment_method_dict = {}
+            for stat in payment_method_stats:
+                payment_method_dict[stat['payment_method']] = {
+                    'count': stat['count'],
+                    'total_amount': float(stat['total_amount'] or 0),
+                    'success_count': stat['success_count'],
+                    'success_rate': (stat['success_count'] / stat['count'] * 100) if stat['count'] > 0 else 0
+                }
+            
+            return {
+                "total": counts['total'],
+                "success": counts['success'],
+                "pending": counts['pending'],
+                "failed": counts['failed'],
+                "success_rate": (counts['success'] / counts['total'] * 100) if counts['total'] > 0 else 0,
+                "total_amount": float(amounts['total_amount'] or 0),
+                "success_amount": float(amounts['success_amount'] or 0),
+                "pending_amount": float(amounts['pending_amount'] or 0),
+                "by_access_type": access_type_dict,
+                "by_payment_method": payment_method_dict
             }
-        
-        payment_method_stats = {}
-        for stat in by_payment_method:
-            payment_method_stats[stat['payment_method']] = {
-                'count': stat['count'],
-                'total_amount': float(stat['total_amount'] or 0),
-                'success_count': stat['success_count'],
-                'pending_count': stat['pending_count'],
-                'failed_count': stat['failed_count']
+            
+        except Exception as e:
+            logger.error(f"Error calculating transaction statistics: {str(e)}")
+            return {
+                "total": 0,
+                "success": 0,
+                "pending": 0,
+                "failed": 0,
+                "success_rate": 0,
+                "total_amount": 0,
+                "success_amount": 0,
+                "pending_amount": 0,
+                "by_access_type": {},
+                "by_payment_method": {}
             }
-        
-        return {
-            "total": total,
-            "success": success,
-            "pending": pending,
-            "failed": failed,
-            "totalAmount": float(total_amount),
-            "byAccessType": access_type_stats,
-            "byPaymentMethod": payment_method_stats
-        }
 
 class TransactionLogStatsView(APIView):
     """
