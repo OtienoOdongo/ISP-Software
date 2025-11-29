@@ -1,5 +1,10 @@
+
+
+
+
+
 // import React, { useState } from "react";
-// import { Menu, X, Ethernet, User, LogOut, Settings } from "lucide-react";
+// import { Menu, X, Network, User, LogOut, Settings } from "lucide-react";
 // import dicondenlogo from "../../assets/dicondenlogo.png";
 
 // const PPPoENavBar = ({ isAuthenticated, clientData, onLogout }) => {
@@ -7,7 +12,7 @@
 //   const [showUserMenu, setShowUserMenu] = useState(false);
 
 //   const navItems = [
-//     { label: 'Dashboard', href: '#dashboard', icon: <Ethernet size={20} className="mr-2" /> },
+//     { label: 'Dashboard', href: '#dashboard', icon: <Network size={20} className="mr-2" /> },
 //     { label: 'Plans', href: '#pppoe-plans', icon: <Settings size={20} className="mr-2" /> },
 //   ];
 
@@ -143,7 +148,7 @@
 //             {/* Mobile Connection Status */}
 //             <div className="px-4 py-3 border-t border-blue-500/30 mt-2">
 //               <div className="flex items-center gap-2">
-//                 <Ethernet className="w-4 h-4 text-blue-400" />
+//                 <Network className="w-4 h-4 text-blue-400" />
 //                 <span className="text-blue-300 text-sm">
 //                   {isAuthenticated ? 'PPPoE Portal' : 'PPPoE Login Required'}
 //                 </span>
@@ -224,7 +229,7 @@ const PPPoENavBar = ({ isAuthenticated, clientData, onLogout }) => {
                   <User className="w-4 h-4 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-medium">{clientData.username}</p>
+                  <p className="text-sm font-medium">{clientData.pppoe_username}</p>
                   <p className="text-xs text-blue-300">PPPoE User</p>
                 </div>
               </button>
@@ -233,8 +238,8 @@ const PPPoENavBar = ({ isAuthenticated, clientData, onLogout }) => {
               {showUserMenu && (
                 <div className="absolute right-0 top-full mt-2 w-48 bg-blue-800/95 backdrop-blur-md rounded-lg shadow-xl border border-blue-500/20 py-2 z-50">
                   <div className="px-4 py-2 border-b border-blue-500/20">
-                    <p className="text-white font-medium text-sm">{clientData.username}</p>
-                    <p className="text-blue-300 text-xs">{clientData.pppoe_username}</p>
+                    <p className="text-white font-medium text-sm">{clientData.pppoe_username}</p>
+                    <p className="text-blue-300 text-xs">PPPoE Account</p>
                   </div>
                   
                   <button
@@ -289,8 +294,8 @@ const PPPoENavBar = ({ isAuthenticated, clientData, onLogout }) => {
                     <User className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <p className="text-white font-medium">{clientData.username}</p>
-                    <p className="text-blue-300 text-sm">{clientData.pppoe_username}</p>
+                    <p className="text-white font-medium">{clientData.pppoe_username}</p>
+                    <p className="text-blue-300 text-sm">PPPoE Account</p>
                   </div>
                 </div>
                 

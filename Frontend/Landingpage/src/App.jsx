@@ -221,8 +221,92 @@
 
 
 
+// import React, { useState, useEffect } from "react";
+// import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+// import HotspotPortal from "./components/portal/HotspotPortal"
+// import PPPoEPortal from "./components/portal/PPPoEPortal";
+// import ConnectionDetector from "./components/ConnectionDetector";
+// import api from "./api/index"
+
+// // Main App Router
+// function AppRouter() {
+//   const location = useLocation();
+//   const [connectionType, setConnectionType] = useState(null);
+//   const [loading, setLoading] = useState(true);
+
+//   useEffect(() => {
+//     detectConnectionType();
+//   }, [location]);
+
+//   const detectConnectionType = async () => {
+//     try {
+//       // Check URL parameters first
+//       const urlParams = new URLSearchParams(location.search);
+//       const forcedType = urlParams.get('connection_type');
+      
+//       if (forcedType && ['hotspot', 'pppoe'].includes(forcedType)) {
+//         setConnectionType(forcedType);
+//         setLoading(false);
+//         return;
+//       }
+
+//       // Auto-detect based on common indicators
+//       const isHotspot = await checkHotspotIndicators();
+//       setConnectionType(isHotspot ? 'hotspot' : 'pppoe');
+//     } catch (error) {
+//       console.error("Connection detection failed:", error);
+//       setConnectionType('hotspot'); // Default fallback
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const checkHotspotIndicators = async () => {
+//     // Check for hotspot indicators
+//     const hasMacParam = new URLSearchParams(location.search).has('mac');
+//     const hasHotspotUserAgent = navigator.userAgent.toLowerCase().includes('hotspot');
+//     const isCaptivePortal = document.referrer.includes('hotspot') || 
+//                            window.location.hostname.includes('hotspot');
+    
+//     return hasMacParam || hasHotspotUserAgent || isCaptivePortal;
+//   };
+
+//   if (loading) {
+//     return <ConnectionDetector />;
+//   }
+
+//   return (
+//     <div className="min-h-screen bg-gradient-to-b from-indigo-900 via-purple-800 to-pink-600">
+//       <Routes>
+//         <Route path="/hotspot" element={<HotspotPortal />} />
+//         <Route path="/pppoe" element={<PPPoEPortal />} />
+//         <Route path="/" element={
+//           connectionType === 'pppoe' ? <PPPoEPortal /> : <HotspotPortal />
+//         } />
+//       </Routes>
+//     </div>
+//   );
+// }
+
+// function App() {
+//   return (
+//     <Router>
+//       <AppRouter />
+//     </Router>
+//   );
+// }
+
+// export default App;
+
+
+
+
+
+
+
+
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import HotspotPortal from "./components/portal/HotspotPortal"
 import PPPoEPortal from "./components/portal/PPPoEPortal";
 import ConnectionDetector from "./components/ConnectionDetector";
@@ -278,11 +362,26 @@ function AppRouter() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-900 via-purple-800 to-pink-600">
       <Routes>
+        {/* Hotspot routes - no authentication required */}
         <Route path="/hotspot" element={<HotspotPortal />} />
-        <Route path="/pppoe" element={<PPPoEPortal />} />
-        <Route path="/" element={
-          connectionType === 'pppoe' ? <PPPoEPortal /> : <HotspotPortal />
+        <Route path="/login" element={
+          connectionType === 'pppoe' ? 
+            <Navigate to="/pppoe" replace /> : 
+            <Navigate to="/hotspot" replace />
         } />
+        
+        {/* PPPoE routes - authentication handled within PPPoEPortal */}
+        <Route path="/pppoe" element={<PPPoEPortal />} />
+        
+        {/* Root route - auto-detect connection type */}
+        <Route path="/" element={
+          connectionType === 'pppoe' ? 
+            <PPPoEPortal /> : 
+            <HotspotPortal />
+        } />
+        
+        {/* Catch all route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   );
