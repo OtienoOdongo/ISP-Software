@@ -118,7 +118,7 @@ from .views import (
     check_email, check_phone, HotspotClientCreateView, PPPoEClientCreateView,
     PPPoECredentialView, user_me_head_fix, UserMeViewSet, check_user_type,
     check_connection_type, user_stats, bulk_user_operation,
-    pppoe_authenticate  # Add this import
+    pppoe_authenticate, admin_pppoe_setup
 )
 from rest_framework.routers import DefaultRouter
 from django.db.models import Count
@@ -139,8 +139,12 @@ urlpatterns = [
     path('clients/hotspot/', HotspotClientCreateView.as_view(), name='hotspot-client-create'),
     path('clients/pppoe/', PPPoEClientCreateView.as_view(), name='pppoe-client-create'),
     
-    # PPPoE Authentication endpoint - ADD THIS
+    # # PPPoE Authentication endpoint - ADD THIS
+    # path('clients/pppoe-authenticate/', pppoe_authenticate, name='pppoe-authenticate'),
+    # 🔥 ENHANCED: PPPoE Authentication endpoints
     path('clients/pppoe-authenticate/', pppoe_authenticate, name='pppoe-authenticate'),
+    path('admin/pppoe-setup/', admin_pppoe_setup, name='admin-pppoe-setup'),
+    
     
     # Validation endpoints
     path('check-email/', check_email, name='check_email'),

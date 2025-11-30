@@ -1,7 +1,7 @@
 # management/commands/get_pppoe_credentials.py
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from authentication.models import UserAccount  # Changed import path
+from authentication.models import UserAccount  
 import sys
 
 class Command(BaseCommand):
