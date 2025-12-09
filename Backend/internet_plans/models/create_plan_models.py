@@ -388,7 +388,7 @@ class Subscription(models.Model):
         ('pppoe', 'PPPoE'),
     )
 
-    client = models.ForeignKey('account.Client', on_delete=models.CASCADE, related_name='subscriptions')
+    client = models.ForeignKey('authentication.UserAccount', on_delete=models.CASCADE, related_name='subscriptions')
     internet_plan = models.ForeignKey(InternetPlan, on_delete=models.SET_NULL, null=True, blank=True, related_name='subscriptions')
     router = models.ForeignKey('network_management.Router', on_delete=models.SET_NULL, null=True, blank=True, related_name='subscriptions')
     transaction_reference = models.CharField(max_length=100, unique=True, null=True, blank=True)  

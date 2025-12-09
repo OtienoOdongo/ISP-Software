@@ -1,227 +1,299 @@
 
 
-
-
-# from django.db import models
-# from django.utils import timezone
-# from account.models.admin_model import Client
-# from network_management.models.router_management_model import Router
-# from internet_plans.models.create_plan_models import Subscription
-# from payments.models.payment_config_model import Transaction
-
-# class SMSTrigger(models.Model):
-#     TRIGGER_TYPES = (
-#         ('data_usage', 'Data Usage'),
-#         ('plan_expiry', 'Plan Expiry'),
-#         ('onboarding', 'Onboarding'),
-#     )
-
-#     ONBOARDING_EVENTS = (
-#         ('signup', 'After Signup'),
-#         ('first_payment', 'After First Payment'),
-#         ('plan_activation', 'After Plan Activation'),
-#     )
-
-#     name = models.CharField(max_length=100)
-#     trigger_type = models.CharField(max_length=20, choices=TRIGGER_TYPES)
-#     threshold = models.PositiveIntegerField(null=True, blank=True)
-#     days_before = models.PositiveIntegerField(null=True, blank=True)
-#     event = models.CharField(max_length=20, choices=ONBOARDING_EVENTS, null=True, blank=True)
-#     message = models.TextField(max_length=160)
-#     enabled = models.BooleanField(default=True)
-#     created_at = models.DateTimeField(default=timezone.now)
-#     last_triggered = models.DateTimeField(null=True, blank=True)
-#     sent_count = models.PositiveIntegerField(default=0)
-#     success_count = models.PositiveIntegerField(default=0)
-
-#     class Meta:
-#         ordering = ['-created_at']
-
-#     def __str__(self):
-#         return self.name
-
-#     @property
-#     def success_rate(self):
-#         return round((self.success_count / self.sent_count * 100), 1) if self.sent_count > 0 else 0
-
-
-# class SMSAutomationSettings(models.Model):
-#     SMS_GATEWAY_CHOICES = (
-#         ('africas_talking', "Africa's Talking"),
-#         ('twilio', 'Twilio'),
-#         ('smpp', 'SMPP'),
-#         ('nexmo', 'Vonage (Nexmo)'),
-#     )
-
-#     enabled = models.BooleanField(default=True)
-#     sms_gateway = models.CharField(max_length=20, choices=SMS_GATEWAY_CHOICES, default='africas_talking')
-#     api_key = models.CharField(max_length=200, blank=True)
-#     username = models.CharField(max_length=100, blank=True)
-#     sender_id = models.CharField(max_length=50, blank=True)
-#     send_time_start = models.TimeField(default='08:00')
-#     send_time_end = models.TimeField(default='20:00')
-#     max_messages_per_day = models.PositiveIntegerField(default=1000)
-#     low_balance_alert = models.BooleanField(default=True)
-#     balance_threshold = models.PositiveIntegerField(default=100)
-#     sms_balance = models.PositiveIntegerField(default=1000)
-#     last_updated = models.DateTimeField(auto_now=True)
-
-#     class Meta:
-#         verbose_name_plural = 'SMS Automation Settings'
-
-#     def __str__(self):
-#         return 'SMS Automation Settings'
-
-
-# class SMSAnalytics(models.Model):
-#     date = models.DateField(unique=True)
-#     total_messages = models.PositiveIntegerField(default=0)
-#     successful_messages = models.PositiveIntegerField(default=0)
-#     failed_messages = models.PositiveIntegerField(default=0)
-#     active_triggers = models.PositiveIntegerField(default=0)
-
-#     class Meta:
-#         ordering = ['-date']
-#         verbose_name_plural = 'SMS Analytics'
-
-#     def __str__(self):
-#         return f"SMS Analytics for {self.date}"
-
-#     @property
-#     def success_rate(self):
-#         return round((self.successful_messages / self.total_messages * 100), 2) if self.total_messages > 0 else 0
-
-
-
-
-
-
-
-# sms_automation_models.py 
+"""
+SMS Automation Models - Integrated with User Management
+"""
 from django.db import models
+import logging
 from django.utils import timezone
-from account.models.admin_model import Client
-from network_management.models.router_management_model import Router
-from internet_plans.models.create_plan_models import Subscription
-from payments.models.payment_config_model import Transaction
+from django.contrib.auth import get_user_model
 import uuid
 
-class SMSTrigger(models.Model):
-    TRIGGER_TYPES = (
-        ('data_usage', 'Data Usage Alert'),
-        ('plan_expiry', 'Plan Expiry Warning'),
-        ('onboarding', 'Onboarding Message'),
-        ('payment', 'Payment Confirmation'),
-        ('system', 'System Notification'),
-    )
-
-    ONBOARDING_EVENTS = (
-        ('signup', 'After Signup'),
-        ('first_payment', 'After First Payment'),
-        ('plan_activation', 'After Plan Activation'),
-    )
-
-    name = models.CharField(max_length=100)
-    trigger_type = models.CharField(max_length=20, choices=TRIGGER_TYPES)
-    threshold = models.PositiveIntegerField(null=True, blank=True, help_text="Percentage for data usage alerts")
-    days_before = models.PositiveIntegerField(null=True, blank=True, help_text="Days before plan expiry")
-    event = models.CharField(max_length=20, choices=ONBOARDING_EVENTS, null=True, blank=True)
-    message = models.TextField(max_length=160)
-    enabled = models.BooleanField(default=True)
-    created_at = models.DateTimeField(default=timezone.now)
-    last_triggered = models.DateTimeField(null=True, blank=True)
-    sent_count = models.PositiveIntegerField(default=0)
-    success_count = models.PositiveIntegerField(default=0)
-
-    class Meta:
-        ordering = ['-created_at']
-        verbose_name = 'SMS Trigger'
-        verbose_name_plural = 'SMS Triggers'
-
-    def __str__(self):
-        return self.name
-
-    @property
-    def success_rate(self):
-        if self.sent_count == 0:
-            return 0
-        return round((self.success_count / self.sent_count) * 100, 1)
+logger = logging.getLogger(__name__)
+User = get_user_model()
 
 
-class SMSAutomationSettings(models.Model):
-    SMS_GATEWAY_CHOICES = (
+class SMSGatewayConfig(models.Model):
+    """SMS Gateway Configuration"""
+    GATEWAY_CHOICES = (
         ('africas_talking', "Africa's Talking"),
         ('twilio', 'Twilio'),
-        ('smpp', 'SMPP'),
-        ('nexmo', 'Vonage (Nexmo)'),
+        ('smpp', 'SMPP Gateway'),
+        ('custom', 'Custom API'),
     )
-
-    enabled = models.BooleanField(default=True)
-    sms_gateway = models.CharField(max_length=20, choices=SMS_GATEWAY_CHOICES, default='africas_talking')
-    api_key = models.CharField(max_length=200, blank=True)
-    username = models.CharField(max_length=100, blank=True)
-    sender_id = models.CharField(max_length=50, blank=True)
-    send_time_start = models.TimeField(default='08:00')
-    send_time_end = models.TimeField(default='20:00')
-    max_messages_per_day = models.PositiveIntegerField(default=1000)
-    low_balance_alert = models.BooleanField(default=True)
-    balance_threshold = models.PositiveIntegerField(default=100)
-    sms_balance = models.PositiveIntegerField(default=1000)
-    last_updated = models.DateTimeField(auto_now=True)
-
+    
+    name = models.CharField(max_length=100, unique=True)
+    gateway_type = models.CharField(max_length=20, choices=GATEWAY_CHOICES)
+    is_default = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    
+    # API credentials
+    api_key = models.CharField(max_length=255, blank=True)
+    api_secret = models.CharField(max_length=255, blank=True)
+    api_url = models.URLField(blank=True)
+    sender_id = models.CharField(max_length=20, blank=True)
+    
+    # Rate limiting
+    max_messages_per_minute = models.IntegerField(default=60)
+    max_messages_per_day = models.IntegerField(default=1000)
+    
+    # Status tracking
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    last_checked = models.DateTimeField(null=True, blank=True)
+    last_used = models.DateTimeField(null=True, blank=True)
+    
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
     class Meta:
-        verbose_name_plural = 'SMS Automation Settings'
-
+        verbose_name = 'SMS Gateway'
+        verbose_name_plural = 'SMS Gateways'
+        ordering = ['-is_default', 'name']
+    
     def __str__(self):
-        return 'SMS Automation Settings'
+        return f"{self.name} ({self.get_gateway_type_display()})"
+    
+    def save(self, *args, **kwargs):
+        """Ensure only one default gateway"""
+        if self.is_default:
+            SMSGatewayConfig.objects.filter(is_default=True).update(is_default=False)
+        super().save(*args, **kwargs)
 
-    def can_send_message(self):
-        """Check if we can send messages based on time and balance"""
-        current_time = timezone.now().time()
-        return (self.enabled and 
-                self.send_time_start <= current_time <= self.send_time_end and
-                self.sms_balance > 0)
 
-
-class SMSAnalytics(models.Model):
-    date = models.DateField(unique=True)
-    total_messages = models.PositiveIntegerField(default=0)
-    successful_messages = models.PositiveIntegerField(default=0)
-    failed_messages = models.PositiveIntegerField(default=0)
-    active_triggers = models.PositiveIntegerField(default=0)
-
+class SMSTemplate(models.Model):
+    """SMS message templates"""
+    TEMPLATE_TYPES = (
+        ('pppoe_credentials', 'PPPoE Credentials'),
+        ('welcome', 'Welcome Message'),
+        ('payment_reminder', 'Payment Reminder'),
+        ('plan_expiry', 'Plan Expiry Warning'),
+        ('promotion', 'Promotional Message'),
+        ('system', 'System Notification'),
+        ('custom', 'Custom Message'),
+    )
+    
+    name = models.CharField(max_length=100, unique=True)
+    template_type = models.CharField(max_length=20, choices=TEMPLATE_TYPES)
+    subject = models.CharField(max_length=200, blank=True)
+    
+    # Template with variables
+    message_template = models.TextField(
+        help_text="Template with variables: {client_name}, {username}, {password}, {phone}"
+    )
+    
+    # Variables description
+    variables = models.JSONField(default=dict, help_text="Available variables for this template")
+    
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
     class Meta:
-        ordering = ['-date']
-        verbose_name_plural = 'SMS Analytics'
-
+        ordering = ['name']
+    
     def __str__(self):
-        return f"SMS Analytics for {self.date}"
+        return f"{self.name} ({self.get_template_type_display()})"
+    
+    def render(self, context):
+        """Render template with context"""
+        try:
+            message = self.message_template
+            for key, value in context.items():
+                placeholder = f"{{{key}}}"
+                if placeholder in message:
+                    message = message.replace(placeholder, str(value))
+            return message
+        except Exception as e:
+            logger.error(f"Error rendering template {self.name}: {str(e)}")
+            return self.message_template
 
-    @property
-    def success_rate(self):
-        if self.total_messages == 0:
-            return 0
-        return round((self.successful_messages / self.total_messages) * 100, 2)
 
-
-class ScheduledMessage(models.Model):
+class SMSMessage(models.Model):
+    """SMS Message to be sent"""
     STATUS_CHOICES = (
-        ('scheduled', 'Scheduled'),
+        ('pending', 'Pending'),
+        ('queued', 'Queued'),
+        ('sending', 'Sending'),
         ('sent', 'Sent'),
+        ('delivered', 'Delivered'),
         ('failed', 'Failed'),
         ('cancelled', 'Cancelled'),
     )
-
-    trigger = models.ForeignKey(SMSTrigger, on_delete=models.CASCADE, related_name='scheduled_messages')
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='scheduled_messages')
+    
+    PRIORITY_CHOICES = (
+        ('low', 'Low'),
+        ('normal', 'Normal'),
+        ('high', 'High'),
+        ('urgent', 'Urgent'),
+    )
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    # Recipient
+    phone_number = models.CharField(max_length=20, db_index=True)
+    recipient_name = models.CharField(max_length=100, blank=True)
+    
+    # Reference to client (optional, for tracking)
+    client = models.ForeignKey(
+        'user_management.ClientProfile',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='sms_messages'
+    )
+    
+    # Message content
+    template = models.ForeignKey(
+        SMSTemplate,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='messages'
+    )
     message = models.TextField()
-    scheduled_for = models.DateTimeField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='scheduled')
-    created_at = models.DateTimeField(default=timezone.now)
+    original_message = models.TextField(blank=True)
+    
+    # Sending configuration
+    gateway = models.ForeignKey(
+        SMSGatewayConfig,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='messages'
+    )
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='normal')
+    scheduled_for = models.DateTimeField(null=True, blank=True, db_index=True)
+    
+    # Status tracking
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    status_message = models.TextField(blank=True)
+    
+    # Delivery tracking
     sent_at = models.DateTimeField(null=True, blank=True)
-
+    delivered_at = models.DateTimeField(null=True, blank=True)
+    message_id = models.CharField(max_length=100, blank=True, db_index=True)
+    delivery_report = models.JSONField(default=dict, blank=True)
+    
+    # Retry logic
+    retry_count = models.IntegerField(default=0)
+    max_retries = models.IntegerField(default=3)
+    next_retry_at = models.DateTimeField(null=True, blank=True)
+    
+    # Metadata
+    source = models.CharField(max_length=100, default='system')
+    reference_id = models.CharField(max_length=100, blank=True, db_index=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
     class Meta:
-        ordering = ['scheduled_for']
-
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['phone_number', 'status']),
+            models.Index(fields=['scheduled_for', 'status']),
+            models.Index(fields=['status', 'priority']),
+            models.Index(fields=['client', 'created_at']),
+        ]
+    
     def __str__(self):
-        return f"Scheduled message for {self.client.user.username} at {self.scheduled_for}"
+        return f"SMS to {self.phone_number} ({self.status})"
+    
+    def can_send(self):
+        """Check if message can be sent"""
+        if self.status in ['sent', 'delivered', 'cancelled']:
+            return False
+        
+        if self.scheduled_for and self.scheduled_for > timezone.now():
+            return False
+        
+        return True
+    
+    def mark_as_sent(self, message_id=None):
+        """Mark message as sent"""
+        self.status = 'sent'
+        self.sent_at = timezone.now()
+        if message_id:
+            self.message_id = message_id
+        self.save()
+    
+    def mark_as_delivered(self, delivery_report=None):
+        """Mark message as delivered"""
+        self.status = 'delivered'
+        self.delivered_at = timezone.now()
+        if delivery_report:
+            self.delivery_report = delivery_report
+        self.save()
+    
+    def mark_as_failed(self, error_message):
+        """Mark message as failed"""
+        self.status = 'failed'
+        self.status_message = error_message[:500]
+        self.retry_count += 1
+        
+        if self.retry_count < self.max_retries:
+            from datetime import timedelta
+            retry_delay = timedelta(minutes=5 * self.retry_count)
+            self.next_retry_at = timezone.now() + retry_delay
+            self.status = 'pending'
+        
+        self.save()
+
+
+class SMSDeliveryLog(models.Model):
+    """Detailed delivery logs for SMS messages"""
+    message = models.ForeignKey(SMSMessage, on_delete=models.CASCADE, related_name='delivery_logs')
+    
+    # Status changes
+    old_status = models.CharField(max_length=10)
+    new_status = models.CharField(max_length=10)
+    
+    # Gateway response
+    gateway_response = models.JSONField(default=dict, blank=True)
+    error_message = models.TextField(blank=True)
+    
+    # Cost tracking
+    cost = models.DecimalField(max_digits=10, decimal_places=4, null=True, blank=True)
+    currency = models.CharField(max_length=3, default='KES')
+    
+    timestamp = models.DateTimeField(default=timezone.now)
+    
+    class Meta:
+        ordering = ['-timestamp']
+    
+    def __str__(self):
+        return f"Log: {self.message.phone_number} - {self.old_status}→{self.new_status}"
+
+
+class SMSAutomationRule(models.Model):
+    """Rules for automatic SMS sending"""
+    RULE_TYPES = (
+        ('pppoe_creation', 'On PPPoE Client Creation'),
+        ('hotspot_creation', 'On Hotspot Client Creation'),
+        ('payment_reminder', 'Payment Reminder'),
+        ('plan_expiry', 'Plan Expiry Warning'),
+        ('welcome', 'Welcome Message'),
+        ('promotion', 'Promotional Campaign'),
+        ('system_alert', 'System Alert'),
+    )
+    
+    name = models.CharField(max_length=100)
+    rule_type = models.CharField(max_length=20, choices=RULE_TYPES)
+    is_active = models.BooleanField(default=True)
+    
+    # Template to use
+    template = models.ForeignKey(SMSTemplate, on_delete=models.CASCADE, related_name='automation_rules')
+    
+    # Conditions
+    conditions = models.JSONField(default=dict, blank=True)
+    
+    # Scheduling
+    delay_minutes = models.IntegerField(default=0, help_text="Delay after trigger in minutes")
+    
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['name']
+    
+    def __str__(self):
+        return f"{self.name} ({self.get_rule_type_display()})"

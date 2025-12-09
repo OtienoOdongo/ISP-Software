@@ -3,40 +3,30 @@
 
 
 
-
 # from django.urls import path
 # from internet_plans.api.views.create_plan_views import (
 #     PlanTemplateListCreateView,
 #     PlanTemplateDetailView,
-#     TemplateIncrementUsageView,
 #     CreatePlanFromTemplateView,
-#     PublicPlanTemplateListView,
 #     InternetPlanListCreateView,
 #     InternetPlanDetailView,
 #     PublicInternetPlanListView,
-#     SubscriptionListView,
-#     PlanAnalyticsView,
-#     PlanAccessTypeAnalyticsView,
-#     RouterCompatibilityView,
-#     ActivatePlanOnRouterView,
-#     TemplateUsageAnalyticsView
 # )
-# from internet_plans.api.views.integration_views import (
-#     PlanRouterIntegrationView,
-#     BulkPlanActivationView,
-#     ClientAccessTypeDetectionView,
+# from internet_plans.api.views.subscription_views import (
+#     SubscriptionListView,
+#     SubscriptionActivationView,
+#     SubscriptionStatusView,
+# )
+# from internet_plans.api.views.client_views import (
 #     ClientPlanPurchaseView,
-#     PPPoEClientDashboardView,
-#     HotspotClientLandingView
+#     PaymentCallbackView,
 # )
 
 # urlpatterns = [
 #     # Template URLs
 #     path('templates/', PlanTemplateListCreateView.as_view(), name='plan-template-list-create'),
 #     path('templates/<int:pk>/', PlanTemplateDetailView.as_view(), name='plan-template-detail'),
-#     path('templates/<int:pk>/increment-usage/', TemplateIncrementUsageView.as_view(), name='increment-template-usage'),
 #     path('templates/<int:template_id>/create-plan/', CreatePlanFromTemplateView.as_view(), name='create-plan-from-template'),
-#     path('templates/public/', PublicPlanTemplateListView.as_view(), name='public-plan-template-list'),
     
 #     # Plan URLs
 #     path('', InternetPlanListCreateView.as_view(), name='internet-plan-list-create'),
@@ -45,29 +35,12 @@
     
 #     # Subscription URLs
 #     path('subscriptions/', SubscriptionListView.as_view(), name='subscription-list'),
+#     path('subscriptions/<int:subscription_id>/activate/', SubscriptionActivationView.as_view(), name='subscription-activate'),
+#     path('subscriptions/<int:subscription_id>/status/', SubscriptionStatusView.as_view(), name='subscription-status'),
     
-#     # Analytics URLs
-#     path('analytics/', PlanAnalyticsView.as_view(), name='plan-analytics'),
-#     path('analytics/access-types/', PlanAccessTypeAnalyticsView.as_view(), name='plan-access-type-analytics'),
-#     path('analytics/template-usage/', TemplateUsageAnalyticsView.as_view(), name='template-usage-analytics'),
-    
-#     # Router Compatibility URLs
-#     path('<int:plan_id>/router-compatibility/', RouterCompatibilityView.as_view(), name='router-compatibility'),
-#     path('<int:plan_id>/activate-on-router/<int:router_id>/', ActivatePlanOnRouterView.as_view(), name='activate-plan-on-router'),
-    
-#     # Integration URLs
-#     path('<int:plan_id>/router-integration/', PlanRouterIntegrationView.as_view(), name='plan-router-integration'),
-#     path('<int:plan_id>/bulk-activate/', BulkPlanActivationView.as_view(), name='bulk-plan-activation'),
-    
-#     # Client URLs (for both Hotspot and PPPoE)
-#     path('client/detect-access-type/', ClientAccessTypeDetectionView.as_view(), name='client-detect-access-type'),
-#     path('client/purchase-plan/', ClientPlanPurchaseView.as_view(), name='client-purchase-plan'),
-    
-#     # PPPoE Client URLs
-#     path('client/pppoe/dashboard/', PPPoEClientDashboardView.as_view(), name='pppoe-client-dashboard'),
-    
-#     # Hotspot Client URLs
-#     path('client/hotspot/landing/', HotspotClientLandingView.as_view(), name='hotspot-client-landing'),
+#     # Client Purchase URLs
+#     path('client/purchase/', ClientPlanPurchaseView.as_view(), name='client-purchase-plan'),
+#     path('payment-callback/', PaymentCallbackView.as_view(), name='payment-callback'),
 # ]
 
 
@@ -76,47 +49,104 @@
 
 
 
-
-
-
-
+"""
+Internet Plans - URL Configuration
+"""
 
 from django.urls import path
-from internet_plans.api.views.create_plan_views import (
-    PlanTemplateListCreateView,
+from internet_plans.api.views.plan_views import (
+    PlanTemplateListView,
     PlanTemplateDetailView,
     CreatePlanFromTemplateView,
-    InternetPlanListCreateView,
+    InternetPlanListView,
     InternetPlanDetailView,
     PublicInternetPlanListView,
+    PlanStatisticsView
 )
 from internet_plans.api.views.subscription_views import (
     SubscriptionListView,
+    SubscriptionDetailView,
     SubscriptionActivationView,
+    SubscriptionRenewView,
     SubscriptionStatusView,
+    SubscriptionStatisticsView
 )
 from internet_plans.api.views.client_views import (
+    ClientPlanListView,
+    ClientPlanDetailView,
     ClientPlanPurchaseView,
-    PaymentCallbackView,
+    PaymentCallbackView
 )
 
 urlpatterns = [
-    # Template URLs
-    path('templates/', PlanTemplateListCreateView.as_view(), name='plan-template-list-create'),
-    path('templates/<int:pk>/', PlanTemplateDetailView.as_view(), name='plan-template-detail'),
-    path('templates/<int:template_id>/create-plan/', CreatePlanFromTemplateView.as_view(), name='create-plan-from-template'),
+    # ==================== PLAN TEMPLATE ENDPOINTS ====================
+    # Admin/Staff only - Manage plan templates
+    path('templates/', PlanTemplateListView.as_view(), name='plan-template-list'),
+    # List all plan templates (GET) or create new template (POST) - STAFF ONLY
     
-    # Plan URLs
-    path('', InternetPlanListCreateView.as_view(), name='internet-plan-list-create'),
-    path('<int:pk>/', InternetPlanDetailView.as_view(), name='internet-plan-detail'),
-    path('public/', PublicInternetPlanListView.as_view(), name='public-internet-plan-list'),
+    path('templates/<uuid:template_id>/', PlanTemplateDetailView.as_view(), name='plan-template-detail'),
+    # Get, update, or delete specific template - STAFF ONLY
     
-    # Subscription URLs
+    path('templates/<uuid:template_id>/create-plan/', CreatePlanFromTemplateView.as_view(), 
+         name='create-plan-from-template'),
+    # Create new internet plan from existing template - STAFF ONLY
+    
+    
+    # ==================== INTERNET PLAN ENDPOINTS ====================
+    # Admin/Staff only - Manage internet plans
+    path('plans/', InternetPlanListView.as_view(), name='internet-plan-list'),
+    # List all internet plans (GET) or create new plan (POST) - STAFF ONLY
+    
+    path('plans/<uuid:plan_id>/', InternetPlanDetailView.as_view(), name='internet-plan-detail'),
+    # Get, update, or delete specific plan - STAFF ONLY
+    
+    path('plans/public/', PublicInternetPlanListView.as_view(), name='public-internet-plan-list'),
+    # Public endpoint - list active plans for clients to view (NO AUTH REQUIRED)
+    
+    path('plans/statistics/', PlanStatisticsView.as_view(), name='plan-statistics'),
+    # Get statistics about plans - STAFF ONLY
+    
+    
+    # ==================== SUBSCRIPTION ENDPOINTS ====================
+    # Admin/Staff only - Manage all subscriptions
     path('subscriptions/', SubscriptionListView.as_view(), name='subscription-list'),
-    path('subscriptions/<int:subscription_id>/activate/', SubscriptionActivationView.as_view(), name='subscription-activate'),
-    path('subscriptions/<int:subscription_id>/status/', SubscriptionStatusView.as_view(), name='subscription-status'),
+    # List all subscriptions - STAFF ONLY (clients cannot access dashboard)
     
-    # Client Purchase URLs
-    path('client/purchase/', ClientPlanPurchaseView.as_view(), name='client-purchase-plan'),
-    path('payment-callback/', PaymentCallbackView.as_view(), name='payment-callback'),
+    path('subscriptions/<uuid:subscription_id>/', SubscriptionDetailView.as_view(), 
+         name='subscription-detail'),
+    # Get or update specific subscription - STAFF ONLY
+    
+    path('subscriptions/<uuid:subscription_id>/activate/', SubscriptionActivationView.as_view(), 
+         name='subscription-activate'),
+    # Activate subscription after payment - STAFF ONLY (or payment callback)
+    
+    path('subscriptions/<uuid:subscription_id>/renew/', SubscriptionRenewView.as_view(), 
+         name='subscription-renew'),
+    # Renew subscription - STAFF ONLY
+    
+    path('subscriptions/<uuid:subscription_id>/status/', SubscriptionStatusView.as_view(), 
+         name='subscription-status'),
+    # Get detailed status for subscription - STAFF ONLY
+    
+    path('subscriptions/statistics/', SubscriptionStatisticsView.as_view(), 
+         name='subscription-statistics'),
+    # Get subscription statistics - STAFF ONLY
+    
+    
+    # ==================== CLIENT-FACING ENDPOINTS ====================
+    # Public endpoints - no authentication required
+    # Used by landing pages (hotspot/PPPoE clients)
+    path('client/plans/', ClientPlanListView.as_view(), name='client-plan-list'),
+    # Public endpoint - clients can browse available plans on landing page
+    
+    path('client/plans/<uuid:plan_id>/', ClientPlanDetailView.as_view(), 
+         name='client-plan-detail'),
+    # Public endpoint - get detailed plan info on landing page
+    
+    path('client/purchase/', ClientPlanPurchaseView.as_view(), name='client-plan-purchase'),
+    # Public endpoint - initiate plan purchase from landing page
+    
+    path('client/payment-callback/', PaymentCallbackView.as_view(), name='payment-callback'),
+    # Public endpoint - payment gateway calls this after payment
+    # Note: This is called by external payment service, not by clients directly
 ]

@@ -4,7 +4,7 @@
 from rest_framework import serializers
 from user_management.models.bulk_actions_model import MessageTemplate, BulkActionLog, UserImportFile
 from user_management.models.sms_automation_model import SMSAutomationSettings
-from user_management.models.user_model import Client, CommunicationLog
+from Backend.user_management.models.client_model import Client, CommunicationLog
 from account.models.admin_model import Client
 from django.contrib.auth import get_user_model
 

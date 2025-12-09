@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from user_management.models.bulk_actions_model import MessageTemplate, BulkActionLog, UserImportFile
 from user_management.models.sms_automation_model import SMSAutomationSettings
-from user_management.models.user_model import Client, CommunicationLog
+from Backend.user_management.models.client_model import Client, CommunicationLog
 from user_management.serializers.bulk_actions_serializer import (
     MessageTemplateSerializer, BulkActionLogSerializer, 
     BulkUserSerializer, UserImportFileSerializer
