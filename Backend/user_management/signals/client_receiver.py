@@ -5,6 +5,7 @@ Listens to Authentication app signals
 import logging
 from django.dispatch import receiver
 from django.db import transaction
+from django.utils import timezone
 
 from authentication.signals import (
     pppoe_credentials_generated,
@@ -13,7 +14,8 @@ from authentication.signals import (
 )
 
 from user_management.models.client_model import ClientProfile, ClientInteraction
-from user_management.services.cllent_services import ClientOnboardingService, SMSService, AnalyticsService
+from user_management.services.client_services import ClientOnboardingService, AnalyticsService
+from user_management.services.sms_services import SMSService
 
 logger = logging.getLogger(__name__)
 

@@ -66,14 +66,14 @@
 #     path('sms-analytics/', SMSAnalyticsView.as_view(), name='sms-analytics'),
 #     path('sms-performance/', TriggerPerformanceView.as_view(), name='trigger-performance'),
 
-#     # Bulk Actions URLs
-#     path('message-templates/', MessageTemplateListCreateView.as_view(), name='message-template-list-create'),
-#     path('message-templates/<int:pk>/', MessageTemplateDetailView.as_view(), name='message-template-detail'),
-#     path('bulk-users/', BulkUserListView.as_view(), name='bulk-user-list'),
-#     path('bulk-import/', BulkUserImportView.as_view(), name='bulk-user-import'),
-#     path('bulk-action/', BulkActionView.as_view(), name='bulk-action'),
-#     path('bulk-history/', BulkActionHistoryView.as_view(), name='bulk-action-history'),
-#     path('bulk-template/', DownloadTemplateView.as_view(), name='download-template'),
+    # # Bulk Actions URLs
+    # path('message-templates/', MessageTemplateListCreateView.as_view(), name='message-template-list-create'),
+    # path('message-templates/<int:pk>/', MessageTemplateDetailView.as_view(), name='message-template-detail'),
+    # path('bulk-users/', BulkUserListView.as_view(), name='bulk-user-list'),
+    # path('bulk-import/', BulkUserImportView.as_view(), name='bulk-user-import'),
+    # path('bulk-action/', BulkActionView.as_view(), name='bulk-action'),
+    # path('bulk-history/', BulkActionHistoryView.as_view(), name='bulk-action-history'),
+    # path('bulk-template/', DownloadTemplateView.as_view(), name='download-template'),
 # ]
 
 # # API versioning and metadata
@@ -131,14 +131,14 @@ Production-ready with all relevant endpoints
 """
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from user_management.views.client_views import (
+from user_management.api.views.client_views import (
     ClientProfileViewSet, 
     DashboardView,
     CreatePPPoEClientView,
     CreateHotspotClientView,
     CommissionDashboardView
 )
-from sms_automation.views import (
+from user_management.api.views.sms_automation_view import (
     SMSGatewayConfigViewSet,
     SMSTemplateViewSet,
     SMSMessageViewSet,

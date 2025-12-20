@@ -716,7 +716,11 @@ from django.utils import timezone
 # Router Management Views
 from network_management.api.views.router_management.router_base_views import (
     RouterListView, 
-    RouterDetailView
+    RouterDetailView,
+    NetworkServiceOperationsView,
+    ActivationStatusView,
+    ServiceOperationsHealthView
+
 )
 
 from network_management.api.views.router_management.router_connection_views import (
@@ -814,6 +818,9 @@ urlpatterns = [
     # Router CRUD Operations
     path("routers/", RouterListView.as_view(), name="router-list"),
     path("routers/<int:pk>/", RouterDetailView.as_view(), name="router-detail"),
+    path('service-operations/activate/', NetworkServiceOperationsView.as_view(), name='service-operations-activate'),
+    path('activations/<uuid:activation_id>/status/', ActivationStatusView.as_view(), name='activation-status'),
+    path('service-operations/health/',  ServiceOperationsHealthView.as_view(), name='service-operations-health'),
     
     # Router Connection Testing and Management
     path("routers/test-connection/", TestRouterConnectionView.as_view(), name="test-router-connection"),

@@ -1599,6 +1599,7 @@ INSTALLED_APPS = [
     'account',
     'dashboard',
     'otp_auth',
+    'service_operations'
     
 ]
 
