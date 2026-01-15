@@ -7,7 +7,7 @@ from django.dispatch import receiver
 from django.db import transaction
 from django.utils import timezone
 
-from authentication.signals import (
+from authentication.signals.core import (
     pppoe_credentials_generated,
     client_account_created,
     account_status_changed

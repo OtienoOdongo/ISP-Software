@@ -46,7 +46,7 @@ class UserManagementConfig(AppConfig):
             # Import SMS Automation models if they exist in the same app
             try:
                 # Check if SMS models exist in user_management.models
-                from user_management.models.sms_automation_model import (
+                from Backend.sms_automation.models.sms_automation_model import (
                     SMSGatewayConfig,
                     SMSTemplate,
                     SMSMessage,

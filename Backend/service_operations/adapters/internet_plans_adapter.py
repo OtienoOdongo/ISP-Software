@@ -1013,10 +1013,4 @@ class InternetPlansAdapter:
                 'error': str(e),
                 'timestamp': timezone.now().isoformat()
             }
-    
-    @staticmethod
-    def get_api_version() -> str:
-        """
-        Get the API version
-        """
-        return "2.0.0"
+   

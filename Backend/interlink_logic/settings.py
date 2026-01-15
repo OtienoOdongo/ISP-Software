@@ -1599,7 +1599,8 @@ INSTALLED_APPS = [
     'account',
     'dashboard',
     'otp_auth',
-    'service_operations'
+    'service_operations',
+    'sms_automation'
     
 ]
 
@@ -1677,7 +1678,10 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.FormParser',
     ],
     'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
-    'DEFAULT_TIMEOUT': 30,  # FIXED: Added global timeout
+    'DEFAULT_TIMEOUT': 30,  
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.UserRateThrottle',
+    ]
 }
 
 # DRF Spectacular Settings

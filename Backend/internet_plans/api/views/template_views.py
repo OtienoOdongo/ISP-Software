@@ -35,12 +35,22 @@ class TemplatePagination(PageNumberPagination):
     page_size = 20
     page_size_query_param = 'page_size'
     max_page_size = 50
+    
+    def get_paginated_response(self, data):
+        return Response({
+            'success': True,
+            'count': self.page.paginator.count,
+            'next': self.get_next_link(),
+            'previous': self.get_previous_link(),
+            'results': data,
+            'page': self.page.number,
+            'total_pages': self.page.paginator.num_pages
+        })
 
 
 class PlanTemplateListView(APIView):
     """
     List and create Plan Templates
-    ORIGINAL LOGIC MAINTAINED with improvements
     """
     
     permission_classes = [IsAuthenticated]
@@ -53,7 +63,7 @@ class PlanTemplateListView(APIView):
             # Base queryset
             queryset = PlanTemplate.objects.filter(is_active=True)
             
-            # Apply permissions
+            # Apply permissions - regular users only see public templates
             if not request.user.is_staff:
                 queryset = queryset.filter(is_public=True)
             
@@ -85,7 +95,7 @@ class PlanTemplateListView(APIView):
         if not request.user.is_staff:
             return Response({
                 'success': False,
-                'error': 'Permission denied'
+                'error': 'Permission denied. Only admins can create templates.'
             }, status=status.HTTP_403_FORBIDDEN)
         
         try:
@@ -111,11 +121,11 @@ class PlanTemplateListView(APIView):
                 template_name=template.name,
                 category=template.category,
                 base_price=template.base_price,
-                created_by=request.user.username,
+                created_by=request.user.email if request.user.email else str(request.user.id),
                 timestamp=template.created_at
             )
             
-            logger.info(f"Template created: {template.name} by {request.user.username}")
+            logger.info(f"Template created: {template.name} by admin {request.user.email}")
             
             return Response({
                 'success': True,
@@ -177,6 +187,17 @@ class PlanTemplateListView(APIView):
             except (ValueError, TypeError):
                 pass
         
+        # Created by filter (admin only)
+        if request.user.is_staff and (created_by := request.query_params.get('created_by')):
+            try:
+                from django.contrib.auth import get_user_model
+                User = get_user_model()
+                user = User.objects.filter(id=created_by).first()
+                if user:
+                    queryset = queryset.filter(created_by=user)
+            except (ValueError, TypeError):
+                pass
+        
         return queryset
     
     def _apply_sorting(self, queryset, request):
@@ -190,6 +211,7 @@ class PlanTemplateListView(APIView):
             'usageCount': 'usage_count',
             'createdAt': 'created_at',
             'updatedAt': 'updated_at',
+            'createdBy': 'created_by__email',
         }
         
         field = sort_map.get(sort_by, sort_by)
@@ -202,7 +224,6 @@ class PlanTemplateListView(APIView):
 class PlanTemplateDetailView(APIView):
     """
     Retrieve, update, or delete a Plan Template
-    ORIGINAL LOGIC MAINTAINED with improvements
     """
     
     permission_classes = [IsAuthenticated]
@@ -257,7 +278,7 @@ class PlanTemplateDetailView(APIView):
         if not request.user.is_staff:
             return Response({
                 'success': False,
-                'error': 'Permission denied'
+                'error': 'Permission denied. Only admins can update templates.'
             }, status=status.HTTP_403_FORBIDDEN)
         
         try:
@@ -292,11 +313,11 @@ class PlanTemplateDetailView(APIView):
                 sender=PlanTemplate,
                 template_id=str(template_id),
                 template_name=updated_template.name,
-                updated_by=request.user.username,
+                updated_by=request.user.email if request.user.email else str(request.user.id),
                 timestamp=timezone.now()
             )
             
-            logger.info(f"Template updated: {template_id} by {request.user.username}")
+            logger.info(f"Template updated: {template_id} by admin {request.user.email}")
             
             return Response({
                 'success': True,
@@ -317,7 +338,7 @@ class PlanTemplateDetailView(APIView):
         if not request.user.is_staff:
             return Response({
                 'success': False,
-                'error': 'Permission denied'
+                'error': 'Permission denied. Only admins can delete templates.'
             }, status=status.HTTP_403_FORBIDDEN)
         
         try:
@@ -346,7 +367,7 @@ class PlanTemplateDetailView(APIView):
             cache.delete(f"plan_template:{template_id}")
             cache.delete_pattern("plan_templates:*")
             
-            logger.info(f"Template deleted: {template_id} by {request.user.username}")
+            logger.info(f"Template deleted: {template_id} by admin {request.user.email}")
             
             return Response({
                 'success': True,
@@ -364,7 +385,6 @@ class PlanTemplateDetailView(APIView):
 class PlanTemplateCreateView(APIView):
     """
     Simplified view for template creation
-    NEW: For specific use cases
     """
     
     permission_classes = [IsAuthenticated]
@@ -375,7 +395,7 @@ class PlanTemplateCreateView(APIView):
         if not request.user.is_staff:
             return Response({
                 'success': False,
-                'error': 'Permission denied'
+                'error': 'Permission denied. Only admins can create templates.'
             }, status=status.HTTP_403_FORBIDDEN)
         
         try:
@@ -406,7 +426,11 @@ class PlanTemplateCreateView(APIView):
                 'success': True,
                 'message': 'Template created successfully',
                 'template_id': str(template.id),
-                'template_name': template.name
+                'template_name': template.name,
+                'created_by': {
+                    'id': str(request.user.id),
+                    'email': request.user.email
+                }
             }, status=status.HTTP_201_CREATED)
             
         except Exception as e:
@@ -421,7 +445,6 @@ class PlanTemplateCreateView(APIView):
 class PlanTemplateUpdateView(APIView):
     """
     View for specific template updates
-    NEW: For specific update operations
     """
     
     permission_classes = [IsAuthenticated]
@@ -432,7 +455,7 @@ class PlanTemplateUpdateView(APIView):
         if not request.user.is_staff:
             return Response({
                 'success': False,
-                'error': 'Permission denied'
+                'error': 'Permission denied. Only admins can update templates.'
             }, status=status.HTTP_403_FORBIDDEN)
         
         try:
@@ -478,7 +501,11 @@ class PlanTemplateUpdateView(APIView):
             return Response({
                 'success': True,
                 'message': 'Template updated successfully',
-                'updated_fields': list(update_data.keys())
+                'updated_fields': list(update_data.keys()),
+                'updated_by': {
+                    'id': str(request.user.id),
+                    'email': request.user.email
+                }
             })
             
         except Exception as e:
@@ -492,14 +519,14 @@ class PlanTemplateUpdateView(APIView):
 class PlanTemplateDeleteView(APIView):
     """
     View for template deletion (hard delete)
-    Use with caution - only for admins
+    Use with caution - only for super admins
     """
     
     permission_classes = [IsAdminUser]
     throttle_classes = [UserRateThrottle]
     
     def delete(self, request, template_id):
-        """Hard delete template (admin only)"""
+        """Hard delete template (super admin only)"""
         try:
             template = get_object_or_404(PlanTemplate, id=template_id)
             
@@ -518,11 +545,15 @@ class PlanTemplateDeleteView(APIView):
             # Clear cache
             cache.delete_pattern("plan_templates:*")
             
-            logger.warning(f"Template hard deleted: {template_id} by {request.user.username}")
+            logger.warning(f"Template hard deleted: {template_id} by super admin {request.user.email}")
             
             return Response({
                 'success': True,
-                'message': f'Template "{template_name}" deleted permanently'
+                'message': f'Template "{template_name}" deleted permanently',
+                'deleted_by': {
+                    'id': str(request.user.id),
+                    'email': request.user.email
+                }
             })
             
         except Exception as e:
@@ -536,7 +567,6 @@ class PlanTemplateDeleteView(APIView):
 class CreatePlanFromTemplateView(APIView):
     """
     Create Internet Plan from Template
-    ORIGINAL LOGIC MAINTAINED with improvements
     """
     
     permission_classes = [IsAuthenticated]
@@ -577,10 +607,6 @@ class CreatePlanFromTemplateView(APIView):
             # Create plan
             plan = serializer.create_plan()
             
-            # Set created_by
-            plan.created_by = request.user
-            plan.save(update_fields=['created_by'])
-            
             # Emit signals
             from internet_plans.signals.plan_signals import plan_created
             plan_created.send(
@@ -591,11 +617,11 @@ class CreatePlanFromTemplateView(APIView):
                 price=plan.price,
                 category=plan.category,
                 access_methods=plan.get_enabled_access_methods(),
-                created_by=request.user.username,
+                created_by=request.user.email if request.user.email else str(request.user.id),
                 timestamp=plan.created_at
             )
             
-            logger.info(f"Plan created from template: {plan.name} by {request.user.username}")
+            logger.info(f"Plan created from template: {plan.name} by {request.user.email}")
             
             return Response({
                 'success': True,
@@ -607,7 +633,11 @@ class CreatePlanFromTemplateView(APIView):
                     'price': float(plan.price),
                     'plan_type': plan.plan_type,
                     'access_methods': plan.get_enabled_access_methods(),
-                    'template_used': template.name
+                    'template_used': template.name,
+                    'created_by': {
+                        'id': str(request.user.id),
+                        'email': request.user.email
+                    }
                 }
             }, status=status.HTTP_201_CREATED)
             

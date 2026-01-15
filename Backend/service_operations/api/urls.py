@@ -222,17 +222,7 @@ urlpatterns = [
     # Health checks
     path('health/', SystemHealthView.as_view(), name='system-health'),
     
-    # ==================== API DOCUMENTATION ====================
-    # API info endpoint
-    path('api-info/', lambda request: Response({
-        'name': 'Service Operations API',
-        'version': '2.0.0',
-        'description': 'Execution and delivery system for internet plans',
-        'base_path': '/api/service_operations/',
-        'authentication': 'JWT Token',
-        'client_types': ['hotspot_client', 'pppoe_client'],
-        'timestamp': timezone.now().isoformat(),
-    }), name='api-info'),
+
 ]
 
 # API Documentation Info

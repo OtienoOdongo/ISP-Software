@@ -217,6 +217,8 @@ urlpatterns = [
     path('api/dashboard/', include('dashboard.urls')),
     path('api/account/', include('account.api.urls')),
     path('api/otp/', include('otp_auth.urls')),
+    path('api/service_operations/', include('service_operations.api.urls')),
+    path('api/sms_automation/', include('sms_automation.api.urls')),
 
     # Health checks
     path('health/', include(('health_check.urls', 'health_check'), namespace='app_health_check')),

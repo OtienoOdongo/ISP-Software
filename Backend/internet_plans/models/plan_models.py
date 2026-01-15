@@ -8,6 +8,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from datetime import datetime, timedelta
 from decimal import Decimal
 from django.contrib.auth import get_user_model
 import uuid
@@ -375,7 +376,6 @@ class PlanTemplate(models.Model):
     """
     Template for creating Internet Plans
     Templates define the structure that can be reused for multiple plans
-    ORIGINAL LOGIC MAINTAINED from your code
     """
     
     CATEGORIES = (
@@ -388,7 +388,7 @@ class PlanTemplate(models.Model):
         ('Dual', 'Hotspot & PPPoE'),
     )
     
-    # Core Template Fields - ORIGINAL FIELDS MAINTAINED
+    # Core Template Fields
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, unique=True, db_index=True)
     description = models.TextField(blank=True, default="")
@@ -401,13 +401,13 @@ class PlanTemplate(models.Model):
         help_text="Base price in KSH"
     )
     
-    # Access Methods Configuration - ORIGINAL STRUCTURE MAINTAINED
+    # Access Methods Configuration - SIMPLIFIED (Technical specs only)
     access_methods = models.JSONField(
         default=dict,
         help_text="Configuration for hotspot and PPPoE access methods"
     )
     
-    # Time Variant Configuration - NEW: Added time variant support
+    # Time Variant Configuration
     time_variant = models.OneToOneField(
         TimeVariantConfig,
         on_delete=models.SET_NULL,
@@ -417,12 +417,12 @@ class PlanTemplate(models.Model):
         help_text="Time variant configuration for this template"
     )
     
-    # Template Management - ORIGINAL FIELDS MAINTAINED
+    # Template Management
     is_public = models.BooleanField(default=True, db_index=True)
     is_active = models.BooleanField(default=True, db_index=True)
     usage_count = models.PositiveIntegerField(default=0, db_index=True)
     
-    # Ownership - ORIGINAL STRUCTURE MAINTAINED
+    # Ownership
     created_by = models.ForeignKey(
         get_user_model(),
         on_delete=models.CASCADE,
@@ -432,7 +432,7 @@ class PlanTemplate(models.Model):
         help_text="Admin who created this template"
     )
     
-    # Timestamps - ORIGINAL FIELDS MAINTAINED
+    # Timestamps
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True, db_index=True)
     
@@ -451,7 +451,7 @@ class PlanTemplate(models.Model):
         return f"{self.name} ({self.category})"
     
     def clean(self):
-        """Validate template configuration - ORIGINAL LOGIC MAINTAINED"""
+        """Validate template configuration"""
         errors = {}
         
         # Validate JSON structure
@@ -471,7 +471,7 @@ class PlanTemplate(models.Model):
                 continue
             
             if config.get('enabled', False):
-                # Validate required fields for enabled methods
+                # Validate required fields for enabled methods (Technical specs only)
                 required_fields = ['downloadSpeed', 'uploadSpeed', 'dataLimit', 'usageLimit']
                 for field in required_fields:
                     if field not in config:
@@ -489,7 +489,7 @@ class PlanTemplate(models.Model):
         if not self.has_enabled_access_methods():
             errors['access_methods'] = 'At least one access method must be enabled'
         
-        # Validate time variant if exists - NEW
+        # Validate time variant if exists
         if self.time_variant:
             try:
                 self.time_variant.full_clean()
@@ -500,14 +500,9 @@ class PlanTemplate(models.Model):
             raise ValidationError(errors)
     
     def save(self, *args, **kwargs):
-        """Save with validation and default configuration - UPDATED with time variant"""
+        """Save with validation and default configuration"""
         if not self.access_methods:
             self.set_default_access_methods()
-        
-        # Create time variant config if template is created and time variant enabled
-        if self.pk is None and self.time_variant is None:
-            # Check if we should create default time variant
-            pass
         
         self.full_clean()
         
@@ -518,7 +513,7 @@ class PlanTemplate(models.Model):
         super().save(*args, **kwargs)
     
     def set_default_access_methods(self):
-        """Set default access method configurations - ORIGINAL LOGIC MAINTAINED"""
+        """Set default access method configurations - SIMPLIFIED (Technical specs only)"""
         self.access_methods = {
             'hotspot': {
                 'enabled': True,
@@ -532,6 +527,7 @@ class PlanTemplate(models.Model):
                 'idleTimeout': 300,
                 'validityPeriod': {'value': '30', 'unit': 'Days'},
                 'macBinding': False,
+               
             },
             'pppoe': {
                 'enabled': False,
@@ -548,12 +544,12 @@ class PlanTemplate(models.Model):
                 'ipPool': 'pppoe-pool-1',
                 'serviceName': '',
                 'mtu': 1492,
-                'dnsServers': ['8.8.8.8', '1.1.1.1'],
+                
             }
         }
     
     def increment_usage(self):
-        """Atomically increment usage count - ORIGINAL LOGIC MAINTAINED"""
+        """Atomically increment usage count"""
         with transaction.atomic():
             PlanTemplate.objects.filter(pk=self.pk).update(
                 usage_count=models.F('usage_count') + 1
@@ -561,21 +557,21 @@ class PlanTemplate(models.Model):
             self.refresh_from_db()
     
     def has_enabled_access_methods(self):
-        """Check if any access method is enabled - ORIGINAL LOGIC MAINTAINED"""
+        """Check if any access method is enabled"""
         return any(
             method_config.get('enabled', False) 
             for method_config in self.access_methods.values()
         )
     
     def get_enabled_access_methods(self) -> List[str]:
-        """Get list of enabled access methods - ORIGINAL LOGIC MAINTAINED"""
+        """Get list of enabled access methods"""
         return [
             method for method, config in self.access_methods.items() 
             if config.get('enabled', False)
         ]
     
     def get_access_type(self) -> str:
-        """Get access type category - ORIGINAL LOGIC MAINTAINED"""
+        """Get access type category"""
         enabled_methods = self.get_enabled_access_methods()
         if 'hotspot' in enabled_methods and 'pppoe' in enabled_methods:
             return 'dual'
@@ -586,10 +582,9 @@ class PlanTemplate(models.Model):
         return 'none'
     
     def get_config_for_method(self, method: str) -> Dict:
-        """Get configuration for specific access method - ORIGINAL LOGIC MAINTAINED"""
+        """Get configuration for specific access method"""
         return self.access_methods.get(method, {})
     
-    # NEW: Time variant methods
     def has_time_variant(self) -> bool:
         """Check if template has time variant configuration"""
         return self.time_variant is not None and self.time_variant.is_active
@@ -597,7 +592,6 @@ class PlanTemplate(models.Model):
     def is_available_for_purchase(self, client_type='hotspot') -> Dict:
         """
         Check if template/plan is available for purchase
-        NEW: Availability check for captive portal
         """
         if not self.has_time_variant():
             return {
@@ -620,7 +614,6 @@ class PlanTemplate(models.Model):
         
         return response
     
-    # NEW: Cache-related methods
     @classmethod
     def get_cached_template(cls, template_id):
         """Get template from cache or database"""
@@ -641,7 +634,6 @@ class InternetPlan(models.Model):
     """
     Internet Plan that can be purchased by clients
     Each plan is created from a template or custom configuration
-    UPDATED: Added time variant support
     """
     
     PLAN_TYPES = (
@@ -671,7 +663,7 @@ class InternetPlan(models.Model):
         (8, 'VIP'),
     )
     
-    # Core Plan Fields - ORIGINAL FIELDS MAINTAINED
+    # Core Plan Fields
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     plan_type = models.CharField(max_length=20, choices=PLAN_TYPES, default='paid', db_index=True)
     name = models.CharField(max_length=100, unique=True, db_index=True)
@@ -686,7 +678,7 @@ class InternetPlan(models.Model):
     category = models.CharField(max_length=20, choices=CATEGORIES, default='Residential', db_index=True)
     description = models.TextField(blank=True, default="")
     
-    # Template Reference - ORIGINAL STRUCTURE MAINTAINED
+    # Template Reference
     template = models.ForeignKey(
         PlanTemplate, 
         on_delete=models.SET_NULL, 
@@ -696,13 +688,13 @@ class InternetPlan(models.Model):
         help_text="Template used to create this plan"
     )
     
-    # Access Methods - ORIGINAL STRUCTURE MAINTAINED
+    # Access Methods - SIMPLIFIED (Technical specs only)
     access_methods = models.JSONField(
         default=dict,
         help_text="Configuration for hotspot and PPPoE access methods"
     )
     
-    # Time Variant Configuration - NEW: Added time variant support
+    # Time Variant Configuration
     time_variant = models.OneToOneField(
         TimeVariantConfig,
         on_delete=models.SET_NULL,
@@ -712,7 +704,7 @@ class InternetPlan(models.Model):
         help_text="Time variant configuration for this plan"
     )
     
-    # Plan Configuration - ORIGINAL FIELDS MAINTAINED
+    # Plan Configuration
     priority_level = models.IntegerField(choices=PRIORITY_LEVELS, default=4)
     router_specific = models.BooleanField(default=False)
     allowed_routers = models.ManyToManyField(
@@ -722,7 +714,7 @@ class InternetPlan(models.Model):
         help_text="Routers where this plan can be used (if router_specific)"
     )
     
-    # FUP (Fair Usage Policy) - ORIGINAL FIELDS MAINTAINED
+    # FUP (Fair Usage Policy)
     FUP_policy = models.TextField(blank=True, default="")
     FUP_threshold = models.PositiveIntegerField(
         default=80,
@@ -730,24 +722,26 @@ class InternetPlan(models.Model):
         help_text="Usage threshold percentage for FUP"
     )
     
-    # Usage Tracking - ORIGINAL FIELDS MAINTAINED
+    # Usage Tracking
     purchases = models.PositiveIntegerField(default=0, db_index=True)
     
-    # Client Type Restriction - NEW: Added to distinguish hotspot vs PPPoE plans
-    client_type_restriction = models.CharField(
-        max_length=20,
-        choices=[('any', 'Any'), ('hotspot', 'Hotspot Only'), ('pppoe', 'PPPoE Only')],
-        default='any',
-        db_index=True,
-        help_text="Restrict plan to specific client type"
-    )
+    # Client Type Restriction - REMOVED (belongs to ServiceOperations)
     
-    # Session Tracking - ORIGINAL FIELD MAINTAINED
+    # Session Tracking
     client_sessions = models.JSONField(default=dict, blank=True)
     
-    # Timestamps - ORIGINAL FIELDS MAINTAINED
+    # Timestamps
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True, db_index=True)
+    created_by = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_plans',
+        help_text="Admin who created this plan"
+        )
+    
     
     class Meta:
         verbose_name = 'Internet Plan'
@@ -760,7 +754,6 @@ class InternetPlan(models.Model):
             models.Index(fields=['price']),
             models.Index(fields=['purchases']),
             models.Index(fields=['created_at']),
-            models.Index(fields=['client_type_restriction', 'active']),  # NEW
         ]
     
     def __str__(self):
@@ -768,7 +761,7 @@ class InternetPlan(models.Model):
         return f"{self.name} ({plan_type}) - KSH {self.price}"
     
     def clean(self):
-        """Validate plan configuration - UPDATED with time variant validation"""
+        """Validate plan configuration"""
         errors = {}
         
         # Free Trial validation
@@ -813,24 +806,18 @@ class InternetPlan(models.Model):
         if not self.has_enabled_access_methods():
             errors['access_methods'] = 'At least one access method must be enabled'
         
-        # Validate time variant if exists - NEW
+        # Validate time variant if exists
         if self.time_variant:
             try:
                 self.time_variant.full_clean()
             except ValidationError as e:
                 errors['time_variant'] = e.message_dict
         
-        # Validate client type restriction matches access methods - NEW
-        if self.client_type_restriction == 'hotspot' and not self.access_methods.get('hotspot', {}).get('enabled', False):
-            errors['client_type_restriction'] = 'Hotspot-only plan must have hotspot access enabled'
-        elif self.client_type_restriction == 'pppoe' and not self.access_methods.get('pppoe', {}).get('enabled', False):
-            errors['client_type_restriction'] = 'PPPoE-only plan must have PPPoE access enabled'
-        
         if errors:
             raise ValidationError(errors)
     
     def save(self, *args, **kwargs):
-        """Save with validation - UPDATED with time variant"""
+        """Save with validation"""
         if not self.access_methods:
             self.set_default_access_methods()
         
@@ -843,7 +830,7 @@ class InternetPlan(models.Model):
         super().save(*args, **kwargs)
     
     def set_default_access_methods(self):
-        """Set default access method configurations - ORIGINAL LOGIC MAINTAINED"""
+        """Set default access method configurations - SIMPLIFIED (Technical specs only)"""
         self.access_methods = {
             'hotspot': {
                 'enabled': True,
@@ -857,6 +844,8 @@ class InternetPlan(models.Model):
                 'idleTimeout': 300,
                 'validityPeriod': {'value': '30', 'unit': 'Days'},
                 'macBinding': False,
+                # Removed: captivePortalEnabled, authenticationType, splashPage, redirectUrl,
+                # concurrentConnections, dnsServers
             },
             'pppoe': {
                 'enabled': False,
@@ -873,12 +862,12 @@ class InternetPlan(models.Model):
                 'ipPool': 'pppoe-pool-1',
                 'serviceName': '',
                 'mtu': 1492,
-                'dnsServers': ['8.8.8.8', '1.1.1.1'],
+                # Removed: dnsServers
             }
         }
     
     def create_from_template(self, template: PlanTemplate):
-        """Create plan from template - UPDATED with time variant"""
+        """Create plan from template"""
         self.name = template.name
         self.category = template.category
         self.price = template.base_price
@@ -886,7 +875,7 @@ class InternetPlan(models.Model):
         self.access_methods = template.access_methods.copy()
         self.template = template
         
-        # Copy time variant from template if exists - NEW
+        # Copy time variant from template if exists
         if template.time_variant:
             # Create a copy of time variant
             time_variant_copy = TimeVariantConfig.objects.create(
@@ -916,21 +905,21 @@ class InternetPlan(models.Model):
         self.save()
     
     def has_enabled_access_methods(self) -> bool:
-        """Check if any access method is enabled - ORIGINAL LOGIC MAINTAINED"""
+        """Check if any access method is enabled"""
         return any(
             method_config.get('enabled', False) 
             for method_config in self.access_methods.values()
         )
     
     def get_enabled_access_methods(self) -> List[str]:
-        """Get list of enabled access methods - ORIGINAL LOGIC MAINTAINED"""
+        """Get list of enabled access methods"""
         return [
             method for method, config in self.access_methods.items() 
             if config.get('enabled', False)
         ]
     
     def get_access_type(self) -> str:
-        """Get access type category - ORIGINAL LOGIC MAINTAINED"""
+        """Get access type category"""
         enabled_methods = self.get_enabled_access_methods()
         if 'hotspot' in enabled_methods and 'pppoe' in enabled_methods:
             return 'dual'
@@ -941,7 +930,7 @@ class InternetPlan(models.Model):
         return 'none'
     
     def can_be_used_on_router(self, router_id: int) -> bool:
-        """Check if plan can be used on specific router - ORIGINAL LOGIC MAINTAINED"""
+        """Check if plan can be used on specific router"""
         if not self.router_specific:
             return True
         
@@ -949,12 +938,12 @@ class InternetPlan(models.Model):
         return self.allowed_routers.filter(id=router_id).exists()
     
     def increment_purchases(self):
-        """Increment purchase count - ORIGINAL LOGIC MAINTAINED"""
+        """Increment purchase count"""
         self.purchases += 1
         self.save(update_fields=['purchases', 'updated_at'])
     
     def get_router_compatibility(self) -> List[Dict]:
-        """Get router compatibility information - ORIGINAL LOGIC MAINTAINED"""
+        """Get router compatibility information"""
         from network_management.models import Router
         
         routers = Router.objects.filter(is_active=True, status='connected')
@@ -971,27 +960,24 @@ class InternetPlan(models.Model):
         
         return compatibility_data
     
-    # UPDATED: Simplified method - removes business logic dependency
     def supports_access_method(self, access_method: str) -> bool:
         """
         Check if plan supports specific access method
-        SIMPLIFIED: Only checks technical capability, not business rules
+        SIMPLIFIED: Only checks technical capability
         """
         return access_method in self.get_enabled_access_methods()
     
     def get_config_for_method(self, method: str) -> Dict:
-        """Get configuration for specific access method - ORIGINAL LOGIC MAINTAINED"""
+        """Get configuration for specific access method"""
         return self.access_methods.get(method, {})
     
-    # NEW: Time variant methods
     def has_time_variant(self) -> bool:
         """Check if plan has time variant configuration"""
         return self.time_variant is not None and self.time_variant.is_active
     
-    def is_available_for_client(self, client_type='hotspot', check_time=True) -> Dict:
+    def is_available_for_client(self, check_time=True) -> Dict:
         """
-        Check if plan is available for a specific client type
-        NEW: Comprehensive availability check
+        Check if plan is available for purchase
         """
         # Check if plan is active
         if not self.active:
@@ -999,28 +985,6 @@ class InternetPlan(models.Model):
                 'available': False,
                 'reason': 'Plan is inactive',
                 'code': 'plan_inactive'
-            }
-        
-        # Check client type restriction
-        if self.client_type_restriction != 'any' and self.client_type_restriction != client_type:
-            return {
-                'available': False,
-                'reason': f'Plan is restricted to {self.client_type_restriction} clients only',
-                'code': 'client_type_restricted'
-            }
-        
-        # Check access method support
-        if client_type == 'hotspot' and not self.supports_access_method('hotspot'):
-            return {
-                'available': False,
-                'reason': 'Plan does not support hotspot access',
-                'code': 'access_method_not_supported'
-            }
-        elif client_type == 'pppoe' and not self.supports_access_method('pppoe'):
-            return {
-                'available': False,
-                'reason': 'Plan does not support PPPoE access',
-                'code': 'access_method_not_supported'
             }
         
         # Check time variant availability if enabled
@@ -1063,7 +1027,6 @@ class InternetPlan(models.Model):
             'next_available': self.time_variant.get_next_available_time() if not self.time_variant.is_available_now() else None
         }
     
-    # NEW: Cache-related methods
     @classmethod
     def get_cached_plan(cls, plan_id):
         """Get plan from cache or database"""
@@ -1083,7 +1046,6 @@ class InternetPlan(models.Model):
     def get_available_plans_for_client(cls, client_type='hotspot', router_id=None):
         """
         Get all plans available for a specific client type
-        NEW: Filter plans by availability
         """
         cache_key = f"available_plans:{client_type}:{router_id}"
         plans = cache.get(cache_key)
@@ -1092,18 +1054,10 @@ class InternetPlan(models.Model):
             # Start with active plans
             queryset = cls.objects.filter(active=True).select_related('time_variant')
             
-            # Filter by client type restriction
+            # Filter by client type
             if client_type == 'hotspot':
-                queryset = queryset.filter(
-                    models.Q(client_type_restriction='any') | 
-                    models.Q(client_type_restriction='hotspot')
-                )
                 queryset = queryset.filter(access_methods__hotspot__enabled=True)
             elif client_type == 'pppoe':
-                queryset = queryset.filter(
-                    models.Q(client_type_restriction='any') | 
-                    models.Q(client_type_restriction='pppoe')
-                )
                 queryset = queryset.filter(access_methods__pppoe__enabled=True)
             
             # Filter by router compatibility if router_id provided
@@ -1119,7 +1073,7 @@ class InternetPlan(models.Model):
             # Filter by time variant availability
             available_plans = []
             for plan in all_plans:
-                availability = plan.is_available_for_client(client_type)
+                availability = plan.is_available_for_client()
                 if availability['available']:
                     plan.availability_info = availability  # Attach availability info
                     available_plans.append(plan)
@@ -1144,11 +1098,9 @@ class InternetPlan(models.Model):
         
         return plans
     
-    # NEW: Advanced methods
     def calculate_effective_price(self, quantity=1, discount_code=None):
         """
         Calculate effective price with quantity and discounts
-        NEW: Integration with pricing service
         """
         from internet_plans.services.pricing_service import PricingService
         return PricingService.calculate_effective_price(
@@ -1160,7 +1112,6 @@ class InternetPlan(models.Model):
     def get_technical_config(self, access_method: str) -> Dict:
         """
         Get technical configuration for network activation
-        NEW: Clean interface for service operations
         """
         config = self.get_config_for_method(access_method)
         

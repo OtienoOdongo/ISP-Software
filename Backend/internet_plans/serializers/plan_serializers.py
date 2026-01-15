@@ -22,7 +22,6 @@ logger = logging.getLogger(__name__)
 class TimeVariantConfigSerializer(serializers.ModelSerializer):
     """
     Serializer for Time Variant Configuration
-    NEW: Comprehensive time variant serialization
     """
     
     # Field mappings for API
@@ -251,10 +250,9 @@ class TimeVariantConfigSerializer(serializers.ModelSerializer):
 class InternetPlanSerializer(serializers.ModelSerializer):
     """
     Serializer for Internet Plans with Time Variant Support
-    UPDATED: Added time variant serialization
     """
     
-    # Field mappings for API - ORIGINAL FIELDS MAINTAINED
+    # Field mappings for API
     planType = serializers.CharField(
         source='plan_type',
         required=True
@@ -316,7 +314,7 @@ class InternetPlanSerializer(serializers.ModelSerializer):
         read_only=True
     )
     
-    # NEW: Time variant fields
+    # Time variant fields
     timeVariant = TimeVariantConfigSerializer(
         required=False,
         allow_null=True,
@@ -330,14 +328,7 @@ class InternetPlanSerializer(serializers.ModelSerializer):
         help_text="Existing time variant configuration ID"
     )
     
-    clientTypeRestriction = serializers.ChoiceField(
-        source='client_type_restriction',
-        choices=['any', 'hotspot', 'pppoe'],
-        default='any',
-        help_text="Restrict plan to specific client type"
-    )
-    
-    # NEW: Availability fields (read-only)
+    # Availability fields (read-only)
     isAvailableNow = serializers.SerializerMethodField(
         read_only=True,
         help_text="Whether plan is available for purchase right now"
@@ -363,31 +354,30 @@ class InternetPlanSerializer(serializers.ModelSerializer):
             'FUP_threshold', 'hasEnabledAccessMethods',
             'enabledAccessMethods', 'template', 'accessType',
             'routerCompatibility', 'timeVariant', 'timeVariantId',
-            'clientTypeRestriction', 'isAvailableNow', 'availabilityInfo',
-            'timeVariantSummary'
+            'isAvailableNow', 'availabilityInfo', 'timeVariantSummary'
         ]
         read_only_fields = ['createdAt', 'updatedAt', 'purchases', 'client_sessions',
                           'isAvailableNow', 'availabilityInfo', 'timeVariantSummary']
     
     def get_allowedRouters(self, obj):
-        """Get allowed routers - ORIGINAL LOGIC MAINTAINED"""
+        """Get allowed routers"""
         from network_management.serializers import RouterSerializer
         return RouterSerializer(obj.allowed_routers.all(), many=True).data
     
     def get_enabledAccessMethods(self, obj):
-        """Get enabled access methods - ORIGINAL LOGIC MAINTAINED"""
+        """Get enabled access methods"""
         return obj.get_enabled_access_methods()
     
     def get_accessType(self, obj):
-        """Get access type - ORIGINAL LOGIC MAINTAINED"""
+        """Get access type"""
         return obj.get_access_type()
     
     def get_routerCompatibility(self, obj):
-        """Get router compatibility - ORIGINAL LOGIC MAINTAINED"""
+        """Get router compatibility"""
         return obj.get_router_compatibility()
     
     def get_effectivePrice(self, obj):
-        """Calculate effective price with discounts - NEW"""
+        """Calculate effective price with discounts"""
         from internet_plans.services.pricing_service import PricingService
         return PricingService.calculate_effective_price(obj)
     
@@ -404,7 +394,7 @@ class InternetPlanSerializer(serializers.ModelSerializer):
         return obj.get_time_variant_summary()
     
     def validate(self, data):
-        """Validate plan data - UPDATED with time variant validation"""
+        """Validate plan data - SIMPLIFIED (no client type restriction validation)"""
         # Free Trial validation
         if data.get('plan_type') == 'free_trial':
             if data.get('price', 0) != 0:
@@ -429,19 +419,6 @@ class InternetPlanSerializer(serializers.ModelSerializer):
                     'accessMethods': error
                 })
         
-        # Validate client type restriction matches access methods
-        client_type_restriction = data.get('client_type_restriction', 'any')
-        access_methods = data.get('access_methods', {})
-        
-        if client_type_restriction == 'hotspot' and not access_methods.get('hotspot', {}).get('enabled', False):
-            raise serializers.ValidationError({
-                'clientTypeRestriction': 'Hotspot-only plan must have hotspot access enabled'
-            })
-        elif client_type_restriction == 'pppoe' and not access_methods.get('pppoe', {}).get('enabled', False):
-            raise serializers.ValidationError({
-                'clientTypeRestriction': 'PPPoE-only plan must have PPPoE access enabled'
-            })
-        
         # Check for duplicate name
         name = data.get('name')
         if name:
@@ -454,7 +431,7 @@ class InternetPlanSerializer(serializers.ModelSerializer):
         return data
     
     def create(self, validated_data):
-        """Create plan with proper relationships - UPDATED with time variant"""
+        """Create plan with proper relationships"""
         # Extract foreign key IDs
         allowed_routers_ids = validated_data.pop('allowed_routers_ids', [])
         template = validated_data.pop('template', None)
@@ -512,7 +489,7 @@ class InternetPlanSerializer(serializers.ModelSerializer):
         return plan
     
     def update(self, instance, validated_data):
-        """Update plan with proper relationships - UPDATED with time variant"""
+        """Update plan with proper relationships"""
         allowed_routers_ids = validated_data.pop('allowed_routers_ids', None)
         template = validated_data.pop('template', None)
         time_variant_id = validated_data.pop('time_variant_id', None)
@@ -574,7 +551,7 @@ class InternetPlanSerializer(serializers.ModelSerializer):
         return instance
     
     def to_representation(self, instance):
-        """Custom representation - UPDATED with time variant info"""
+        """Custom representation"""
         data = super().to_representation(instance)
         
         # Ensure proper field names in output
@@ -601,27 +578,21 @@ class InternetPlanSerializer(serializers.ModelSerializer):
 class InternetPlanCreateSerializer(serializers.ModelSerializer):
     """
     Simplified serializer for plan creation
-    UPDATED: Added time variant support
     """
     
     time_variant = TimeVariantConfigSerializer(required=False, allow_null=True)
-    client_type_restriction = serializers.ChoiceField(
-        choices=['any', 'hotspot', 'pppoe'],
-        default='any'
-    )
     
     class Meta:
         model = InternetPlan
         fields = ['name', 'plan_type', 'price', 'category', 'description', 
                  'access_methods', 'priority_level', 'router_specific',
                  'template', 'FUP_policy', 'FUP_threshold',
-                 'time_variant', 'client_type_restriction']
+                 'time_variant']
 
 
 class InternetPlanUpdateSerializer(serializers.ModelSerializer):
     """
     Serializer for plan updates
-    UPDATED: Added time variant support
     """
     
     time_variant = TimeVariantConfigSerializer(required=False, allow_null=True)
@@ -630,14 +601,12 @@ class InternetPlanUpdateSerializer(serializers.ModelSerializer):
         model = InternetPlan
         fields = ['name', 'price', 'category', 'description', 'active',
                  'access_methods', 'priority_level', 'router_specific',
-                 'FUP_policy', 'FUP_threshold', 'time_variant',
-                 'client_type_restriction']
+                 'FUP_policy', 'FUP_threshold', 'time_variant']
 
 
 class InternetPlanDetailSerializer(serializers.ModelSerializer):
     """
     Detailed serializer for plan view
-    UPDATED: Added time variant support
     """
     
     template_details = serializers.SerializerMethodField()
@@ -664,8 +633,7 @@ class InternetPlanDetailSerializer(serializers.ModelSerializer):
         return {
             'supported_access_methods': obj.get_enabled_access_methods(),
             'router_specific': obj.router_specific,
-            'allowed_routers': obj.allowed_routers.count() if obj.router_specific else 'All',
-            'client_type_restriction': obj.client_type_restriction
+            'allowed_routers': obj.allowed_routers.count() if obj.router_specific else 'All'
         }
     
     def get_availability(self, obj):
@@ -675,7 +643,6 @@ class InternetPlanDetailSerializer(serializers.ModelSerializer):
 class PlanCompatibilitySerializer(serializers.Serializer):
     """
     Serializer for checking plan compatibility
-    UPDATED: Added time variant checking
     """
     
     plan_id = serializers.UUIDField(required=True)
@@ -684,15 +651,10 @@ class PlanCompatibilitySerializer(serializers.Serializer):
         required=True
     )
     router_id = serializers.IntegerField(required=False, allow_null=True)
-    client_type = serializers.ChoiceField(
-        choices=[('hotspot', 'Hotspot'), ('pppoe', 'PPPoE')],
-        default='hotspot',
-        required=False
-    )
     check_time_availability = serializers.BooleanField(default=True)
     
     class Meta:
-        fields = ['plan_id', 'access_method', 'router_id', 'client_type', 'check_time_availability']
+        fields = ['plan_id', 'access_method', 'router_id', 'check_time_availability']
     
     def validate(self, data):
         plan_id = data['plan_id']
@@ -721,8 +683,7 @@ class PlanCompatibilitySerializer(serializers.Serializer):
         
         # Check time availability if requested
         if data.get('check_time_availability', True):
-            client_type = data.get('client_type', 'hotspot')
-            availability = plan.is_available_for_client(client_type)
+            availability = plan.is_available_for_client()
             if not availability['available']:
                 raise serializers.ValidationError({
                     'availability': availability['reason'],
@@ -742,7 +703,6 @@ class PlanCompatibilitySerializer(serializers.Serializer):
             return None
         
         availability = plan.is_available_for_client(
-            self.validated_data.get('client_type', 'hotspot'),
             self.validated_data.get('check_time_availability', True)
         )
         
@@ -760,22 +720,16 @@ class PlanCompatibilitySerializer(serializers.Serializer):
 class PlanAvailabilityCheckSerializer(serializers.Serializer):
     """
     Serializer specifically for checking plan availability
-    NEW: Dedicated availability checking
     """
     
     plan_id = serializers.UUIDField(required=True)
-    client_type = serializers.ChoiceField(
-        choices=[('hotspot', 'Hotspot'), ('pppoe', 'PPPoE')],
-        default='hotspot',
-        required=False
-    )
     timestamp = serializers.DateTimeField(
         required=False,
         help_text="Check availability at specific time (defaults to now)"
     )
     
     class Meta:
-        fields = ['plan_id', 'client_type', 'timestamp']
+        fields = ['plan_id', 'timestamp']
     
     def validate(self, data):
         plan_id = data['plan_id']
@@ -792,7 +746,6 @@ class PlanAvailabilityCheckSerializer(serializers.Serializer):
     def get_availability_result(self):
         """Get detailed availability result"""
         plan = self.context['plan']
-        client_type = self.validated_data.get('client_type', 'hotspot')
         
         # For specific timestamp checking, we need to temporarily adjust time
         timestamp = self.validated_data.get('timestamp')
@@ -800,15 +753,14 @@ class PlanAvailabilityCheckSerializer(serializers.Serializer):
         if timestamp:
             # This would require more complex logic to check future availability
             # For now, return current availability with note
-            availability = plan.is_available_for_client(client_type)
+            availability = plan.is_available_for_client()
             availability['note'] = 'Timestamp parameter not yet implemented for future checking'
         else:
-            availability = plan.is_available_for_client(client_type)
+            availability = plan.is_available_for_client()
         
         result = {
             'plan_id': str(plan.id),
             'plan_name': plan.name,
-            'client_type': client_type,
             'availability': availability,
             'has_time_variant': plan.has_time_variant(),
             'time_variant_summary': plan.get_time_variant_summary(),
@@ -821,7 +773,6 @@ class PlanAvailabilityCheckSerializer(serializers.Serializer):
 class AvailablePlansRequestSerializer(serializers.Serializer):
     """
     Serializer for requesting available plans
-    NEW: For captive portal and client interfaces
     """
     
     client_type = serializers.ChoiceField(
@@ -881,15 +832,9 @@ class AvailablePlansRequestSerializer(serializers.Serializer):
             
             # Filter by client type
             if client_type == 'hotspot':
-                queryset = queryset.filter(
-                    models.Q(client_type_restriction='any') | 
-                    models.Q(client_type_restriction='hotspot')
-                ).filter(access_methods__hotspot__enabled=True)
+                queryset = queryset.filter(access_methods__hotspot__enabled=True)
             elif client_type == 'pppoe':
-                queryset = queryset.filter(
-                    models.Q(client_type_restriction='any') | 
-                    models.Q(client_type_restriction='pppoe')
-                ).filter(access_methods__pppoe__enabled=True)
+                queryset = queryset.filter(access_methods__pppoe__enabled=True)
             
             # Filter by router
             if router_id:
@@ -902,7 +847,7 @@ class AvailablePlansRequestSerializer(serializers.Serializer):
             
             # Add availability info to each plan
             for plan in plans:
-                plan.availability_info = plan.is_available_for_client(client_type)
+                plan.availability_info = plan.is_available_for_client()
             
         else:
             # Use optimized method for available plans only

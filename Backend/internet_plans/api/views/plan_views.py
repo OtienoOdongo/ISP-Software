@@ -33,6 +33,7 @@ from internet_plans.services.plan_service import PlanService
 from internet_plans.services.pricing_service import PricingService
 from internet_plans.utils.formatters import format_plan_summary
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -59,7 +60,6 @@ class InternetPlanListView(APIView):
     List and create Internet Plans with Time Variant Support
     GET: List plans with filtering (including time availability)
     POST: Create new plan with time variant
-    UPDATED: Added time variant support
     """
     
     permission_classes = [IsAuthenticated]
@@ -67,7 +67,7 @@ class InternetPlanListView(APIView):
     throttle_classes = [UserRateThrottle]
     
     def get(self, request):
-        """Get list of plans with filtering - UPDATED with time variant filters"""
+        """Get list of plans with filtering"""
         try:
             # Use PlanService for efficient querying
             filters = self._extract_filters(request)
@@ -136,10 +136,6 @@ class InternetPlanListView(APIView):
             with transaction.atomic():
                 plan = serializer.save()
                 
-                # Set created_by
-                plan.created_by = request.user
-                plan.save(update_fields=['created_by'])
-                
                 # Emit signal
                 from internet_plans.signals.plan_signals import plan_created
                 plan_created.send(
@@ -172,7 +168,7 @@ class InternetPlanListView(APIView):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     def _extract_filters(self, request):
-        """Extract and validate filters from request - UPDATED with time variant filters"""
+        """Extract and validate filters from request"""
         filters = {}
         
         # Active filter
@@ -191,18 +187,14 @@ class InternetPlanListView(APIView):
         if access_method := request.query_params.get('access_method'):
             filters['access_method'] = access_method
         
-        # Client type restriction filter - NEW
-        if client_type := request.query_params.get('client_type'):
-            filters['client_type_restriction'] = client_type
-        
-        # Time variant filter - NEW
+        # Time variant filter
         if time_variant := request.query_params.get('time_variant'):
             if time_variant.lower() == 'active':
                 filters['has_time_variant'] = True
             elif time_variant.lower() == 'inactive':
                 filters['has_time_variant'] = False
         
-        # Availability filter - NEW
+        # Availability filter
         if available_now := request.query_params.get('available_now'):
             filters['available_now'] = available_now.lower() == 'true'
         
@@ -240,7 +232,6 @@ class InternetPlanListView(APIView):
 class InternetPlanDetailView(APIView):
     """
     Retrieve, update, or delete an Internet Plan with Time Variant
-    UPDATED: Added time variant support
     """
     
     permission_classes = [IsAuthenticated]
@@ -270,11 +261,8 @@ class InternetPlanDetailView(APIView):
             # Add pricing information
             pricing_info = PricingService.get_pricing_options(plan)
             
-            # Add time variant availability for different client types
-            availability = {
-                'hotspot': plan.is_available_for_client('hotspot'),
-                'pppoe': plan.is_available_for_client('pppoe') if plan.supports_access_method('pppoe') else None
-            }
+            # Add time variant availability
+            availability = plan.is_available_for_client()
             
             response_data = {
                 'success': True,
@@ -285,8 +273,7 @@ class InternetPlanDetailView(APIView):
                 'compatibility': {
                     'supported_access_methods': plan.get_enabled_access_methods(),
                     'router_specific': plan.router_specific,
-                    'allowed_routers_count': plan.allowed_routers.count() if plan.router_specific else 'All',
-                    'client_type_restriction': plan.client_type_restriction
+                    'allowed_routers_count': plan.allowed_routers.count() if plan.router_specific else 'All'
                 }
             }
             
@@ -441,7 +428,6 @@ class InternetPlanDetailView(APIView):
 class TimeVariantConfigView(APIView):
     """
     Manage Time Variant Configurations
-    NEW: Dedicated endpoint for time variant management
     """
     
     permission_classes = [IsAuthenticated]
@@ -637,7 +623,6 @@ class TimeVariantConfigView(APIView):
 class PlanAvailabilityCheckView(APIView):
     """
     Check plan availability for clients
-    NEW: Dedicated endpoint for availability checking
     """
     
     permission_classes = [AllowAny]  # Allow access from captive portal
@@ -674,7 +659,6 @@ class PlanAvailabilityCheckView(APIView):
 class AvailablePlansView(APIView):
     """
     Get available plans for clients (for captive portal)
-    NEW: Client-facing endpoint for plan listing
     """
     
     permission_classes = [AllowAny]  # Allow access from captive portal
@@ -751,7 +735,6 @@ class PublicInternetPlanListView(APIView):
     """
     Public API for listing available Internet Plans
     No authentication required
-    UPDATED: Filter by time availability
     """
     
     permission_classes = [AllowAny]
@@ -818,7 +801,6 @@ class PublicInternetPlanListView(APIView):
 class PlanStatisticsView(APIView):
     """
     Get statistics about plans
-    UPDATED: Added time variant statistics
     """
     
     permission_classes = [IsAuthenticated]
@@ -834,7 +816,7 @@ class PlanStatisticsView(APIView):
                     'error': stats['error']
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
-            # Add time variant statistics - NEW
+            # Add time variant statistics
             time_variant_stats = {
                 'plans_with_time_variant': InternetPlan.objects.filter(
                     active=True,
@@ -892,7 +874,6 @@ class PlanStatisticsView(APIView):
 class PlanCompatibilityCheckView(APIView):
     """
     Check plan compatibility
-    UPDATED: Added time availability checking
     """
     
     permission_classes = [IsAuthenticated]
@@ -935,7 +916,6 @@ class PlanCompatibilityCheckView(APIView):
 class PlanRecommendationView(APIView):
     """
     Get plan recommendations
-    UPDATED: Consider time availability in recommendations
     """
     
     permission_classes = [IsAuthenticated]
@@ -975,7 +955,7 @@ class PlanRecommendationView(APIView):
                 plan_id = rec['id']
                 plan = InternetPlan.get_cached_plan(plan_id)
                 if plan:
-                    availability = plan.is_available_for_client(client_type or 'hotspot')
+                    availability = plan.is_available_for_client()
                     if availability['available']:
                         rec['availability'] = availability
                         filtered_recommendations.append(rec)
@@ -1004,7 +984,6 @@ class PlanRecommendationView(APIView):
 class TimeVariantTestView(APIView):
     """
     Test time variant configurations
-    NEW: For debugging and testing time variant logic
     """
     
     permission_classes = [IsAdminUser]

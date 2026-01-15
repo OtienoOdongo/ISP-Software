@@ -8,6 +8,7 @@ import time
 import threading
 from typing import Dict, Any, Optional, List, Union, Callable
 from dataclasses import dataclass
+from django.conf import settings
 from enum import Enum
 from datetime import datetime, timedelta
 from collections import defaultdict, deque

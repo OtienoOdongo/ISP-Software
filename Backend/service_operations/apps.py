@@ -164,7 +164,7 @@ class ServiceOperationsConfig(AppConfig):
             
             # Import models to ensure they're registered
             from service_operations.models.subscription_models import Subscription
-            from Backend.service_operations.models.activation_queue_models import ActivationQueue, OperationLog
+            from service_operations.models.activation_queue_models import ActivationQueue, OperationLog
             from service_operations.models.client_operation_models import ClientOperation
             
             # Initialize queue service
