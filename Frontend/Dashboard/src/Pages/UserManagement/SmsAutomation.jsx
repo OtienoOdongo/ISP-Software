@@ -1,2386 +1,801 @@
-
-
-
-
-
-
-
-
-// import React, { useState, useEffect, useMemo, useCallback } from 'react';
-// import { 
-//   Settings, 
-//   Bell, 
-//   MessageSquare, 
-//   Clock, 
-//   ToggleLeft, 
-//   ToggleRight,
-//   Save,
-//   Plus,
-//   Trash2,
-//   Edit,
-//   Filter,
-//   Search,
-//   Download,
-//   Upload,
-//   Play,
-//   Pause,
-//   TestTube,
-//   ChevronDown,
-//   ChevronUp,
-//   CheckCircle,
-//   XCircle,
-//   AlertCircle,
-//   User,
-//   Calendar,
-//   BarChart3,
-//   Phone,
-//   Loader,
-//   RefreshCw,
-//   BarChart2,
-//   PieChart
-// } from 'lucide-react';
-// import api from '../../api';
-// import { useAuth } from '../../context/AuthContext';
-// import { useTheme } from '../../context/ThemeContext';
-// import { FaSpinner } from 'react-icons/fa';
-
-// // Memoized components
-// const TriggerTypeIcon = React.memo(({ type }) => {
-//   const iconMap = {
-//     data_usage: BarChart3,
-//     plan_expiry: Calendar,
-//     onboarding: User,
-//     default: Bell
-//   };
-//   const Icon = iconMap[type] || iconMap.default;
-//   return <Icon size={16} />;
-// });
-
-// const TriggerTypeBadge = React.memo(({ type, theme }) => {
-//   const colorMap = useMemo(() => ({
-//     data_usage: theme === 'dark' 
-//       ? 'bg-blue-900/30 text-blue-400 border border-blue-800/50' 
-//       : 'bg-blue-100 text-blue-600',
-//     plan_expiry: theme === 'dark'
-//       ? 'bg-amber-900/30 text-amber-400 border border-amber-800/50'
-//       : 'bg-amber-100 text-amber-600',
-//     onboarding: theme === 'dark'
-//       ? 'bg-green-900/30 text-green-400 border border-green-800/50'
-//       : 'bg-green-100 text-green-600',
-//     default: theme === 'dark'
-//       ? 'bg-gray-700 text-gray-300 border border-gray-600'
-//       : 'bg-gray-100 text-gray-600'
-//   }), [theme]);
-
-//   return (
-//     <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorMap[type] || colorMap.default}`}>
-//       {type.replace('_', ' ')}
-//     </span>
-//   );
-// });
-
-// const SMSAutomation = () => {
-//   const { isAuthenticated } = useAuth();
-//   const { theme } = useTheme();
-//   const [triggers, setTriggers] = useState([]);
-//   const [settings, setSettings] = useState({
-//     enabled: true,
-//     sms_gateway: 'africas_talking',
-//     api_key: '',
-//     username: '',
-//     sender_id: '',
-//     send_time_start: '08:00',
-//     send_time_end: '20:00',
-//     max_messages_per_day: 1000,
-//     low_balance_alert: true,
-//     balance_threshold: 100,
-//     sms_balance: 0
-//   });
-//   const [analytics, setAnalytics] = useState({
-//     total_messages: 0,
-//     successful_messages: 0,
-//     failed_messages: 0,
-//     active_triggers: 0,
-//     success_rate: 0,
-//     messages_by_type: [],
-//     daily_messages: []
-//   });
-//   const [performanceData, setPerformanceData] = useState([]);
-
-//   const [editingTrigger, setEditingTrigger] = useState(null);
-//   const [newTrigger, setNewTrigger] = useState({
-//     name: '',
-//     trigger_type: 'data_usage',
-//     threshold: 80,
-//     days_before: 3,
-//     event: 'signup',
-//     message: '',
-//     enabled: true
-//   });
-
-//   const [activeTab, setActiveTab] = useState('triggers');
-//   const [searchTerm, setSearchTerm] = useState('');
-//   const [statusFilter, setStatusFilter] = useState('all');
-//   const [typeFilter, setTypeFilter] = useState('all');
-//   const [showTestModal, setShowTestModal] = useState(false);
-//   const [testRecipient, setTestRecipient] = useState('');
-//   const [testResults, setTestResults] = useState(null);
-//   const [expandedTrigger, setExpandedTrigger] = useState(null);
-//   const [isLoading, setIsLoading] = useState(true);
-//   const [error, setError] = useState(null);
-//   const [isSaving, setIsSaving] = useState(false);
-//   const [isTesting, setIsTesting] = useState(false);
-
-//   // Theme-based classes
-//   const containerClass = theme === 'dark' 
-//     ? 'bg-gradient-to-br from-gray-900 to-indigo-900 text-white min-h-screen' 
-//     : 'bg-gray-50 text-gray-800 min-h-screen';
-
-//   const cardClass = theme === 'dark'
-//     ? 'bg-gray-800/80 backdrop-blur-md border border-gray-700'
-//     : 'bg-white border border-gray-200';
-
-//   const inputClass = theme === 'dark'
-//     ? 'bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-//     : 'bg-white border-gray-300 text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500';
-
-//   const buttonClass = theme === 'dark'
-//     ? 'bg-gray-700 hover:bg-gray-600 text-gray-200 border-gray-600'
-//     : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-300';
-
-//   // Memoized filtered triggers with optimized filtering
-//   const filteredTriggers = useMemo(() => {
-//     const lowerSearch = searchTerm.toLowerCase();
-//     return triggers.filter(trigger => {
-//       const matchesSearch = trigger.name.toLowerCase().includes(lowerSearch) ||
-//                             trigger.message.toLowerCase().includes(lowerSearch);
-//       const matchesStatus = statusFilter === 'all' || 
-//                            (statusFilter === 'active' && trigger.enabled) ||
-//                            (statusFilter === 'inactive' && !trigger.enabled);
-//       const matchesType = typeFilter === 'all' || trigger.trigger_type === typeFilter;
-      
-//       return matchesSearch && matchesStatus && matchesType;
-//     });
-//   }, [triggers, searchTerm, statusFilter, typeFilter]);
-
-//   // Fetch data on component mount
-//   useEffect(() => {
-//     if (isAuthenticated) {
-//       fetchData();
-//     }
-//   }, [isAuthenticated]);
-
-//   const fetchData = useCallback(async () => {
-//     try {
-//       setIsLoading(true);
-//       setError(null);
-      
-//       const [triggersRes, settingsRes, analyticsRes, performanceRes] = await Promise.all([
-//         api.get('/api/user_management/sms-triggers/'),
-//         api.get('/api/user_management/sms-settings/'),
-//         api.get('/api/user_management/sms-analytics/'),
-//         api.get('/api/user_management/sms-performance/')
-//       ]);
-
-//       setTriggers(triggersRes.data || []);
-//       setSettings(settingsRes.data);
-//       setAnalytics(analyticsRes.data);
-//       setPerformanceData(performanceRes.data);
-      
-//     } catch (err) {
-//       setError(err.response?.data?.error || 'Failed to load SMS automation data');
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   }, []);
-
-//   const toggleTrigger = useCallback(async (id, enabled) => {
-//     try {
-//       const response = await api.patch(`/api/user_management/sms-triggers/${id}/`, { enabled: !enabled });
-//       setTriggers(prev => prev.map(trigger => trigger.id === id ? response.data : trigger));
-//     } catch (err) {
-//       setError(err.response?.data?.error || 'Failed to update trigger');
-//     }
-//   }, []);
-
-//   const saveSettings = useCallback(async () => {
-//     try {
-//       setIsSaving(true);
-//       const response = await api.put('/api/user_management/sms-settings/', settings);
-//       setSettings(response.data);
-//       alert('Settings saved successfully!');
-//     } catch (err) {
-//       setError(err.response?.data?.error || 'Failed to save settings');
-//     } finally {
-//       setIsSaving(false);
-//     }
-//   }, [settings]);
-
-//   const saveTrigger = useCallback(async () => {
-//     try {
-//       setIsSaving(true);
-//       let response;
-      
-//       if (editingTrigger) {
-//         response = await api.put(`/api/user_management/sms-triggers/${editingTrigger.id}/`, editingTrigger);
-//         setTriggers(prev => prev.map(trigger => trigger.id === editingTrigger.id ? response.data : trigger));
-//       } else {
-//         response = await api.post('/api/user_management/sms-triggers/', newTrigger);
-//         setTriggers(prev => [...prev, response.data]);
-//         setNewTrigger({
-//           name: '',
-//           trigger_type: 'data_usage',
-//           threshold: 80,
-//           days_before: 3,
-//           event: 'signup',
-//           message: '',
-//           enabled: true
-//         });
-//       }
-      
-//       setEditingTrigger(null);
-//     } catch (err) {
-//       setError(err.response?.data?.error || 'Failed to save trigger');
-//     } finally {
-//       setIsSaving(false);
-//     }
-//   }, [editingTrigger, newTrigger]);
-
-//   const deleteTrigger = useCallback(async (id) => {
-//     if (!window.confirm('Are you sure you want to delete this trigger?')) return;
-    
-//     try {
-//       await api.delete(`/api/user_management/sms-triggers/${id}/`);
-//       setTriggers(prev => prev.filter(trigger => trigger.id !== id));
-//     } catch (err) {
-//       setError(err.response?.data?.error || 'Failed to delete trigger');
-//     }
-//   }, []);
-
-//   const sendTestMessage = useCallback(async () => {
-//     if (!testRecipient.trim()) {
-//       setError('Please enter a phone number');
-//       return;
-//     }
-
-//     try {
-//       setIsTesting(true);
-//       const response = await api.post(`/api/user_management/sms-triggers/${showTestModal.id}/test/`, {
-//         recipient: testRecipient
-//       });
-      
-//       setTestResults(response.data);
-//       setTimeout(() => {
-//         setShowTestModal(false);
-//         setTestRecipient('');
-//         setTestResults(null);
-//       }, 2000);
-//     } catch (err) {
-//       setError(err.response?.data?.error || 'Failed to send test message');
-//     } finally {
-//       setIsTesting(false);
-//     }
-//   }, [testRecipient, showTestModal]);
-
-//   const exportTriggers = useCallback(() => {
-//     const csvContent = triggers.reduce((acc, trigger) => {
-//       const row = `"${trigger.name}",${trigger.trigger_type},${trigger.threshold || ''},${trigger.days_before || ''},${trigger.event || ''},"${trigger.message.replace(/"/g, '""')}",${trigger.enabled},${trigger.sent_count},${trigger.success_rate},${trigger.last_triggered || ''}`;
-//       return acc + row + '\n';
-//     }, 'Name,Type,Threshold,Days Before,Event,Message,Enabled,Sent Count,Success Rate,Last Triggered\n');
-    
-//     const blob = new Blob([csvContent], { type: 'text/csv' });
-//     const url = URL.createObjectURL(blob);
-//     const a = document.createElement('a');
-//     a.href = url;
-//     a.download = 'sms_triggers_export.csv';
-//     a.click();
-//     URL.revokeObjectURL(url);
-//   }, [triggers]);
-
-//   const importTriggers = useCallback((event) => {
-//     const file = event.target.files[0];
-//     if (file) {
-//       const reader = new FileReader();
-//       reader.onload = async (e) => {
-//         const csv = e.target.result;
-//         alert('Triggers imported successfully');
-//         fetchData();
-//       };
-//       reader.readAsText(file);
-//     }
-//   }, [fetchData]);
-
-//   const formatDate = useCallback((dateString) => {
-//     if (!dateString) return 'Never';
-//     return new Date(dateString).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-//   }, []);
-
-//   if (isLoading) return (
-//     <div className={`p-4 sm:p-6 max-w-7xl mx-auto flex justify-center items-center min-h-screen transition-colors duration-300 ${containerClass}`}>
-//       <FaSpinner className="animate-spin text-4xl text-blue-600 dark:text-blue-400" />
-//     </div>
-//   );
-
-//   if (!isAuthenticated) return (
-//     <div className={`p-4 sm:p-6 max-w-7xl mx-auto transition-colors duration-300 ${containerClass}`}>
-//       <p className="text-center text-red-500 dark:text-red-400">Please log in to access SMS automation.</p>
-//     </div>
-//   );
-
-//   return (
-//     <div className={`p-4 sm:p-6 max-w-7xl mx-auto transition-colors duration-300 ${containerClass}`}>
-//       {error && (
-//         <div className={`mb-4 p-4 rounded-lg flex justify-between items-center ${
-//           theme === 'dark' 
-//             ? 'bg-red-900/30 text-red-400 border border-red-800/50' 
-//             : 'bg-red-100 text-red-700'
-//         }`}>
-//           <span>{error}</span>
-//           <button onClick={() => setError(null)} className={theme === 'dark' ? 'text-red-400' : 'text-red-700'}>
-//             <XCircle size={20} />
-//           </button>
-//         </div>
-//       )}
-
-//       <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-//         <div>
-//           <h1 className="text-2xl sm:text-3xl font-bold dark:text-white">SMS Automation</h1>
-//           <p className={`mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-//             Configure automated SMS messages based on user triggers and events
-//           </p>
-//         </div>
-//         <button
-//           onClick={fetchData}
-//           className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors duration-300 ${buttonClass}`}
-//         >
-//           <RefreshCw size={16} />
-//           Refresh
-//         </button>
-//       </div>
-
-//       <div className={`rounded-xl shadow-sm overflow-hidden mb-6 ${cardClass}`}>
-//         <div className={`flex border-b overflow-x-auto ${
-//           theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
-//         }`}>
-//           {['triggers', 'settings', 'analytics'].map((tab) => (
-//             <button
-//               key={tab}
-//               className={`flex-shrink-0 px-6 py-3 font-medium text-sm transition-colors duration-300 ${
-//                 activeTab === tab 
-//                   ? theme === 'dark'
-//                     ? 'text-blue-400 border-b-2 border-blue-400'
-//                     : 'text-blue-600 border-b-2 border-blue-600'
-//                   : theme === 'dark'
-//                   ? 'text-gray-400 hover:text-gray-300'
-//                   : 'text-gray-500 hover:text-gray-700'
-//               }`}
-//               onClick={() => setActiveTab(tab)}
-//             >
-//               {tab === 'triggers' && 'Automation Triggers'}
-//               {tab === 'settings' && 'Settings'}
-//               {tab === 'analytics' && 'Analytics'}
-//             </button>
-//           ))}
-//         </div>
-
-//         <div className="p-4 sm:p-6">
-//           {activeTab === 'triggers' && (
-//             <div className="space-y-6">
-//               <div className="flex flex-col md:flex-row gap-4 justify-between">
-//                 <div className="flex flex-col sm:flex-row gap-2 flex-1">
-//                   <div className="relative flex-1">
-//                     <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-//                       theme === 'dark' ? 'text-gray-400' : 'text-gray-400'
-//                     }`} size={16} />
-//                     <input
-//                       type="text"
-//                       placeholder="Search triggers..."
-//                       value={searchTerm}
-//                       onChange={(e) => setSearchTerm(e.target.value)}
-//                       className={`pl-10 pr-4 py-2 border rounded-lg w-full transition-colors duration-300 ${inputClass}`}
-//                     />
-//                   </div>
-                  
-//                   <select
-//                     value={statusFilter}
-//                     onChange={(e) => setStatusFilter(e.target.value)}
-//                     className={`px-4 py-2 border rounded-lg transition-colors duration-300 ${inputClass}`}
-//                   >
-//                     <option value="all">All Status</option>
-//                     <option value="active">Active</option>
-//                     <option value="inactive">Inactive</option>
-//                   </select>
-                  
-//                   <select
-//                     value={typeFilter}
-//                     onChange={(e) => setTypeFilter(e.target.value)}
-//                     className={`px-4 py-2 border rounded-lg transition-colors duration-300 ${inputClass}`}
-//                   >
-//                     <option value="all">All Types</option>
-//                     <option value="data_usage">Data Usage</option>
-//                     <option value="plan_expiry">Plan Expiry</option>
-//                     <option value="onboarding">Onboarding</option>
-//                   </select>
-//                 </div>
-                
-//                 <div className="flex gap-2 mt-4 md:mt-0">
-//                   <button
-//                     className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors duration-300 ${buttonClass}`}
-//                     onClick={exportTriggers}
-//                   >
-//                     <Download size={16} />
-//                     Export
-//                   </button>
-                  
-//                   <label className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-colors duration-300 ${buttonClass}`}>
-//                     <Upload size={16} />
-//                     Import
-//                     <input
-//                       type="file"
-//                       accept=".csv"
-//                       onChange={importTriggers}
-//                       className="hidden"
-//                     />
-//                   </label>
-                  
-//                   <button
-//                     className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300 dark:bg-blue-600 dark:hover:bg-blue-700"
-//                     onClick={() => setEditingTrigger({})}
-//                   >
-//                     <Plus size={16} />
-//                     New Trigger
-//                   </button>
-//                 </div>
-//               </div>
-
-//               <div className="space-y-4">
-//                 {filteredTriggers.length > 0 ? (
-//                   filteredTriggers.map(trigger => (
-//                     <div key={trigger.id} className={`p-4 rounded-lg border ${cardClass}`}>
-//                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-//                         <div className="flex items-start gap-3 flex-1 min-w-0">
-//                           <div className={`p-2 rounded-lg ${
-//                             trigger.trigger_type === 'data_usage' 
-//                               ? theme === 'dark' ? 'bg-blue-900/20 text-blue-400' : 'bg-blue-100 text-blue-600'
-//                               : trigger.trigger_type === 'plan_expiry'
-//                               ? theme === 'dark' ? 'bg-amber-900/20 text-amber-400' : 'bg-amber-100 text-amber-600'
-//                               : trigger.trigger_type === 'onboarding'
-//                               ? theme === 'dark' ? 'bg-green-900/20 text-green-400' : 'bg-green-100 text-green-600'
-//                               : theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'
-//                           }`}>
-//                             <TriggerTypeIcon type={trigger.trigger_type} />
-//                           </div>
-                          
-//                           <div className="flex-1 min-w-0">
-//                             <div className="flex items-center gap-2 mb-1">
-//                               <h3 className="font-medium truncate dark:text-white">{trigger.name}</h3>
-//                               <span className={`px-2 py-1 rounded-full text-xs flex-shrink-0 ${
-//                                 trigger.enabled 
-//                                   ? theme === 'dark' ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-700'
-//                                   : theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
-//                               }`}>
-//                                 {trigger.enabled ? 'Active' : 'Inactive'}
-//                               </span>
-//                             </div>
-                            
-//                             <p className={`text-sm mb-2 truncate ${
-//                               theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-//                             }`}>
-//                               {trigger.trigger_type === 'data_usage' 
-//                                 ? `Sends when data usage reaches ${trigger.threshold}%`
-//                                 : trigger.trigger_type === 'plan_expiry'
-//                                 ? `Sends ${trigger.days_before} day${trigger.days_before !== 1 ? 's' : ''} before plan expiry`
-//                                 : `Sends when a user ${trigger.event?.replace('_', ' ')}`
-//                               }
-//                             </p>
-                            
-//                             <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-xs ${
-//                               theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-//                             }`}>
-//                               <span>Created: {formatDate(trigger.created_at)}</span>
-//                               <span>Last sent: {formatDate(trigger.last_triggered)}</span>
-//                               <span>Sent: {trigger.sent_count} times</span>
-//                               <span>Success: {trigger.success_rate}%</span>
-//                             </div>
-//                           </div>
-//                         </div>
-                        
-//                         <div className="flex items-center gap-2 flex-shrink-0">
-//                           <button
-//                             className={theme === 'dark' ? 'text-gray-400 hover:text-blue-400' : 'text-gray-400 hover:text-blue-500'}
-//                             onClick={() => setShowTestModal(trigger)}
-//                             title="Test this trigger"
-//                           >
-//                             <TestTube size={16} />
-//                           </button>
-                          
-//                           <button
-//                             className={theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}
-//                             onClick={() => setEditingTrigger(trigger)}
-//                             title="Edit trigger"
-//                           >
-//                             <Edit size={16} />
-//                           </button>
-                          
-//                           <button
-//                             className={theme === 'dark' ? 'text-gray-400 hover:text-red-400' : 'text-gray-400 hover:text-red-500'}
-//                             onClick={() => deleteTrigger(trigger.id)}
-//                             title="Delete trigger"
-//                           >
-//                             <Trash2 size={16} />
-//                           </button>
-                          
-//                           <button
-//                             onClick={() => toggleTrigger(trigger.id, trigger.enabled)}
-//                             className="flex items-center"
-//                             title={trigger.enabled ? 'Disable trigger' : 'Enable trigger'}
-//                           >
-//                             {trigger.enabled ? (
-//                               <ToggleRight className={theme === 'dark' ? 'text-green-400' : 'text-green-500'} size={32} />
-//                             ) : (
-//                               <ToggleLeft className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} size={32} />
-//                             )}
-//                           </button>
-                          
-//                           <button
-//                             onClick={() => setExpandedTrigger(expandedTrigger === trigger.id ? null : trigger.id)}
-//                             className={theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}
-//                           >
-//                             {expandedTrigger === trigger.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-//                           </button>
-//                         </div>
-//                       </div>
-                      
-//                       {expandedTrigger === trigger.id && (
-//                         <div className={`mt-4 p-3 rounded border ${
-//                           theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
-//                         }`}>
-//                           <h4 className={`font-medium mb-2 ${
-//                             theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-//                           }`}>Message Template</h4>
-//                           <p className={`text-sm p-3 rounded whitespace-pre-wrap ${
-//                             theme === 'dark' ? 'bg-gray-600 text-gray-300' : 'bg-gray-100 text-gray-700'
-//                           }`}>{trigger.message}</p>
-                          
-//                           <div className="mt-3 flex gap-2">
-//                             <button
-//                               className="flex items-center gap-1 px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition-colors duration-300 dark:bg-blue-600 dark:hover:bg-blue-700"
-//                               onClick={() => {
-//                                 setEditingTrigger(trigger);
-//                                 setExpandedTrigger(null);
-//                               }}
-//                             >
-//                               <Edit size={12} />
-//                               Edit
-//                             </button>
-                            
-//                             <button
-//                               className="flex items-center gap-1 px-3 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 transition-colors duration-300 dark:bg-green-600 dark:hover:bg-green-700"
-//                               onClick={() => setShowTestModal(trigger)}
-//                             >
-//                               <TestTube size={12} />
-//                               Test
-//                             </button>
-//                           </div>
-//                         </div>
-//                       )}
-//                     </div>
-//                   ))
-//                 ) : (
-//                   <div className={`text-center py-8 ${
-//                     theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-//                   }`}>
-//                     <Bell size={32} className="mx-auto mb-2 opacity-50" />
-//                     <p>No triggers found</p>
-//                     <p className="text-sm">Create your first automation trigger to get started</p>
-//                   </div>
-//                 )}
-//               </div>
-//             </div>
-//           )}
-
-//           {activeTab === 'settings' && (
-//             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-//               <div className="lg:col-span-2 space-y-6">
-//                 <div className={`rounded-xl shadow-sm border p-6 ${cardClass}`}>
-//                   <h2 className={`text-xl font-semibold mb-4 flex items-center gap-2 ${
-//                     theme === 'dark' ? 'text-white' : 'text-gray-800'
-//                   }`}>
-//                     <Settings className={theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} size={20} />
-//                     SMS Gateway Settings
-//                   </h2>
-
-//                   <div className="space-y-4">
-//                     <div className="flex items-center justify-between">
-//                       <label className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Enable Automation</label>
-//                       <button
-//                         onClick={() => setSettings(prev => ({ ...prev, enabled: !prev.enabled }))}
-//                         className="flex items-center"
-//                       >
-//                         {settings.enabled ? (
-//                           <ToggleRight className={theme === 'dark' ? 'text-green-400' : 'text-green-500'} size={32} />
-//                         ) : (
-//                           <ToggleLeft className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} size={32} />
-//                         )}
-//                       </button>
-//                     </div>
-
-//                     <div>
-//                       <label className={`block text-sm mb-1 ${
-//                         theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-//                       }`}>SMS Gateway</label>
-//                       <select
-//                         value={settings.sms_gateway}
-//                         onChange={(e) => setSettings(prev => ({ ...prev, sms_gateway: e.target.value }))}
-//                         className={`w-full p-2 border rounded-lg transition-colors duration-300 ${inputClass}`}
-//                       >
-//                         <option value="africas_talking">Africa's Talking</option>
-//                         <option value="twilio">Twilio</option>
-//                         <option value="smpp">SMPP</option>
-//                         <option value="nexmo">Vonage (Nexmo)</option>
-//                       </select>
-//                     </div>
-
-//                     <div>
-//                       <label className={`block text-sm mb-1 ${
-//                         theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-//                       }`}>API Key</label>
-//                       <input
-//                         type="password"
-//                         value={settings.api_key}
-//                         onChange={(e) => setSettings(prev => ({ ...prev, api_key: e.target.value }))}
-//                         className={`w-full p-2 border rounded-lg transition-colors duration-300 ${inputClass}`}
-//                         placeholder="Enter API key"
-//                       />
-//                     </div>
-
-//                     <div>
-//                       <label className={`block text-sm mb-1 ${
-//                         theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-//                       }`}>Username</label>
-//                       <input
-//                         type="text"
-//                         value={settings.username}
-//                         onChange={(e) => setSettings(prev => ({ ...prev, username: e.target.value }))}
-//                         className={`w-full p-2 border rounded-lg transition-colors duration-300 ${inputClass}`}
-//                         placeholder="Enter username"
-//                       />
-//                     </div>
-
-//                     <div>
-//                       <label className={`block text-sm mb-1 ${
-//                         theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-//                       }`}>Sender ID</label>
-//                       <input
-//                         type="text"
-//                         value={settings.sender_id}
-//                         onChange={(e) => setSettings(prev => ({ ...prev, sender_id: e.target.value }))}
-//                         className={`w-full p-2 border rounded-lg transition-colors duration-300 ${inputClass}`}
-//                         placeholder="Enter sender ID"
-//                       />
-//                     </div>
-
-//                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-//                       <div>
-//                         <label className={`block text-sm mb-1 ${
-//                           theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-//                         }`}>Send Time Start</label>
-//                         <input
-//                           type="time"
-//                           value={settings.send_time_start}
-//                           onChange={(e) => setSettings(prev => ({ ...prev, send_time_start: e.target.value }))}
-//                           className={`w-full p-2 border rounded-lg transition-colors duration-300 ${inputClass}`}
-//                         />
-//                       </div>
-//                       <div>
-//                         <label className={`block text-sm mb-1 ${
-//                           theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-//                         }`}>Send Time End</label>
-//                         <input
-//                           type="time"
-//                           value={settings.send_time_end}
-//                           onChange={(e) => setSettings(prev => ({ ...prev, send_time_end: e.target.value }))}
-//                           className={`w-full p-2 border rounded-lg transition-colors duration-300 ${inputClass}`}
-//                         />
-//                       </div>
-//                     </div>
-
-//                     <div>
-//                       <label className={`block text-sm mb-1 ${
-//                         theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-//                       }`}>Max Messages Per Day</label>
-//                       <input
-//                         type="number"
-//                         value={settings.max_messages_per_day}
-//                         onChange={(e) => setSettings(prev => ({ ...prev, max_messages_per_day: parseInt(e.target.value) || 0 }))}
-//                         className={`w-full p-2 border rounded-lg transition-colors duration-300 ${inputClass}`}
-//                         min="1"
-//                       />
-//                     </div>
-
-//                     <div className="flex items-center justify-between">
-//                       <div>
-//                         <label className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Low Balance Alert</label>
-//                         <p className={`text-sm ${
-//                           theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-//                         }`}>Get notified when SMS balance is low</p>
-//                       </div>
-//                       <button
-//                         onClick={() => setSettings(prev => ({ ...prev, low_balance_alert: !prev.low_balance_alert }))}
-//                         className="flex items-center"
-//                       >
-//                         {settings.low_balance_alert ? (
-//                           <ToggleRight className={theme === 'dark' ? 'text-green-400' : 'text-green-500'} size={32} />
-//                         ) : (
-//                           <ToggleLeft className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} size={32} />
-//                         )}
-//                       </button>
-//                     </div>
-
-//                     {settings.low_balance_alert && (
-//                       <div>
-//                         <label className={`block text-sm mb-1 ${
-//                           theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-//                         }`}>Balance Threshold</label>
-//                         <input
-//                           type="number"
-//                           value={settings.balance_threshold}
-//                           onChange={(e) => setSettings(prev => ({ ...prev, balance_threshold: parseInt(e.target.value) || 0 }))}
-//                           className={`w-full p-2 border rounded-lg transition-colors duration-300 ${inputClass}`}
-//                           min="1"
-//                         />
-//                       </div>
-//                     )}
-
-//                     <button
-//                       onClick={saveSettings}
-//                       disabled={isSaving}
-//                       className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors duration-300 dark:bg-blue-600 dark:hover:bg-blue-700"
-//                     >
-//                       {isSaving ? <Loader className="animate-spin" size={16} /> : <Save size={16} />}
-//                       {isSaving ? 'Saving...' : 'Save Settings'}
-//                     </button>
-//                   </div>
-//                 </div>
-//               </div>
-
-//               <div className="space-y-6">
-//                 <div className={`rounded-xl shadow-sm border p-6 ${cardClass}`}>
-//                   <h3 className={`font-semibold mb-3 ${
-//                     theme === 'dark' ? 'text-white' : 'text-gray-800'
-//                   }`}>Available Variables</h3>
-//                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-//                     {[
-//                       { variable: '{client_id}', description: "Client's unique ID" },
-//                       { variable: '{username}', description: "Client's username" },
-//                       { variable: '{phone_number}', description: "Client's phone number" },
-//                       { variable: '{plan_name}', description: "Current plan name" },
-//                       { variable: '{data_used}', description: "Data used in GB" },
-//                       { variable: '{data_total}', description: "Total data allowance" },
-//                       { variable: '{expiry_date}', description: "Plan expiry date" },
-//                       { variable: '{renewal_link}', description: "Renewal URL" }
-//                     ].map((item, index) => (
-//                       <div key={index} className="flex justify-between items-start">
-//                         <span className={`font-mono px-1 rounded ${
-//                           theme === 'dark' 
-//                             ? 'text-blue-400 bg-blue-900/20' 
-//                             : 'text-blue-600 bg-blue-50'
-//                         }`}>{item.variable}</span>
-//                         <span className={`text-right ${
-//                           theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-//                         }`}>{item.description}</span>
-//                       </div>
-//                     ))}
-//                   </div>
-//                 </div>
-
-//                 <div className={`rounded-xl shadow-sm border p-6 ${cardClass}`}>
-//                   <h3 className={`font-semibold mb-3 ${
-//                     theme === 'dark' ? 'text-white' : 'text-gray-800'
-//                   }`}>SMS Balance</h3>
-//                   <div className="text-center py-4">
-//                     <div className={`text-3xl font-bold mb-2 ${
-//                       theme === 'dark' ? 'text-blue-500' : 'text-blue-600'
-//                     }`}>{settings.sms_balance}</div>
-//                     <p className={`text-sm ${
-//                       theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-//                     }`}>SMS credits remaining</p>
-//                   </div>
-//                   <button className="w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-300 dark:bg-green-600 dark:hover:bg-green-700">
-//                     Buy More Credits
-//                   </button>
-//                 </div>
-//               </div>
-//             </div>
-//           )}
-
-//           {activeTab === 'analytics' && (
-//             <div className="space-y-6">
-//               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-//                 {[
-//                   { label: 'Total Messages Sent', value: analytics.total_messages, icon: MessageSquare, color: 'blue' },
-//                   { label: 'Success Rate', value: `${analytics.success_rate}%`, icon: CheckCircle, color: 'green' },
-//                   { label: 'Failed Messages', value: analytics.failed_messages, icon: AlertCircle, color: 'amber' },
-//                   { label: 'Active Triggers', value: analytics.active_triggers, icon: Bell, color: 'purple' }
-//                 ].map((stat, index) => (
-//                   <div key={index} className={`p-4 rounded-lg shadow-sm border ${cardClass}`}>
-//                     <div className="flex items-center gap-3">
-//                       <div className={`p-2 rounded-lg ${
-//                         theme === 'dark' 
-//                           ? `bg-${stat.color}-900/20 text-${stat.color}-400`
-//                           : `bg-${stat.color}-100 text-${stat.color}-600`
-//                       }`}>
-//                         <stat.icon size={20} />
-//                       </div>
-//                       <div>
-//                         <p className={`text-xs ${
-//                           theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-//                         }`}>{stat.label}</p>
-//                         <p className={`font-medium text-lg ${
-//                           theme === 'dark' ? 'text-white' : 'text-gray-800'
-//                         }`}>{stat.value}</p>
-//                       </div>
-//                     </div>
-//                   </div>
-//                 ))}
-//               </div>
-              
-//               <div className={`p-4 sm:p-6 rounded-lg shadow-sm border ${cardClass}`}>
-//                 <h3 className={`font-semibold mb-4 ${
-//                   theme === 'dark' ? 'text-white' : 'text-gray-800'
-//                 }`}>Messages Sent (Last 30 Days)</h3>
-//                 <div className={`h-64 rounded-lg flex items-center justify-center ${
-//                   theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'
-//                 }`}>
-//                   {analytics.daily_messages && analytics.daily_messages.length > 0 ? (
-//                     <div className="w-full h-full p-2 sm:p-4">
-//                       <div className="flex items-end h-full gap-1 overflow-x-auto pb-4">
-//                         {analytics.daily_messages.map((day, index) => (
-//                           <div key={index} className="flex flex-col items-center flex-shrink-0" style={{ width: 'max(20px, 100% / 30)' }}>
-//                             <div 
-//                               className={`w-full rounded-t transition-all duration-500 ${
-//                                 theme === 'dark' ? 'bg-blue-600' : 'bg-blue-500'
-//                               }`}
-//                               style={{ height: `${(day.count / Math.max(...analytics.daily_messages.map(d => d.count)) * 100)}%` }}
-//                             ></div>
-//                             <div className={`text-xs mt-1 ${
-//                               theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-//                             } whitespace-nowrap transform -rotate-45 translate-y-2`}>
-//                               {new Date(day.day).getDate()}
-//                             </div>
-//                           </div>
-//                         ))}
-//                       </div>
-//                     </div>
-//                   ) : (
-//                     <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>No message data available</p>
-//                   )}
-//                 </div>
-//               </div>
-              
-//               <div className={`p-4 sm:p-6 rounded-lg shadow-sm border overflow-x-auto ${cardClass}`}>
-//                 <h3 className={`font-semibold mb-4 ${
-//                   theme === 'dark' ? 'text-white' : 'text-gray-800'
-//                 }`}>Trigger Performance</h3>
-//                 <table className="min-w-full text-sm divide-y transition-colors duration-300">
-//                   <thead>
-//                     <tr className={theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}>
-//                       <th className={`p-3 text-left ${
-//                         theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-//                       }`}>Trigger</th>
-//                       <th className={`p-3 text-left ${
-//                         theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-//                       }`}>Type</th>
-//                       <th className={`p-3 text-left ${
-//                         theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-//                       }`}>Sent</th>
-//                       <th className={`p-3 text-left ${
-//                         theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-//                       }`}>Success Rate</th>
-//                       <th className={`p-3 text-left ${
-//                         theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-//                       }`}>Last Triggered</th>
-//                     </tr>
-//                   </thead>
-//                   <tbody className={`divide-y ${
-//                     theme === 'dark' ? 'divide-gray-700' : 'divide-gray-200'
-//                   }`}>
-//                     {performanceData.length > 0 ? (
-//                       performanceData.map(trigger => (
-//                         <tr key={trigger.id} className={theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
-//                           <td className="p-3 dark:text-gray-300 truncate">{trigger.name}</td>
-//                           <td className="p-3 capitalize dark:text-gray-300 truncate">{trigger.type.replace('_', ' ')}</td>
-//                           <td className="p-3 dark:text-gray-300">{trigger.sent}</td>
-//                           <td className="p-3">
-//                             <div className={`w-24 rounded-full h-2 ${
-//                               theme === 'dark' ? 'bg-gray-600' : 'bg-gray-200'
-//                             }`}>
-//                               <div 
-//                                 className={`h-2 rounded-full transition-all duration-500 ${
-//                                   theme === 'dark' ? 'bg-green-600' : 'bg-green-500'
-//                                 }`} 
-//                                 style={{ width: `${trigger.success_rate}%` }}
-//                               ></div>
-//                             </div>
-//                             <span className={`text-xs ml-2 ${
-//                               theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-//                             }`}>{trigger.success_rate}%</span>
-//                           </td>
-//                           <td className="p-3 dark:text-gray-300 whitespace-nowrap">{formatDate(trigger.last_triggered)}</td>
-//                         </tr>
-//                       ))
-//                     ) : (
-//                       <tr>
-//                         <td colSpan="5" className={`p-4 text-center ${
-//                           theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-//                         }`}>
-//                           No performance data available
-//                         </td>
-//                       </tr>
-//                     )}
-//                   </tbody>
-//                 </table>
-//               </div>
-//             </div>
-//           )}
-//         </div>
-//       </div>
-
-//       {editingTrigger && (
-//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-//           <div className={`rounded-xl max-w-md w-full p-6 overflow-y-auto max-h-[90vh] ${
-//             theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-//           }`}>
-//             <div className="flex items-center justify-between mb-4">
-//               <h3 className={`text-lg font-bold ${
-//                 theme === 'dark' ? 'text-white' : 'text-gray-800'
-//               }`}>
-//                 {editingTrigger.id ? 'Edit Trigger' : 'Add New Trigger'}
-//               </h3>
-//               <button
-//                 onClick={() => setEditingTrigger(null)}
-//                 className={theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}
-//               >
-//                 <XCircle size={20} />
-//               </button>
-//             </div>
-
-//             <div className="space-y-4">
-//               <div>
-//                 <label className={`block text-sm mb-1 ${
-//                   theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-//                 }`}>Trigger Name</label>
-//                 <input
-//                   type="text"
-//                   value={editingTrigger.name}
-//                   onChange={(e) => setEditingTrigger(prev => ({ ...prev, name: e.target.value }))}
-//                   className={`w-full p-2 border rounded-lg transition-colors duration-300 ${
-//                     theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
-//                   }`}
-//                   placeholder="Enter trigger name"
-//                 />
-//               </div>
-
-//               <div>
-//                 <label className={`block text-sm mb-1 ${
-//                   theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-//                 }`}>Trigger Type</label>
-//                 <select
-//                   value={editingTrigger.trigger_type}
-//                   onChange={(e) => setEditingTrigger(prev => ({ ...prev, trigger_type: e.target.value }))}
-//                   className={`w-full p-2 border rounded-lg transition-colors duration-300 ${
-//                     theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
-//                   }`}
-//                 >
-//                   <option value="data_usage">Data Usage</option>
-//                   <option value="plan_expiry">Plan Expiry</option>
-//                   <option value="onboarding">Onboarding</option>
-//                 </select>
-//               </div>
-
-//               {editingTrigger.trigger_type === 'data_usage' && (
-//                 <div>
-//                   <label className={`block text-sm mb-1 ${
-//                     theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-//                   }`}>Usage Threshold (%)</label>
-//                   <input
-//                     type="number"
-//                     min="1"
-//                     max="100"
-//                     value={editingTrigger.threshold}
-//                     onChange={(e) => setEditingTrigger(prev => ({ ...prev, threshold: parseInt(e.target.value) || 0 }))}
-//                     className={`w-full p-2 border rounded-lg transition-colors duration-300 ${
-//                       theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
-//                     }`}
-//                   />
-//                 </div>
-//               )}
-
-//               {editingTrigger.trigger_type === 'plan_expiry' && (
-//                 <div>
-//                   <label className={`block text-sm mb-1 ${
-//                     theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-//                   }`}>Days Before Expiry</label>
-//                   <input
-//                     type="number"
-//                     min="0"
-//                     max="30"
-//                     value={editingTrigger.days_before}
-//                     onChange={(e) => setEditingTrigger(prev => ({ ...prev, days_before: parseInt(e.target.value) || 0 }))}
-//                     className={`w-full p-2 border rounded-lg transition-colors duration-300 ${
-//                       theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
-//                     }`}
-//                   />
-//                 </div>
-//               )}
-
-//               {editingTrigger.trigger_type === 'onboarding' && (
-//                 <div>
-//                   <label className={`block text-sm mb-1 ${
-//                     theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-//                   }`}>Event Type</label>
-//                   <select
-//                     value={editingTrigger.event}
-//                     onChange={(e) => setEditingTrigger(prev => ({ ...prev, event: e.target.value }))}
-//                     className={`w-full p-2 border rounded-lg transition-colors duration-300 ${
-//                       theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
-//                     }`}
-//                   >
-//                     <option value="signup">After Signup</option>
-//                     <option value="first_payment">After First Payment</option>
-//                     <option value="plan_activation">After Plan Activation</option>
-//                   </select>
-//                 </div>
-//               )}
-
-//               <div>
-//                 <label className={`block text-sm mb-1 ${
-//                   theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-//                 }`}>Message Template</label>
-//                 <textarea
-//                   rows={4}
-//                   value={editingTrigger.message}
-//                   onChange={(e) => setEditingTrigger(prev => ({ ...prev, message: e.target.value }))}
-//                   className={`w-full p-2 border rounded-lg transition-colors duration-300 ${
-//                     theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
-//                   }`}
-//                   placeholder="Enter your message template..."
-//                 />
-//                 <p className={`text-xs mt-1 ${
-//                   theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-//                 }`}>
-//                   Character count: {editingTrigger.message.length}/160
-//                 </p>
-//               </div>
-
-//               <button
-//                 onClick={saveTrigger}
-//                 disabled={isSaving}
-//                 className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors duration-300 dark:bg-blue-600 dark:hover:bg-blue-700"
-//               >
-//                 {isSaving ? <Loader className="animate-spin" size={16} /> : <Save size={16} />}
-//                 {isSaving ? 'Saving...' : (editingTrigger.id ? 'Update Trigger' : 'Create Trigger')}
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-
-//       {showTestModal && (
-//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-//           <div className={`rounded-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto ${
-//             theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-//           }`}>
-//             <div className="flex items-center justify-between mb-4">
-//               <h3 className={`text-lg font-bold ${
-//                 theme === 'dark' ? 'text-white' : 'text-gray-800'
-//               }`}>
-//                 Test Trigger: {showTestModal.name}
-//               </h3>
-//               <button
-//                 onClick={() => {
-//                   setShowTestModal(false);
-//                   setTestRecipient('');
-//                   setTestResults(null);
-//                 }}
-//                 className={theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}
-//               >
-//                 <XCircle size={20} />
-//               </button>
-//             </div>
-
-//             {!testResults ? (
-//               <div className="space-y-4">
-//                 <div>
-//                   <label className={`block text-sm mb-1 ${
-//                     theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-//                   }`}>Phone Number</label>
-//                   <input
-//                     type="text"
-//                     value={testRecipient}
-//                     onChange={(e) => setTestRecipient(e.target.value)}
-//                     className={`w-full p-2 border rounded-lg transition-colors duration-300 ${
-//                       theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
-//                     }`}
-//                     placeholder="+254712345678"
-//                   />
-//                 </div>
-
-//                 <div className={`p-3 rounded border ${
-//                   theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
-//                 }`}>
-//                   <h4 className={`font-medium mb-2 ${
-//                     theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-//                   }`}>Preview Message</h4>
-//                   <p className={`text-sm whitespace-pre-wrap ${
-//                     theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-//                   }`}>
-//                     {showTestModal.message
-//                       .replace('{client_id}', 'CLT-A1B2C3D4')
-//                       .replace('{username}', 'client_abc123')
-//                       .replace('{phone_number}', testRecipient || '+254712345678')
-//                       .replace('{plan_name}', 'Business 10GB')
-//                       .replace('{data_used}', '8.5')
-//                       .replace('{data_total}', '10')
-//                       .replace('{expiry_date}', '2023-12-31')
-//                       .replace('{renewal_link}', 'https://myisp.com/renew')
-//                     }
-//                   </p>
-//                 </div>
-
-//                 <button
-//                   onClick={sendTestMessage}
-//                   disabled={!testRecipient.trim() || isTesting}
-//                   className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors duration-300 dark:bg-blue-600 dark:hover:bg-blue-700"
-//                 >
-//                   {isTesting ? <Loader className="animate-spin" size={16} /> : <TestTube size={16} />}
-//                   {isTesting ? 'Sending...' : 'Send Test Message'}
-//                 </button>
-//               </div>
-//             ) : (
-//               <div className="text-center py-4">
-//                 {testResults.success ? (
-//                   <CheckCircle className="text-green-500 mx-auto mb-3" size={48} />
-//                 ) : (
-//                   <XCircle className="text-red-500 mx-auto mb-3" size={48} />
-//                 )}
-//                 <p className={`font-medium text-xl ${
-//                   testResults.success 
-//                     ? theme === 'dark' ? 'text-green-400' : 'text-green-700'
-//                     : theme === 'dark' ? 'text-red-400' : 'text-red-700'
-//                 }`}>
-//                   {testResults.message}
-//                 </p>
-//                 <p className={`text-sm mt-2 ${
-//                   theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-//                 }`}>
-//                   Sent to: {testResults.recipient}
-//                 </p>
-//                 <p className={`text-sm ${
-//                   theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-//                 }`}>
-//                   {new Date(testResults.timestamp).toLocaleString()}
-//                 </p>
-//               </div>
-//             )}
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default SMSAutomation;
-
-
-
-
-
-
-
-
-
-// SMSAutomation.jsx - COMPLETE VERSION
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { 
-  Settings, Bell, MessageSquare, Clock, ToggleLeft, ToggleRight,
-  Save, Plus, Trash2, Edit, Filter, Search, Download, Upload,
-  Play, Pause, TestTube, ChevronDown, ChevronUp, CheckCircle,
-  XCircle, AlertCircle, User, Calendar, BarChart3, Phone,
-  Loader, RefreshCw, BarChart2, PieChart, Users, Mail
+  MessageSquare, Settings, BarChart3, Filter, Users, Clock,
+  AlertCircle, CheckCircle, XCircle, RefreshCw, Search,
+  ChevronRight, Bell, Play, Pause, Zap, Activity,
+  Download, Upload, Shield, Server, Loader,
+  Menu, X, Home, Database, Cpu, Globe
 } from 'lucide-react';
-import api from '../../api';
-import { useAuth } from '../../context/AuthContext';
+import api from '../../api'
+import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext';
-import { FaSpinner } from 'react-icons/fa';
+import { useWebSocket } from '../../components/SMSAutomation/hooks/useWebSocket'
+import { useSMSData } from '../../components/SMSAutomation/hooks/useSMSData'
+import {
+  EnhancedSelect,
+  DateRangePicker,
+  ConfirmationModal,
+  LoadingOverlay,
+  EmptyState,
+  StatisticsCard,
+  ResponsiveContainer,
+  ChartTooltip
+} from '../../components/ServiceManagement/Shared/components'
 
-// Memoized components
-const TriggerTypeIcon = React.memo(({ type }) => {
-  const iconMap = {
-    data_usage: BarChart3,
-    plan_expiry: Calendar,
-    onboarding: User,
-    payment: CheckCircle,
-    system: Bell,
-    default: Bell
-  };
-  const Icon = iconMap[type] || iconMap.default;
-  return <Icon size={16} />;
-});
+// Import child components
+import GatewayManager from '../../components/SMSAutomation/components/GatewayManager'
+import TemplateManager from '../../components/SMSAutomation/components/TemplateManager'
+import MessageManager from '../../components/SMSAutomation/components/MessageManager'
+import AutomationRules from '../../components/SMSAutomation/components/AutomationRules'
+import AnalyticsDashboard from '../../components/SMSAutomation/components/AnalyticsDashboard'
+import QueueMonitor from '../../components/SMSAutomation/components/QueueMonitor'
+import ExportManager from '../../components/SMSAutomation/components/ExportManager'
 
-const TriggerTypeBadge = React.memo(({ type, theme }) => {
-  const colorMap = useMemo(() => ({
-    data_usage: theme === 'dark' 
-      ? 'bg-blue-900/30 text-blue-400 border border-blue-800/50' 
-      : 'bg-blue-100 text-blue-600',
-    plan_expiry: theme === 'dark'
-      ? 'bg-amber-900/30 text-amber-400 border border-amber-800/50'
-      : 'bg-amber-100 text-amber-600',
-    onboarding: theme === 'dark'
-      ? 'bg-green-900/30 text-green-400 border border-green-800/50'
-      : 'bg-green-100 text-green-600',
-    payment: theme === 'dark'
-      ? 'bg-purple-900/30 text-purple-400 border border-purple-800/50'
-      : 'bg-purple-100 text-purple-600',
-    default: theme === 'dark'
-      ? 'bg-gray-700 text-gray-300 border border-gray-600'
-      : 'bg-gray-100 text-gray-600'
-  }), [theme]);
-
-  const displayText = type ? type.replace(/_/g, ' ') : 'Unknown';
-
-  return (
-    <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorMap[type] || colorMap.default}`}>
-      {displayText}
-    </span>
-  );
-});
+// Import performance monitoring
+import usePerformanceMonitor from './hooks/usePerformanceMonitor';
 
 const SMSAutomation = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { theme } = useTheme();
-  const [triggers, setTriggers] = useState([]);
-  const [settings, setSettings] = useState({
-    enabled: true,
-    sms_gateway: 'africas_talking',
-    api_key: '',
-    username: '',
-    sender_id: '',
-    send_time_start: '08:00',
-    send_time_end: '20:00',
-    max_messages_per_day: 1000,
-    low_balance_alert: true,
-    balance_threshold: 100,
-    sms_balance: 0
-  });
-  const [analytics, setAnalytics] = useState({
-    total_messages: 0,
-    successful_messages: 0,
-    failed_messages: 0,
-    active_triggers: 0,
-    success_rate: 0,
-    messages_by_type: [],
-    daily_messages: []
-  });
-  const [performanceData, setPerformanceData] = useState([]);
-
-  const [editingTrigger, setEditingTrigger] = useState(null);
-  const [newTrigger, setNewTrigger] = useState({
-    name: '',
-    trigger_type: 'data_usage',
-    threshold: 80,
-    days_before: 3,
-    event: 'signup',
-    message: '',
-    enabled: true
-  });
-
-  const [activeTab, setActiveTab] = useState('triggers');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [showTestModal, setShowTestModal] = useState(false);
-  const [testRecipient, setTestRecipient] = useState('');
-  const [testResults, setTestResults] = useState(null);
-  const [expandedTrigger, setExpandedTrigger] = useState(null);
+  
+  // State management
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isTesting, setIsTesting] = useState(false);
+  const [stats, setStats] = useState({
+    today: { total: 0, sent: 0, delivered: 0, failed: 0, cost: 0 },
+    month: { total: 0, sent: 0, delivered: 0, failed: 0, cost: 0 },
+    gateways: { total: 0, online: 0, offline: 0, healthy: 0 },
+    queue: { pending: 0, processing: 0, failed: 0 },
+    performance: { avgDeliveryTime: 0, successRate: 0, throughput: 0 }
+  });
+  
+  // Mobile menu state
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Performance monitoring
+  const { performanceMetrics } = usePerformanceMonitor({
+    enabled: true,
+    collectMetrics: ['fps', 'memory', 'apiResponse']
+  });
 
-  // Theme-based classes
-  const containerClass = theme === 'dark' 
-    ? 'bg-gradient-to-br from-gray-900 to-indigo-900 text-white min-h-screen' 
-    : 'bg-gray-50 text-gray-800 min-h-screen';
+  // WebSocket integration
+  const { 
+    isConnected, 
+    realTimeUpdates,
+    subscribeToGateway,
+    unsubscribeFromGateway,
+    connectionError
+  } = useWebSocket({
+    autoConnect: true,
+    reconnectInterval: 5000
+  });
 
-  const cardClass = theme === 'dark'
-    ? 'bg-gray-800/80 backdrop-blur-md border border-gray-700'
-    : 'bg-white border border-gray-200';
+  // Custom hook for SMS data management
+  const {
+    gateways,
+    templates,
+    messages,
+    rules,
+    queue,
+    analytics,
+    refreshData,
+    loading,
+    error: dataError
+  } = useSMSData();
 
-  const inputClass = theme === 'dark'
-    ? 'bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-    : 'bg-white border-gray-300 text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500';
+  // Ref for performance monitoring
+  const renderCountRef = useRef(0);
+  
+  // Theme classes with responsive breakpoints
+  const themeClasses = useMemo(() => ({
+    container: theme === 'dark' 
+      ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white'
+      : 'bg-gradient-to-br from-gray-50 via-white to-gray-50 text-gray-800',
+    
+    card: theme === 'dark'
+      ? 'bg-gray-800/80 backdrop-blur-md border border-gray-700 shadow-xl'
+      : 'bg-white/95 backdrop-blur-md border border-gray-200 shadow-lg',
+    
+    input: theme === 'dark'
+      ? 'bg-gray-700/70 border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+      : 'bg-white border-gray-300 text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+    
+    button: {
+      primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all duration-200',
+      secondary: theme === 'dark'
+        ? 'bg-gray-700/80 hover:bg-gray-600/90 text-gray-200 border border-gray-600 hover:border-gray-500'
+        : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 hover:border-gray-400 shadow-sm',
+      danger: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white',
+      success: 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white',
+      warning: 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white'
+    },
+    
+    // Mobile-specific classes
+    mobileMenu: theme === 'dark'
+      ? 'bg-gray-900 border-r border-gray-800'
+      : 'bg-white border-r border-gray-200'
+  }), [theme]);
 
-  const buttonClass = theme === 'dark'
-    ? 'bg-gray-700 hover:bg-gray-600 text-gray-200 border-gray-600'
-    : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-300';
+  // Tab configuration with responsive icons
+  const tabs = useMemo(() => [
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, color: 'blue', mobileIcon: Home },
+    { id: 'messages', label: 'Messages', icon: MessageSquare, color: 'green', mobileIcon: MessageSquare },
+    { id: 'templates', label: 'Templates', icon: Users, color: 'purple', mobileIcon: Users },
+    { id: 'gateways', label: 'Gateways', icon: Server, color: 'orange', mobileIcon: Server },
+    { id: 'automation', label: 'Automation', icon: Zap, color: 'yellow', mobileIcon: Zap },
+    { id: 'queue', label: 'Queue', icon: Clock, color: 'indigo', mobileIcon: Clock },
+    { id: 'analytics', label: 'Analytics', icon: Filter, color: 'pink', mobileIcon: BarChart3 },
+    { id: 'export', label: 'Export', icon: Download, color: 'teal', mobileIcon: Download }
+  ], []);
 
-  // Memoized filtered triggers with optimized filtering
-  const filteredTriggers = useMemo(() => {
-    const lowerSearch = searchTerm.toLowerCase();
-    return triggers.filter(trigger => {
-      const matchesSearch = trigger.name.toLowerCase().includes(lowerSearch) ||
-                            trigger.message.toLowerCase().includes(lowerSearch);
-      const matchesStatus = statusFilter === 'all' || 
-                           (statusFilter === 'active' && trigger.enabled) ||
-                           (statusFilter === 'inactive' && !trigger.enabled);
-      const matchesType = typeFilter === 'all' || trigger.trigger_type === typeFilter;
-      
-      return matchesSearch && matchesStatus && matchesType;
-    });
-  }, [triggers, searchTerm, statusFilter, typeFilter]);
-
-  // Fetch data on component mount
+  // Fetch initial data with error handling and retry logic
   useEffect(() => {
     if (isAuthenticated) {
-      fetchData();
+      fetchInitialData();
     }
   }, [isAuthenticated]);
 
-  const fetchData = useCallback(async () => {
+  const fetchInitialData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const [triggersRes, settingsRes, analyticsRes, performanceRes] = await Promise.all([
-        api.get('/api/user_management/sms-triggers/'),
-        api.get('/api/user_management/sms-settings/'),
-        api.get('/api/user_management/sms-analytics/'),
-        api.get('/api/user_management/sms-performance/')
+      // Parallel API calls with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      
+      const [statsRes, performanceRes] = await Promise.all([
+        api.get('/api/sms/dashboard/', { signal: controller.signal }),
+        api.get('/api/sms/performance/', { signal: controller.signal }).catch(() => ({ data: {} }))
       ]);
-
-      setTriggers(triggersRes.data || []);
-      setSettings(settingsRes.data || {});
-      setAnalytics(analyticsRes.data || {});
-      setPerformanceData(performanceRes.data || []);
+      
+      clearTimeout(timeoutId);
+      
+      setStats({
+        ...statsRes.data,
+        performance: performanceRes.data || stats.performance
+      });
       
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to load SMS automation data');
-      console.error('Error fetching SMS automation data:', err);
+      if (err.name === 'AbortError') {
+        setError('Request timeout. Please check your connection.');
+      } else {
+        setError(err.response?.data?.error || 'Failed to load SMS automation data');
+      }
+      console.error('Error fetching SMS data:', err);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const toggleTrigger = useCallback(async (id, enabled) => {
-    try {
-      const response = await api.patch(`/api/user_management/sms-triggers/${id}/`, { enabled: !enabled });
-      setTriggers(prev => prev.map(trigger => trigger.id === id ? response.data : trigger));
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to update trigger');
+  // Handle real-time updates
+  useEffect(() => {
+    if (realTimeUpdates) {
+      handleRealTimeUpdate(realTimeUpdates);
+    }
+  }, [realTimeUpdates]);
+
+  const handleRealTimeUpdate = useCallback((update) => {
+    switch (update.type) {
+      case 'sms_sent':
+        setStats(prev => ({
+          ...prev,
+          today: {
+            ...prev.today,
+            sent: prev.today.sent + 1,
+            total: prev.today.total + 1
+          }
+        }));
+        break;
+        
+      case 'sms_delivered':
+        setStats(prev => ({
+          ...prev,
+          today: {
+            ...prev.today,
+            delivered: prev.today.delivered + 1
+          }
+        }));
+        break;
+        
+      case 'gateway_update':
+        // Update gateway stats
+        break;
+        
+      case 'queue_update':
+        setStats(prev => ({
+          ...prev,
+          queue: update.data
+        }));
+        break;
+        
+      case 'performance_update':
+        setStats(prev => ({
+          ...prev,
+          performance: update.data
+        }));
+        break;
     }
   }, []);
 
-  const saveSettings = useCallback(async () => {
-    try {
-      setIsSaving(true);
-      const response = await api.put('/api/user_management/sms-settings/', settings);
-      setSettings(response.data);
-      setError(null);
-      alert('Settings saved successfully!');
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to save settings');
-    } finally {
-      setIsSaving(false);
-    }
-  }, [settings]);
-
-  const saveTrigger = useCallback(async () => {
-    try {
-      setIsSaving(true);
-      let response;
-      
-      if (editingTrigger && editingTrigger.id) {
-        response = await api.put(`/api/user_management/sms-triggers/${editingTrigger.id}/`, editingTrigger);
-        setTriggers(prev => prev.map(trigger => trigger.id === editingTrigger.id ? response.data : trigger));
-      } else {
-        response = await api.post('/api/user_management/sms-triggers/', newTrigger);
-        setTriggers(prev => [...prev, response.data]);
-        setNewTrigger({
-          name: '',
-          trigger_type: 'data_usage',
-          threshold: 80,
-          days_before: 3,
-          event: 'signup',
-          message: '',
-          enabled: true
-        });
-      }
-      
-      setEditingTrigger(null);
-      setError(null);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to save trigger');
-    } finally {
-      setIsSaving(false);
-    }
-  }, [editingTrigger, newTrigger]);
-
-  const deleteTrigger = useCallback(async (id) => {
-    if (!window.confirm('Are you sure you want to delete this trigger?')) return;
+  // Optimized search function with debouncing
+  const debouncedSearch = useCallback((searchTerm, data, fields) => {
+    if (!searchTerm.trim()) return data;
     
-    try {
-      await api.delete(`/api/user_management/sms-triggers/${id}/`);
-      setTriggers(prev => prev.filter(trigger => trigger.id !== id));
-      setError(null);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to delete trigger');
-    }
+    const lowerSearch = searchTerm.toLowerCase();
+    return data.filter(item => 
+      fields.some(field => 
+        String(item[field] || '').toLowerCase().includes(lowerSearch)
+      )
+    );
   }, []);
 
-  const sendTestMessage = useCallback(async () => {
-    if (!testRecipient.trim()) {
-      setError('Please enter a phone number');
-      return;
-    }
-
-    try {
-      setIsTesting(true);
-      const response = await api.post(`/api/user_management/sms-triggers/${showTestModal.id}/test/`, {
-        recipient: testRecipient
-      });
-      
-      setTestResults(response.data);
-      setTimeout(() => {
-        setShowTestModal(false);
-        setTestRecipient('');
-        setTestResults(null);
-      }, 3000);
-      setError(null);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to send test message');
-    } finally {
-      setIsTesting(false);
-    }
-  }, [testRecipient, showTestModal]);
-
-  const exportTriggers = useCallback(() => {
-    const csvContent = triggers.reduce((acc, trigger) => {
-      const row = `"${trigger.name}",${trigger.trigger_type},${trigger.threshold || ''},${trigger.days_before || ''},${trigger.event || ''},"${trigger.message.replace(/"/g, '""')}",${trigger.enabled},${trigger.sent_count},${trigger.success_rate},${trigger.last_triggered || ''}`;
-      return acc + row + '\n';
-    }, 'Name,Type,Threshold,Days Before,Event,Message,Enabled,Sent Count,Success Rate,Last Triggered\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'sms_triggers_export.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [triggers]);
-
-  const importTriggers = useCallback((event) => {
-    const file = event.target.files[0];
-    if (file) {
-      // Implement CSV import logic here
-      alert('Trigger import functionality would be implemented here');
-    }
+  // Mobile responsive handlers
+  const handleTabChange = useCallback((tabId) => {
+    setActiveTab(tabId);
+    setIsMobileMenuOpen(false);
   }, []);
 
-  const formatDate = useCallback((dateString) => {
-    if (!dateString) return 'Never';
-    return new Date(dateString).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-  }, []);
+  // Performance optimization: Memoize expensive calculations
+  const performanceData = useMemo(() => ({
+    deliveryRate: stats.today.total > 0 
+      ? Math.round((stats.today.delivered / stats.today.total) * 100)
+      : 0,
+    estimatedQueueTime: stats.queue.pending > 0
+      ? Math.round(stats.queue.pending / (stats.performance.throughput || 1))
+      : 0,
+    gatewayHealth: stats.gateways.total > 0
+      ? Math.round((stats.gateways.healthy / stats.gateways.total) * 100)
+      : 0
+  }), [stats]);
 
-  if (isLoading) return (
-    <div className={`p-4 sm:p-6 max-w-7xl mx-auto flex justify-center items-center min-h-screen transition-colors duration-300 ${containerClass}`}>
-      <FaSpinner className="animate-spin text-4xl text-blue-600 dark:text-blue-400" />
-    </div>
-  );
+  // Render count for debugging
+  useEffect(() => {
+    renderCountRef.current += 1;
+    if (renderCountRef.current > 10) {
+      console.warn('High render count detected in SMSAutomation:', renderCountRef.current);
+    }
+  });
 
-  if (!isAuthenticated) return (
-    <div className={`p-4 sm:p-6 max-w-7xl mx-auto transition-colors duration-300 ${containerClass}`}>
-      <p className="text-center text-red-500 dark:text-red-400">Please log in to access SMS automation.</p>
-    </div>
-  );
-
-  return (
-    <div className={`p-4 sm:p-6 max-w-7xl mx-auto transition-colors duration-300 ${containerClass}`}>
-      {error && (
-        <div className={`mb-4 p-4 rounded-lg flex justify-between items-center ${
-          theme === 'dark' 
-            ? 'bg-red-900/30 text-red-400 border border-red-800/50' 
-            : 'bg-red-100 text-red-700'
-        }`}>
-          <span>{error}</span>
-          <button onClick={() => setError(null)} className={theme === 'dark' ? 'text-red-400' : 'text-red-700'}>
-            <XCircle size={20} />
+  if (!isAuthenticated) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${themeClasses.container}`}>
+        <div className="text-center p-8">
+          <Shield className="w-16 h-16 mx-auto mb-6 text-gray-400" />
+          <h2 className="text-2xl font-bold mb-3">Authentication Required</h2>
+          <p className="text-gray-500 mb-6 max-w-md mx-auto">
+            Please log in to access the SMS automation system
+          </p>
+          <button
+            onClick={() => window.location.href = '/login'}
+            className={`px-6 py-3 rounded-lg font-medium ${themeClasses.button.primary}`}
+          >
+            Go to Login
           </button>
         </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <LoadingOverlay 
+        isVisible={true} 
+        message="Loading SMS Automation Dashboard..." 
+        theme={theme}
+        progress={true}
+      />
+    );
+  }
+
+  return (
+    <div className={`min-h-screen transition-all duration-300 ${themeClasses.container}`}>
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
       )}
 
-      <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold dark:text-white">SMS Automation</h1>
-          <p className={`mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-            Configure automated SMS messages based on user triggers and events
-          </p>
-        </div>
-        <button
-          onClick={fetchData}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors duration-300 ${buttonClass}`}
-        >
-          <RefreshCw size={16} />
-          Refresh
-        </button>
-      </div>
-
-      <div className={`rounded-xl shadow-sm overflow-hidden mb-6 ${cardClass}`}>
-        <div className={`flex border-b overflow-x-auto ${
-          theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
-        }`}>
-          {['triggers', 'settings', 'analytics'].map((tab) => (
-            <button
-              key={tab}
-              className={`flex-shrink-0 px-6 py-3 font-medium text-sm transition-colors duration-300 ${
-                activeTab === tab 
-                  ? theme === 'dark'
-                    ? 'text-blue-400 border-b-2 border-blue-400'
-                    : 'text-blue-600 border-b-2 border-blue-600'
-                  : theme === 'dark'
-                  ? 'text-gray-400 hover:text-gray-300'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab === 'triggers' && 'Automation Triggers'}
-              {tab === 'settings' && 'Settings'}
-              {tab === 'analytics' && 'Analytics'}
-            </button>
-          ))}
-        </div>
-
-        <div className="p-4 sm:p-6">
-          {activeTab === 'triggers' && (
-            <div className="space-y-6">
-              <div className="flex flex-col md:flex-row gap-4 justify-between">
-                <div className="flex flex-col sm:flex-row gap-2 flex-1">
-                  <div className="relative flex-1">
-                    <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-                      theme === 'dark' ? 'text-gray-400' : 'text-gray-400'
-                    }`} size={16} />
-                    <input
-                      type="text"
-                      placeholder="Search triggers..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className={`pl-10 pr-4 py-2 border rounded-lg w-full transition-colors duration-300 ${inputClass}`}
-                    />
-                  </div>
-                  
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className={`px-4 py-2 border rounded-lg transition-colors duration-300 ${inputClass}`}
-                  >
-                    <option value="all">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                  
-                  <select
-                    value={typeFilter}
-                    onChange={(e) => setTypeFilter(e.target.value)}
-                    className={`px-4 py-2 border rounded-lg transition-colors duration-300 ${inputClass}`}
-                  >
-                    <option value="all">All Types</option>
-                    <option value="data_usage">Data Usage</option>
-                    <option value="plan_expiry">Plan Expiry</option>
-                    <option value="onboarding">Onboarding</option>
-                    <option value="payment">Payment</option>
-                  </select>
-                </div>
-                
-                <div className="flex gap-2 mt-4 md:mt-0">
-                  <button
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors duration-300 ${buttonClass}`}
-                    onClick={exportTriggers}
-                  >
-                    <Download size={16} />
-                    Export
-                  </button>
-                  
-                  <label className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-colors duration-300 ${buttonClass}`}>
-                    <Upload size={16} />
-                    Import
-                    <input
-                      type="file"
-                      accept=".csv"
-                      onChange={importTriggers}
-                      className="hidden"
-                    />
-                  </label>
-                  
-                  <button
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300 dark:bg-blue-600 dark:hover:bg-blue-700"
-                    onClick={() => setEditingTrigger({})}
-                  >
-                    <Plus size={16} />
-                    New Trigger
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {filteredTriggers.length > 0 ? (
-                  filteredTriggers.map(trigger => (
-                    <div key={trigger.id} className={`p-4 rounded-lg border ${cardClass}`}>
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div className="flex items-start gap-3 flex-1 min-w-0">
-                          <div className={`p-2 rounded-lg ${
-                            trigger.trigger_type === 'data_usage' 
-                              ? theme === 'dark' ? 'bg-blue-900/20 text-blue-400' : 'bg-blue-100 text-blue-600'
-                              : trigger.trigger_type === 'plan_expiry'
-                              ? theme === 'dark' ? 'bg-amber-900/20 text-amber-400' : 'bg-amber-100 text-amber-600'
-                              : trigger.trigger_type === 'onboarding'
-                              ? theme === 'dark' ? 'bg-green-900/20 text-green-400' : 'bg-green-100 text-green-600'
-                              : theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'
-                          }`}>
-                            <TriggerTypeIcon type={trigger.trigger_type} />
-                          </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-medium truncate dark:text-white">{trigger.name}</h3>
-                              <span className={`px-2 py-1 rounded-full text-xs flex-shrink-0 ${
-                                trigger.enabled 
-                                  ? theme === 'dark' ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-700'
-                                  : theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
-                              }`}>
-                                {trigger.enabled ? 'Active' : 'Inactive'}
-                              </span>
-                            </div>
-                            
-                            <p className={`text-sm mb-2 truncate ${
-                              theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                            }`}>
-                              {trigger.trigger_type === 'data_usage' 
-                                ? `Sends when data usage reaches ${trigger.threshold}%`
-                                : trigger.trigger_type === 'plan_expiry'
-                                ? `Sends ${trigger.days_before} day${trigger.days_before !== 1 ? 's' : ''} before plan expiry`
-                                : `Sends when a user ${trigger.event?.replace('_', ' ')}`
-                              }
-                            </p>
-                            
-                            <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-xs ${
-                              theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                            }`}>
-                              <span>Created: {formatDate(trigger.created_at)}</span>
-                              <span>Last sent: {formatDate(trigger.last_triggered)}</span>
-                              <span>Sent: {trigger.sent_count || 0} times</span>
-                              <span>Success: {trigger.success_rate || 0}%</span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <button
-                            className={theme === 'dark' ? 'text-gray-400 hover:text-blue-400' : 'text-gray-400 hover:text-blue-500'}
-                            onClick={() => setShowTestModal(trigger)}
-                            title="Test this trigger"
-                          >
-                            <TestTube size={16} />
-                          </button>
-                          
-                          <button
-                            className={theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}
-                            onClick={() => setEditingTrigger(trigger)}
-                            title="Edit trigger"
-                          >
-                            <Edit size={16} />
-                          </button>
-                          
-                          <button
-                            className={theme === 'dark' ? 'text-gray-400 hover:text-red-400' : 'text-gray-400 hover:text-red-500'}
-                            onClick={() => deleteTrigger(trigger.id)}
-                            title="Delete trigger"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                          
-                          <button
-                            onClick={() => toggleTrigger(trigger.id, trigger.enabled)}
-                            className="flex items-center"
-                            title={trigger.enabled ? 'Disable trigger' : 'Enable trigger'}
-                          >
-                            {trigger.enabled ? (
-                              <ToggleRight className={theme === 'dark' ? 'text-green-400' : 'text-green-500'} size={32} />
-                            ) : (
-                              <ToggleLeft className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} size={32} />
-                            )}
-                          </button>
-                          
-                          <button
-                            onClick={() => setExpandedTrigger(expandedTrigger === trigger.id ? null : trigger.id)}
-                            className={theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}
-                          >
-                            {expandedTrigger === trigger.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                          </button>
-                        </div>
-                      </div>
-                      
-                      {expandedTrigger === trigger.id && (
-                        <div className={`mt-4 p-3 rounded border ${
-                          theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
-                        }`}>
-                          <h4 className={`font-medium mb-2 ${
-                            theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                          }`}>Message Template</h4>
-                          <p className={`text-sm p-3 rounded whitespace-pre-wrap ${
-                            theme === 'dark' ? 'bg-gray-600 text-gray-300' : 'bg-gray-100 text-gray-700'
-                          }`}>{trigger.message}</p>
-                          
-                          <div className="mt-3 flex gap-2">
-                            <button
-                              className="flex items-center gap-1 px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition-colors duration-300 dark:bg-blue-600 dark:hover:bg-blue-700"
-                              onClick={() => {
-                                setEditingTrigger(trigger);
-                                setExpandedTrigger(null);
-                              }}
-                            >
-                              <Edit size={12} />
-                              Edit
-                            </button>
-                            
-                            <button
-                              className="flex items-center gap-1 px-3 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 transition-colors duration-300 dark:bg-green-600 dark:hover:bg-green-700"
-                              onClick={() => setShowTestModal(trigger)}
-                            >
-                              <TestTube size={12} />
-                              Test
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  <div className={`text-center py-8 ${
-                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
-                    <Bell size={32} className="mx-auto mb-2 opacity-50" />
-                    <p>No triggers found</p>
-                    <p className="text-sm">Create your first automation trigger to get started</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'settings' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
-                <div className={`rounded-xl shadow-sm border p-6 ${cardClass}`}>
-                  <h2 className={`text-xl font-semibold mb-4 flex items-center gap-2 ${
-                    theme === 'dark' ? 'text-white' : 'text-gray-800'
-                  }`}>
-                    <Settings className={theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} size={20} />
-                    SMS Gateway Settings
-                  </h2>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <label className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Enable Automation</label>
-                      <button
-                        onClick={() => setSettings(prev => ({ ...prev, enabled: !prev.enabled }))}
-                        className="flex items-center"
-                      >
-                        {settings.enabled ? (
-                          <ToggleRight className={theme === 'dark' ? 'text-green-400' : 'text-green-500'} size={32} />
-                        ) : (
-                          <ToggleLeft className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} size={32} />
-                        )}
-                      </button>
-                    </div>
-
-                    <div>
-                      <label className={`block text-sm mb-1 ${
-                        theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                      }`}>SMS Gateway</label>
-                      <select
-                        value={settings.sms_gateway}
-                        onChange={(e) => setSettings(prev => ({ ...prev, sms_gateway: e.target.value }))}
-                        className={`w-full p-2 border rounded-lg transition-colors duration-300 ${inputClass}`}
-                      >
-                        <option value="africas_talking">Africa's Talking</option>
-                        <option value="twilio">Twilio</option>
-                        <option value="smpp">SMPP</option>
-                        <option value="nexmo">Vonage (Nexmo)</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className={`block text-sm mb-1 ${
-                        theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                      }`}>API Key</label>
-                      <input
-                        type="password"
-                        value={settings.api_key}
-                        onChange={(e) => setSettings(prev => ({ ...prev, api_key: e.target.value }))}
-                        className={`w-full p-2 border rounded-lg transition-colors duration-300 ${inputClass}`}
-                        placeholder="Enter API key"
-                      />
-                    </div>
-
-                    <div>
-                      <label className={`block text-sm mb-1 ${
-                        theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                      }`}>Username</label>
-                      <input
-                        type="text"
-                        value={settings.username}
-                        onChange={(e) => setSettings(prev => ({ ...prev, username: e.target.value }))}
-                        className={`w-full p-2 border rounded-lg transition-colors duration-300 ${inputClass}`}
-                        placeholder="Enter username"
-                      />
-                    </div>
-
-                    <div>
-                      <label className={`block text-sm mb-1 ${
-                        theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                      }`}>Sender ID</label>
-                      <input
-                        type="text"
-                        value={settings.sender_id}
-                        onChange={(e) => setSettings(prev => ({ ...prev, sender_id: e.target.value }))}
-                        className={`w-full p-2 border rounded-lg transition-colors duration-300 ${inputClass}`}
-                        placeholder="Enter sender ID"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className={`block text-sm mb-1 ${
-                          theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                        }`}>Send Time Start</label>
-                        <input
-                          type="time"
-                          value={settings.send_time_start}
-                          onChange={(e) => setSettings(prev => ({ ...prev, send_time_start: e.target.value }))}
-                          className={`w-full p-2 border rounded-lg transition-colors duration-300 ${inputClass}`}
-                        />
-                      </div>
-                      <div>
-                        <label className={`block text-sm mb-1 ${
-                          theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                        }`}>Send Time End</label>
-                        <input
-                          type="time"
-                          value={settings.send_time_end}
-                          onChange={(e) => setSettings(prev => ({ ...prev, send_time_end: e.target.value }))}
-                          className={`w-full p-2 border rounded-lg transition-colors duration-300 ${inputClass}`}
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className={`block text-sm mb-1 ${
-                        theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                      }`}>Max Messages Per Day</label>
-                      <input
-                        type="number"
-                        value={settings.max_messages_per_day}
-                        onChange={(e) => setSettings(prev => ({ ...prev, max_messages_per_day: parseInt(e.target.value) || 0 }))}
-                        className={`w-full p-2 border rounded-lg transition-colors duration-300 ${inputClass}`}
-                        min="1"
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <label className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Low Balance Alert</label>
-                        <p className={`text-sm ${
-                          theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                        }`}>Get notified when SMS balance is low</p>
-                      </div>
-                      <button
-                        onClick={() => setSettings(prev => ({ ...prev, low_balance_alert: !prev.low_balance_alert }))}
-                        className="flex items-center"
-                      >
-                        {settings.low_balance_alert ? (
-                          <ToggleRight className={theme === 'dark' ? 'text-green-400' : 'text-green-500'} size={32} />
-                        ) : (
-                          <ToggleLeft className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} size={32} />
-                        )}
-                      </button>
-                    </div>
-
-                    {settings.low_balance_alert && (
-                      <div>
-                        <label className={`block text-sm mb-1 ${
-                          theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                        }`}>Balance Threshold</label>
-                        <input
-                          type="number"
-                          value={settings.balance_threshold}
-                          onChange={(e) => setSettings(prev => ({ ...prev, balance_threshold: parseInt(e.target.value) || 0 }))}
-                          className={`w-full p-2 border rounded-lg transition-colors duration-300 ${inputClass}`}
-                          min="1"
-                        />
-                      </div>
-                    )}
-
-                    <button
-                      onClick={saveSettings}
-                      disabled={isSaving}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors duration-300 dark:bg-blue-600 dark:hover:bg-blue-700"
-                    >
-                      {isSaving ? <Loader className="animate-spin" size={16} /> : <Save size={16} />}
-                      {isSaving ? 'Saving...' : 'Save Settings'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className={`rounded-xl shadow-sm border p-6 ${cardClass}`}>
-                  <h3 className={`font-semibold mb-3 ${
-                    theme === 'dark' ? 'text-white' : 'text-gray-800'
-                  }`}>Available Variables</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                    {[
-                      { variable: '{client_id}', description: "Client's unique ID" },
-                      { variable: '{username}', description: "Client's username" },
-                      { variable: '{phone_number}', description: "Client's phone number" },
-                      { variable: '{plan_name}', description: "Current plan name" },
-                      { variable: '{data_used}', description: "Data used in GB" },
-                      { variable: '{data_total}', description: "Total data allowance" },
-                      { variable: '{expiry_date}', description: "Plan expiry date" },
-                      { variable: '{renewal_link}', description: "Renewal URL" },
-                      { variable: '{remaining_days}', description: "Days until plan expiry" },
-                      { variable: '{usage_percentage}', description: "Data usage percentage" }
-                    ].map((item, index) => (
-                      <div key={index} className="flex justify-between items-start">
-                        <span className={`font-mono px-1 rounded ${
-                          theme === 'dark' 
-                            ? 'text-blue-400 bg-blue-900/20' 
-                            : 'text-blue-600 bg-blue-50'
-                        }`}>{item.variable}</span>
-                        <span className={`text-right ${
-                          theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-                        }`}>{item.description}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className={`rounded-xl shadow-sm border p-6 ${cardClass}`}>
-                  <h3 className={`font-semibold mb-3 ${
-                    theme === 'dark' ? 'text-white' : 'text-gray-800'
-                  }`}>SMS Balance</h3>
-                  <div className="text-center py-4">
-                    <div className={`text-3xl font-bold mb-2 ${
-                      theme === 'dark' ? 'text-blue-500' : 'text-blue-600'
-                    }`}>{settings.sms_balance || 0}</div>
-                    <p className={`text-sm ${
-                      theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                    }`}>SMS credits remaining</p>
-                  </div>
-                  <button className="w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-300 dark:bg-green-600 dark:hover:bg-green-700">
-                    Buy More Credits
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'analytics' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { label: 'Total Messages Sent', value: analytics.total_messages || 0, icon: MessageSquare, color: 'blue' },
-                  { label: 'Success Rate', value: `${analytics.success_rate || 0}%`, icon: CheckCircle, color: 'green' },
-                  { label: 'Failed Messages', value: analytics.failed_messages || 0, icon: AlertCircle, color: 'amber' },
-                  { label: 'Active Triggers', value: analytics.active_triggers || 0, icon: Bell, color: 'purple' }
-                ].map((stat, index) => (
-                  <div key={index} className={`p-4 rounded-lg shadow-sm border ${cardClass}`}>
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${
-                        theme === 'dark' 
-                          ? `bg-${stat.color}-900/20 text-${stat.color}-400`
-                          : `bg-${stat.color}-100 text-${stat.color}-600`
-                      }`}>
-                        <stat.icon size={20} />
-                      </div>
-                      <div>
-                        <p className={`text-xs ${
-                          theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                        }`}>{stat.label}</p>
-                        <p className={`font-medium text-lg ${
-                          theme === 'dark' ? 'text-white' : 'text-gray-800'
-                        }`}>{stat.value}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              <div className={`p-4 sm:p-6 rounded-lg shadow-sm border ${cardClass}`}>
-                <h3 className={`font-semibold mb-4 ${
-                  theme === 'dark' ? 'text-white' : 'text-gray-800'
-                }`}>Messages Sent (Last 30 Days)</h3>
-                <div className={`h-64 rounded-lg flex items-center justify-center ${
-                  theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'
-                }`}>
-                  {analytics.daily_messages && analytics.daily_messages.length > 0 ? (
-                    <div className="w-full h-full p-2 sm:p-4">
-                      <div className="flex items-end h-full gap-1 overflow-x-auto pb-4">
-                        {analytics.daily_messages.map((day, index) => (
-                          <div key={index} className="flex flex-col items-center flex-shrink-0" style={{ width: 'max(20px, 100% / 30)' }}>
-                            <div 
-                              className={`w-full rounded-t transition-all duration-500 ${
-                                theme === 'dark' ? 'bg-blue-600' : 'bg-blue-500'
-                              }`}
-                              style={{ height: `${Math.max(10, (day.count / Math.max(...analytics.daily_messages.map(d => d.count || 1)) * 100))}%` }}
-                            ></div>
-                            <div className={`text-xs mt-1 ${
-                              theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                            } whitespace-nowrap transform -rotate-45 translate-y-2`}>
-                              {new Date(day.day).getDate()}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>No message data available</p>
-                  )}
-                </div>
-              </div>
-              
-              <div className={`p-4 sm:p-6 rounded-lg shadow-sm border overflow-x-auto ${cardClass}`}>
-                <h3 className={`font-semibold mb-4 ${
-                  theme === 'dark' ? 'text-white' : 'text-gray-800'
-                }`}>Trigger Performance</h3>
-                <table className="min-w-full text-sm divide-y transition-colors duration-300">
-                  <thead>
-                    <tr className={theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}>
-                      <th className={`p-3 text-left ${
-                        theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                      }`}>Trigger</th>
-                      <th className={`p-3 text-left ${
-                        theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                      }`}>Type</th>
-                      <th className={`p-3 text-left ${
-                        theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                      }`}>Sent</th>
-                      <th className={`p-3 text-left ${
-                        theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                      }`}>Success Rate</th>
-                      <th className={`p-3 text-left ${
-                        theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                      }`}>Last Triggered</th>
-                    </tr>
-                  </thead>
-                  <tbody className={`divide-y ${
-                    theme === 'dark' ? 'divide-gray-700' : 'divide-gray-200'
-                  }`}>
-                    {performanceData.length > 0 ? (
-                      performanceData.map(trigger => (
-                        <tr key={trigger.id} className={theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
-                          <td className="p-3 dark:text-gray-300 truncate">{trigger.name}</td>
-                          <td className="p-3 capitalize dark:text-gray-300 truncate">{trigger.type?.replace('_', ' ') || 'Unknown'}</td>
-                          <td className="p-3 dark:text-gray-300">{trigger.sent || 0}</td>
-                          <td className="p-3">
-                            <div className={`w-24 rounded-full h-2 ${
-                              theme === 'dark' ? 'bg-gray-600' : 'bg-gray-200'
-                            }`}>
-                              <div 
-                                className={`h-2 rounded-full transition-all duration-500 ${
-                                  theme === 'dark' ? 'bg-green-600' : 'bg-green-500'
-                                }`} 
-                                style={{ width: `${trigger.success_rate || 0}%` }}
-                              ></div>
-                            </div>
-                            <span className={`text-xs ml-2 ${
-                              theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                            }`}>{trigger.success_rate || 0}%</span>
-                          </td>
-                          <td className="p-3 dark:text-gray-300 whitespace-nowrap">{formatDate(trigger.last_triggered)}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="5" className={`p-4 text-center ${
-                          theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                        }`}>
-                          No performance data available
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {editingTrigger && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className={`rounded-xl max-w-md w-full p-6 overflow-y-auto max-h-[90vh] ${
-            theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-          }`}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className={`text-lg font-bold ${
-                theme === 'dark' ? 'text-white' : 'text-gray-800'
-              }`}>
-                {editingTrigger.id ? 'Edit Trigger' : 'Add New Trigger'}
-              </h3>
+      {/* Mobile Sidebar */}
+      <div className={`
+        fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:hidden
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+        ${themeClasses.mobileMenu}
+      `}>
+        <div className="flex flex-col h-full">
+          {/* Mobile Header */}
+          <div className="p-4 border-b border-gray-700 dark:border-gray-600">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <MessageSquare className="w-6 h-6 text-blue-500" />
+                SMS
+              </h2>
               <button
-                onClick={() => setEditingTrigger(null)}
-                className={theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-800"
               >
-                <XCircle size={20} />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className={`block text-sm ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                }`}>Trigger Name</label>
-                <input
-                  type="text"
-                  value={editingTrigger.name || ''}
-                  onChange={(e) => setEditingTrigger(prev => ({ ...prev, name: e.target.value }))}
-                  className={`w-full p-2 border rounded-lg transition-colors duration-300 ${
-                    theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
-                  }`}
-                  placeholder="Enter trigger name"
-                />
-              </div>
-
-              <div>
-                <label className={`block text-sm ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                }`}>Trigger Type</label>
-                <select
-                  value={editingTrigger.trigger_type || 'data_usage'}
-                  onChange={(e) => setEditingTrigger(prev => ({ ...prev, trigger_type: e.target.value }))}
-                  className={`w-full p-2 border rounded-lg transition-colors duration-300 ${
-                    theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
-                  }`}
-                >
-                  <option value="data_usage">Data Usage Alert</option>
-                  <option value="plan_expiry">Plan Expiry Warning</option>
-                  <option value="onboarding">Onboarding Message</option>
-                  <option value="payment">Payment Confirmation</option>
-                  <option value="system">System Notification</option>
-                </select>
-              </div>
-
-              {editingTrigger.trigger_type === 'data_usage' && (
-                <div>
-                  <label className={`block text-sm ${
-                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                  }`}>Usage Threshold (%)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="100"
-                    value={editingTrigger.threshold || 80}
-                    onChange={(e) => setEditingTrigger(prev => ({ ...prev, threshold: parseInt(e.target.value) || 0 }))}
-                    className={`w-full p-2 border rounded-lg transition-colors duration-300 ${
-                      theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
-                    }`}
-                  />
-                </div>
-              )}
-
-              {editingTrigger.trigger_type === 'plan_expiry' && (
-                <div>
-                  <label className={`block text-sm ${
-                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                  }`}>Days Before Expiry</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="30"
-                    value={editingTrigger.days_before || 3}
-                    onChange={(e) => setEditingTrigger(prev => ({ ...prev, days_before: parseInt(e.target.value) || 0 }))}
-                    className={`w-full p-2 border rounded-lg transition-colors duration-300 ${
-                      theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
-                    }`}
-                  />
-                </div>
-              )}
-
-              {editingTrigger.trigger_type === 'onboarding' && (
-                <div>
-                  <label className={`block text-sm ${
-                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                  }`}>Event Type</label>
-                  <select
-                    value={editingTrigger.event || 'signup'}
-                    onChange={(e) => setEditingTrigger(prev => ({ ...prev, event: e.target.value }))}
-                    className={`w-full p-2 border rounded-lg transition-colors duration-300 ${
-                      theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
-                    }`}
-                  >
-                    <option value="signup">After Signup</option>
-                    <option value="first_payment">After First Payment</option>
-                    <option value="plan_activation">After Plan Activation</option>
-                  </select>
-                </div>
-              )}
-
-              <div>
-                <label className={`block text-sm ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                }`}>Message Template</label>
-                <textarea
-                  rows={4}
-                  value={editingTrigger.message || ''}
-                  onChange={(e) => setEditingTrigger(prev => ({ ...prev, message: e.target.value }))}
-                  className={`w-full p-2 border rounded-lg transition-colors duration-300 ${
-                    theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
-                  }`}
-                  placeholder="Enter your message template..."
-                />
-                <p className={`text-xs mt-1 ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                }`}>
-                  Character count: {(editingTrigger.message || '').length}/160
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <label className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Enable Trigger</label>
-                <button
-                  onClick={() => setEditingTrigger(prev => ({ ...prev, enabled: !prev.enabled }))}
-                  className="flex items-center"
-                >
-                  {editingTrigger.enabled ? (
-                    <ToggleRight className={theme === 'dark' ? 'text-green-400' : 'text-green-500'} size={32} />
-                  ) : (
-                    <ToggleLeft className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} size={32} />
-                  )}
-                </button>
-              </div>
-
-              <button
-                onClick={saveTrigger}
-                disabled={isSaving}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors duration-300 dark:bg-blue-600 dark:hover:bg-blue-700"
-              >
-                {isSaving ? <Loader className="animate-spin" size={16} /> : <Save size={16} />}
-                {isSaving ? 'Saving...' : (editingTrigger.id ? 'Update Trigger' : 'Create Trigger')}
+                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
-        </div>
-      )}
 
-      {showTestModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className={`rounded-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto ${
-            theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-          }`}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className={`text-lg font-bold ${
-                theme === 'dark' ? 'text-white' : 'text-gray-800'
-              }`}>
-                Test Trigger: {showTestModal.name}
-              </h3>
-              <button
-                onClick={() => {
-                  setShowTestModal(false);
-                  setTestRecipient('');
-                  setTestResults(null);
-                }}
-                className={theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}
-              >
-                <XCircle size={20} />
-              </button>
+          {/* Mobile Navigation */}
+          <nav className="flex-1 overflow-y-auto p-4">
+            <div className="space-y-1">
+              {tabs.map((tab) => {
+                const Icon = tab.mobileIcon || tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                      activeTab === tab.id
+                        ? theme === 'dark'
+                          ? `bg-${tab.color}-900/30 text-${tab.color}-400 border-l-4 border-${tab.color}-400`
+                          : `bg-${tab.color}-50 text-${tab.color}-600 border-l-4 border-${tab.color}-500`
+                        : theme === 'dark'
+                        ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-800'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    {tab.label}
+                    {tab.id === 'queue' && stats.queue.pending > 0 && (
+                      <span className="ml-auto px-2 py-1 text-xs bg-red-500 text-white rounded-full">
+                        {stats.queue.pending}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+
+          {/* Mobile Footer */}
+          <div className="p-4 border-t border-gray-700 dark:border-gray-600">
+            <div className="flex items-center justify-between text-sm">
+              <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>
+                {user?.username || 'User'}
+              </span>
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${
+                  isConnected ? 'bg-green-500' : 'bg-red-500'
+                }`} />
+                <span>{isConnected ? 'Online' : 'Offline'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Layout */}
+      <div className="flex flex-col lg:flex-row min-h-screen">
+        {/* Desktop Sidebar */}
+        <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 z-30">
+          <div className={`flex flex-col flex-1 border-r ${theme === 'dark' ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'}`}>
+            {/* Logo */}
+            <div className="p-6">
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                <MessageSquare className="w-8 h-8 text-blue-500" />
+                SMS Automation
+              </h1>
+              <p className={`text-sm mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                Enterprise SMS Platform
+              </p>
             </div>
 
-            {!testResults ? (
-              <div className="space-y-4">
-                <div>
-                  <label className={`block text-sm mb-1 ${
-                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                  }`}>Phone Number</label>
-                  <input
-                    type="text"
-                    value={testRecipient}
-                    onChange={(e) => setTestRecipient(e.target.value)}
-                    className={`w-full p-2 border rounded-lg transition-colors duration-300 ${
-                      theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+            {/* Navigation */}
+            <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                      activeTab === tab.id
+                        ? theme === 'dark'
+                          ? `bg-${tab.color}-900/30 text-${tab.color}-400`
+                          : `bg-${tab.color}-50 text-${tab.color}-600`
+                        : theme === 'dark'
+                        ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-800'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                     }`}
-                    placeholder="+254712345678"
-                  />
-                </div>
+                  >
+                    <Icon className="w-5 h-5" />
+                    {tab.label}
+                    {tab.id === 'queue' && stats.queue.pending > 0 && (
+                      <span className="ml-auto px-2 py-1 text-xs bg-red-500 text-white rounded-full">
+                        {stats.queue.pending}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
 
-                <div className={`p-3 rounded border ${
-                  theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
+            {/* User Info */}
+            <div className={`p-4 border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
                 }`}>
-                  <h4 className={`font-medium mb-2 ${
-                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                  }`}>Preview Message</h4>
-                  <p className={`text-sm whitespace-pre-wrap ${
-                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                  }`}>
-                    {showTestModal.message
-                      .replace('{client_id}', 'CLT-TEST123')
-                      .replace('{username}', 'test_user')
-                      .replace('{phone_number}', testRecipient || '+254712345678')
-                      .replace('{plan_name}', 'Business 10GB')
-                      .replace('{data_used}', '8.5')
-                      .replace('{data_total}', '10')
-                      .replace('{expiry_date}', '2023-12-31')
-                      .replace('{renewal_link}', 'https://myisp.com/renew')
-                      .replace('{remaining_days}', '5')
-                      .replace('{usage_percentage}', '85')
-                    }
+                  <Users className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{user?.username || 'User'}</p>
+                  <p className={`text-xs truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {user?.email || 'admin@example.com'}
                   </p>
                 </div>
+              </div>
+            </div>
+          </div>
+        </aside>
 
+        {/* Main Content */}
+        <main className="flex-1 lg:pl-64">
+          {/* Top Bar */}
+          <div className={`sticky top-0 z-20 px-4 sm:px-6 py-4 border-b backdrop-blur-md ${
+            theme === 'dark' 
+              ? 'border-gray-800 bg-gray-900/95' 
+              : 'border-gray-200 bg-white/95'
+          }`}>
+            <div className="flex items-center justify-between">
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+
+              {/* Page Title */}
+              <div className="flex-1 lg:ml-4">
+                <h2 className="text-lg sm:text-xl font-semibold">
+                  {tabs.find(t => t.id === activeTab)?.label || 'Dashboard'}
+                </h2>
+                <p className={`text-sm hidden sm:block ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {activeTab === 'dashboard' && 'Real-time monitoring and analytics'}
+                  {activeTab === 'messages' && 'Send and manage SMS messages'}
+                  {activeTab === 'templates' && 'Create and manage message templates'}
+                  {activeTab === 'gateways' && 'Configure SMS gateway connections'}
+                  {activeTab === 'automation' && 'Set up automated SMS triggers'}
+                  {activeTab === 'queue' && 'Monitor and manage processing queue'}
+                  {activeTab === 'analytics' && 'Detailed analytics and reports'}
+                  {activeTab === 'export' && 'Export data in various formats'}
+                </p>
+              </div>
+
+              {/* Status Indicators */}
+              <div className="flex items-center gap-3">
+                {/* Connection Status */}
+                <div className="hidden sm:flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'
+                  }`} />
+                  <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {isConnected ? 'Live' : 'Offline'}
+                  </span>
+                </div>
+
+                {/* Performance Indicator */}
+                {performanceMetrics.fps > 0 && (
+                  <div className="hidden md:flex items-center gap-2">
+                    <Cpu className="w-4 h-4 text-gray-400" />
+                    <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {Math.round(performanceMetrics.fps)} FPS
+                    </span>
+                  </div>
+                )}
+
+                {/* Refresh Button */}
                 <button
-                  onClick={sendTestMessage}
-                  disabled={!testRecipient.trim() || isTesting}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors duration-300 dark:bg-blue-600 dark:hover:bg-blue-700"
+                  onClick={refreshData}
+                  disabled={loading}
+                  className={`p-2 rounded-lg ${themeClasses.button.secondary}`}
+                  title="Refresh data"
                 >
-                  {isTesting ? <Loader className="animate-spin" size={16} /> : <TestTube size={16} />}
-                  {isTesting ? 'Sending...' : 'Send Test Message'}
+                  <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                 </button>
               </div>
-            ) : (
-              <div className="text-center py-4">
-                {testResults.success ? (
-                  <CheckCircle className="text-green-500 mx-auto mb-3" size={48} />
-                ) : (
-                  <XCircle className="text-red-500 mx-auto mb-3" size={48} />
-                )}
-                <p className={`font-medium text-xl ${
-                  testResults.success 
-                    ? theme === 'dark' ? 'text-green-400' : 'text-green-700'
-                    : theme === 'dark' ? 'text-red-400' : 'text-red-700'
-                }`}>
-                  {testResults.message}
-                </p>
-                <p className={`text-sm mt-2 ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                }`}>
-                  Sent to: {testResults.recipient}
-                </p>
-                <p className={`text-sm ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                }`}>
-                  {new Date(testResults.timestamp).toLocaleString()}
-                </p>
+            </div>
+          </div>
+
+          {/* Error Alert */}
+          {(error || dataError || connectionError) && (
+            <div className="mx-4 mt-4">
+              <div className={`p-4 rounded-lg flex items-start justify-between ${
+                theme === 'dark' 
+                  ? 'bg-red-900/30 text-red-400 border border-red-800/50' 
+                  : 'bg-red-50 text-red-700 border border-red-200'
+              }`}>
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Error</p>
+                    <p className="text-sm mt-1">{error || dataError || connectionError}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setError(null);
+                    if (connectionError) refreshData();
+                  }}
+                  className="p-1 hover:opacity-70"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Content Area */}
+          <div className="p-4 sm:p-6">
+            {/* Dashboard Overview (Only shown on dashboard tab) */}
+            {activeTab === 'dashboard' && (
+              <div className="mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <StatisticsCard
+                    title="Today's Messages"
+                    value={stats.today.total}
+                    change={stats.today.total > 0 ? performanceData.deliveryRate : 0}
+                    icon={MessageSquare}
+                    theme={theme}
+                    trend={stats.today.total > 0 ? 'up' : 'neutral'}
+                    format="number"
+                    size="lg"
+                  />
+                  
+                  <StatisticsCard
+                    title="Delivery Rate"
+                    value={performanceData.deliveryRate}
+                    change={5}
+                    icon={CheckCircle}
+                    theme={theme}
+                    trend="up"
+                    format="percentage"
+                    size="lg"
+                  />
+                  
+                  <StatisticsCard
+                    title="Queue Pending"
+                    value={stats.queue.pending}
+                    change={performanceData.estimatedQueueTime}
+                    icon={Clock}
+                    theme={theme}
+                    format="number"
+                    size="lg"
+                    suffix="messages"
+                    subText={`~${performanceData.estimatedQueueTime}m to clear`}
+                  />
+                  
+                  <StatisticsCard
+                    title="Gateway Health"
+                    value={performanceData.gatewayHealth}
+                    change={stats.gateways.online - stats.gateways.offline}
+                    icon={Server}
+                    theme={theme}
+                    trend={stats.gateways.healthy > stats.gateways.total / 2 ? 'up' : 'down'}
+                    format="percentage"
+                    size="lg"
+                    subText={`${stats.gateways.online}/${stats.gateways.total} online`}
+                  />
+                </div>
               </div>
             )}
+
+            {/* Main Content Container */}
+            <div className={`rounded-xl overflow-hidden ${themeClasses.card}`}>
+              {/* Tab Navigation (Desktop) */}
+              <div className={`hidden lg:flex border-b ${
+                theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
+              }`}>
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-shrink-0 px-6 py-3 font-medium text-sm transition-all duration-300 flex items-center gap-2 ${
+                      activeTab === tab.id
+                        ? theme === 'dark'
+                          ? `text-${tab.color}-400 border-b-2 border-${tab.color}-400`
+                          : `text-${tab.color}-600 border-b-2 border-${tab.color}-600`
+                        : theme === 'dark'
+                        ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-800/50'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <tab.icon className="w-4 h-4" />
+                    {tab.label}
+                    {tab.id === 'queue' && stats.queue.pending > 0 && (
+                      <span className="ml-2 px-2 py-0.5 text-xs bg-red-500 text-white rounded-full">
+                        {stats.queue.pending}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Tab Content */}
+              <div className="p-4 sm:p-6">
+                {activeTab === 'dashboard' && (
+                  <div className="space-y-6">
+                    <AnalyticsDashboard
+                      stats={stats}
+                      analytics={analytics}
+                      theme={theme}
+                    />
+                    
+                    {/* Quick Actions */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <button
+                        onClick={() => setActiveTab('messages')}
+                        className={`p-4 rounded-lg text-left transition-all hover:scale-[1.02] ${themeClasses.card}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-blue-100 text-blue-600">
+                            <MessageSquare className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium">Send SMS</h3>
+                            <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                              Send a new message
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                      
+                      <button
+                        onClick={() => setActiveTab('queue')}
+                        className={`p-4 rounded-lg text-left transition-all hover:scale-[1.02] ${themeClasses.card}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-orange-100 text-orange-600">
+                            <Clock className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium">Queue Monitor</h3>
+                            <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                              {stats.queue.pending} pending messages
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                      
+                      <button
+                        onClick={() => setActiveTab('gateways')}
+                        className={`p-4 rounded-lg text-left transition-all hover:scale-[1.02] ${themeClasses.card}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-green-100 text-green-600">
+                            <Server className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium">Gateway Status</h3>
+                            <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                              {stats.gateways.online}/{stats.gateways.total} online
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'messages' && (
+                  <MessageManager
+                    messages={messages}
+                    loading={loading}
+                    theme={theme}
+                    refreshData={refreshData}
+                  />
+                )}
+
+                {activeTab === 'templates' && (
+                  <TemplateManager
+                    templates={templates}
+                    loading={loading}
+                    theme={theme}
+                    refreshData={refreshData}
+                  />
+                )}
+
+                {activeTab === 'gateways' && (
+                  <GatewayManager
+                    gateways={gateways}
+                    loading={loading}
+                    theme={theme}
+                    refreshData={refreshData}
+                  />
+                )}
+
+                {activeTab === 'automation' && (
+                  <AutomationRules
+                    rules={rules}
+                    loading={loading}
+                    theme={theme}
+                    refreshData={refreshData}
+                  />
+                )}
+
+                {activeTab === 'queue' && (
+                  <QueueMonitor
+                    queue={queue}
+                    loading={loading}
+                    theme={theme}
+                    refreshData={refreshData}
+                    realTimeUpdates={realTimeUpdates}
+                  />
+                )}
+
+                {activeTab === 'analytics' && (
+                  <AnalyticsDashboard
+                    stats={stats}
+                    analytics={analytics}
+                    theme={theme}
+                    detailed={true}
+                  />
+                )}
+
+                {activeTab === 'export' && (
+                  <ExportManager
+                    messages={messages}
+                    templates={templates}
+                    gateways={gateways}
+                    rules={rules}
+                    theme={theme}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Performance Footer */}
+          <div className={`px-4 sm:px-6 py-3 border-t ${
+            theme === 'dark' ? 'border-gray-800 bg-gray-900/50' : 'border-gray-200 bg-gray-50/50'
+          }`}>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-sm">
+              <div className={`flex items-center gap-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                <span className="flex items-center gap-1">
+                  <Database className="w-3 h-3" />
+                  {messages.length} messages
+                </span>
+                <span className="flex items-center gap-1">
+                  <Cpu className="w-3 h-3" />
+                  {Math.round(performanceMetrics.memory || 0)} MB
+                </span>
+                <span className="flex items-center gap-1">
+                  <Globe className="w-3 h-3" />
+                  {gateways.filter(g => g.is_online).length} gateways online
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {!isConnected && (
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    theme === 'dark' ? 'bg-yellow-900/50 text-yellow-400' : 'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    Reconnecting...
+                  </span>
+                )}
+                <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>
+                  v2.0.0 • {new Date().getFullYear()}
+                </span>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+
+      {/* WebSocket Connection Status (Mobile) */}
+      {!isConnected && (
+        <div className="fixed bottom-4 right-4 p-3 bg-yellow-500 text-white rounded-lg shadow-lg animate-pulse lg:hidden">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4" />
+            <span className="text-sm">Reconnecting...</span>
           </div>
         </div>
       )}
