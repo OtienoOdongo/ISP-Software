@@ -319,7 +319,7 @@ FIXED: Updated URL patterns to match existing view classes
 """
 
 from django.urls import path
-from internet_plans.api.plan_views import (
+from internet_plans.api.views.plan_views import (
     InternetPlanListView,
     InternetPlanDetailView,
     TimeVariantConfigView,
@@ -331,12 +331,12 @@ from internet_plans.api.plan_views import (
     PlanRecommendationView,
     TimeVariantTestView
 )
-from internet_plans.api.template_views import (
+from internet_plans.api.views.template_views import (
     PlanTemplateListView,
     PlanTemplateDetailView,
     CreatePlanFromTemplateView
 )
-from internet_plans.api.pricing_views import (
+from internet_plans.api.views.pricing_views import (
     PriceMatrixListView,
     PriceMatrixDetailView,
     DiscountRuleListView,

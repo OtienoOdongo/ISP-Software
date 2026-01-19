@@ -220,3 +220,4 @@ prometheus_client==0.23.1
 et_xmlfile==2.0.0
 openpyxl==3.1.5
 xlsxwriter==3.2.9
+psutil==7.2.1

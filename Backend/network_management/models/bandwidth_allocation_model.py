@@ -138,7 +138,7 @@ from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from account.models.admin_model import Client
-from internet_plans.models.create_plan_models import InternetPlan
+from internet_plans.models.plan_models import InternetPlan
 from payments.models.payment_config_model import Transaction
 
 class QoSProfile(models.Model):

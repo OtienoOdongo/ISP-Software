@@ -371,7 +371,8 @@ logger = logging.getLogger(__name__)
 # Import existing models to avoid duplication
 from payments.models.transaction_log_model import TransactionLog
 from payments.models.payment_reconciliation_model import ReconciliationStats
-from internet_plans.models.create_plan_models import InternetPlan, Subscription, PlanTemplate
+from internet_plans.models.plan_models import InternetPlan, PlanTemplate
+from service_operations.models.subscription_models import Subscription
 from network_management.models.router_management_model import (
     Router, RouterStats, HotspotUser, PPPoEUser, RouterHealthCheck,
     RouterConnectionTest

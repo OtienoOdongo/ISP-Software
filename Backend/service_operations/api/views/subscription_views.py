@@ -32,13 +32,13 @@ import uuid
 import json
 
 # Model imports
-from service_operations.models.activation_queue_model import ActivationQueue
-from service_operations.models.client_operations_model import ClientOperation
-from service_operations.models.operations_log_model import OperationLog
-from service_operations.models.subscription_model import Subscription, UsageTracking
+from service_operations.models.activation_queue_models import ActivationQueue
+from service_operations.models.client_operation_models import ClientOperation
+from service_operations.models.operation_log_models import OperationLog
+from service_operations.models.subscription_models import Subscription, UsageTracking
 
 # Serializer imports
-from service_operations.serializers.subscription_serializer import (
+from service_operations.serializers.subscription_serializers import (
     SubscriptionSerializer,
     SubscriptionCreateSerializer,
     SubscriptionUpdateSerializer,
@@ -47,6 +47,7 @@ from service_operations.serializers.subscription_serializer import (
     SubscriptionUsageSerializer,
     SubscriptionListSerializer,
     SubscriptionDetailSerializer,
+    SubscriptionSuspendSerializer,
     SubscriptionSuspendSerializer,
     SubscriptionExtendSerializer,
     SubscriptionStatisticsSerializer,

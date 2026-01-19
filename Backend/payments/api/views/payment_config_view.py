@@ -3797,7 +3797,8 @@ from payments.serializers.payment_config_serializer import (
     PaymentVerificationSerializer,
 )
 from account.models.admin_model import Client
-from internet_plans.models.create_plan_models import InternetPlan, Subscription
+from internet_plans.models.plan_models import InternetPlan
+from service_operations.models.subscription_models import Subscription
 from django.conf import settings
 from django.core.paginator import Paginator
 from django.contrib.auth import get_user_model

@@ -12,6 +12,7 @@ import logging
 import uuid
 import re
 from typing import Dict, Any, Optional
+from datetime import timedelta 
 
 from service_operations.models import Subscription, UsageTracking
 from service_operations.utils.validators import (
@@ -411,6 +412,198 @@ class SubscriptionRenewSerializer(serializers.Serializer):
         return data
 
 
+
+
+class SubscriptionSuspendSerializer(serializers.Serializer):
+    """
+    Serializer for suspending subscriptions
+    """
+    
+    reason = serializers.CharField(
+        required=True,
+        max_length=255,
+        help_text="Reason for suspension"
+    )
+    
+    suspend_immediately = serializers.BooleanField(
+        default=True,
+        help_text="Suspend immediately or schedule"
+    )
+    
+    scheduled_suspend = serializers.DateTimeField(
+        required=False,
+        allow_null=True,
+        help_text="Scheduled suspension time"
+    )
+    
+    notify_client = serializers.BooleanField(
+        default=True,
+        help_text="Send notification to client"
+    )
+    
+    metadata = serializers.JSONField(
+        required=False,
+        default=dict,
+        help_text="Suspension metadata"
+    )
+    
+    def validate(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate suspension request"""
+        errors = {}
+        
+        # Validate scheduled suspension time
+        scheduled_suspend = data.get('scheduled_suspend')
+        if scheduled_suspend:
+            if scheduled_suspend <= timezone.now():
+                errors['scheduled_suspend'] = 'Scheduled suspension must be in the future'
+            if scheduled_suspend > timezone.now() + timezone.timedelta(days=30):
+                errors['scheduled_suspend'] = 'Cannot schedule suspension more than 30 days in advance'
+        
+        # Validate reason
+        reason = data.get('reason', '').strip()
+        if not reason:
+            errors['reason'] = 'Suspension reason is required'
+        elif len(reason) < 10:
+            errors['reason'] = 'Reason should be at least 10 characters'
+        
+        if errors:
+            raise serializers.ValidationError(errors)
+        
+        return data
+
+
+
+
+class SubscriptionExtendSerializer(serializers.Serializer):
+    """
+    Serializer for extending subscription duration
+    """
+    
+    extension_days = serializers.IntegerField(
+        required=False,
+        min_value=1,
+        max_value=365,
+        default=None,
+        allow_null=True,
+        help_text="Number of days to extend"
+    )
+    
+    extension_hours = serializers.IntegerField(
+        required=False,
+        min_value=1,
+        max_value=744,
+        default=None,
+        allow_null=True,
+        help_text="Number of hours to extend"
+    )
+    
+    new_end_date = serializers.DateTimeField(
+        required=False,
+        allow_null=True,
+        help_text="Specific new end date (alternative to duration)"
+    )
+    
+    reason = serializers.CharField(
+        required=False,
+        max_length=255,
+        default="Subscription extension",
+        help_text="Reason for extension"
+    )
+    
+    prorate_amount = serializers.DecimalField(
+        required=False,
+        max_digits=10,
+        decimal_places=2,
+        allow_null=True,
+        help_text="Prorated amount for extension"
+    )
+    
+    notify_client = serializers.BooleanField(
+        default=True,
+        help_text="Send notification to client"
+    )
+    
+    metadata = serializers.JSONField(
+        required=False,
+        default=dict,
+        help_text="Extension metadata"
+    )
+    
+    def validate(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate extension request"""
+        errors = {}
+        
+        extension_days = data.get('extension_days')
+        extension_hours = data.get('extension_hours')
+        new_end_date = data.get('new_end_date')
+        
+        # Validate that at least one extension method is provided
+        if not any([extension_days, extension_hours, new_end_date]):
+            errors['non_field_errors'] = 'Either extension_days, extension_hours, or new_end_date must be provided'
+        
+        # Validate extension durations
+        if extension_days and extension_days > 365:
+            errors['extension_days'] = 'Cannot extend more than 365 days at once'
+        
+        if extension_hours and extension_hours > 744:  # 31 days
+            errors['extension_hours'] = 'Cannot extend more than 744 hours (31 days) at once'
+        
+        # Validate new end date
+        if new_end_date:
+            # Get current subscription end date
+            instance = self.context.get('subscription')
+            if instance and instance.end_date:
+                if new_end_date <= instance.end_date:
+                    errors['new_end_date'] = 'New end date must be after current end date'
+                if new_end_date > instance.end_date + timezone.timedelta(days=365):
+                    errors['new_end_date'] = 'Cannot extend more than 365 days from current end date'
+            else:
+                if new_end_date <= timezone.now():
+                    errors['new_end_date'] = 'New end date must be in the future'
+        
+        # Ensure only one extension method is used
+        method_count = sum([1 for x in [extension_days, extension_hours, new_end_date] if x is not None])
+        if method_count > 1:
+            errors['non_field_errors'] = 'Only one extension method (days, hours, or date) can be specified'
+        
+        # Validate prorate amount if provided
+        prorate_amount = data.get('prorate_amount')
+        if prorate_amount is not None:
+            if prorate_amount < 0:
+                errors['prorate_amount'] = 'Prorate amount cannot be negative'
+        
+        if errors:
+            raise serializers.ValidationError(errors)
+        
+        return data
+    
+    def calculate_extension_duration(self, validated_data: Dict[str, Any], subscription) -> timedelta:
+        """
+        Calculate the extension duration based on provided parameters
+        
+        Args:
+            validated_data: Validated serializer data
+            subscription: Subscription instance being extended
+        
+        Returns:
+            timedelta: Duration to extend
+        """
+        extension_days = validated_data.get('extension_days')
+        extension_hours = validated_data.get('extension_hours')
+        new_end_date = validated_data.get('new_end_date')
+        
+        if new_end_date:
+            # Calculate from new end date
+            current_end = subscription.end_date or timezone.now()
+            return new_end_date - current_end
+        elif extension_days:
+            return timedelta(days=extension_days)
+        elif extension_hours:
+            return timedelta(hours=extension_hours)
+        
+        return timedelta(0)
+
+
 class SubscriptionUsageSerializer(serializers.Serializer):
     """
     Serializer for updating subscription usage from network management
@@ -584,3 +777,341 @@ class SubscriptionDetailSerializer(SubscriptionSerializer):
             }
             for op in operations
         ]
+
+
+
+
+class SubscriptionStatisticsSerializer(serializers.Serializer):
+    """
+    Serializer for subscription statistics and analytics
+    """
+    
+    # Time period filters
+    start_date = serializers.DateTimeField(
+        required=False,
+        allow_null=True,
+        help_text="Start date for statistics period"
+    )
+    
+    end_date = serializers.DateTimeField(
+        required=False,
+        allow_null=True,
+        help_text="End date for statistics period"
+    )
+    
+    group_by = serializers.ChoiceField(
+        choices=[
+            ('hour', 'Hour'),
+            ('day', 'Day'),
+            ('week', 'Week'),
+            ('month', 'Month'),
+        ],
+        default='day',
+        help_text="Group statistics by time period"
+    )
+    
+    include_usage_details = serializers.BooleanField(
+        default=True,
+        help_text="Include detailed usage statistics"
+    )
+    
+    include_activation_stats = serializers.BooleanField(
+        default=True,
+        help_text="Include activation statistics"
+    )
+    
+    include_financial_stats = serializers.BooleanField(
+        default=False,
+        help_text="Include financial statistics"
+    )
+    
+    def validate(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate statistics request parameters"""
+        errors = {}
+        
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        
+        if start_date and end_date:
+            if end_date <= start_date:
+                errors['end_date'] = 'End date must be after start date'
+            
+            # Limit to maximum 1 year period
+            max_days = 365
+            if (end_date - start_date).days > max_days:
+                errors['non_field_errors'] = f'Maximum statistics period is {max_days} days'
+        
+        elif start_date and not end_date:
+            # Default end date to now if only start date provided
+            data['end_date'] = timezone.now()
+        
+        elif end_date and not start_date:
+            # Default start date to 30 days before if only end date provided
+            data['start_date'] = end_date - timedelta(days=30)
+        
+        else:
+            # Default to last 30 days if no dates provided
+            data['end_date'] = timezone.now()
+            data['start_date'] = timezone.now() - timedelta(days=30)
+        
+        return data
+    
+    def get_statistics(self, subscription) -> Dict[str, Any]:
+        """
+        Generate comprehensive subscription statistics
+        
+        Args:
+            subscription: Subscription instance
+        
+        Returns:
+            Dict with subscription statistics
+        """
+        validated_data = self.validated_data
+        start_date = validated_data['start_date']
+        end_date = validated_data['end_date']
+        group_by = validated_data['group_by']
+        
+        from service_operations.models import UsageTracking, ActivationQueue, OperationLog
+        from django.db.models import Sum, Avg, Count, Max, Min
+        from django.db.models.functions import Trunc
+        
+        statistics = {
+            'subscription_id': str(subscription.id),
+            'client_id': str(subscription.client_id),
+            'client_type': subscription.client_type,
+            'period': {
+                'start': start_date.isoformat(),
+                'end': end_date.isoformat(),
+                'duration_days': (end_date - start_date).days
+            },
+            'group_by': group_by,
+            'generated_at': timezone.now().isoformat()
+        }
+        
+        # Usage statistics
+        if validated_data['include_usage_details']:
+            usage_records = UsageTracking.objects.filter(
+                subscription=subscription,
+                session_start__gte=start_date,
+                session_start__lte=end_date
+            )
+            
+            usage_stats = usage_records.aggregate(
+                total_sessions=Count('id'),
+                total_data_bytes=Sum('data_used_bytes'),
+                total_time_seconds=Sum('session_duration_seconds'),
+                avg_data_rate=Avg('avg_data_rate'),
+                peak_data_usage=Max('data_used_bytes'),
+                avg_session_duration=Avg('session_duration_seconds')
+            )
+            
+            # Grouped usage by time period
+            if group_by in ['hour', 'day', 'week', 'month']:
+                trunc_kwarg = group_by
+                grouped_usage = usage_records.annotate(
+                    period=Trunc('session_start', trunc_kwarg)
+                ).values('period').annotate(
+                    sessions=Count('id'),
+                    data_used=Sum('data_used_bytes'),
+                    time_used=Sum('session_duration_seconds')
+                ).order_by('period')
+                
+                usage_stats['grouped_usage'] = [
+                    {
+                        'period': item['period'].isoformat(),
+                        'sessions': item['sessions'],
+                        'data_used_bytes': item['data_used'],
+                        'data_used_display': format_bytes_human_readable(item['data_used']),
+                        'time_used_seconds': item['time_used'],
+                        'time_used_display': format_seconds_human_readable(item['time_used'])
+                    }
+                    for item in grouped_usage
+                ]
+            
+            statistics['usage_statistics'] = {
+                'summary': {
+                    'total_sessions': usage_stats['total_sessions'] or 0,
+                    'total_data_bytes': usage_stats['total_data_bytes'] or 0,
+                    'total_data_display': format_bytes_human_readable(usage_stats['total_data_bytes'] or 0),
+                    'total_time_seconds': usage_stats['total_time_seconds'] or 0,
+                    'total_time_display': format_seconds_human_readable(usage_stats['total_time_seconds'] or 0),
+                    'average_data_rate': usage_stats['avg_data_rate'] or 0,
+                    'peak_data_usage': usage_stats['peak_data_usage'] or 0,
+                    'peak_data_display': format_bytes_human_readable(usage_stats['peak_data_usage'] or 0),
+                    'average_session_duration': usage_stats['avg_session_duration'] or 0,
+                    'average_session_display': format_seconds_human_readable(usage_stats['avg_session_duration'] or 0)
+                },
+                'current_usage_percentage': calculate_usage_percentage(
+                    subscription.used_data_bytes,
+                    subscription.data_limit_bytes
+                ) if subscription.data_limit_bytes > 0 else 100.0
+            }
+        
+        # Activation statistics
+        if validated_data['include_activation_stats']:
+            activation_records = ActivationQueue.objects.filter(
+                subscription=subscription,
+                created_at__gte=start_date,
+                created_at__lte=end_date
+            )
+            
+            activation_stats = activation_records.aggregate(
+                total_attempts=Count('id'),
+                successful=Count('id', filter=models.Q(status='completed')),
+                failed=Count('id', filter=models.Q(status='failed')),
+                avg_processing_time=Avg('processing_duration_seconds')
+            )
+            
+            # Activation success rate
+            total_attempts = activation_stats['total_attempts'] or 0
+            successful = activation_stats['successful'] or 0
+            success_rate = (successful / total_attempts * 100) if total_attempts > 0 else 0
+            
+            statistics['activation_statistics'] = {
+                'total_attempts': total_attempts,
+                'successful_attempts': successful,
+                'failed_attempts': activation_stats['failed'] or 0,
+                'success_rate': round(success_rate, 1),
+                'average_processing_time_seconds': activation_stats['avg_processing_time'] or 0,
+                'average_processing_display': format_seconds_human_readable(activation_stats['avg_processing_time'] or 0)
+            }
+        
+        # Financial statistics (if enabled)
+        if validated_data['include_financial_stats']:
+            # Note: This would typically integrate with your payment system
+            # Placeholder for financial statistics
+            statistics['financial_statistics'] = {
+                'total_revenue': 0.0,  # Would come from payment system
+                'average_revenue_per_day': 0.0,
+                'renewal_rate': 0.0,
+                'payment_methods': {}
+            }
+        
+        # Performance metrics
+        operation_logs = OperationLog.objects.filter(
+            subscription=subscription,
+            created_at__gte=start_date,
+            created_at__lte=end_date
+        )
+        
+        error_count = operation_logs.filter(
+            severity__in=['error', 'critical']
+        ).count()
+        
+        statistics['performance_metrics'] = {
+            'total_operations': operation_logs.count(),
+            'error_count': error_count,
+            'error_rate': (error_count / max(operation_logs.count(), 1)) * 100,
+            'average_operation_duration_ms': operation_logs.aggregate(
+                avg_duration=Avg('duration_ms')
+            )['avg_duration'] or 0
+        }
+        
+        # Subscription health score
+        health_score = self.calculate_health_score(subscription, statistics)
+        statistics['health_score'] = health_score
+        
+        return statistics
+    
+    def calculate_health_score(self, subscription, statistics) -> Dict[str, Any]:
+        """
+        Calculate subscription health score (0-100)
+        
+        Args:
+            subscription: Subscription instance
+            statistics: Pre-calculated statistics
+        
+        Returns:
+            Dict with health score breakdown
+        """
+        score = 100
+        factors = []
+        
+        # 1. Usage health (max 30 points)
+        usage_percentage = calculate_usage_percentage(
+            subscription.used_data_bytes,
+            subscription.data_limit_bytes
+        ) if subscription.data_limit_bytes > 0 else 0
+        
+        if usage_percentage > 90:
+            usage_score = 10  # Critical
+            factors.append({'factor': 'usage', 'status': 'critical', 'score': usage_score})
+        elif usage_percentage > 75:
+            usage_score = 20  # Warning
+            factors.append({'factor': 'usage', 'status': 'warning', 'score': usage_score})
+        else:
+            usage_score = 30  # Good
+            factors.append({'factor': 'usage', 'status': 'good', 'score': usage_score})
+        
+        # 2. Activation success rate (max 30 points)
+        activation_stats = statistics.get('activation_statistics', {})
+        success_rate = activation_stats.get('success_rate', 100)
+        
+        if success_rate < 80:
+            activation_score = 10  # Critical
+            factors.append({'factor': 'activation', 'status': 'critical', 'score': activation_score})
+        elif success_rate < 95:
+            activation_score = 20  # Warning
+            factors.append({'factor': 'activation', 'status': 'warning', 'score': activation_score})
+        else:
+            activation_score = 30  # Good
+            factors.append({'factor': 'activation', 'status': 'good', 'score': activation_score})
+        
+        # 3. Error rate (max 20 points)
+        perf_metrics = statistics.get('performance_metrics', {})
+        error_rate = perf_metrics.get('error_rate', 0)
+        
+        if error_rate > 10:
+            error_score = 5  # Critical
+            factors.append({'factor': 'error_rate', 'status': 'critical', 'score': error_score})
+        elif error_rate > 5:
+            error_score = 10  # Warning
+            factors.append({'factor': 'error_rate', 'status': 'warning', 'score': error_score})
+        else:
+            error_score = 20  # Good
+            factors.append({'factor': 'error_rate', 'status': 'good', 'score': error_score})
+        
+        # 4. Time remaining (max 20 points)
+        if subscription.end_date:
+            time_remaining = (subscription.end_date - timezone.now()).total_seconds()
+            if time_remaining <= 0:
+                time_score = 0  # Expired
+                factors.append({'factor': 'time_remaining', 'status': 'critical', 'score': time_score})
+            elif time_remaining < 24 * 3600:  # Less than 24 hours
+                time_score = 5  # Warning
+                factors.append({'factor': 'time_remaining', 'status': 'warning', 'score': time_score})
+            elif time_remaining < 7 * 24 * 3600:  # Less than 7 days
+                time_score = 10  # Caution
+                factors.append({'factor': 'time_remaining', 'status': 'caution', 'score': time_score})
+            else:
+                time_score = 20  # Good
+                factors.append({'factor': 'time_remaining', 'status': 'good', 'score': time_score})
+        else:
+            time_score = 20  # No expiration (unlimited)
+            factors.append({'factor': 'time_remaining', 'status': 'good', 'score': time_score})
+        
+        total_score = usage_score + activation_score + error_score + time_score
+        
+        # Determine overall status
+        if total_score >= 85:
+            overall_status = 'excellent'
+        elif total_score >= 70:
+            overall_status = 'good'
+        elif total_score >= 50:
+            overall_status = 'fair'
+        elif total_score >= 30:
+            overall_status = 'poor'
+        else:
+            overall_status = 'critical'
+        
+        return {
+            'score': total_score,
+            'status': overall_status,
+            'factors': factors,
+            'breakdown': {
+                'usage': usage_score,
+                'activation': activation_score,
+                'error_rate': error_score,
+                'time_remaining': time_score
+            }
+        }

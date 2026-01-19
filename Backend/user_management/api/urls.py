@@ -45,7 +45,7 @@ URL Configuration for Integrated Client Management
 """
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from user_management.views.client_views import (
+from user_management.api.views.client_views import (
     ClientProfileViewSet,
     CreatePPPoEClientView,
     CreateHotspotClientView,
@@ -56,14 +56,14 @@ from user_management.views.client_views import (
     ClientPlanRecommendationsView,
     ClientPlanBulkActionsView
 )
-from user_management.views.analytics_views import (
+from user_management.api.views.analytics_views import (
     FinancialAnalyticsView,
     UsageAnalyticsView,
     BehavioralAnalyticsView,
     HotspotAnalyticsView,
     TrendAnalyticsView
 )
-from user_management.views.commissions_views import (
+from user_management.api.views.commission_views import (
     CommissionTransactionViewSet,
     CommissionPayoutView,
     MarketerPerformanceView

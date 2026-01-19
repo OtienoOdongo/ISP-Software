@@ -123,7 +123,7 @@ from network_management.models.bandwidth_allocation_model import (
     BandwidthAllocation, BandwidthUsageHistory, QoSProfile
 )
 from account.serializers.admin_serializer import ClientSerializer
-from internet_plans.serializers.create_plan_serializers import InternetPlanSerializer
+from internet_plans.serializers.plan_serializers import InternetPlanSerializer
 from payments.serializers.payment_config_serializer import TransactionSerializer
 import re
 

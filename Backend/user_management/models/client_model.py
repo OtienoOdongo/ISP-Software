@@ -895,7 +895,7 @@ from decimal import Decimal
 import json
 import re
 
-from user_management.tasks import update_client_metrics_task
+
 
 logger = logging.getLogger(__name__)
 
@@ -1225,6 +1225,7 @@ class ClientProfile(models.Model):
         return code
     
     def _queue_metrics_update(self):
+        from user_management.tasks import update_client_metrics_task
         """Queue metrics update for async processing"""
         try:
             update_client_metrics_task.delay(self.id)

@@ -129,7 +129,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from django.utils import timezone
 from rest_framework.response import Response
-from service_operations.views.subscription_views import (
+from service_operations.api.views.subscription_views import (
     SubscriptionListView,
     SubscriptionDetailView,
     SubscriptionCreateView,
@@ -141,7 +141,7 @@ from service_operations.views.subscription_views import (
     SubscriptionSearchView,
 )
 
-from service_operations.views.client_views import (
+from service_operations.api.views.client_views import (
     ClientPortalSubscriptionView,
     ClientPortalPurchaseView,
     ClientPortalPaymentCallbackView,
@@ -151,7 +151,7 @@ from service_operations.views.client_views import (
     ClientOperationDetailView,
 )
 
-from service_operations.views.activation_views import (
+from service_operations.api.views.activation_views import (
     ActivationQueueView,
     ActivationQueueDetailView,
     ActivationProcessView,
@@ -159,7 +159,7 @@ from service_operations.views.activation_views import (
     ActivationStatsView,
 )
 
-from service_operations.views.operation_views import (
+from service_operations.api.views.operation_views import (
     OperationLogView,
     OperationLogDetailView,
     OperationStatsView,

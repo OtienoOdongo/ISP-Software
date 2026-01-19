@@ -242,7 +242,7 @@ from account.serializers.admin_serializer import (
     ClientConnectionStatsSerializer
 )
 from payments.models.transaction_log_model import TransactionLog
-from internet_plans.models.create_plan_models import Subscription
+from service_operations.models.subscription_models import Subscription
 from network_management.models.router_management_model import Router, RouterHealthCheck
 
 logger = logging.getLogger(__name__)

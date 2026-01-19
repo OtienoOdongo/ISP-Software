@@ -18,8 +18,8 @@ from datetime import timedelta
 import psutil
 import os
 
-from Backend.service_operations.models.activation_queue_models import ActivationQueue, OperationLog
-from service_operations.services.activation_service import ActivationService
+from service_operations.models.activation_queue_models import ActivationQueue
+from service_operations.models.operation_log_models import OperationLog
 from service_operations.utils.calculators import format_seconds_human_readable
 
 logger = logging.getLogger(__name__)
@@ -373,6 +373,9 @@ class QueueService:
         """Process item in a separate thread for timeout control."""
         try:
             # Process based on activation type
+
+            from service_operations.services.activation_service import ActivationService
+            
             if queue_item.activation_type == 'initial':
                 result = ActivationService.process_activation_queue_item(
                     str(queue_item.id),

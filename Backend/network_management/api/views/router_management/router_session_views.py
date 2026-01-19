@@ -26,7 +26,8 @@ from network_management.serializers.router_management_serializer import (
     SessionRecoverySerializer, HotspotUserSerializer, PPPoEUserSerializer
 )
 from account.models.admin_model import Client
-from internet_plans.models.create_plan_models import InternetPlan, Subscription
+from internet_plans.models.plan_models import InternetPlan 
+from service_operations.models.subscription_models import Subscription
 from payments.models.payment_config_model import Transaction
 from network_management.utils.websocket_utils import WebSocketManager
 

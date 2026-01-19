@@ -1037,3 +1037,9 @@ class TimeVariantTestView(APIView):
                 'error': 'Failed to test time variant',
                 'details': str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
+
+

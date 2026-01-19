@@ -1527,7 +1527,7 @@ class ClientProfileSerializer(BaseSerializer):
         
         return None
     
-    # REMOVED: get_email() method - No longer needed
+
     
     def get_current_plan(self, obj):
         """Get client's current active plan via Service Operations"""
@@ -2090,7 +2090,6 @@ class ClientInteractionSerializer(BaseSerializer):
         return None
 
 
-# Additional serializers for Service Operations integration
 
 class AssignPlanSerializer(serializers.Serializer):
     """Serializer for assigning internet plans to clients"""
@@ -2102,6 +2101,51 @@ class AssignPlanSerializer(serializers.Serializer):
     
     class Meta:
         fields = ['plan_id', 'auto_renew', 'duration_hours', 'router_id', 'hotspot_mac_address']
+
+
+class ChangePlanSerializer(serializers.Serializer):
+    """Serializer for changing client's current plan"""
+    plan_id = serializers.CharField(required=True, help_text="New internet plan ID")
+    subscription_id = serializers.CharField(required=True, help_text="Current subscription ID to change")
+    immediate = serializers.BooleanField(
+        default=False,
+        help_text="Change plan immediately (otherwise at next renewal)"
+    )
+    prorate = serializers.BooleanField(
+        default=True,
+        help_text="Prorate charges for unused time"
+    )
+    notes = serializers.CharField(required=False, allow_blank=True, max_length=500)
+    
+    class Meta:
+        fields = ['plan_id', 'subscription_id', 'immediate', 'prorate', 'notes']
+
+
+
+class PlanRenewalSerializer(serializers.Serializer):
+    """Serializer for renewing internet plans"""
+    subscription_id = serializers.CharField(required=True, help_text="Subscription ID to renew")
+    duration_hours = serializers.IntegerField(
+        default=30,
+        min_value=1,
+        max_value=720,
+        help_text="Renewal duration in hours"
+    )
+    auto_renew = serializers.BooleanField(
+        default=True,
+        help_text="Enable auto-renewal after this renewal"
+    )
+    payment_method = serializers.ChoiceField(
+        choices=[
+            ('mpesa', 'M-Pesa')
+         ],
+        default='mpesa',
+        required=False
+    )
+    notes = serializers.CharField(required=False, allow_blank=True, max_length=500)
+    
+    class Meta:
+        fields = ['subscription_id', 'duration_hours', 'auto_renew', 'payment_method', 'notes']
 
 
 class UpdateSubscriptionSerializer(serializers.Serializer):

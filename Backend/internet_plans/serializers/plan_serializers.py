@@ -7,7 +7,8 @@ Production-ready with comprehensive validation
 from rest_framework import serializers
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import models, Q
+from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 from decimal import Decimal
 import logging
@@ -778,7 +779,7 @@ class AvailablePlansRequestSerializer(serializers.Serializer):
     client_type = serializers.ChoiceField(
         choices=[('hotspot', 'Hotspot'), ('pppoe', 'PPPoE')],
         default='hotspot',
-        required=True,
+        required=False,
         help_text="Type of client (hotspot or PPPoE)"
     )
     
