@@ -1235,7 +1235,12 @@ class BankConfig(models.Model):
 
 class ClientPaymentMethod(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    client = models.ForeignKey("account.Client", on_delete=models.CASCADE, related_name="payment_methods")
+    client = models.ForeignKey(
+        "authentication.UserAccount", 
+        on_delete=models.CASCADE, 
+        related_name="payment_methods",
+        limit_choices_to={'user_type': 'client'},  # Add this constraint
+    )
     gateway = models.ForeignKey(PaymentGateway, on_delete=models.CASCADE, related_name="client_methods")
     is_default = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -1247,17 +1252,20 @@ class ClientPaymentMethod(models.Model):
         ordering = ["-is_default", "-created_at"]
 
     def clean(self):
+        # Ensure only client users can have payment methods
+        if self.client.user_type != 'client':
+            raise ValidationError("Payment methods can only be assigned to client users")
+        
         if not self.gateway.is_active:
             raise ValidationError("Cannot assign inactive payment method to client")
-
-    def save(self, *args, **kwargs):
-        if self.is_default:
-            ClientPaymentMethod.objects.filter(client=self.client).exclude(pk=self.pk).update(is_default=False)
-        super().save(*args, **kwargs)
+        
+        super().clean()
 
     def __str__(self):
-        return f"{self.client.user.username} - {self.gateway.get_name_display()}"
-
+        # Update the string representation
+        if self.client.is_client:
+            return f"{self.client.username} - {self.gateway.get_name_display()}"
+        return f"User {self.client.uuid} - {self.gateway.get_name_display()}"
 
 class Transaction(models.Model):
     STATUS_CHOICES = (
@@ -1270,7 +1278,12 @@ class Transaction(models.Model):
     )
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    client = models.ForeignKey("account.Client", on_delete=models.CASCADE, related_name="transactions")
+    client = models.ForeignKey(
+        "authentication.UserAccount", 
+        on_delete=models.CASCADE, 
+        related_name="transactions",
+        limit_choices_to={'user_type': 'client'}, 
+    )
     gateway = models.ForeignKey(PaymentGateway, on_delete=models.SET_NULL, null=True, related_name="transactions")
     plan = models.ForeignKey(
         'internet_plans.InternetPlan', 
@@ -1283,7 +1296,7 @@ class Transaction(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     idempotency_key = models.CharField(max_length=100, unique=True, blank=True, null=True)
     subscription = models.ForeignKey(
-        'internet_plans.Subscription',
+        'service_operations.Subscription',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -1309,28 +1322,18 @@ class Transaction(models.Model):
             models.Index(fields=["subscription_id"]),
         ]
 
+    def clean(self):
+        # Ensure only client users can have transactions
+        if self.client and self.client.user_type != 'client':
+            raise ValidationError("Transactions can only be associated with client users")
+        super().clean()
+
     def __str__(self):
         return f"{self.reference} - {self.get_status_display()} ({self.amount})"
-
-    def save(self, *args, **kwargs):
-        if not self.reference:
-            self.reference = self._generate_reference()
-        super().save(*args, **kwargs)
-
-    def _generate_reference(self):
-        timestamp = timezone.now().strftime("%Y%m%d%H%M%S")
-        random_part = get_random_string(8, "ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
-        return f"TX-{timestamp}-{random_part}"
-
-    def mark_callback_attempt(self):
-        self.callback_attempts += 1
-        self.last_callback_attempt = timezone.now()
-        self.save(update_fields=['callback_attempts', 'last_callback_attempt'])
 
     def create_transaction_log(self, status='pending', access_type='hotspot'):
         """
         Create a linked transaction log for this payment
-        Enhanced method with complete payment method coverage
         """
         from payments.models.transaction_log_model import TransactionLog
         
@@ -1338,8 +1341,10 @@ class Transaction(models.Model):
             # Determine payment method based on gateway
             payment_method = self._determine_payment_method()
             
-            # Get phone number for M-Pesa transactions
-            phone_number = self._extract_phone_number()
+            # Get phone number from client (using authentication app's method)
+            phone_number = None
+            if self.client and self.client.is_client:
+                phone_number = self.client.get_phone_display()
             
             transaction_log = TransactionLog.objects.create(
                 payment_transaction=self,
@@ -1348,7 +1353,7 @@ class Transaction(models.Model):
                 status=status,
                 payment_method=payment_method,
                 access_type=access_type,
-                user=self.client.user,
+                user=self.client,
                 internet_plan=self.plan,
                 subscription=self.subscription,
                 phone_number=phone_number,

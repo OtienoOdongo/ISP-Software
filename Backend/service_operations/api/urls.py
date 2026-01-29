@@ -132,13 +132,13 @@ from rest_framework.response import Response
 from service_operations.api.views.subscription_views import (
     SubscriptionListView,
     SubscriptionDetailView,
-    SubscriptionCreateView,
-    SubscriptionUpdateView,
+    SubscriptionSuspendView,
     SubscriptionActivateView,
     SubscriptionRenewView,
     SubscriptionUsageView,
-    SubscriptionStatsView,
     SubscriptionSearchView,
+    SubscriptionStatisticsView,
+    SubscriptionHealthView,
 )
 
 from service_operations.api.views.client_views import (
@@ -174,16 +174,15 @@ urlpatterns = [
     # ==================== SUBSCRIPTION MANAGEMENT ====================
     # Subscription CRUD operations
     path('subscriptions/', SubscriptionListView.as_view(), name='subscription-list'),
-    path('subscriptions/create/', SubscriptionCreateView.as_view(), name='subscription-create'),
     path('subscriptions/<uuid:subscription_id>/', SubscriptionDetailView.as_view(), name='subscription-detail'),
-    path('subscriptions/<uuid:subscription_id>/update/', SubscriptionUpdateView.as_view(), name='subscription-update'),
     path('subscriptions/<uuid:subscription_id>/activate/', SubscriptionActivateView.as_view(), name='subscription-activate'),
     path('subscriptions/<uuid:subscription_id>/renew/', SubscriptionRenewView.as_view(), name='subscription-renew'),
     path('subscriptions/<uuid:subscription_id>/usage/', SubscriptionUsageView.as_view(), name='subscription-usage'),
+    path('subscriptions/<uuid:subscription_id>/suspend/', SubscriptionSuspendView.as_view(), name='subscription-suspend'),
     
     # Subscription search and statistics
     path('subscriptions/search/', SubscriptionSearchView.as_view(), name='subscription-search'),
-    path('subscriptions/stats/', SubscriptionStatsView.as_view(), name='subscription-stats'),
+     path('subscriptions/stats/', SubscriptionStatisticsView.as_view(), name='subscription-stats'),
     
     # ==================== CLIENT PORTAL ENDPOINTS ====================
     # Client portal subscription management
@@ -219,8 +218,8 @@ urlpatterns = [
     path('operations/stats/', OperationStatsView.as_view(), name='operation-stats'),
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
     
-    # Health checks
-    path('health/', SystemHealthView.as_view(), name='system-health'),
+    # Health
+    path('subscriptions/health/', SubscriptionHealthView.as_view(), name='subscription-health'),
     
 
 ]

@@ -7,11 +7,9 @@ the minor implementation differences between the Apereo CAS OIDC server
 implementation and the standard OIDC implementation in Python Social Auth.
 """
 
-import logging
+from typing import Any, cast
 
 from .open_id_connect import OpenIdConnectAuth
-
-logger = logging.getLogger("social")
 
 
 class CASOpenIdConnectAuth(OpenIdConnectAuth):
@@ -25,6 +23,7 @@ class CASOpenIdConnectAuth(OpenIdConnectAuth):
     SOCIAL_AUTH_CAS_OIDC_ENDPOINT = 'https://.....'  # endpoint without /.well-known/openid-configuration
     SOCIAL_AUTH_CAS_KEY = '<client_id>'
     SOCIAL_AUTH_CAS_SECRET = '<client_secret>'
+    SOCIAL_AUTH_CAS_ALLOW_GROUPS = []
     """
 
     name = "cas"
@@ -32,26 +31,24 @@ class CASOpenIdConnectAuth(OpenIdConnectAuth):
 
     def oidc_endpoint(self):
         endpoint = self.setting("OIDC_ENDPOINT", self.OIDC_ENDPOINT)
-        logger.debug("backend: CAS, endpoint: %s", endpoint)
+        self.log_debug("endpoint: %s", endpoint)
         return endpoint
 
     def get_user_id(self, details, response):
-        logger.debug(
-            "backend: CAS, method: get_user_id, details: %s, %s", details, response
-        )
+        self.log_debug("method: get_user_id, details: %s, %s", details, response)
         return details.get("username")
 
-    def user_data(self, access_token, *args, **kwargs):
+    def user_data(self, access_token: str, *args, **kwargs) -> dict[str, Any] | None:
         data = self.get_json(
             self.userinfo_url(), headers={"Authorization": f"Bearer {access_token}"}
         )
-        logger.debug("backend: CAS, user_data: %s", data)
+        self.log_debug("user_data: %s", data)
         return data.get("attributes", {})
 
     def get_user_details(self, response):
         username_key = self.setting("USERNAME_KEY", self.USERNAME_KEY)
-        logger.debug("backend: CAS, username_key: %s", username_key)
-        attributes = self.user_data(response.get("access_token"))
+        self.log_debug("username_key: %s", username_key)
+        attributes = cast("dict", self.user_data(response.get("access_token")))
         return {
             "username": attributes.get(username_key),
             "email": attributes.get("email"),
@@ -59,3 +56,12 @@ class CASOpenIdConnectAuth(OpenIdConnectAuth):
             "first_name": attributes.get("given_name"),
             "last_name": attributes.get("family_name"),
         }
+
+    def auth_allowed(self, response, details):
+        allow_groups = set(self.setting("ALLOW_GROUPS", set()))
+        groups = set(response.get("groups", set()))
+        return (
+            super().auth_allowed(response, details)
+            if groups.intersection(allow_groups) or not allow_groups
+            else False
+        )

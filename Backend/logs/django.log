@@ -3840,3 +3840,63 @@ ERROR 2025-12-04 15:06:26,101 audit_middleware 30099 139917687867072 Failed to c
 ERROR 2025-12-04 15:06:27,174 audit_middleware 30099 139918869251776 Failed to create audit log for exception: (2013, 'Lost connection to MySQL server during query')
 ERROR 2025-12-04 15:06:26,760 audit_middleware 30099 139918850369216 Failed to create audit log for exception: (2013, 'Lost connection to MySQL server during query')
 ERROR 2025-12-04 15:06:25,854 audit_middleware 30099 139918451316416 Failed to create audit log for exception: (2013, 'Lost connection to MySQL server during query')
+INFO 2026-01-28 14:51:12,069 autoreload 14972 140235924713600 Watching for file changes with StatReloader
+INFO 2026-01-28 14:52:24,433 autoreload 15204 139813202985088 Watching for file changes with StatReloader
+WARNING 2026-01-28 14:55:05,309 log 15204 139813033342656 Bad Request: /api/auth/users/
+INFO 2026-01-28 15:03:45,909 autoreload 15204 139813202985088 /home/clinton-odongo/projects/ISP-Software/Backend/interlink_logic/settings.py changed, reloading.
+WARNING 2026-01-29 10:01:06,850 log 10670 140491292747456 Bad Request: /api/auth/users/
+ERROR 2026-01-29 11:03:39,542 log 18176 140404083123904 Internal Server Error: /api/user_management/analytics/behavioral/
+ERROR 2026-01-29 11:03:39,972 log 18176 140404321150656 Internal Server Error: /api/user_management/analytics/usage/
+ERROR 2026-01-29 11:03:40,286 log 18176 140404083123904 Internal Server Error: /api/user_management/analytics/behavioral/
+ERROR 2026-01-29 11:03:40,396 log 18176 140404321150656 Internal Server Error: /api/user_management/analytics/usage/
+ERROR 2026-01-29 11:03:41,040 log 18176 140404321150656 Internal Server Error: /api/user_management/analytics/usage/
+ERROR 2026-01-29 11:03:41,197 log 18176 140404321150656 Internal Server Error: /api/user_management/analytics/usage/
+WARNING 2026-01-29 11:04:47,803 log 18176 140404329543360 Not Found: /api/sms/templates/
+WARNING 2026-01-29 11:04:47,835 log 18176 140404091516608 Not Found: /api/sms/analytics/
+WARNING 2026-01-29 11:04:47,970 log 18176 140404083123904 Not Found: /api/sms/messages/
+WARNING 2026-01-29 11:04:47,973 log 18176 140404321150656 Not Found: /api/sms/queue/
+WARNING 2026-01-29 11:04:47,989 log 18176 140404074731200 Not Found: /api/sms/rules/
+WARNING 2026-01-29 11:04:48,185 log 18176 140404306466496 Not Found: /api/sms/dashboard/
+WARNING 2026-01-29 11:04:48,211 log 18176 140404329543360 Not Found: /api/sms/performance/
+WARNING 2026-01-29 11:04:48,280 log 18176 140404091516608 Not Found: /api/sms/gateways/
+WARNING 2026-01-29 11:04:48,564 log 18176 140404321150656 Not Found: /api/sms/analytics/
+WARNING 2026-01-29 11:04:48,614 log 18176 140404083123904 Not Found: /api/sms/templates/
+WARNING 2026-01-29 11:04:48,855 log 18176 140404329543360 Not Found: /api/sms/rules/
+WARNING 2026-01-29 11:04:48,975 log 18176 140404074731200 Not Found: /api/sms/messages/
+WARNING 2026-01-29 11:04:48,978 log 18176 140404321150656 Not Found: /api/sms/performance/
+WARNING 2026-01-29 11:04:49,078 log 18176 140404091516608 Not Found: /api/sms/dashboard/
+WARNING 2026-01-29 11:04:49,078 log 18176 140404083123904 Not Found: /api/sms/gateways/
+WARNING 2026-01-29 11:04:49,079 log 18176 140404306466496 Not Found: /api/sms/queue/
+WARNING 2026-01-29 11:05:55,437 log 18176 140404091516608 Not Found: /api/service_operations/health/
+WARNING 2026-01-29 11:05:55,611 log 18176 140404321150656 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-01-29 11:05:55,655 log 18176 140404083123904 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-01-29 11:05:56,129 log 18176 140404091516608 Not Found: /api/service_operations/health/
+WARNING 2026-01-29 11:05:56,367 log 18176 140404321150656 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-01-29 11:05:56,522 log 18176 140404083123904 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-01-29 11:06:46,577 log 18176 140404329543360 Bad Request: /api/payments/gateways/
+ERROR 2026-01-29 11:06:46,870 log 18176 140404074731200 Internal Server Error: /api/payments/analytics/revenue/
+WARNING 2026-01-29 11:06:47,146 log 18176 140404329543360 Bad Request: /api/payments/gateways/
+ERROR 2026-01-29 11:06:47,299 log 18176 140404329543360 Internal Server Error: /api/payments/analytics/revenue/
+ERROR 2026-01-29 11:14:50,164 log 19760 139714289977024 Internal Server Error: /api/user_management/analytics/usage/
+ERROR 2026-01-29 11:14:50,295 log 19760 139714298369728 Internal Server Error: /api/user_management/analytics/behavioral/
+ERROR 2026-01-29 11:14:52,324 log 19760 139714078176960 Internal Server Error: /api/user_management/analytics/usage/
+ERROR 2026-01-29 11:14:52,883 log 19760 139714310956736 Internal Server Error: /api/user_management/analytics/usage/
+ERROR 2026-01-29 11:14:53,522 log 19760 139714289977024 Internal Server Error: /api/user_management/analytics/usage/
+ERROR 2026-01-29 11:14:54,535 log 19760 139714298369728 Internal Server Error: /api/user_management/analytics/behavioral/
+ERROR 2026-01-29 11:22:39,060 log 19760 139714319349440 Internal Server Error: /api/user_management/analytics/usage/
+ERROR 2026-01-29 11:22:39,195 log 19760 139714069784256 Internal Server Error: /api/user_management/analytics/behavioral/
+ERROR 2026-01-29 11:22:39,936 log 19760 139714069784256 Internal Server Error: /api/user_management/analytics/usage/
+ERROR 2026-01-29 11:22:40,338 log 19760 139714078176960 Internal Server Error: /api/user_management/analytics/behavioral/
+ERROR 2026-01-29 11:22:40,664 log 19760 139714069784256 Internal Server Error: /api/user_management/analytics/usage/
+ERROR 2026-01-29 11:22:41,582 log 19760 139714069784256 Internal Server Error: /api/user_management/analytics/usage/
+WARNING 2026-01-29 15:01:06,780 log 22414 140330780317376 Not Found: /api/internet_plans/analytics/
+WARNING 2026-01-29 15:01:18,445 log 22414 140330780317376 Not Found: /api/internet_plans/analytics/
+WARNING 2026-01-29 15:01:26,723 log 22414 140330780317376 Not Found: /api/internet_plans/analytics/
+WARNING 2026-01-29 15:01:59,706 log 22414 140330763531968 Not Found: /api/service_operations/health/
+WARNING 2026-01-29 15:01:59,948 log 22414 140330755139264 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-01-29 15:02:00,472 log 22414 140330808637120 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-01-29 15:02:01,510 log 22414 140330755139264 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-01-29 15:02:01,809 log 22414 140330763531968 Not Found: /api/service_operations/health/
+WARNING 2026-01-29 15:02:02,113 log 22414 140330808637120 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-01-29 15:02:07,571 log 22414 140330771924672 Not Found: /api/service_operations/client_operations/
+WARNING 2026-01-29 15:02:07,853 log 22414 140330808637120 Not Found: /api/service_operations/client_operations/

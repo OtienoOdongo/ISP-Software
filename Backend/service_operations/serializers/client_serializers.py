@@ -10,6 +10,7 @@ import logging
 import uuid
 import re
 from typing import Dict, Any, Optional
+from decimal import Decimal
 
 from service_operations.models import ClientOperation, Subscription
 from service_operations.utils.validators import (
@@ -196,14 +197,14 @@ class ClientPaymentCallbackSerializer(serializers.Serializer):
     
     # Payment details
     amount = serializers.DecimalField(
-        required=True,
+        required=False,
         max_digits=10,
         decimal_places=2,
-        min_value=0.01
+        min_value=Decimal('0.01')
     )
     
     currency = serializers.CharField(
-        required=True,
+        required=False,
         default='KES',
         max_length=3
     )

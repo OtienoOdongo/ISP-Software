@@ -1,12 +1,13 @@
 
 
+
 # """
 # AUTHENTICATION APP - Serializers for API endpoints
 # Handles data validation and serialization for authentication operations only
+# Supports both admin dashboard and captive portal workflows
 # """
 
 # from rest_framework import serializers
-# from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
 # from django.db import transaction
 # from django.core.exceptions import ValidationError
 # from django.utils.crypto import constant_time_compare
@@ -92,26 +93,25 @@
 
 
 # # ==================== AUTHENTICATED USER SERIALIZERS ====================
-# class AuthenticatedUserCreateSerializer(BaseUserCreateSerializer):
+# class AuthenticatedUserCreateSerializer(serializers.ModelSerializer):
 #     """
-#     Serializer for creating authenticated users (staff/admin)
-#     Uses Djoser base with custom validation
-#     Note: Authenticated users don't have usernames
+#     Serializer for creating authenticated users (staff/admin) via API
+#     Uses our UserAccountManager's create_authenticated_user method
 #     """
     
+#     email = serializers.EmailField(required=True)
+#     password = serializers.CharField(write_only=True, required=True, min_length=8)
+#     name = serializers.CharField(required=True)
 #     user_type = serializers.ChoiceField(
 #         choices=UserAccount.USER_TYPES[1:],  # Only staff/admin, not client
 #         default='staff',
 #         required=False
 #     )
     
-#     class Meta(BaseUserCreateSerializer.Meta):
+#     class Meta:
 #         model = UserAccount
 #         fields = ['id', 'email', 'password', 'name', 'user_type']
-#         extra_kwargs = {
-#             'password': {'write_only': True},
-#             'name': {'required': True},
-#         }
+#         read_only_fields = ['id']
     
 #     def validate(self, attrs):
 #         """Validate authenticated user creation"""
@@ -136,7 +136,7 @@
 #                 "user_type": "Invalid user type for authenticated user"
 #             })
         
-#         return super().validate(attrs)
+#         return attrs
     
 #     def create(self, validated_data):
 #         """Create authenticated user using manager"""
@@ -150,12 +150,12 @@
 #         )
 
 
-# # ==================== CLIENT USER SERIALIZERS ====================
+# # ==================== ADMIN CLIENT CREATION SERIALIZERS ====================
 # class HotspotClientCreateSerializer(serializers.ModelSerializer):
 #     """
-#     Serializer for creating hotspot clients
-#     Hotspot clients: phone only, no authentication required
-#     Username auto-generated from phone number
+#     Serializer for creating hotspot clients via admin dashboard
+#     Hotspot clients only need phone number, username auto-generated
+#     Requires authentication (admin/staff only)
 #     """
     
 #     phone_number = serializers.CharField(
@@ -170,8 +170,8 @@
     
 #     class Meta:
 #         model = UserAccount
-#         fields = ['id', 'phone_number', 'phone_number_display', 'username']
-#         read_only_fields = ['id', 'username']
+#         fields = ['id', 'phone_number', 'phone_number_display', 'username', 'source']
+#         read_only_fields = ['id', 'username', 'source']
     
 #     def validate_phone_number(self, value):
 #         """Validate and normalize phone number"""
@@ -182,9 +182,10 @@
         
 #         normalized = ValidationAlgorithms.normalize_phone(value)
         
-#         # Check if phone already registered
-#         if UserAccount.objects.filter(phone_number=normalized).exists():
-#             raise serializers.ValidationError("Phone number already registered")
+#         # Check if phone already exists and is active
+#         existing = UserAccount.objects.filter(phone_number=normalized, is_active=True).first()
+#         if existing:
+#             raise serializers.ValidationError("Phone number already registered with an active account")
         
 #         return normalized
     
@@ -194,25 +195,26 @@
     
 #     @transaction.atomic
 #     def create(self, validated_data):
-#         """Create hotspot client"""
+#         """Create hotspot client via admin dashboard"""
 #         try:
 #             user = UserAccount.objects.create_client_user(
 #                 phone_number=validated_data['phone_number'],
-#                 connection_type='hotspot'
+#                 connection_type='hotspot',
+#                 source='admin_dashboard'
 #             )
             
-#             logger.info(f"Created hotspot client: {user.username}")
+#             logger.info(f"Created hotspot client via admin: {user.username}")
 #             return user
             
 #         except Exception as e:
-#             logger.error(f"Failed to create hotspot client: {e}")
+#             logger.error(f"Failed to create hotspot client via admin: {e}")
 #             raise serializers.ValidationError(str(e))
 
 
 # class PPPoEClientCreateSerializer(serializers.ModelSerializer):
 #     """
-#     Serializer for creating PPPoE clients
-#     PPPoE clients: name + phone, credentials auto-generated
+#     Serializer for creating PPPoE clients via admin dashboard
+#     PPPoE clients need name + phone, credentials auto-generated
 #     SMS sending handled by UserManagement app
 #     """
     
@@ -239,9 +241,9 @@
 #         model = UserAccount
 #         fields = [
 #             'id', 'phone_number', 'name', 
-#             'phone_number_display', 'username', 'pppoe_username', 'pppoe_password'
+#             'phone_number_display', 'username', 'pppoe_username', 'pppoe_password', 'source'
 #         ]
-#         read_only_fields = ['id', 'username', 'pppoe_username', 'pppoe_password']
+#         read_only_fields = ['id', 'username', 'pppoe_username', 'pppoe_password', 'source']
     
 #     def validate(self, data):
 #         """Validate PPPoE client creation"""
@@ -254,10 +256,11 @@
         
 #         normalized = ValidationAlgorithms.normalize_phone(phone_number)
         
-#         # Check if phone exists
-#         if UserAccount.objects.filter(phone_number=normalized).exists():
+#         # Check if phone exists with active account
+#         existing = UserAccount.objects.filter(phone_number=normalized, is_active=True).first()
+#         if existing:
 #             raise serializers.ValidationError({
-#                 'phone_number': 'Phone number already registered'
+#                 'phone_number': 'Phone number already registered with an active account'
 #             })
         
 #         return data
@@ -279,12 +282,13 @@
     
 #     @transaction.atomic
 #     def create(self, validated_data):
-#         """Create PPPoE client and generate credentials"""
+#         """Create PPPoE client and generate credentials via admin dashboard"""
 #         try:
 #             user = UserAccount.objects.create_client_user(
 #                 phone_number=validated_data['phone_number'],
 #                 client_name=validated_data['name'],
-#                 connection_type='pppoe'
+#                 connection_type='pppoe',
+#                 source='admin_dashboard'
 #             )
             
 #             # Generate PPPoE credentials
@@ -293,11 +297,62 @@
 #             # Store credentials in context for UserManagement app to send SMS
 #             self.context['pppoe_credentials'] = credentials
             
-#             logger.info(f"Created PPPoE client: {user.username}")
+#             logger.info(f"Created PPPoE client via admin: {user.username}")
 #             return user
             
 #         except Exception as e:
-#             logger.error(f"Failed to create PPPoE client: {e}")
+#             logger.error(f"Failed to create PPPoE client via admin: {e}")
+#             raise serializers.ValidationError(str(e))
+
+
+# # ==================== CAPTIVE PORTAL SERIALIZERS ====================
+# class CaptivePortalRegistrationSerializer(serializers.Serializer):
+#     """
+#     Serializer for captive portal registration (public endpoint)
+#     Used when user enters phone on hotspot landing page
+#     """
+    
+#     phone_number = serializers.CharField(
+#         max_length=20,
+#         required=True,
+#         help_text="Phone number in 07XXXXXXXX or 01XXXXXXXX format"
+#     )
+    
+#     class Meta:
+#         fields = ['phone_number']
+    
+#     def validate_phone_number(self, value):
+#         """Validate and normalize phone number"""
+#         if not ValidationAlgorithms.is_valid_phone_number(value):
+#             raise serializers.ValidationError(
+#                 "Invalid phone number format. Must be 07XXXXXXXX or 01XXXXXXXX"
+#             )
+        
+#         normalized = ValidationAlgorithms.normalize_phone(value)
+#         return normalized
+    
+#     @transaction.atomic
+#     def create(self, validated_data):
+#         """Get or create client user via captive portal"""
+#         try:
+#             phone_number = validated_data['phone_number']
+            
+#             # Get or create user
+#             user, created = UserAccount.get_or_create_client_by_phone(
+#                 phone_number=phone_number,
+#                 connection_type='hotspot',
+#                 source='captive_portal'
+#             )
+            
+#             logger.info(f"Captive portal registration: user={user.username}, created={created}")
+            
+#             # Store creation status in context
+#             self.context['user_created'] = created
+            
+#             return user
+            
+#         except Exception as e:
+#             logger.error(f"Captive portal registration failed: {e}")
 #             raise serializers.ValidationError(str(e))
 
 
@@ -318,24 +373,32 @@
 #         read_only=True
 #     )
     
+#     source_display = serializers.CharField(
+#         source='get_source_display',
+#         read_only=True
+#     )
+    
 #     phone_number_display = serializers.SerializerMethodField()
 #     is_client = serializers.BooleanField(read_only=True)
 #     is_authenticated_user = serializers.BooleanField(read_only=True)
 #     is_pppoe_client = serializers.BooleanField(read_only=True)
 #     is_hotspot_client = serializers.BooleanField(read_only=True)
+#     is_captive_portal_user = serializers.BooleanField(read_only=True)
     
 #     class Meta:
 #         model = UserAccount
 #         fields = [
 #             'id', 'username', 'email', 'name', 'phone_number', 'phone_number_display',
 #             'user_type', 'user_type_display', 'connection_type', 'connection_type_display',
-#             'is_active', 'is_staff', 'date_joined', 'last_updated',
+#             'source', 'source_display', 'is_active', 'is_staff', 'date_joined', 'last_updated',
 #             'is_client', 'is_authenticated_user', 'is_pppoe_client', 'is_hotspot_client',
-#             'pppoe_username', 'pppoe_active', 'pppoe_credentials_generated', 'pppoe_credentials_generated_at'
+#             'is_captive_portal_user', 'pppoe_username', 'pppoe_active', 
+#             'pppoe_credentials_generated', 'pppoe_credentials_generated_at'
 #         ]
 #         read_only_fields = [
 #             'id', 'username', 'is_staff', 'date_joined', 'last_updated',
-#             'is_client', 'is_authenticated_user'
+#             'is_client', 'is_authenticated_user', 'is_pppoe_client', 
+#             'is_hotspot_client', 'is_captive_portal_user'
 #         ]
     
 #     def get_phone_number_display(self, obj):
@@ -544,8 +607,58 @@
 #         return attrs
 
 
+# # ==================== DJOSER SERIALIZERS (Simple implementation) ====================
+# class DjoserUserCreateSerializer(serializers.ModelSerializer):
+#     """
+#     Simple Djoser-compatible user registration serializer
+#     Used by Djoser for user registration
+#     """
+    
+#     password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
+#     re_password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
+    
+#     class Meta:
+#         model = UserAccount
+#         fields = ['id', 'email', 'password', 're_password', 'name']
+#         read_only_fields = ['id']
+    
+#     def validate(self, data):
+#         """Validate user registration"""
+#         # Check passwords match
+#         if data['password'] != data['re_password']:
+#             raise serializers.ValidationError({
+#                 "re_password": "Passwords do not match"
+#             })
+        
+#         # Check email exists
+#         email = data['email']
+#         if UserAccount.objects.filter(email=email).exists():
+#             raise serializers.ValidationError({
+#                 "email": "Email already exists"
+#             })
+        
+#         return data
+    
+#     def create(self, validated_data):
+#         """Create user using Django's create_user method"""
+#         # Remove re_password before creating user
+#         validated_data.pop('re_password')
+        
+#         # Extract password and create user
+#         password = validated_data.pop('password')
+#         user = UserAccount.objects.create_user(**validated_data)
+#         user.set_password(password)  # This properly hashes the password
+#         user.save()
+#         return user
 
-
+# class DjoserUserSerializer(serializers.ModelSerializer):
+#     """
+#     Simple Djoser-compatible user serializer
+#     """
+    
+#     class Meta:
+#         model = UserAccount
+#         fields = ['id', 'email', 'name', 'is_active', 'date_joined']
 
 
 
@@ -554,13 +667,12 @@
 
 
 """
-AUTHENTICATION APP - Serializers for API endpoints
-Handles data validation and serialization for authentication operations only
-Supports both admin dashboard and captive portal workflows
+AUTHENTICATION APP - Enhanced Serializers for API endpoints
+Handles data validation and serialization with Djoser compatibility
+Supports both authenticated user registration and client workflows
 """
 
 from rest_framework import serializers
-from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
 from django.db import transaction
 from django.core.exceptions import ValidationError
 from django.utils.crypto import constant_time_compare
@@ -645,63 +757,141 @@ class ValidationAlgorithms:
         }
 
 
-# ==================== AUTHENTICATED USER SERIALIZERS ====================
-class AuthenticatedUserCreateSerializer(BaseUserCreateSerializer):
+# ==================== DJOSER COMPATIBLE SERIALIZERS ====================
+
+
+class DjoserUserCreateSerializer(serializers.ModelSerializer):
     """
-    Serializer for creating authenticated users (staff/admin)
-    Uses Djoser base with custom validation
-    Note: Authenticated users don't have usernames
+    Djoser-compatible user registration serializer
+    MUST include password and re_password fields when USER_CREATE_PASSWORD_RETYPE=True
     """
     
+    password = serializers.CharField(write_only=True, required=True)
+    re_password = serializers.CharField(write_only=True, required=True)
+    name = serializers.CharField(required=False, allow_blank=True)
+    
+    class Meta:
+        model = UserAccount
+        fields = ['id', 'email', 'password', 're_password', 'name']
+    
+    def validate(self, attrs):
+        """Validate that passwords match"""
+        if attrs.get('password') != attrs.get('re_password'):
+            raise serializers.ValidationError({
+                "re_password": "Passwords do not match"
+            })
+        return attrs
+    
+    def validate_email(self, value):
+        """Validate email format and uniqueness"""
+        if not value:
+            raise serializers.ValidationError("Email is required")
+        
+        # Normalize email
+        email = self.normalize_email(value)
+        
+        # Check if email exists for authenticated users
+        exists = UserAccount.objects.filter(
+            email__iexact=email,
+            user_type__in=['staff', 'admin']
+        ).exists()
+        
+        if exists:
+            raise serializers.ValidationError("Email already registered")
+        
+        return email
+    
+    def normalize_email(self, email):
+        """Normalize email address"""
+        email_name, domain_part = email.strip().rsplit('@', 1)
+        email = email_name + '@' + domain_part.lower()
+        return email
+    
+    def create(self, validated_data):
+        """Create user with Djoser compatibility"""
+        # Remove re_password from validated data
+        validated_data.pop('re_password')
+        
+        # Get password and email
+        password = validated_data.pop('password')
+        email = validated_data.get('email')
+        name = validated_data.get('name', '')
+        
+        # Create user using UserAccountManager
+        user = UserAccount.objects.create_user(
+            email=email,
+            password=password,
+            name=name,
+            user_type='staff',
+            is_active=True  # Set to True since email activation is disabled
+        )
+        
+        return user
+
+class DjoserUserSerializer(serializers.ModelSerializer):
+    """
+    Djoser-compatible user serializer for authenticated users
+    Used for user profile endpoints
+    """
+    
+    class Meta:
+        model = UserAccount
+        fields = ['id', 'email', 'name', 'user_type', 'is_active', 'date_joined']
+        read_only_fields = ['id', 'user_type', 'is_active', 'date_joined']
+
+
+# ==================== AUTHENTICATED USER SERIALIZERS ====================
+class AuthenticatedUserCreateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for creating authenticated users (staff/admin) via admin dashboard
+    NOT for Djoser registration - for manual creation by admin
+    """
+    
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(write_only=True, required=True, min_length=8)
+    name = serializers.CharField(required=True)
     user_type = serializers.ChoiceField(
-        choices=UserAccount.USER_TYPES[1:],  # Only staff/admin, not client
+        choices=[('staff', 'Staff'), ('admin', 'Admin')],
         default='staff',
         required=False
     )
     
-    class Meta(BaseUserCreateSerializer.Meta):
+    class Meta:
         model = UserAccount
         fields = ['id', 'email', 'password', 'name', 'user_type']
-        extra_kwargs = {
-            'password': {'write_only': True},
-            'name': {'required': True},
-        }
+        read_only_fields = ['id']
     
-    def validate(self, attrs):
-        """Validate authenticated user creation"""
-        email = attrs.get('email')
-        user_type = attrs.get('user_type', 'staff')
+    def validate_email(self, value):
+        """Validate email format and uniqueness"""
+        if not ValidationAlgorithms.is_valid_email(value):
+            raise serializers.ValidationError("Invalid email format")
         
-        # Validate email
-        if not ValidationAlgorithms.is_valid_email(email):
-            raise serializers.ValidationError({
-                "email": "Invalid email format"
-            })
+        # Check if email exists for authenticated users
+        exists = UserAccount.objects.filter(
+            email__iexact=value,
+            user_type__in=['staff', 'admin']
+        ).exists()
         
-        # Check if email exists
-        if UserAccount.objects.filter(email=email).exists():
-            raise serializers.ValidationError({
-                "email": "Email already exists"
-            })
+        if exists:
+            raise serializers.ValidationError("Email already registered for an authenticated user")
         
-        # Validate user type
-        if user_type not in ['staff', 'admin']:
-            raise serializers.ValidationError({
-                "user_type": "Invalid user type for authenticated user"
-            })
-        
-        return super().validate(attrs)
+        return value
     
+    @transaction.atomic
     def create(self, validated_data):
         """Create authenticated user using manager"""
+        password = validated_data.pop('password')
         user_type = validated_data.pop('user_type', 'staff')
         
-        return UserAccount.objects.create_authenticated_user(
+        user = UserAccount.objects.create_authenticated_user(
             email=validated_data['email'],
-            password=validated_data['password'],
+            password=password,
             name=validated_data.get('name'),
             user_type=user_type
         )
+        
+        logger.info(f"Created authenticated user via admin: {user.email}")
+        return user
 
 
 # ==================== ADMIN CLIENT CREATION SERIALIZERS ====================
@@ -736,10 +926,15 @@ class HotspotClientCreateSerializer(serializers.ModelSerializer):
         
         normalized = ValidationAlgorithms.normalize_phone(value)
         
-        # Check if phone already exists and is active
-        existing = UserAccount.objects.filter(phone_number=normalized, is_active=True).first()
+        # Check if phone already exists and is active (for clients only)
+        existing = UserAccount.objects.filter(
+            phone_number=normalized, 
+            user_type='client',
+            is_active=True
+        ).first()
+        
         if existing:
-            raise serializers.ValidationError("Phone number already registered with an active account")
+            raise serializers.ValidationError("Phone number already registered with an active client account")
         
         return normalized
     
@@ -810,11 +1005,16 @@ class PPPoEClientCreateSerializer(serializers.ModelSerializer):
         
         normalized = ValidationAlgorithms.normalize_phone(phone_number)
         
-        # Check if phone exists with active account
-        existing = UserAccount.objects.filter(phone_number=normalized, is_active=True).first()
+        # Check if phone exists with active client account
+        existing = UserAccount.objects.filter(
+            phone_number=normalized, 
+            user_type='client',
+            is_active=True
+        ).first()
+        
         if existing:
             raise serializers.ValidationError({
-                'phone_number': 'Phone number already registered with an active account'
+                'phone_number': 'Phone number already registered with an active client account'
             })
         
         return data
@@ -938,6 +1138,7 @@ class UserSerializer(serializers.ModelSerializer):
     is_pppoe_client = serializers.BooleanField(read_only=True)
     is_hotspot_client = serializers.BooleanField(read_only=True)
     is_captive_portal_user = serializers.BooleanField(read_only=True)
+    is_djoser_user = serializers.BooleanField(read_only=True)
     
     class Meta:
         model = UserAccount
@@ -946,13 +1147,13 @@ class UserSerializer(serializers.ModelSerializer):
             'user_type', 'user_type_display', 'connection_type', 'connection_type_display',
             'source', 'source_display', 'is_active', 'is_staff', 'date_joined', 'last_updated',
             'is_client', 'is_authenticated_user', 'is_pppoe_client', 'is_hotspot_client',
-            'is_captive_portal_user', 'pppoe_username', 'pppoe_active', 
+            'is_captive_portal_user', 'is_djoser_user', 'pppoe_username', 'pppoe_active', 
             'pppoe_credentials_generated', 'pppoe_credentials_generated_at'
         ]
         read_only_fields = [
             'id', 'username', 'is_staff', 'date_joined', 'last_updated',
             'is_client', 'is_authenticated_user', 'is_pppoe_client', 
-            'is_hotspot_client', 'is_captive_portal_user'
+            'is_hotspot_client', 'is_captive_portal_user', 'is_djoser_user'
         ]
     
     def get_phone_number_display(self, obj):
@@ -964,18 +1165,22 @@ class UserSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         request = self.context.get('request')
         
-        # Client users: hide email
+        # Client users: hide email and staff fields
         if instance.is_client:
             data.pop('email', None)
             data.pop('is_staff', None)
+            data.pop('is_djoser_user', None)
         
         # Authenticated users: hide client-specific fields
         else:
             data.pop('phone_number', None)
             data.pop('phone_number_display', None)
             data.pop('connection_type', None)
+            data.pop('connection_type_display', None)
             data.pop('pppoe_username', None)
             data.pop('pppoe_active', None)
+            data.pop('pppoe_credentials_generated', None)
+            data.pop('pppoe_credentials_generated_at', None)
         
         return data
 
@@ -1051,9 +1256,10 @@ class PhoneValidationSerializer(serializers.Serializer):
         
         normalized = ValidationAlgorithms.normalize_phone(value)
         
-        # Check if phone exists in system
+        # Check if phone exists in system (for clients only)
         exists = UserAccount.objects.filter(
             phone_number=normalized,
+            user_type='client',
             is_active=True
         ).exists()
         
@@ -1159,3 +1365,44 @@ class PPPoECredentialUpdateSerializer(serializers.Serializer):
                 "At least one of 'username' or 'password' must be provided"
             )
         return attrs
+
+
+# ==================== EMAIL VALIDATION SERIALIZER ====================
+class EmailValidationSerializer(serializers.Serializer):
+    """
+    Serializer for email validation endpoints
+    Specifically for authenticated user registration (Djoser)
+    """
+    
+    email = serializers.EmailField(
+        required=True,
+        help_text="Email address to validate"
+    )
+    
+    class Meta:
+        fields = ['email']
+    
+    def validate_email(self, value):
+        """Validate email format and check if exists for authenticated users"""
+        if not ValidationAlgorithms.is_valid_email(value):
+            raise serializers.ValidationError("Invalid email format")
+        
+        # Check if email exists for authenticated users (staff/admin)
+        exists = UserAccount.objects.filter(
+            email__iexact=value,
+            user_type__in=['staff', 'admin']
+        ).exists()
+        
+        self.context['email'] = value
+        self.context['email_exists'] = exists
+        
+        return value
+    
+    def to_representation(self, instance):
+        """Return validation result"""
+        return {
+            'email': self.context.get('email'),
+            'exists': self.context.get('email_exists', False),
+            'is_valid': True,
+            'message': 'Email found' if self.context.get('email_exists') else 'Email available'
+        }

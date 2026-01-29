@@ -1,3 +1,16 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from social_core.exceptions import (
+    StrategyMissingBackendError,
+)
+
+if TYPE_CHECKING:
+    from social_core.backends.base import BaseAuth
+    from social_core.storage import PartialMixin, UserProtocol
+    from social_core.strategy import BaseStrategy
+
 SERIALIZABLE_TYPES = (dict, list, tuple, set, bool, type(None), int, str, bytes)
 
 
@@ -12,8 +25,16 @@ def is_dict_type(value):
 
 
 def partial_prepare(
-    strategy, backend, next_step, user=None, social=None, *args, **kwargs
-):
+    strategy: BaseStrategy,
+    backend: BaseAuth,
+    next_step,
+    user: UserProtocol | None = None,
+    social=None,
+    *args,
+    **kwargs,
+) -> PartialMixin:
+    if strategy.storage is None:
+        raise StrategyMissingBackendError
     kwargs.update(
         {
             "response": kwargs.get("response") or {},
@@ -22,7 +43,7 @@ def partial_prepare(
             "uid": kwargs.get("uid"),
             "is_new": kwargs.get("is_new") or False,
             "new_association": kwargs.get("new_association") or False,
-            "user": (hasattr(user, "id") and user.id) or None,
+            "user": None if user is None else user.id,
             "social": (social and {"provider": social.provider, "uid": social.uid})
             or None,
         }
@@ -43,15 +64,17 @@ def partial_prepare(
 
 
 def partial_store(
-    strategy, backend, next_step, user=None, social=None, *args, **kwargs
-):
-    partial = partial_prepare(
-        strategy, backend, next_step, user=user, social=social, *args, **kwargs
-    )
+    strategy: BaseStrategy, backend: BaseAuth, next_step, *args, **kwargs
+) -> PartialMixin:
+    if strategy.storage is None:
+        raise StrategyMissingBackendError
+    partial = partial_prepare(strategy, backend, next_step, *args, **kwargs)
     return strategy.storage.partial.store(partial)
 
 
-def partial_load(strategy, token):
+def partial_load(strategy: BaseStrategy, token: str) -> PartialMixin | None:
+    if strategy.storage is None:
+        raise StrategyMissingBackendError
     partial = strategy.storage.partial.load(token)
 
     if partial:
@@ -61,7 +84,7 @@ def partial_load(strategy, token):
         social = kwargs.get("social")
 
         if isinstance(social, dict):
-            kwargs["social"] = strategy.storage.user.get_social_auth(**social)
+            kwargs["social"] = strategy.storage.user.get_social_auth(**social)  # type: ignore[missing-argument]
 
         if user:
             kwargs["user"] = strategy.storage.user.get_user(user)

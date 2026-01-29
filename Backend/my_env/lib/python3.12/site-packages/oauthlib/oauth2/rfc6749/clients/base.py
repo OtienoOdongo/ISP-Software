@@ -6,19 +6,18 @@ oauthlib.oauth2.rfc6749
 This module is an implementation of various logic needed
 for consuming OAuth 2.0 RFC6749.
 """
+import base64
+import hashlib
 import time
 import warnings
-import secrets
-import re
-import hashlib
-import base64
 
-from oauthlib.common import generate_token
+from oauthlib.common import UNICODE_ASCII_CHARACTER_SET, generate_token
 from oauthlib.oauth2.rfc6749 import tokens
 from oauthlib.oauth2.rfc6749.errors import (
     InsecureTransportError, TokenExpiredError,
 )
 from oauthlib.oauth2.rfc6749.parameters import (
+    parse_expires,
     parse_token_response, prepare_token_request,
     prepare_token_revocation_request,
 )
@@ -207,7 +206,7 @@ class Client:
 
         case_insensitive_token_types = {
             k.lower(): v for k, v in self.token_types.items()}
-        if not self.token_type.lower() in case_insensitive_token_types:
+        if self.token_type.lower() not in case_insensitive_token_types:
             raise ValueError("Unsupported token type: %s" % self.token_type)
 
         if not (self.access_token or self.token.get('access_token')):
@@ -228,26 +227,21 @@ class Client:
         required parameters to the authorization URL.
 
         :param authorization_url: Provider authorization endpoint URL.
-
         :param state: CSRF protection string. Will be automatically created if
-        not provided. The generated state is available via the ``state``
-        attribute. Clients should verify that the state is unchanged and
-        present in the authorization response. This verification is done
-        automatically if using the ``authorization_response`` parameter
-        with ``prepare_token_request``.
-
+            not provided. The generated state is available via the ``state``
+            attribute. Clients should verify that the state is unchanged and
+            present in the authorization response. This verification is done
+            automatically if using the ``authorization_response`` parameter
+            with ``prepare_token_request``.
         :param redirect_url: Redirect URL to which the user will be returned
-        after authorization. Must be provided unless previously setup with
-        the provider. If provided then it must also be provided in the
-        token request.
-
+            after authorization. Must be provided unless previously setup with
+            the provider. If provided then it must also be provided in the
+            token request.
         :param scope: List of scopes to request. Must be equal to
-        or a subset of the scopes granted when obtaining the refresh
-        token. If none is provided, the ones provided in the constructor are
-        used.
-
+            or a subset of the scopes granted when obtaining the refresh
+            token. If none is provided, the ones provided in the constructor are
+            used.
         :param kwargs: Additional parameters to included in the request.
-
         :returns: The prepared request tuple with (url, headers, body).
         """
         if not is_secure_transport(authorization_url):
@@ -271,22 +265,16 @@ class Client:
         credentials.
 
         :param token_url: Provider token creation endpoint URL.
-
         :param authorization_response: The full redirection URL string, i.e.
-        the location to which the user was redirected after successfull
-        authorization. Used to mine credentials needed to obtain a token
-        in this step, such as authorization code.
-
+            the location to which the user was redirected after successful
+            authorization. Used to mine credentials needed to obtain a token
+            in this step, such as authorization code.
         :param redirect_url: The redirect_url supplied with the authorization
-        request (if there was one).
-
+            request (if there was one).
         :param state:
-
         :param body: Existing request body (URL encoded string) to embed parameters
-                     into. This may contain extra paramters. Default ''.
-
+                     into. This may contain extra parameters. Default ''.
         :param kwargs: Additional parameters to included in the request.
-
         :returns: The prepared request tuple with (url, headers, body).
         """
         if not is_secure_transport(token_url):
@@ -312,19 +300,14 @@ class Client:
         obtain a new access token, and possibly a new refresh token.
 
         :param token_url: Provider token refresh endpoint URL.
-
         :param refresh_token: Refresh token string.
-
         :param body: Existing request body (URL encoded string) to embed parameters
-                     into. This may contain extra paramters. Default ''.
-
+            into. This may contain extra parameters. Default ''.
         :param scope: List of scopes to request. Must be equal to
-        or a subset of the scopes granted when obtaining the refresh
-        token. If none is provided, the ones provided in the constructor are
-        used.
-
+            or a subset of the scopes granted when obtaining the refresh
+            token. If none is provided, the ones provided in the constructor are
+            used.
         :param kwargs: Additional parameters to included in the request.
-
         :returns: The prepared request tuple with (url, headers, body).
         """
         if not is_secure_transport(token_url):
@@ -341,20 +324,14 @@ class Client:
         """Prepare a token revocation request.
 
         :param revocation_url: Provider token revocation endpoint URL.
-
         :param token: The access or refresh token to be revoked (string).
-
         :param token_type_hint: ``"access_token"`` (default) or
-        ``"refresh_token"``. This is optional and if you wish to not pass it you
-        must provide ``token_type_hint=None``.
-
+            ``"refresh_token"``. This is optional and if you wish to not pass it you
+            must provide ``token_type_hint=None``.
         :param body:
-
         :param callback: A jsonp callback such as ``package.callback`` to be invoked
-        upon receiving the response. Not that it should not include a () suffix.
-
+            upon receiving the response. Not that it should not include a () suffix.
         :param kwargs: Additional parameters to included in the request.
-
         :returns: The prepared request tuple with (url, headers, body).
 
         Note that JSONP request may use GET requests as the parameters will
@@ -362,7 +339,7 @@ class Client:
 
         An example of a revocation request
 
-        .. code-block: http
+        .. code-block:: http
 
             POST /revoke HTTP/1.1
             Host: server.example.com
@@ -373,7 +350,7 @@ class Client:
 
         An example of a jsonp revocation request
 
-        .. code-block: http
+        .. code-block:: http
 
             GET /revoke?token=agabcdefddddafdd&callback=package.myCallback HTTP/1.1
             Host: server.example.com
@@ -382,9 +359,9 @@ class Client:
 
         and an error response
 
-        .. code-block: http
+        .. code-block:: javascript
 
-        package.myCallback({"error":"unsupported_token_type"});
+            package.myCallback({"error":"unsupported_token_type"});
 
         Note that these requests usually require client credentials, client_id in
         the case for public clients and provider specific authentication
@@ -408,9 +385,10 @@ class Client:
 
         :param body: The response body from the token request.
         :param scope: Scopes originally requested. If none is provided, the ones
-        provided in the constructor are used.
+            provided in the constructor are used.
         :return: Dictionary of token parameters.
-        :raises: Warning if scope has changed. OAuth2Error if response is invalid.
+        :raises: Warning if scope has changed. :py:class:`oauthlib.oauth2.errors.OAuth2Error`
+            if response is invalid.
 
         These response are json encoded and could easily be parsed without
         the assistance of OAuthLib. However, there are a few subtle issues
@@ -436,7 +414,7 @@ class Client:
             If omitted, the authorization server SHOULD provide the
             expiration time via other means or document the default value.
 
-           **scope**
+         **scope**
             Providers may supply this in all responses but are required to only
             if it has changed since the authorization request.
 
@@ -454,20 +432,16 @@ class Client:
 
         If the authorization server issued a refresh token to the client, the
         client makes a refresh request to the token endpoint by adding the
-        following parameters using the "application/x-www-form-urlencoded"
+        following parameters using the `application/x-www-form-urlencoded`
         format in the HTTP request entity-body:
 
-        grant_type
-                REQUIRED.  Value MUST be set to "refresh_token".
-        refresh_token
-                REQUIRED.  The refresh token issued to the client.
-        scope
-                OPTIONAL.  The scope of the access request as described by
-                Section 3.3.  The requested scope MUST NOT include any scope
-                not originally granted by the resource owner, and if omitted is
-                treated as equal to the scope originally granted by the
-                resource owner. Note that if none is provided, the ones provided
-                in the constructor are used if any.
+        :param refresh_token: REQUIRED.  The refresh token issued to the client.
+        :param scope:  OPTIONAL.  The scope of the access request as described by
+            Section 3.3.  The requested scope MUST NOT include any scope
+            not originally granted by the resource owner, and if omitted is
+            treated as equal to the scope originally granted by the
+            resource owner. Note that if none is provided, the ones provided
+            in the constructor are used if any.
         """
         refresh_token = refresh_token or self.refresh_token
         scope = self.scope if scope is None else scope
@@ -491,19 +465,22 @@ class Client:
         return uri, headers, body
 
     def create_code_verifier(self, length):
-        """Create PKCE **code_verifier** used in computing **code_challenge**. 
+        """Create PKCE **code_verifier** used in computing **code_challenge**.
+        See `RFC7636 Section 4.1`_
 
-           :param length: REQUIRED. The length of the code_verifier.
+        :param length: REQUIRED. The length of the code_verifier.
 
-            The client first creates a code verifier, "code_verifier", for each
-            OAuth 2.0 [RFC6749] Authorization Request, in the following manner:
+        The client first creates a code verifier, "code_verifier", for each
+        OAuth 2.0 [RFC6749] Authorization Request, in the following manner:
 
-            code_verifier = high-entropy cryptographic random STRING using the
-            unreserved characters [A-Z] / [a-z] / [0-9] / "-" / "." / "_" / "~"
-            from Section 2.3 of [RFC3986], with a minimum length of 43 characters
-            and a maximum length of 128 characters.
-            
-            .. _`Section 4.1`: https://tools.ietf.org/html/rfc7636#section-4.1
+        .. code-block:: text
+
+               code_verifier = high-entropy cryptographic random STRING using the
+               unreserved characters [A-Z] / [a-z] / [0-9] / "-" / "." / "_" / "~"
+               from Section 2.3 of [RFC3986], with a minimum length of 43 characters
+               and a maximum length of 128 characters.
+
+        .. _`RFC7636 Section 4.1`: https://tools.ietf.org/html/rfc7636#section-4.1
         """
         code_verifier = None
 
@@ -513,11 +490,7 @@ class Client:
         if not length <= 128:
             raise ValueError("Length must be less than or equal to 128")
 
-        allowed_characters = re.compile('^[A-Zaa-z0-9-._~]')
-        code_verifier = secrets.token_urlsafe(length)
-
-        if not re.search(allowed_characters, code_verifier):
-            raise ValueError("code_verifier contains invalid characters")
+        code_verifier = generate_token(length, UNICODE_ASCII_CHARACTER_SET + "-._~")
 
         self.code_verifier = code_verifier
 
@@ -525,40 +498,37 @@ class Client:
 
     def create_code_challenge(self, code_verifier, code_challenge_method=None):
         """Create PKCE **code_challenge** derived from the  **code_verifier**.
+        See `RFC7636 Section 4.2`_
 
-           :param code_verifier: REQUIRED. The **code_verifier** generated from create_code_verifier().
-           :param code_challenge_method: OPTIONAL. The method used to derive the **code_challenge**. Acceptable
-                values include "S256". DEFAULT is "plain".
+        :param code_verifier: REQUIRED. The **code_verifier** generated from `create_code_verifier()`.
+        :param code_challenge_method: OPTIONAL. The method used to derive the **code_challenge**. Acceptable values include `S256`. DEFAULT is `plain`.
 
-
-            The client then creates a code challenge derived from the code
+               The client then creates a code challenge derived from the code
                verifier by using one of the following transformations on the code
-               verifier:
+               verifier::
 
-               plain
-                  code_challenge = code_verifier
+                   plain
+                      code_challenge = code_verifier
+                   S256
+                      code_challenge = BASE64URL-ENCODE(SHA256(ASCII(code_verifier)))
 
-               S256
-                  code_challenge = BASE64URL-ENCODE(SHA256(ASCII(code_verifier)))
-
-               If the client is capable of using "S256", it MUST use "S256", as
-               "S256" is Mandatory To Implement (MTI) on the server.  Clients are
-               permitted to use "plain" only if they cannot support "S256" for some
+               If the client is capable of using `S256`, it MUST use `S256`, as
+               `S256` is Mandatory To Implement (MTI) on the server.  Clients are
+               permitted to use `plain` only if they cannot support `S256` for some
                technical reason and know via out-of-band configuration that the
-               server supports "plain".
+               server supports `plain`.
 
                The plain transformation is for compatibility with existing
-               deployments and for constrained environments that can't use the S256
-               transformation.
+               deployments and for constrained environments that can't use the S256 transformation.
 
-            .. _`Section 4.2`: https://tools.ietf.org/html/rfc7636#section-4.2
+        .. _`RFC7636 Section 4.2`: https://tools.ietf.org/html/rfc7636#section-4.2
         """
         code_challenge = None
 
-        if code_verifier == None:
+        if code_verifier is None:
             raise ValueError("Invalid code_verifier")
 
-        if code_challenge_method == None:
+        if code_challenge_method is None:
             code_challenge_method = "plain"
             self.code_challenge_method = code_challenge_method
             code_challenge = code_verifier
@@ -612,15 +582,13 @@ class Client:
         if 'token_type' in response:
             self.token_type = response.get('token_type')
 
-        if 'expires_in' in response:
-            self.expires_in = response.get('expires_in')
-            self._expires_at = time.time() + int(self.expires_in)
-
-        if 'expires_at' in response:
-            try:
-                self._expires_at = int(response.get('expires_at'))
-            except:
-                self._expires_at = None
+        vin, vat, v_at = parse_expires(response)
+        if vin:
+            self.expires_in = vin
+        if vat:
+            self.expires_at = vat
+        if v_at:
+            self._expires_at = v_at
 
         if 'mac_key' in response:
             self.mac_key = response.get('mac_key')

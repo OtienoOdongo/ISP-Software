@@ -1,392 +1,554 @@
 # """
-# Built-in Signal Receivers
-# Receivers for model signals within the Authentication app
+# Production-ready Signal Receivers
+# Handles model signals with proper error handling and logging
 # """
 
-# from django.dispatch import receiver
-# from django.db.models.signals import post_save, pre_save, pre_delete
 # import logging
-# from typing import Dict, Any
-# from .emitters import (
-#     emit_pppoe_credentials_generated,
-#     emit_client_account_created,
-#     emit_account_status_changed,
+# import time
+# from typing import Dict, Optional, Set
+
+# from django.db import transaction
+# from django.db.models.signals import post_save, pre_delete, pre_save
+# from django.dispatch import receiver
+
+# from .core import (
+#     AccountStatusSignal,
+#     ClientAccountSignal,
+#     PPPoECredentialsSignal,
+#     SignalCacheManager,
+#     SignalType,
+#     account_status_changed,
+#     client_account_created,
+#     emit_signal_with_retry,
+#     pppoe_credentials_generated,
+#     send_notification,
 # )
 
 # logger = logging.getLogger(__name__)
-
-# # Import UserAccount model locally to avoid circular imports
-# def get_useraccount_model():
-#     """Lazy import of UserAccount model"""
-#     from django.apps import apps
-#     return apps.get_model('authentication', 'UserAccount')
 
 # # ==================== MODEL SIGNAL RECEIVERS ====================
 
 # @receiver(post_save)
 # def handle_user_account_save(sender, instance, created, **kwargs):
 #     """
-#     Handle UserAccount save events and emit appropriate signals
+#     Handle UserAccount save events with proper error handling and transaction safety
 #     """
-#     UserAccount = get_useraccount_model()
+#     # Lazy import to avoid circular imports
+#     try:
+#         from django.apps import apps
+#         UserAccount = apps.get_model('authentication', 'UserAccount')
+#     except Exception as e:
+#         logger.error(f"Failed to import UserAccount model: {e}")
+#         return
     
 #     # Only process UserAccount instances
 #     if sender != UserAccount:
 #         return
     
-#     logger.debug(f"UserAccount save signal: {instance.username}, created={created}")
+#     logger.debug(
+#         f"UserAccount save signal received: "
+#         f"id={instance.id}, "
+#         f"username={instance.username}, "
+#         f"created={created}"
+#     )
     
-#     # Track changes for update signals
 #     update_fields = kwargs.get('update_fields', set())
     
-#     # Handle new client creation
-#     if created and instance.user_type == 'client':
-#         logger.info(f"New client created via model save: {instance.username}")
+#     try:
+#         # Handle different scenarios based on what changed
+#         if created:
+#             _handle_new_account(instance)
+#         elif update_fields:
+#             _handle_account_updates(instance, update_fields)
         
-#         # Emit client account created signal
-#         emit_client_account_created(
-#             user_id=str(instance.id),
-#             username=instance.username,
-#             phone_number=instance.phone_number,
-#             connection_type=instance.connection_type,
-#             client_name=instance.name or "",
-#             created_by_admin=False  # Created via model, not admin UI
+#     except Exception as e:
+#         logger.error(
+#             f"Error handling UserAccount save signal for {instance.username}: {e}",
+#             exc_info=True
 #         )
-    
-#     # Handle PPPoE credential generation
-#     if (instance.connection_type == 'pppoe' and 
-#         instance.pppoe_username and 
-#         instance.pppoe_password):
-        
-#         # Check if this is a new credential generation
-#         if (created or 
-#             'pppoe_username' in update_fields or 
-#             'pppoe_password' in update_fields):
+
+# def _handle_new_account(instance) -> None:
+#     """Handle creation of new user account"""
+#     try:
+#         if instance.user_type == 'client':
+#             # Prepare signal data
+#             signal_data = ClientAccountSignal(
+#                 user_id=str(instance.id),
+#                 username=instance.username or '',
+#                 phone_number=instance.phone_number or '',
+#                 connection_type=instance.connection_type,
+#                 client_name=instance.name or '',
+#                 created_by_admin=instance.source == 'admin_dashboard'
+#             )
             
-#             logger.info(f"PPPoE credentials generated via model save: {instance.username}")
+#             # Emit signal with retry
+#             result = emit_signal_with_retry(
+#                 signal=client_account_created,
+#                 signal_type=SignalType.CLIENT_ACCOUNT_CREATED,
+#                 data=signal_data.to_dict(),
+#                 sender='authentication.models'
+#             )
             
-#             # Get decrypted password for signal
-#             try:
-#                 decrypted_password = instance.get_pppoe_password_decrypted()
-#                 if decrypted_password:
-#                     # Emit credentials generated signal
-#                     emit_pppoe_credentials_generated(
-#                         user_id=str(instance.id),
-#                         username=instance.username,
-#                         pppoe_username=instance.pppoe_username,
-#                         password=decrypted_password,
-#                         phone_number=instance.phone_number,
-#                         client_name=instance.name or "",
-#                         connection_type='pppoe'
-#                     )
-#             except Exception as e:
-#                 logger.error(f"Failed to emit PPPoE credentials signal: {e}")
-    
-#     # Handle account activation/deactivation
-#     if 'is_active' in update_fields:
-#         reason = "Account activated via system" if instance.is_active else "Account deactivated via system"
-#         changed_by_admin = kwargs.get('changed_by_admin', False)
+#             if result['success']:
+#                 logger.info(
+#                     f"Client account creation signal emitted: "
+#                     f"username={instance.username}, "
+#                     f"signal_id={result['signal_id']}"
+#                 )
+#             else:
+#                 logger.error(
+#                     f"Failed to emit client account creation signal: "
+#                     f"username={instance.username}, "
+#                     f"error={result['error']}"
+#                 )
         
-#         logger.info(f"Account status changed via model save: {instance.username} - {reason}")
+#         # For PPPoE clients, also check if credentials were generated
+#         if (instance.connection_type == 'pppoe' and 
+#             getattr(instance, 'pppoe_username', None) and 
+#             getattr(instance, 'pppoe_password', None)):
+            
+#             _handle_pppoe_credentials(instance)
+            
+#     except Exception as e:
+#         logger.error(f"Error handling new account for {instance.username}: {e}", exc_info=True)
+
+# def _handle_account_updates(instance, update_fields: Set[str]) -> None:
+#     """Handle updates to existing user account"""
+#     try:
+#         # Check for PPPoE credential generation/update
+#         if (instance.connection_type == 'pppoe' and 
+#             getattr(instance, 'pppoe_username', None) and 
+#             getattr(instance, 'pppoe_password', None)):
+            
+#             if ('pppoe_username' in update_fields or 
+#                 'pppoe_password' in update_fields):
+                
+#                 _handle_pppoe_credentials(instance)
         
-#         emit_account_status_changed(
+#         # Check for account status changes
+#         if 'is_active' in update_fields:
+#             _handle_account_status_change(instance)
+            
+#         # Check for PPPoE activation status
+#         if 'pppoe_active' in update_fields:
+#             _handle_pppoe_status_change(instance)
+            
+#     except Exception as e:
+#         logger.error(f"Error handling account updates for {instance.username}: {e}", exc_info=True)
+
+# def _handle_pppoe_credentials(instance) -> None:
+#     """Handle PPPoE credential generation or update"""
+#     try:
+#         # Get decrypted password - you need to implement this method
+#         # or adjust to your actual password field
+#         decrypted_password = getattr(instance, 'pppoe_password', '')
+        
+#         # If you have a method to decrypt, use it
+#         if hasattr(instance, 'get_pppoe_password_decrypted'):
+#             decrypted_password = instance.get_pppoe_password_decrypted()
+        
+#         if not decrypted_password:
+#             logger.warning(f"Cannot emit PPPoE credentials signal - password not available")
+#             return
+        
+#         # Prepare signal data
+#         signal_data = PPPoECredentialsSignal(
 #             user_id=str(instance.id),
-#             username=instance.username,
+#             username=instance.username or '',
+#             pppoe_username=instance.pppoe_username or '',
+#             password=decrypted_password,
+#             phone_number=instance.phone_number or '',
+#             client_name=instance.name or '',
+#             connection_type='pppoe'
+#         )
+        
+#         # Emit signal with retry
+#         result = emit_signal_with_retry(
+#             signal=pppoe_credentials_generated,
+#             signal_type=SignalType.PPPOE_CREDENTIALS_GENERATED,
+#             data=signal_data.to_dict(),
+#             sender='authentication.models'
+#         )
+        
+#         if result['success']:
+#             logger.info(
+#                 f"PPPoE credentials signal emitted: "
+#                 f"username={instance.username}, "
+#                 f"pppoe_username={instance.pppoe_username}, "
+#                 f"signal_id={result['signal_id']}"
+#             )
+#         else:
+#             logger.error(
+#                 f"Failed to emit PPPoE credentials signal: "
+#                 f"username={instance.username}, "
+#                 f"error={result['error']}"
+#             )
+            
+#     except Exception as e:
+#         logger.error(f"Error handling PPPoE credentials for {instance.username}: {e}", exc_info=True)
+
+# def _handle_account_status_change(instance) -> None:
+#     """Handle account activation/deactivation"""
+#     try:
+#         reason = "Account activated via system" if instance.is_active else "Account deactivated via system"
+        
+#         # Determine if changed by admin
+#         changed_by_admin = False
+#         admin_email = None
+        
+#         # In a real system, you'd track who made the change
+#         # For now, we'll check the source or use a default
+#         if getattr(instance, 'source', '') == 'admin_dashboard':
+#             changed_by_admin = True
+#             # admin_email would come from request context
+        
+#         # Prepare signal data
+#         signal_data = AccountStatusSignal(
+#             user_id=str(instance.id),
+#             username=instance.username or '',
 #             is_active=instance.is_active,
 #             reason=reason,
-#             changed_by_admin=changed_by_admin
+#             changed_by_admin=changed_by_admin,
+#             admin_email=admin_email
 #         )
-
-# @receiver(pre_save, sender='authentication.UserAccount')
-# def track_user_account_changes(sender, instance, **kwargs):
-#     """
-#     Track changes to UserAccount for audit purposes
-#     """
-#     if instance.pk:
-#         try:
-#             # Get original instance
-#             original = sender.objects.get(pk=instance.pk)
+        
+#         # Emit signal with retry
+#         result = emit_signal_with_retry(
+#             signal=account_status_changed,
+#             signal_type=SignalType.ACCOUNT_STATUS_CHANGED,
+#             data=signal_data.to_dict(),
+#             sender='authentication.models'
+#         )
+        
+#         if result['success']:
+#             logger.info(
+#                 f"Account status change signal emitted: "
+#                 f"username={instance.username}, "
+#                 f"status={'active' if instance.is_active else 'inactive'}, "
+#                 f"signal_id={result['signal_id']}"
+#             )
+#         else:
+#             logger.error(
+#                 f"Failed to emit account status change signal: "
+#                 f"username={instance.username}, "
+#                 f"error={result['error']}"
+#             )
             
-#             # Track changes
-#             changes = {}
-#             for field in ['is_active', 'pppoe_active', 'connection_type']:
-#                 original_value = getattr(original, field, None)
-#                 new_value = getattr(instance, field, None)
-#                 if original_value != new_value:
-#                     changes[field] = {'from': original_value, 'to': new_value}
-            
-#             if changes:
-#                 logger.debug(f"UserAccount changes tracked: {instance.username} - {changes}")
-#                 # Store changes in instance for post_save to use
-#                 instance._tracked_changes = changes
-                
-#         except sender.DoesNotExist:
-#             # New instance, no original to compare
-#             pass
+#     except Exception as e:
+#         logger.error(f"Error handling account status change for {instance.username}: {e}", exc_info=True)
 
-# @receiver(pre_delete, sender='authentication.UserAccount')
-# def handle_user_account_deletion(sender, instance, **kwargs):
-#     """
-#     Handle UserAccount deletion
-#     Emit signal for cleanup in other apps
-#     """
-#     logger.info(f"UserAccount deletion: {instance.username}")
-    
-#     # Emit account deactivation signal before deletion
-#     emit_account_status_changed(
-#         user_id=str(instance.id),
-#         username=instance.username,
-#         is_active=False,
-#         reason="Account deleted from system",
-#         changed_by_admin=True  # Assuming deletion is admin action
-#     )
+# def _handle_pppoe_status_change(instance) -> None:
+#     """Handle PPPoE activation status changes"""
+#     try:
+#         pppoe_active = getattr(instance, 'pppoe_active', False)
+#         reason = f"PPPoE {'activated' if pppoe_active else 'deactivated'}"
+        
+#         # Prepare signal data
+#         signal_data = {
+#             'user_id': str(instance.id),
+#             'username': instance.username or '',
+#             'pppoe_username': getattr(instance, 'pppoe_username', ''),
+#             'is_active': pppoe_active,
+#             'reason': reason,
+#             'timestamp': time.time()
+#         }
+        
+#         # Emit notification signal
+#         result = emit_signal_with_retry(
+#             signal=send_notification,
+#             signal_type=SignalType.SEND_NOTIFICATION,
+#             data=signal_data,
+#             sender='authentication.models'
+#         )
+        
+#         if result['success']:
+#             logger.info(
+#                 f"PPPoE status change signal emitted: "
+#                 f"username={instance.username}, "
+#                 f"pppoe_active={pppoe_active}"
+#             )
+#         else:
+#             logger.error(
+#                 f"Failed to emit PPPoE status change signal: "
+#                 f"username={instance.username}, "
+#                 f"error={result['error']}"
+#             )
+            
+#     except Exception as e:
+#         logger.error(f"Error handling PPPoE status change for {instance.username}: {e}", exc_info=True)
 
 # # ==================== CUSTOM SIGNAL RECEIVERS ====================
 
-# # These receivers listen to our own custom signals for internal processing
-# # Example: Log all PPPoE credential signals for audit
-
 # @receiver(pppoe_credentials_generated)
-# def log_pppoe_credentials_signal(sender, **kwargs):
+# def handle_pppoe_credentials_signal(sender, **kwargs):
 #     """
-#     Log all PPPoE credential generation signals for audit trail
+#     Handle PPPoE credentials signal - log for audit and forward to other apps
 #     """
-#     cache_key = kwargs.get('cache_key')
-#     username = kwargs.get('username')
-#     phone = kwargs.get('phone_number')
-    
-#     logger.info(
-#         f"PPPoE credentials signal received: "
-#         f"sender={sender}, user={username}, phone={phone}, "
-#         f"cache_key={cache_key}"
-#     )
+#     try:
+#         signal_id = kwargs.get('signal_id')
+#         username = kwargs.get('username')
+#         pppoe_username = kwargs.get('pppoe_username')
+#         phone = kwargs.get('phone_number')
+        
+#         # Log for audit trail
+#         logger.info(
+#             f"PPPoE credentials signal received: "
+#             f"signal_id={signal_id}, "
+#             f"sender={sender}, "
+#             f"user={username}, "
+#             f"pppoe_username={pppoe_username}, "
+#             f"phone={phone}"
+#         )
+        
+#         # In a real system, you might forward this to other services
+#         # For example, to a message queue or external API
+        
+#         # Update signal status
+#         if signal_id:
+#             SignalCacheManager.mark_as_delivered(signal_id)
+        
+#     except Exception as e:
+#         logger.error(f"Error handling PPPoE credentials signal: {e}", exc_info=True)
 
 # @receiver(client_account_created)
-# def log_client_creation_signal(sender, **kwargs):
+# def handle_client_account_signal(sender, **kwargs):
 #     """
-#     Log all client creation signals
+#     Handle client account creation signal
 #     """
-#     username = kwargs.get('username')
-#     connection_type = kwargs.get('connection_type')
+#     try:
+#         signal_id = kwargs.get('signal_id')
+#         username = kwargs.get('username')
+#         connection_type = kwargs.get('connection_type')
+        
+#         logger.info(
+#             f"Client account signal received: "
+#             f"signal_id={signal_id}, "
+#             f"sender={sender}, "
+#             f"user={username}, "
+#             f"type={connection_type}"
+#         )
+        
+#         # Update signal status
+#         if signal_id:
+#             SignalCacheManager.mark_as_delivered(signal_id)
+        
+#     except Exception as e:
+#         logger.error(f"Error handling client account signal: {e}", exc_info=True)
+
+# @receiver(account_status_changed)
+# def handle_account_status_signal(sender, **kwargs):
+#     """
+#     Handle account status change signal
+#     """
+#     try:
+#         signal_id = kwargs.get('signal_id')
+#         username = kwargs.get('username')
+#         is_active = kwargs.get('is_active')
+#         reason = kwargs.get('reason')
+        
+#         logger.info(
+#             f"Account status signal received: "
+#             f"signal_id={signal_id}, "
+#             f"sender={sender}, "
+#             f"user={username}, "
+#             f"status={'active' if is_active else 'inactive'}, "
+#             f"reason={reason}"
+#         )
+        
+#         # Update signal status
+#         if signal_id:
+#             SignalCacheManager.mark_as_delivered(signal_id)
+        
+#     except Exception as e:
+#         logger.error(f"Error handling account status signal: {e}", exc_info=True)
+
+# # ==================== UTILITY RECEIVERS ====================
+
+# @receiver(pre_save, sender='authentication.UserAccount')
+# def track_changes_before_save(sender, instance, **kwargs):
+#     """
+#     Track changes before saving for audit purposes
+#     """
+#     if not instance.pk:
+#         return  # New instance
     
-#     logger.info(
-#         f"Client creation signal received: "
-#         f"sender={sender}, user={username}, type={connection_type}"
-#     )
+#     try:
+#         # Get original instance
+#         original = sender.objects.get(pk=instance.pk)
+        
+#         # Track important field changes
+#         changes = {}
+        
+#         fields_to_track = [
+#             'is_active', 'pppoe_active', 'connection_type',
+#             'pppoe_username', 'name', 'phone_number'
+#         ]
+        
+#         for field in fields_to_track:
+#             original_value = getattr(original, field, None)
+#             new_value = getattr(instance, field, None)
+            
+#             if original_value != new_value:
+#                 changes[field] = {
+#                     'from': original_value,
+#                     'to': new_value,
+#                     'changed_at': time.time()
+#                 }
+        
+#         # Store changes for post_save handler
+#         if changes:
+#             instance._tracked_changes = changes
+#             logger.debug(f"Tracked changes for {instance.username}: {list(changes.keys())}")
+            
+#     except sender.DoesNotExist:
+#         pass  # New instance
+#     except Exception as e:
+#         logger.error(f"Error tracking changes for {instance.username}: {e}")
+
+# @receiver(pre_delete, sender='authentication.UserAccount')
+# def handle_account_deletion(sender, instance, **kwargs):
+#     """
+#     Handle account deletion - emit deactivation signal
+#     """
+#     try:
+#         # Emit account deactivation signal before deletion
+#         signal_data = AccountStatusSignal(
+#             user_id=str(instance.id),
+#             username=instance.username or '',
+#             is_active=False,
+#             reason="Account permanently deleted from system",
+#             changed_by_admin=True
+#         )
+        
+#         # Use direct emission without waiting for response
+#         emit_signal_with_retry(
+#             signal=account_status_changed,
+#             signal_type=SignalType.ACCOUNT_STATUS_CHANGED,
+#             data=signal_data.to_dict(),
+#             sender='authentication.models'
+#         )
+        
+#         logger.warning(
+#             f"Account deletion signal emitted: "
+#             f"username={instance.username}, "
+#             f"user_id={instance.id}"
+#         )
+        
+#     except Exception as e:
+#         logger.error(f"Error handling account deletion for {instance.username}: {e}", exc_info=True)
 
 # # ==================== SIGNAL REGISTRATION ====================
 
 # def register_model_receivers():
 #     """
-#     Explicitly register model signal receivers
+#     Explicitly register all model signal receivers
+#     This should be called from AppConfig.ready()
 #     """
-#     # Receivers are already registered via @receiver decorators
-#     # This function is for clarity and explicit registration if needed
-#     logger.info("Authentication model signal receivers registered")
-#     return True
-
-
-
-
-
-
+#     try:
+#         # Import UserAccount model
+#         from django.apps import apps
+        
+#         try:
+#             UserAccount = apps.get_model('authentication', 'UserAccount')
+            
+#             # Connect pre_save and pre_delete
+#             pre_save.connect(track_changes_before_save, sender=UserAccount)
+#             pre_delete.connect(handle_account_deletion, sender=UserAccount)
+            
+#             # post_save is already connected via @receiver decorator
+            
+#             logger.info("✅ Authentication model signal receivers registered successfully")
+#             return True
+            
+#         except LookupError:
+#             logger.warning("UserAccount model not found. Skipping model receiver registration.")
+#             return False
+        
+#     except Exception as e:
+#         logger.error(f"❌ Failed to register model receivers: {e}")
+#         return False
 
 
 """
-Built-in Signal Receivers
-Receivers for model signals within the Authentication app
+Authentication Signal Receivers
+Handles signals with proper error handling
 """
 
-from django.dispatch import receiver
-from django.db.models.signals import post_save, pre_save, pre_delete
 import logging
-from typing import Dict, Any
-
-# Import signals from core module
+from django.dispatch import receiver
 from .core import (
+    SignalCacheManager,
     pppoe_credentials_generated,
     client_account_created,
-    pppoe_credentials_updated,
     account_status_changed,
-    authentication_failed,
-    send_notification,
-)
-
-# Import emitters from emitters module
-from .emitters import (
-    emit_pppoe_credentials_generated,
-    emit_client_account_created,
-    emit_account_status_changed,
 )
 
 logger = logging.getLogger(__name__)
 
-# Import UserAccount model locally to avoid circular imports
-def get_useraccount_model():
-    """Lazy import of UserAccount model"""
-    from django.apps import apps
-    return apps.get_model('authentication', 'UserAccount')
-
-# ==================== MODEL SIGNAL RECEIVERS ====================
-
-@receiver(post_save)
-def handle_user_account_save(sender, instance, created, **kwargs):
-    """
-    Handle UserAccount save events and emit appropriate signals
-    """
-    UserAccount = get_useraccount_model()
-    
-    # Only process UserAccount instances
-    if sender != UserAccount:
-        return
-    
-    logger.debug(f"UserAccount save signal: {instance.username}, created={created}")
-    
-    # Track changes for update signals
-    update_fields = kwargs.get('update_fields', set())
-    
-    # Handle new client creation
-    if created and instance.user_type == 'client':
-        logger.info(f"New client created via model save: {instance.username}")
-        
-        # Emit client account created signal
-        emit_client_account_created(
-            user_id=str(instance.id),
-            username=instance.username,
-            phone_number=instance.phone_number,
-            connection_type=instance.connection_type,
-            client_name=instance.name or "",
-            created_by_admin=False  # Created via model, not admin UI
-        )
-    
-    # Handle PPPoE credential generation
-    if (instance.connection_type == 'pppoe' and 
-        instance.pppoe_username and 
-        instance.pppoe_password):
-        
-        # Check if this is a new credential generation
-        if (created or 
-            'pppoe_username' in update_fields or 
-            'pppoe_password' in update_fields):
-            
-            logger.info(f"PPPoE credentials generated via model save: {instance.username}")
-            
-            # Get decrypted password for signal
-            try:
-                decrypted_password = instance.get_pppoe_password_decrypted()
-                if decrypted_password:
-                    # Emit credentials generated signal
-                    emit_pppoe_credentials_generated(
-                        user_id=str(instance.id),
-                        username=instance.username,
-                        pppoe_username=instance.pppoe_username,
-                        password=decrypted_password,
-                        phone_number=instance.phone_number,
-                        client_name=instance.name or "",
-                        connection_type='pppoe'
-                    )
-            except Exception as e:
-                logger.error(f"Failed to emit PPPoE credentials signal: {e}")
-    
-    # Handle account activation/deactivation
-    if 'is_active' in update_fields:
-        reason = "Account activated via system" if instance.is_active else "Account deactivated via system"
-        changed_by_admin = kwargs.get('changed_by_admin', False)
-        
-        logger.info(f"Account status changed via model save: {instance.username} - {reason}")
-        
-        emit_account_status_changed(
-            user_id=str(instance.id),
-            username=instance.username,
-            is_active=instance.is_active,
-            reason=reason,
-            changed_by_admin=changed_by_admin
-        )
-
-@receiver(pre_save, sender='authentication.UserAccount')
-def track_user_account_changes(sender, instance, **kwargs):
-    """
-    Track changes to UserAccount for audit purposes
-    """
-    if instance.pk:
-        try:
-            # Get original instance
-            original = sender.objects.get(pk=instance.pk)
-            
-            # Track changes
-            changes = {}
-            for field in ['is_active', 'pppoe_active', 'connection_type']:
-                original_value = getattr(original, field, None)
-                new_value = getattr(instance, field, None)
-                if original_value != new_value:
-                    changes[field] = {'from': original_value, 'to': new_value}
-            
-            if changes:
-                logger.debug(f"UserAccount changes tracked: {instance.username} - {changes}")
-                # Store changes in instance for post_save to use
-                instance._tracked_changes = changes
-                
-        except sender.DoesNotExist:
-            # New instance, no original to compare
-            pass
-
-@receiver(pre_delete, sender='authentication.UserAccount')
-def handle_user_account_deletion(sender, instance, **kwargs):
-    """
-    Handle UserAccount deletion
-    Emit signal for cleanup in other apps
-    """
-    logger.info(f"UserAccount deletion: {instance.username}")
-    
-    # Emit account deactivation signal before deletion
-    emit_account_status_changed(
-        user_id=str(instance.id),
-        username=instance.username,
-        is_active=False,
-        reason="Account deleted from system",
-        changed_by_admin=True  # Assuming deletion is admin action
-    )
-
 # ==================== CUSTOM SIGNAL RECEIVERS ====================
 
-# These receivers listen to our own custom signals for internal processing
-# Example: Log all PPPoE credential signals for audit
-
 @receiver(pppoe_credentials_generated)
-def log_pppoe_credentials_signal(sender, **kwargs):
+def handle_pppoe_credentials_signal(sender, **kwargs):
     """
-    Log all PPPoE credential generation signals for audit trail
+    Handle PPPoE credentials signal
     """
-    cache_key = kwargs.get('cache_key')
-    username = kwargs.get('username')
-    phone = kwargs.get('phone_number')
-    
-    logger.info(
-        f"PPPoE credentials signal received: "
-        f"sender={sender}, user={username}, phone={phone}, "
-        f"cache_key={cache_key}"
-    )
+    try:
+        signal_id = kwargs.get('signal_id')
+        username = kwargs.get('username')
+        pppoe_username = kwargs.get('pppoe_username')
+        
+        logger.info(
+            f"PPPoE credentials signal received: "
+            f"user={username}, "
+            f"pppoe_username={pppoe_username}"
+        )
+        
+        if signal_id:
+            SignalCacheManager.mark_as_delivered(signal_id)
+        
+    except Exception as e:
+        logger.error(f"Error handling PPPoE credentials signal: {e}", exc_info=True)
 
 @receiver(client_account_created)
-def log_client_creation_signal(sender, **kwargs):
+def handle_client_account_signal(sender, **kwargs):
     """
-    Log all client creation signals
+    Handle client account creation signal
     """
-    username = kwargs.get('username')
-    connection_type = kwargs.get('connection_type')
-    
-    logger.info(
-        f"Client creation signal received: "
-        f"sender={sender}, user={username}, type={connection_type}"
-    )
+    try:
+        signal_id = kwargs.get('signal_id')
+        username = kwargs.get('username')
+        connection_type = kwargs.get('connection_type')
+        
+        logger.info(
+            f"Client account signal received: "
+            f"user={username}, "
+            f"type={connection_type}"
+        )
+        
+        if signal_id:
+            SignalCacheManager.mark_as_delivered(signal_id)
+        
+    except Exception as e:
+        logger.error(f"Error handling client account signal: {e}", exc_info=True)
 
-# ==================== SIGNAL REGISTRATION ====================
-
-def register_model_receivers():
+@receiver(account_status_changed)
+def handle_account_status_signal(sender, **kwargs):
     """
-    Explicitly register model signal receivers
+    Handle account status change signal
     """
-    # Receivers are already registered via @receiver decorators
-    # This function is for clarity and explicit registration if needed
-    logger.info("Authentication model signal receivers registered")
-    return True
+    try:
+        signal_id = kwargs.get('signal_id')
+        username = kwargs.get('username')
+        is_active = kwargs.get('is_active')
+        
+        logger.info(
+            f"Account status signal received: "
+            f"user={username}, "
+            f"status={'active' if is_active else 'inactive'}"
+        )
+        
+        if signal_id:
+            SignalCacheManager.mark_as_delivered(signal_id)
+        
+    except Exception as e:
+        logger.error(f"Error handling account status signal: {e}", exc_info=True)

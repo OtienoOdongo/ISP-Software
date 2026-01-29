@@ -1,4 +1,4 @@
-import base64
+from typing import Any
 
 from .oauth import BaseOAuth2
 
@@ -16,9 +16,9 @@ class ZoomOAuth2(BaseOAuth2):
     DEFAULT_SCOPE = ["user:read"]
     REFRESH_TOKEN_METHOD = "POST"
     REDIRECT_STATE = False
-    EXTRA_DATA = [("expires_in", "expires")]
+    EXTRA_DATA = [("expires_in", "expires_in")]
 
-    def user_data(self, access_token, *args, **kwargs):
+    def user_data(self, access_token: str, *args, **kwargs) -> dict[str, Any] | None:
         return self.get_json(
             self.USER_DETAILS_URL,
             headers={"Authorization": f"Bearer {access_token}"},
@@ -46,12 +46,7 @@ class ZoomOAuth2(BaseOAuth2):
         }
 
     def auth_headers(self):
-        return {
-            "Authorization": b"Basic "
-            + base64.urlsafe_b64encode(
-                "{}:{}".format(*self.get_key_and_secret()).encode()
-            )
-        }
+        return {"Authorization": self.get_key_and_secret_basic_auth()}
 
     def refresh_token_params(self, token, *args, **kwargs):
         return {"refresh_token": token, "grant_type": "refresh_token"}

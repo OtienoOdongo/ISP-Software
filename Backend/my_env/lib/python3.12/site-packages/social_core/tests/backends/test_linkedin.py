@@ -36,35 +36,36 @@ class LinkedinOpenIdConnectTest(OpenIdConnectTest, BaseAuthUrlTestMixin):
         }
     )
 
-    def test_invalid_nonce(self):
+    def test_invalid_nonce(self) -> None:
         """Skip the invalid nonce test as LinkedIn does not provide any nonce."""
 
 
 class BaseLinkedinTest:
-    user_data_url = "https://api.linkedin.com/v2/userinfo"
+    user_data_url = "https://api.linkedin.com/v2/me?projection=(firstName,id,lastName)"
     expected_username = "FooBar"
     access_token_body = json.dumps({"access_token": "foobar", "token_type": "bearer"})
 
     # Reference:
-    # https://learn.microsoft.com/en-us/linkedin/consumer/integrations/self
-    # -serve/sign-in-with-linkedin-v2#response-body-schema
+    # https://docs.microsoft.com/en-us/linkedin/consumer/integrations/self
+    # -serve/sign-in-with-linkedin?context=linkedin/consumer/context#api-request
     user_data_body = json.dumps(
         {
-            "sub": "782bbtaQ",
-            "name": "FooBar",
-            "given_name": "Foo",
-            "family_name": "Bar",
-            "picture": "https://media.licdn-ei.com/dms/image/C5F03AQHqK8v7tB1HCQ/profile-displayphoto-shrink_100_100/0/",
-            "locale": "en-US",
-            "email": "doe@email.com",
-            "email_verified": True,
+            "id": "1010101010",
+            "firstName": {
+                "localized": {"en_US": "Foo"},
+                "preferredLocale": {"country": "US", "language": "en"},
+            },
+            "lastName": {
+                "localized": {"en_US": "Bar"},
+                "preferredLocale": {"country": "US", "language": "en"},
+            },
         }
     )
 
-    def test_login(self):
+    def test_login(self) -> None:
         self.do_login()  # type: ignore[attr-defined]
 
-    def test_partial_pipeline(self):
+    def test_partial_pipeline(self) -> None:
         self.do_partial_pipeline()  # type: ignore[attr-defined]
 
 

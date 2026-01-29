@@ -202,3 +202,4 @@ class OperationLog(models.Model):
             'time_range_hours': hours,
             'timestamp': timezone.now().isoformat(),
         }
+

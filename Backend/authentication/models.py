@@ -7,11 +7,10 @@
 # 1. Authenticated Users (Admins/Staff): Email + Password (Django Admin/Dashboard)
 # 2. Client Users: Phone-based (Hotspot) or PPPoE credentials
 
-# Architecture Principles:
-# - Authentication app ONLY handles identity and authentication
-# - No SMS functionality - that's handled by UserManagement app
-# - No internet plans - that's handled by InternetPlans app
-# - No statistics/health checks - those are separate concerns
+# SUPPORTS:
+# - Captive Portal Registration (Hotspot users self-register)
+# - Admin Dashboard Registration (Manual client creation)
+# - PPPoE clients with auto-generated credentials
 # """
 
 # from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
@@ -275,8 +274,41 @@
 #     Custom User Manager with clear separation of concerns:
 #     - Creates authenticated users (email + password)
 #     - Creates client users (phone-based or PPPoE)
-#     - No SMS functionality - that's handled by UserManagement app
+#     - Supports both admin dashboard and captive portal registration
 #     """
+    
+#     # ADD THIS METHOD - Required by Djoser
+#     def create_user(self, email, password=None, **extra_fields):
+#         """
+#         Create and save a user with the given email and password.
+#         This method is required by Djoser for user registration.
+#         """
+#         if not email:
+#             raise ValueError('Users must have an email address')
+        
+#         email = self.normalize_email(email)
+        
+#         # Check for existing email
+#         if self.model.objects.filter(email=email).exists():
+#             raise ValueError(f"Email {email} already exists")
+        
+#         # Create user - authenticated users don't have usernames
+#         user = self.model(
+#             id=uuid.uuid4(),
+#             email=email,
+#             name=extra_fields.pop('name', email.split('@')[0]),
+#             user_type=extra_fields.pop('user_type', 'staff'),
+#             is_staff=True,
+#             is_active=True,
+#             source='admin_dashboard',
+#             **extra_fields,
+#         )
+        
+#         user.set_password(password)
+#         user.save(using=self._db)
+        
+#         logger.info(f"Created user via Djoser: {user.email}")
+#         return user
     
 #     def create_authenticated_user(
 #         self, 
@@ -309,6 +341,7 @@
 #             user_type=extra_fields.pop('user_type', 'staff'),
 #             is_staff=True,
 #             is_active=True,
+#             source='admin_dashboard',
 #             **extra_fields,
 #         )
         
@@ -323,12 +356,14 @@
 #         phone_number: str,
 #         client_name: str = None,
 #         connection_type: str = "hotspot",
+#         source: str = "admin_dashboard",  # 'admin_dashboard' or 'captive_portal'
 #         **extra_fields
 #     ) -> 'UserAccount':
 #         """
 #         Create client user (hotspot or PPPoE)
 #         Hotspot clients: phone only, no password
 #         PPPoE clients: phone + name, with generated credentials
+#         Supports both admin dashboard and captive portal registration
 #         """
 #         # Validate and normalize phone
 #         if not PhoneValidation.is_valid_kenyan_phone(phone_number):
@@ -337,8 +372,19 @@
 #         normalized_phone = PhoneValidation.normalize_kenyan_phone(phone_number)
         
 #         # Check for existing phone (clients must have unique phones)
-#         if self.model.objects.filter(phone_number=normalized_phone).exists():
-#             raise ValueError(f"Phone number {normalized_phone} already registered")
+#         existing_user = self.model.objects.filter(phone_number=normalized_phone).first()
+#         if existing_user:
+#             # If user exists and is active, return existing user
+#             if existing_user.is_active:
+#                 logger.info(f"User with phone {normalized_phone} already exists, returning existing user")
+#                 return existing_user
+#             else:
+#                 # If user exists but is inactive, reactivate
+#                 existing_user.is_active = True
+#                 existing_user.source = source
+#                 existing_user.save()
+#                 logger.info(f"Reactivated inactive user: {existing_user.username}")
+#                 return existing_user
         
 #         # Generate username from phone
 #         username = IDGenerator.generate_client_username(normalized_phone)
@@ -354,6 +400,7 @@
 #             is_staff=False,
 #             is_superuser=False,
 #             is_active=True,
+#             source=source,
 #             **extra_fields,
 #         )
         
@@ -361,7 +408,7 @@
 #         user.set_unusable_password()
 #         user.save(using=self._db)
         
-#         logger.info(f"Created client user: {username} ({connection_type})")
+#         logger.info(f"Created client user: {username} ({connection_type}) via {source}")
 #         return user
     
 #     def create_superuser(self, email: str, password: str, **extra_fields):
@@ -369,6 +416,7 @@
 #         extra_fields.setdefault('user_type', 'admin')
 #         extra_fields.setdefault('is_staff', True)
 #         extra_fields.setdefault('is_superuser', True)
+#         extra_fields.setdefault('source', 'system')
         
 #         return self.create_authenticated_user(
 #             email=email,
@@ -383,11 +431,7 @@
 #     Core User Model with clear separation:
 #     - Authenticated Users: Email + Password (for Dashboard)
 #     - Client Users: Phone-based (Hotspot) or PPPoE credentials
-    
-#     Architectural Boundaries:
-#     - No SMS functionality - UserManagement app handles that
-#     - No plan management - InternetPlans app handles that
-#     - Only authentication and identity management
+#     - Supports captive portal self-registration
 #     """
     
 #     # ========== UUID PRIMARY KEY ==========
@@ -409,7 +453,17 @@
 #     # Connection type choices for clients only
 #     CONNECTION_TYPES = (
 #         ("hotspot", "Hotspot"),      # WiFi users (captive portal)
-#         ("pppoe", "PPPoE"),          # Ethernet users (PPPoE auth)
+#         ("pppoe", "PPPoE"),  
+#         ("admin", "Admin"), 
+                
+#     )
+    
+#     # Source of user creation
+#     SOURCE_CHOICES = (
+#         ("admin_dashboard", "Admin Dashboard"),
+#         ("captive_portal", "Captive Portal"),
+#         ("api", "API"),
+#         ("system", "System"),
 #     )
     
 #     # ========== IDENTITY FIELDS ==========
@@ -465,6 +519,14 @@
 #         help_text="Connection type for client users only"
 #     )
     
+#     source = models.CharField(
+#         max_length=20,
+#         choices=SOURCE_CHOICES,
+#         default="admin_dashboard",
+#         db_index=True,
+#         help_text="Source of user creation"
+#     )
+    
 #     is_active = models.BooleanField(default=True, db_index=True)
 #     is_staff = models.BooleanField(default=False)
     
@@ -509,11 +571,13 @@
 #             models.Index(fields=['phone_number', 'is_active']),
 #             models.Index(fields=['pppoe_username', 'pppoe_active']),
 #             models.Index(fields=['date_joined']),
+#             models.Index(fields=['source']),
             
 #             # Partial indexes for better performance
 #             models.Index(fields=['user_type'], condition=models.Q(user_type='client'), name='idx_client_users'),
 #             models.Index(fields=['connection_type'], condition=models.Q(connection_type='pppoe'), name='idx_pppoe_users'),
 #             models.Index(fields=['is_active'], condition=models.Q(is_active=True), name='idx_active_users'),
+#             models.Index(fields=['source'], condition=models.Q(source='captive_portal'), name='idx_captive_users'),
 #         ]
 #         ordering = ['-date_joined']
     
@@ -550,6 +614,16 @@
 #     def is_hotspot_client(self) -> bool:
 #         """Check if user is a hotspot client"""
 #         return self.is_client and self.connection_type == 'hotspot'
+    
+#     @property
+#     def is_captive_portal_user(self) -> bool:
+#         """Check if user was created via captive portal"""
+#         return self.source == 'captive_portal'
+    
+#     @property
+#     def is_admin_created_user(self) -> bool:
+#         """Check if user was created by admin"""
+#         return self.source == 'admin_dashboard'
     
 #     # ========== PHONE METHODS ==========
 #     def get_phone_display(self) -> str:
@@ -751,6 +825,8 @@
 #             'user_type': self.user_type,
 #             'user_type_display': self.get_user_type_display(),
 #             'is_active': self.is_active,
+#             'source': self.source,
+#             'source_display': self.get_source_display(),
 #             'date_joined': self.date_joined.isoformat() if self.date_joined else None,
 #         }
         
@@ -764,6 +840,7 @@
 #                 'connection_type_display': self.get_connection_type_display(),
 #                 'is_pppoe_client': self.is_pppoe_client,
 #                 'is_hotspot_client': self.is_hotspot_client,
+#                 'is_captive_portal_user': self.is_captive_portal_user,
 #             })
             
 #             if self.is_pppoe_client:
@@ -789,7 +866,7 @@
     
 #     # ========== CLASS METHODS ==========
 #     @classmethod
-#     def get_client_by_phone(cls, phone_number: str) -> Optional['UserAccount']:
+#     def get_client_by_phone(cls, phone_number: str, active_only: bool = True) -> Optional['UserAccount']:
 #         """
 #         Get client user by phone number
 #         Used by hotspot landing page to find/create clients
@@ -800,20 +877,69 @@
 #             return None
         
 #         try:
-#             return cls.objects.get(
+#             query = cls.objects.filter(
 #                 phone_number=normalized,
-#                 user_type='client',
-#                 is_active=True
+#                 user_type='client'
 #             )
+            
+#             if active_only:
+#                 query = query.filter(is_active=True)
+            
+#             return query.first()
 #         except cls.DoesNotExist:
 #             return None
 #         except cls.MultipleObjectsReturned:
 #             # Handle duplicates by returning first active client
-#             return cls.objects.filter(
+#             query = cls.objects.filter(
 #                 phone_number=normalized,
-#                 user_type='client',
-#                 is_active=True
-#             ).first()
+#                 user_type='client'
+#             )
+            
+#             if active_only:
+#                 query = query.filter(is_active=True)
+            
+#             return query.first()
+    
+#     @classmethod
+#     def get_or_create_client_by_phone(
+#         cls, 
+#         phone_number: str, 
+#         connection_type: str = "hotspot",
+#         source: str = "captive_portal"
+#     ) -> tuple['UserAccount', bool]:
+#         """
+#         Get existing client by phone or create new one
+#         Returns (user, created) tuple
+#         """
+#         normalized = PhoneValidation.normalize_kenyan_phone(phone_number)
+        
+#         if not normalized:
+#             raise ValueError("Invalid phone number")
+        
+#         # Try to get existing client
+#         user = cls.get_client_by_phone(normalized, active_only=False)
+        
+#         if user:
+#             # If user exists but is inactive, reactivate
+#             if not user.is_active:
+#                 user.is_active = True
+#                 user.source = source
+#                 user.save()
+#                 logger.info(f"Reactivated inactive user: {user.username}")
+#                 return user, False
+#             return user, False
+        
+#         # Create new client
+#         try:
+#             user = cls.objects.create_client_user(
+#                 phone_number=normalized,
+#                 connection_type=connection_type,
+#                 source=source
+#             )
+#             return user, True
+#         except Exception as e:
+#             logger.error(f"Failed to create client user: {e}")
+#             raise
     
 #     @classmethod
 #     def get_pppoe_client_by_username(cls, username: str) -> Optional['UserAccount']:
@@ -837,19 +963,20 @@
 
 
 
-
-
-
 """
 AUTHENTICATION APP - Core User Identity Management
-Handles only authentication-related functionality for two user types:
-1. Authenticated Users (Admins/Staff): Email + Password (Django Admin/Dashboard)
+Enhanced version with clear separation for Djoser compatibility and client users.
+
+TWO USER TYPES:
+1. Authenticated Users (Admins/Staff): Email + Password (Djoser-based, for Dashboard)
 2. Client Users: Phone-based (Hotspot) or PPPoE credentials
 
-SUPPORTS:
-- Captive Portal Registration (Hotspot users self-register)
-- Admin Dashboard Registration (Manual client creation)
-- PPPoE clients with auto-generated credentials
+FIXES IMPLEMENTED:
+- Djoser compatibility for email registration
+- Clear separation of user types in validation
+- Fixed email validation conflicts
+- Proper UUID primary key for all users
+- Production-ready encryption for PPPoE passwords
 """
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
@@ -866,7 +993,7 @@ import uuid
 import secrets
 import string
 import base64
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple
 from datetime import datetime
 import logging
 import re
@@ -1110,28 +1237,20 @@ class IDGenerator:
 # ==================== USER MANAGER ====================
 class UserAccountManager(BaseUserManager):
     """
-    Custom User Manager with clear separation of concerns:
-    - Creates authenticated users (email + password)
-    - Creates client users (phone-based or PPPoE)
-    - Supports both admin dashboard and captive portal registration
+    Enhanced User Manager with Djoser compatibility
+    Supports both Djoser registration and client creation workflows
     """
     
-    def create_authenticated_user(
-        self, 
-        email: str, 
-        password: str, 
-        name: str = None,
-        **extra_fields
-    ) -> 'UserAccount':
+    def create_user(self, email=None, password=None, **extra_fields):
         """
-        Create authenticated user (admin/staff) for dashboard access
-        Uses email + password authentication (handled by Djoser)
+        Create and save a user with the given email and password.
+        This method is REQUIRED by Djoser and Django.
+        
+        IMPORTANT: This is for AUTHENTICATED users only (dashboard access)
+        For client users, use create_client_user() method instead.
         """
         if not email:
-            raise ValueError("Email is required for authenticated users")
-        
-        if not password:
-            raise ValueError("Password is required for authenticated users")
+            raise ValueError('Authenticated users must have an email address')
         
         email = self.normalize_email(email)
         
@@ -1139,12 +1258,69 @@ class UserAccountManager(BaseUserManager):
         if self.model.objects.filter(email=email).exists():
             raise ValueError(f"Email {email} already exists")
         
+        # Set default values for authenticated users
+        extra_fields.setdefault('user_type', 'staff')
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_active', False)  # Djoser will activate via email
+        extra_fields.setdefault('source', 'djoser_registration')
+        
         # Create user - authenticated users don't have usernames
         user = self.model(
             id=uuid.uuid4(),
             email=email,
+            name=extra_fields.pop('name', email.split('@')[0]),
+            **extra_fields,
+        )
+        
+        user.set_password(password)
+        user.save(using=self._db)
+        
+        logger.info(f"Created authenticated user via Djoser: {user.email}")
+        return user
+    
+    def create_superuser(self, email, password, **extra_fields):
+        """Create superuser for Django admin"""
+        extra_fields.setdefault('user_type', 'admin')
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('source', 'system')
+        
+        return self.create_user(email, password, **extra_fields)
+    
+    def create_authenticated_user(
+        self, 
+        email: str, 
+        password: str, 
+        name: str = None,
+        user_type: str = "staff",
+        **extra_fields
+    ) -> 'UserAccount':
+        """
+        Create authenticated user (admin/staff) programmatically
+        For manual creation via admin dashboard, not Djoser registration
+        """
+        if not email:
+            raise ValueError("Email is required for authenticated users")
+        
+        if not password:
+            raise ValueError("Password is required for authenticated users")
+        
+        if user_type not in ['staff', 'admin']:
+            raise ValueError("Invalid user type for authenticated user")
+        
+        email = self.normalize_email(email)
+        
+        # Check for existing email
+        if self.model.objects.filter(email=email).exists():
+            raise ValueError(f"Email {email} already exists")
+        
+        # Create user
+        user = self.model(
+            id=uuid.uuid4(),
+            email=email,
             name=name or email.split('@')[0],
-            user_type=extra_fields.pop('user_type', 'staff'),
+            user_type=user_type,
             is_staff=True,
             is_active=True,
             source='admin_dashboard',
@@ -1162,7 +1338,7 @@ class UserAccountManager(BaseUserManager):
         phone_number: str,
         client_name: str = None,
         connection_type: str = "hotspot",
-        source: str = "admin_dashboard",  # 'admin_dashboard' or 'captive_portal'
+        source: str = "admin_dashboard",  # 'admin_dashboard', 'captive_portal', 'api'
         **extra_fields
     ) -> 'UserAccount':
         """
@@ -1216,27 +1392,19 @@ class UserAccountManager(BaseUserManager):
         
         logger.info(f"Created client user: {username} ({connection_type}) via {source}")
         return user
-    
-    def create_superuser(self, email: str, password: str, **extra_fields):
-        """Create superuser for Django admin"""
-        extra_fields.setdefault('user_type', 'admin')
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('source', 'system')
-        
-        return self.create_authenticated_user(
-            email=email,
-            password=password,
-            **extra_fields
-        )
 
 
 # ==================== USER MODEL ====================
 class UserAccount(AbstractBaseUser, PermissionsMixin):
     """
-    Core User Model with clear separation:
-    - Authenticated Users: Email + Password (for Dashboard)
+    Enhanced User Model with clear separation:
+    - Authenticated Users: Email + Password (Djoser for Dashboard)
     - Client Users: Phone-based (Hotspot) or PPPoE credentials
+    
+    KEY CHANGES:
+    - Fixed Djoser compatibility for authenticated user registration
+    - Clear separation of user types with proper validation
+    - Email is optional for client users (not used by them)
     - Supports captive portal self-registration
     """
     
@@ -1259,11 +1427,13 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     # Connection type choices for clients only
     CONNECTION_TYPES = (
         ("hotspot", "Hotspot"),      # WiFi users (captive portal)
-        ("pppoe", "PPPoE"),          # Ethernet users (PPPoE auth)
+        ("pppoe", "PPPoE"),  
+        ("admin", "Admin"),          # Admin/dashboard access
     )
     
     # Source of user creation
     SOURCE_CHOICES = (
+        ("djoser_registration", "Djoser Registration"),  # Email signup
         ("admin_dashboard", "Admin Dashboard"),
         ("captive_portal", "Captive Portal"),
         ("api", "API"),
@@ -1295,7 +1465,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
         null=True, 
         blank=True,
         db_index=True,
-        help_text="Email address for authenticated users only"
+        help_text="Email address for authenticated users only (optional for clients)"
     )
     
     phone_number = models.CharField(
@@ -1326,7 +1496,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     source = models.CharField(
         max_length=20,
         choices=SOURCE_CHOICES,
-        default="admin_dashboard",
+        default="djoser_registration",
         db_index=True,
         help_text="Source of user creation"
     )
@@ -1361,9 +1531,9 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     
     objects = UserAccountManager()
     
-    # ✅ Authenticated users login with email (handled by Djoser)
+    # ✅ Djoser compatibility: Authenticated users login with email
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["name"]  # For createsuperuser command
+    REQUIRED_FIELDS = []  # For createsuperuser command (email already in USERNAME_FIELD)
     
     class Meta:
         verbose_name = "User Account"
@@ -1429,6 +1599,11 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
         """Check if user was created by admin"""
         return self.source == 'admin_dashboard'
     
+    @property
+    def is_djoser_user(self) -> bool:
+        """Check if user was created via Djoser registration"""
+        return self.source == 'djoser_registration'
+    
     # ========== PHONE METHODS ==========
     def get_phone_display(self) -> str:
         """Get phone number in local display format"""
@@ -1453,9 +1628,8 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
             elif not PhoneValidation.is_valid_kenyan_phone(self.phone_number):
                 errors['phone_number'] = "Invalid phone number format"
             
-            # Clients should not have email for authentication
-            if self.email:
-                errors['email'] = "Clients should not have email addresses"
+            # Clients may have email (for contact purposes) but it's not used for auth
+            # So we don't validate email for clients
             
             # PPPoE-specific validation
             if self.connection_type == 'pppoe':
@@ -1463,18 +1637,26 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
                     errors['name'] = "Name is required for PPPoE clients"
         
         # Authenticated user validation rules
-        else:
+        elif self.user_type in ['staff', 'admin']:
             if not self.email:
                 errors['email'] = "Email is required for authenticated users"
             
-            if self.phone_number:
-                errors['phone_number'] = "Authenticated users should not have phone numbers"
+            # Authenticated users should not have phone numbers (for authentication)
+            if self.phone_number and self.source == 'djoser_registration':
+                # Allow phone for contact info if manually created by admin
+                logger.warning(f"Authenticated user {self.email} has phone number")
             
+            # Authenticated users use 'admin' connection type
             if self.connection_type != 'admin':
-                errors['connection_type'] = "Invalid connection type for authenticated user"
-            
-            if self.username:
-                errors['username'] = "Authenticated users should not have usernames"
+                self.connection_type = 'admin'  # Auto-correct
+        
+        # Email uniqueness check (only for authenticated users)
+        if self.email and self.user_type in ['staff', 'admin']:
+            # Check if email exists for another user
+            existing = UserAccount.objects.filter(email=self.email).exclude(id=self.id).first()
+            if existing:
+                if existing.user_type in ['staff', 'admin']:
+                    errors['email'] = "Email already registered for an authenticated user"
         
         if errors:
             raise ValidationError(errors)
@@ -1497,10 +1679,12 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
         if self.is_client and not self.username:
             self.username = IDGenerator.generate_client_username(self.phone_number)
         
-        # Set staff flags for authenticated users
+        # Set connection_type for authenticated users
         if self.is_authenticated_user:
-            self.is_staff = True
             self.connection_type = 'admin'
+            # Ensure staff flag is set
+            if not self.is_staff:
+                self.is_staff = True
         
         # Validate and save
         self.full_clean()
@@ -1664,6 +1848,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
                 'name': self.name,
                 'is_staff': self.is_staff,
                 'is_superuser': self.is_superuser,
+                'is_djoser_user': self.is_djoser_user,
             })
         
         return base_data
@@ -1760,10 +1945,3 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
             )
         except cls.DoesNotExist:
             return None
-
-
-
-
-
-
-

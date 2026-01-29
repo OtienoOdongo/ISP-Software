@@ -3,16 +3,7 @@ from urllib.parse import quote
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.http.multipartparser import MultiPartParserError
-from django.utils.functional import SimpleLazyObject
-
-try:
-    from django.utils.functional import empty as _empty
-
-    empty = _empty
-except ImportError:  # django < 1.4
-    empty = None
-
-
+from django.utils.functional import SimpleLazyObject, empty
 from social_core.backends.utils import user_backends_data
 
 from .utils import Storage
@@ -33,16 +24,18 @@ class LazyDict(SimpleLazyObject):
 
 
 def backends(request):
-    """Load Social Auth current user data to context under the key 'backends'.
-    Will return the output of social_core.backends.utils.user_backends_data."""
+    """
+    Load Social Auth current user data to context under the key 'backends'.
+    Will return the output of social_core.backends.utils.user_backends_data.
+    """
     return {"backends": LazyDict(lambda: user_backends_data(request.user, settings.AUTHENTICATION_BACKENDS, Storage))}
 
 
 def login_redirect(request):
     """Load current redirect to context."""
     try:
-        value = (
-            request.method == "POST" and request.POST.get(REDIRECT_FIELD_NAME) or request.GET.get(REDIRECT_FIELD_NAME)
+        value = (request.method == "POST" and request.POST.get(REDIRECT_FIELD_NAME)) or request.GET.get(
+            REDIRECT_FIELD_NAME
         )
     except MultiPartParserError:
         # request POST may be malformed

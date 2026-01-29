@@ -2,7 +2,7 @@
 Chatwork OAuth2 backend
 """
 
-import base64
+from typing import Any
 
 from .oauth import BaseOAuth2
 
@@ -17,17 +17,14 @@ class ChatworkOAuth2(BaseOAuth2):
     REDIRECT_STATE = True
     DEFAULT_SCOPE = ["users.profile.me:read"]
     ID_KEY = "account_id"
-    EXTRA_DATA = [("expires_in", "expires"), ("refresh_token", "refresh_token")]
+    EXTRA_DATA = [("expires_in", "expires_in"), ("refresh_token", "refresh_token")]
 
     def api_url(self, path):
         api_url = self.setting("API_URL") or self.API_URL
         return "{}{}".format(api_url.rstrip("/"), path)
 
     def auth_headers(self):
-        return {
-            "Authorization": b"Basic "
-            + base64.b64encode("{}:{}".format(*self.get_key_and_secret()).encode())
-        }
+        return {"Authorization": self.get_key_and_secret_basic_auth()}
 
     def auth_complete_params(self, state=None):
         return {
@@ -53,7 +50,7 @@ class ChatworkOAuth2(BaseOAuth2):
             "last_name": last_name,
         }
 
-    def user_data(self, access_token, *args, **kwargs):
+    def user_data(self, access_token: str, *args, **kwargs) -> dict[str, Any] | None:
         """Loads user data from service"""
         headers = {"Authorization": "Bearer " + access_token}
         return self.get_json(self.api_url("/me"), headers=headers)

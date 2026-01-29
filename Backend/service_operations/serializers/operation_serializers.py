@@ -9,7 +9,7 @@ import logging
 from typing import Dict, Any, Optional
 
 from service_operations.models import ActivationQueue, OperationLog
-from service_operations.models.subscription import Subscription
+from service_operations.models.subscription_models import Subscription
 from service_operations.utils.formatters import (
     format_seconds_human_readable,
     format_bytes_human_readable,

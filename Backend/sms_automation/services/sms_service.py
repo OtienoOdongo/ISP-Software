@@ -21,10 +21,11 @@ from sms_automation.models.sms_automation_model import (
     SMSQueue, SMSAutomationRule, SMSAnalytics
 )
 from user_management.models.client_model import ClientProfile
-from .gateways.africastalking import AfricaTalkingGateway
-from .gateways.twilio import TwilioGateway
-from .gateways.smpp import SMPPGateway
-from .gateways.custom import CustomGateway
+from sms_automation.gateways.africastalking import AfricaTalkingGateway
+from sms_automation.gateways.twilio import TwilioGateway
+from sms_automation.gateways.custom import CustomGateway
+from sms_automation.gateways.smpp import SMPPGateway
+
 
 logger = logging.getLogger(__name__)
 

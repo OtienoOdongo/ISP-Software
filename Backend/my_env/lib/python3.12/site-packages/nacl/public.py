@@ -97,8 +97,7 @@ class PrivateKey(encoding.Encodable, StringFixer):
         ):
             raise exc.TypeError(
                 (
-                    "PrivateKey must be created from a {} "
-                    "bytes long raw secret key"
+                    "PrivateKey must be created from a {} bytes long raw secret key"
                 ).format(self.SIZE)
             )
 
@@ -134,11 +133,10 @@ class PrivateKey(encoding.Encodable, StringFixer):
         if not (isinstance(seed, bytes) and len(seed) == cls.SEED_SIZE):
             raise exc.TypeError(
                 (
-                    "PrivateKey seed must be a {} bytes long "
-                    "binary sequence"
+                    "PrivateKey seed must be a {} bytes long binary sequence"
                 ).format(cls.SEED_SIZE)
             )
-        # generate a raw keypair from the given seed
+        # generate a raw key pair from the given seed
         raw_pk, raw_sk = nacl.bindings.crypto_box_seed_keypair(seed)
         # construct a instance from the raw secret key
         return cls(raw_sk)
@@ -251,7 +249,7 @@ class Box(encoding.Encodable, StringFixer):
                 "The nonce must be exactly %s bytes long" % self.NONCE_SIZE
             )
 
-        ciphertext = nacl.bindings.crypto_box_afternm(
+        ciphertext = nacl.bindings.crypto_box_easy_afternm(
             plaintext,
             nonce,
             self._shared_key,
@@ -296,7 +294,7 @@ class Box(encoding.Encodable, StringFixer):
                 "The nonce must be exactly %s bytes long" % self.NONCE_SIZE
             )
 
-        plaintext = nacl.bindings.crypto_box_open_afternm(
+        plaintext = nacl.bindings.crypto_box_open_easy_afternm(
             ciphertext,
             nonce,
             self._shared_key,
@@ -325,7 +323,7 @@ _Key = TypeVar("_Key", PublicKey, PrivateKey)
 class SealedBox(Generic[_Key], encoding.Encodable, StringFixer):
     """
     The SealedBox class boxes and unboxes messages addressed to
-    a specified key-pair by using ephemeral sender's keypairs,
+    a specified key-pair by using ephemeral sender's key pairs,
     whose private part will be discarded just after encrypting
     a single plaintext message.
 
@@ -371,8 +369,8 @@ class SealedBox(Generic[_Key], encoding.Encodable, StringFixer):
     ) -> bytes:
         """
         Encrypts the plaintext message using a random-generated ephemeral
-        keypair and returns a "composed ciphertext", containing both
-        the public part of the keypair and the ciphertext proper,
+        key pair and returns a "composed ciphertext", containing both
+        the public part of the key pair and the ciphertext proper,
         encoded with the encoder.
 
         The private part of the ephemeral key-pair will be scrubbed before

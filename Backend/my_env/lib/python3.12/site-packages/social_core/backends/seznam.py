@@ -3,6 +3,8 @@ Seznam OAuth2 backend, docs at:
     https://python-social-auth.readthedocs.io/en/latest/backends/seznam.html
 """
 
+from typing import Any
+
 from .oauth import BaseOAuth2
 
 
@@ -20,15 +22,6 @@ class SeznamOAuth2(BaseOAuth2):
     def api_url(self):
         return self.setting("API_URL") or self.API_URL
 
-    def authorization_url(self):
-        return self.setting("AUTHORIZATION_URL") or self.AUTHORIZATION_URL
-
-    def access_token_url(self):
-        return self.setting("ACCESS_TOKEN_URL") or self.ACCESS_TOKEN_URL
-
-    def get_user_id(self, details, response):
-        return response.get(self.setting("ID_KEY") or self.ID_KEY)
-
     def get_user_details(self, response):
         """Return user details from Seznam account"""
         fullname, first_name, last_name = self.get_user_names(
@@ -44,7 +37,7 @@ class SeznamOAuth2(BaseOAuth2):
             "last_name": last_name,
         }
 
-    def user_data(self, access_token, *args, **kwargs):
+    def user_data(self, access_token: str, *args, **kwargs) -> dict[str, Any] | None:
         """Loads user data from service"""
         return self.get_json(
             self.api_url(), headers={"Authorization": f"bearer {access_token}"}

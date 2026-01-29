@@ -25,7 +25,6 @@ from django.db.models import Q, Count
 from service_operations.models import Subscription, ClientOperation, OperationLog, ActivationQueue
 from service_operations.services.subscription_service import SubscriptionService
 from service_operations.services.activation_service import ActivationService
-from service_operations.services.client_service import ClientService
 from service_operations.signals.operation_signals import subscription_created, subscription_activated, subscription_renewed
 from service_operations.utils.validators import validate_mac_address, validate_duration_hours
 from service_operations.utils.calculators import format_bytes_human_readable
@@ -509,6 +508,8 @@ class UserManagementAdapter:
         Create a new subscription for a client using SubscriptionService
         """
         try:
+          
+            from service_operations.services.client_service import ClientService
             # Validate inputs
             if not validate_duration_hours(duration_hours):
                 return {
@@ -624,6 +625,8 @@ class UserManagementAdapter:
         Activate a client's subscription using SubscriptionService
         """
         try:
+
+            from service_operations.services.client_service import ClientService
             # Get subscription
             try:
                 subscription = Subscription.objects.get(id=subscription_id, is_active=True)
@@ -717,6 +720,8 @@ class UserManagementAdapter:
         Process service activation for Service Operations with comprehensive validation
         """
         try:
+            
+            from service_operations.services.client_service import ClientService
             # Validate service data
             if not service_data.get('plan_id'):
                 return {

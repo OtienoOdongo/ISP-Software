@@ -3,6 +3,8 @@ Podio OAuth2 backend, docs at:
     https://python-social-auth.readthedocs.io/en/latest/backends/podio.html
 """
 
+from typing import Any
+
 from .oauth import BaseOAuth2
 
 
@@ -15,7 +17,7 @@ class PodioOAuth2(BaseOAuth2):
     EXTRA_DATA = [
         ("access_token", "access_token"),
         ("token_type", "token_type"),
-        ("expires_in", "expires"),
+        ("expires_in", "expires_in"),
         ("refresh_token", "refresh_token"),
     ]
 
@@ -34,7 +36,7 @@ class PodioOAuth2(BaseOAuth2):
             "last_name": last_name,
         }
 
-    def user_data(self, access_token, *args, **kwargs):
+    def user_data(self, access_token: str, *args, **kwargs) -> dict[str, Any] | None:
         return self.get_json(
             "https://api.podio.com/user/status",
             headers={"Authorization": "OAuth2 " + access_token},

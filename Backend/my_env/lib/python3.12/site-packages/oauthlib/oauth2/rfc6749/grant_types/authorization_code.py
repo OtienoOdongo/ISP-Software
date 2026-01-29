@@ -10,7 +10,6 @@ import logging
 from oauthlib import common
 
 from .. import errors
-from ..utils import is_secure_transport
 from .base import GrantTypeBase
 
 log = logging.getLogger(__name__)
@@ -388,7 +387,7 @@ class AuthorizationCodeGrant(GrantTypeBase):
             raise errors.MissingResponseTypeError(request=request)
         # Value MUST be set to "code" or one of the OpenID authorization code including
         # response_types "code token", "code id_token", "code token id_token"
-        elif not 'code' in request.response_type and request.response_type != 'none':
+        elif 'code' not in request.response_type and request.response_type != 'none':
             raise errors.UnsupportedResponseTypeError(request=request)
 
         if not self.request_validator.validate_response_type(request.client_id,
@@ -401,9 +400,8 @@ class AuthorizationCodeGrant(GrantTypeBase):
 
         # OPTIONAL. Validate PKCE request or reply with "error"/"invalid_request"
         # https://tools.ietf.org/html/rfc6749#section-4.4.1
-        if self.request_validator.is_pkce_required(request.client_id, request) is True:
-            if request.code_challenge is None:
-                raise errors.MissingCodeChallengeError(request=request)
+        if self.request_validator.is_pkce_required(request.client_id, request) is True and request.code_challenge is None:
+            raise errors.MissingCodeChallengeError(request=request)
 
         if request.code_challenge is not None:
             request_info["code_challenge"] = request.code_challenge
@@ -547,20 +545,3 @@ class AuthorizationCodeGrant(GrantTypeBase):
         if challenge_method in self._code_challenge_methods:
             return self._code_challenge_methods[challenge_method](verifier, challenge)
         raise NotImplementedError('Unknown challenge_method %s' % challenge_method)
-
-    def _create_cors_headers(self, request):
-        """If CORS is allowed, create the appropriate headers."""
-        if 'origin' not in request.headers:
-            return {}
-
-        origin = request.headers['origin']
-        if not is_secure_transport(origin):
-            log.debug('Origin "%s" is not HTTPS, CORS not allowed.', origin)
-            return {}
-        elif not self.request_validator.is_origin_allowed(
-            request.client_id, origin, request):
-            log.debug('Invalid origin "%s", CORS not allowed.', origin)
-            return {}
-        else:
-            log.debug('Valid origin "%s", injecting CORS headers.', origin)
-            return {'Access-Control-Allow-Origin': origin}

@@ -1,3 +1,4 @@
+from typing import Any
 from urllib.parse import urlencode
 
 from .oauth import BaseOAuth2
@@ -30,9 +31,9 @@ class SalesforceOAuth2(BaseOAuth2):
             "fullname": response.get("display_name"),
         }
 
-    def user_data(self, access_token, *args, **kwargs):
+    def user_data(self, access_token: str, *args, **kwargs) -> dict[str, Any] | None:
         """Loads user data from service"""
-        user_id_url = kwargs.get("response").get("id")
+        user_id_url = kwargs["response"]["id"]
         url = user_id_url + "?" + urlencode({"access_token": access_token})
         try:
             return self.get_json(url)

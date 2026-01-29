@@ -649,3 +649,55 @@ def validate_positive_decimal(value: Any, field_name: str = "value") -> Tuple[bo
     except (ValueError, InvalidOperation, TypeError):
         return False, f"{field_name} must be a decimal number"
 
+
+
+
+
+def validate_email(email: str) -> Tuple[bool, Optional[str]]:
+    """
+    Validate email address format.
+    
+    Args:
+        email: Email address to validate
+    
+    Returns:
+        (is_valid, normalized_email)
+    """
+    if not email:
+        return False, None
+    
+    try:
+        # RFC 5322 compliant email regex (simplified but robust)
+        email_regex = re.compile(
+            r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        )
+        
+        # Remove whitespace
+        email = email.strip().lower()
+        
+        # Basic format check
+        if not email_regex.match(email):
+            return False, None
+        
+        # Additional checks
+        if len(email) > 254:  # RFC 5321 limit
+            return False, None
+        
+        # Check for common invalid patterns
+        invalid_patterns = [
+            r'\.\.',  # Double dots
+            r'\.@',   # Dot before @
+            r'@\.',   # @ before dot
+            r'^\.',   # Starts with dot
+            r'\.$',   # Ends with dot
+        ]
+        
+        for pattern in invalid_patterns:
+            if re.search(pattern, email):
+                return False, None
+        
+        return True, email
+        
+    except Exception as e:
+        logger.error(f"Email validation error: {e}")
+        return False, None

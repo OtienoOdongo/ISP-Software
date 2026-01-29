@@ -10,7 +10,7 @@ import copy
 import json
 import logging
 
-from .. import grant_types
+from .. import grant_types, utils
 from .authorization import AuthorizationEndpoint
 from .base import BaseEndpoint, catch_errors_and_unavailability
 from .introspect import IntrospectEndpoint
@@ -38,9 +38,9 @@ class MetadataEndpoint(BaseEndpoint):
    """
 
     def __init__(self, endpoints, claims={}, raise_errors=True):
-        assert isinstance(claims, dict)
+        assert isinstance(claims, dict)  # noqa: S101
         for endpoint in endpoints:
-            assert isinstance(endpoint, BaseEndpoint)
+            assert isinstance(endpoint, BaseEndpoint)  # noqa: S101
 
         BaseEndpoint.__init__(self)
         self.raise_errors = raise_errors
@@ -68,7 +68,7 @@ class MetadataEndpoint(BaseEndpoint):
                 raise ValueError("key {} is a mandatory metadata.".format(key))
 
         elif is_issuer:
-            if not array[key].startswith("https"):
+            if not utils.is_secure_transport(array[key]):
                 raise ValueError("key {}: {} must be an HTTPS URL".format(key, array[key]))
             if "?" in array[key] or "&" in array[key] or "#" in array[key]:
                 raise ValueError("key {}: {} must not contain query or fragment components".format(key, array[key]))

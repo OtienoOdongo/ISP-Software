@@ -28,7 +28,7 @@ import time
 from typing import TYPE_CHECKING
 
 import jwt
-from jwt.algorithms import RSAAlgorithm
+from jwt.algorithms import RSAAlgorithm  # ty: ignore[possibly-missing-import]
 from jwt.exceptions import PyJWTError
 
 from social_core.backends.oauth import BaseOAuth2
@@ -148,7 +148,7 @@ class AppleIdAuth(BaseOAuth2):
         )
 
         email = response.get("email", "")
-        apple_id = response.get(self.ID_KEY, "")
+        apple_id = response.get(self.id_key(), "")
         # prevent updating User with empty strings
         user_details = {
             "fullname": fullname or None,
@@ -171,4 +171,4 @@ class AppleIdAuth(BaseOAuth2):
             raise AuthFailed(self, "Missing id_token parameter")
 
         decoded_data = self.decode_id_token(jwt_string)
-        return super().do_auth(access_token, response=decoded_data, *args, **kwargs)
+        return super().do_auth(access_token, *args, response=decoded_data, **kwargs)

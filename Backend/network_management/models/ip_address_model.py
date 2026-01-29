@@ -127,6 +127,7 @@
 
 from django.db import models
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 from network_management.models.router_management_model import Router
 from account.models.admin_model import Client
 from routeros_api import RouterOsApiPool
@@ -308,7 +309,7 @@ class Subnet(models.Model):
 class DHCPLease(models.Model):
     ip_address = models.ForeignKey(IPAddress, on_delete=models.CASCADE, related_name='dhcp_leases')
     mac_address = models.CharField(max_length=17)
-    client = models.ForeignKey(Client, on_delete=models.SET_NULL, null=True, blank=True)
+    client = models.ForeignKey('authentication.UserAccount', on_delete=models.SET_NULL, null=True, blank=True)
     lease_time = models.PositiveIntegerField(default=3600)
     expires_at = models.DateTimeField()
     is_active = models.BooleanField(default=True)

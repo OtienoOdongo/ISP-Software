@@ -4,6 +4,7 @@ Mail.ru OAuth2 backend, docs at:
 """
 
 from hashlib import md5
+from typing import Any
 from urllib.parse import unquote
 
 from .oauth import BaseOAuth2
@@ -16,7 +17,7 @@ class MailruOAuth2(BaseOAuth2):
     ID_KEY = "uid"
     AUTHORIZATION_URL = "https://connect.mail.ru/oauth/authorize"
     ACCESS_TOKEN_URL = "https://connect.mail.ru/oauth/token"
-    EXTRA_DATA = [("refresh_token", "refresh_token"), ("expires_in", "expires")]
+    EXTRA_DATA = [("refresh_token", "refresh_token"), ("expires_in", "expires_in")]
 
     def get_user_details(self, response):
         """Return user details from Mail.ru request"""
@@ -32,7 +33,7 @@ class MailruOAuth2(BaseOAuth2):
             "last_name": last_name,
         }
 
-    def user_data(self, access_token, *args, **kwargs):
+    def user_data(self, access_token: str, *args, **kwargs) -> dict[str, Any] | None:
         """Return user data from Mail.ru REST API"""
         key, secret = self.get_key_and_secret()
         data = {
@@ -52,7 +53,7 @@ class MRGOAuth2(BaseOAuth2):
     ID_KEY = "email"
     AUTHORIZATION_URL = "https://oauth.mail.ru/login"
     ACCESS_TOKEN_URL = "https://oauth.mail.ru/token"
-    EXTRA_DATA = [("refresh_token", "refresh_token"), ("expires_in", "expires")]
+    EXTRA_DATA = [("refresh_token", "refresh_token"), ("expires_in", "expires_in")]
     REDIRECT_STATE = False
 
     def get_user_details(self, response):
@@ -69,7 +70,7 @@ class MRGOAuth2(BaseOAuth2):
             "image": response.get("image"),
         }
 
-    def user_data(self, access_token, *args, **kwargs):
+    def user_data(self, access_token: str, *args, **kwargs) -> dict[str, Any] | None:
         return self.get_json(
             "https://oauth.mail.ru/userinfo", params={"access_token": access_token}
         )

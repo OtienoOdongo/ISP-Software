@@ -1,10 +1,15 @@
 """Django ORM models for Social Auth"""
 
-import base64
+from __future__ import annotations
 
+import base64
+from typing import TYPE_CHECKING
+
+from django.conf import settings
 from django.core.exceptions import FieldDoesNotExist
 from django.db import router, transaction
 from django.db.utils import IntegrityError
+from social_core.exceptions import AuthAlreadyAssociated
 from social_core.storage import (
     AssociationMixin,
     BaseStorage,
@@ -13,6 +18,10 @@ from social_core.storage import (
     PartialMixin,
     UserMixin,
 )
+from social_core.utils import setting_name
+
+if TYPE_CHECKING:
+    from django.db.models import QuerySet
 
 
 class DjangoUserMixin(UserMixin):
@@ -34,10 +43,7 @@ class DjangoUserMixin(UserMixin):
             qs = cls.objects.exclude(provider=backend_name)
         qs = qs.filter(user=user)
 
-        if hasattr(user, "has_usable_password"):
-            valid_password = user.has_usable_password()
-        else:
-            valid_password = True
+        valid_password = user.has_usable_password() if hasattr(user, "has_usable_password") else True
         return valid_password or qs.exists()
 
     @classmethod
@@ -56,7 +62,7 @@ class DjangoUserMixin(UserMixin):
         """
         if "username" in kwargs:
             kwargs[cls.username_field()] = kwargs.pop("username")
-        return cls.user_model()._default_manager.filter(*args, **kwargs).exists()
+        return cls.filter_users(*args, **kwargs).exists()
 
     @classmethod
     def get_username(cls, user):
@@ -65,6 +71,7 @@ class DjangoUserMixin(UserMixin):
     @classmethod
     def create_user(cls, *args, **kwargs):
         username_field = cls.username_field()
+        manager = cls.user_model()._default_manager  # noqa: SLF001
         if "username" in kwargs:
             if username_field not in kwargs:
                 kwargs[username_field] = kwargs.pop("username")
@@ -72,44 +79,45 @@ class DjangoUserMixin(UserMixin):
                 # If username_field is 'email' and there is no field named "username"
                 # then latest should be removed from kwargs.
                 try:
-                    cls.user_model()._meta.get_field("username")
+                    cls.user_model()._meta.get_field("username")  # noqa: SLF001
                 except FieldDoesNotExist:
                     kwargs.pop("username")
+
+        # If the create fails below due to an IntegrityError, ensure that the transaction
+        # stays undamaged by wrapping the create in an atomic.
+        using = router.db_for_write(cls.user_model())
         try:
-            if hasattr(transaction, "atomic"):
-                # In Django versions that have an "atomic" transaction decorator / context
-                # manager, there's a transaction wrapped around this call.
-                # If the create fails below due to an IntegrityError, ensure that the transaction
-                # stays undamaged by wrapping the create in an atomic.
-                using = router.db_for_write(cls.user_model())
-                with transaction.atomic(using=using):
-                    user = cls.user_model()._default_manager.create_user(*args, **kwargs)
-            else:
-                user = cls.user_model()._default_manager.create_user(*args, **kwargs)
+            with transaction.atomic(using=using):
+                return manager.create_user(*args, **kwargs)
         except IntegrityError as exc:
-            # If email comes in as None it won't get found in the get
-            if kwargs.get("email", True) is None:
-                kwargs["email"] = ""
-            try:
-                user = cls.user_model()._default_manager.get(*args, **kwargs)
-            except cls.user_model().DoesNotExist:
-                raise exc
-        return user
+            raise AuthAlreadyAssociated(None) from exc
+
+    @classmethod
+    def filter_users(cls, *args, **kwargs) -> QuerySet:
+        model = cls.user_model()
+        manager = model._default_manager  # noqa: SLF001
+        return manager.filter(*args, **kwargs)
+
+    @classmethod
+    def filter_active_users(cls, *args, **kwargs) -> QuerySet:
+        active_filter = getattr(settings, setting_name("ACTIVE_USERS_FILTER"), {"is_active": True})
+        kwargs.update(active_filter)
+        return cls.filter_users(*args, **kwargs)
 
     @classmethod
     def get_user(cls, pk=None, **kwargs):
         if pk:
             kwargs = {"pk": pk}
-        try:
-            return cls.user_model()._default_manager.get(**kwargs)
-        except cls.user_model().DoesNotExist:
+        users = cls.filter_active_users(**kwargs)
+        if len(users) != 1:
             return None
+        return users[0]
 
     @classmethod
     def get_users_by_email(cls, email):
         user_model = cls.user_model()
         email_field = getattr(user_model, "EMAIL_FIELD", "email")
-        return user_model._default_manager.filter(**{email_field + "__iexact": email})
+        return cls.filter_active_users(**{f"{email_field}__iexact": email})
 
     @classmethod
     def get_social_auth(cls, provider, uid):
@@ -121,7 +129,7 @@ class DjangoUserMixin(UserMixin):
             return None
 
     @classmethod
-    def get_social_auth_for_user(cls, user, provider=None, id=None):
+    def get_social_auth_for_user(cls, user, provider=None, id=None):  # noqa: A002
         qs = cls.objects.filter(user=user)
 
         if provider:
@@ -135,17 +143,11 @@ class DjangoUserMixin(UserMixin):
     def create_social_auth(cls, user, uid, provider):
         if not isinstance(uid, str):
             uid = str(uid)
-        if hasattr(transaction, "atomic"):
-            # In Django versions that have an "atomic" transaction decorator / context
-            # manager, there's a transaction wrapped around this call.
-            # If the create fails below due to an IntegrityError, ensure that the transaction
-            # stays undamaged by wrapping the create in an atomic.
-            using = router.db_for_write(cls)
-            with transaction.atomic(using=using):
-                social_auth = cls.objects.create(user=user, uid=uid, provider=provider)
-        else:
-            social_auth = cls.objects.create(user=user, uid=uid, provider=provider)
-        return social_auth
+        # If the create fails below due to an IntegrityError, ensure that the transaction
+        # stays undamaged by wrapping the create in an atomic.
+        using = router.db_for_write(cls)
+        with transaction.atomic(using=using):
+            return cls.objects.create(user=user, uid=uid, provider=provider)
 
 
 class DjangoNonceMixin(NonceMixin):

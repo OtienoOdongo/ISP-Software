@@ -40,8 +40,8 @@ from sms_automation.serializers.sms_automation_serializer import (
     SMSStatusUpdateSerializer
 )
 from sms_automation.services.sms_service import SMSService
-from sms_automation.services.sms_campaign_service import SMSCampaignService
-from sms_automation.services.sms_automation_service import SMSAutomationService
+# from sms_automation.services.sms_campaign_service import SMSCampaignService
+# from sms_automation.services.sms_automation_service import SMSAutomationService
 
 logger = logging.getLogger(__name__)
 

@@ -6,6 +6,8 @@ Written by Avi Alkalay <avi at unix dot sh>
 Certified to work with Django 1.6
 """
 
+from typing import Any
+
 from .oauth import BaseOAuth2
 
 
@@ -18,14 +20,14 @@ class MovesOAuth2(BaseOAuth2):
     ACCESS_TOKEN_URL = "https://api.moves-app.com/oauth/v1/access_token"
     EXTRA_DATA = [
         ("refresh_token", "refresh_token", True),
-        ("expires_in", "expires"),
+        ("expires_in", "expires_in"),
     ]
 
     def get_user_details(self, response):
         """Return user details Moves account"""
         return {"username": str(response.get("user_id"))}
 
-    def user_data(self, access_token, *args, **kwargs):
+    def user_data(self, access_token: str, *args, **kwargs) -> dict[str, Any] | None:
         """Loads user data from service"""
         return self.get_json(
             "https://api.moves-app.com/api/1.1/user/profile",

@@ -225,7 +225,7 @@ def _check_memory_occupation(
 
     ensure(
         Blen + Vlen <= maxmem,
-        "Memory limit would be exceeded with the choosen n, r, p",
+        "Memory limit would be exceeded with the chosen n, r, p",
         raising=exc.ValueError,
     )
 
@@ -244,15 +244,15 @@ def nacl_bindings_pick_scrypt_params(
         p = 1
         maxn = opslimit // (4 * r)
         for n_log2 in range(1, 63):  # pragma: no branch
-            if (2 ** n_log2) > (maxn // 2):
+            if (2**n_log2) > (maxn // 2):
                 break
     else:
         maxn = memlimit // (r * 128)
         for n_log2 in range(1, 63):  # pragma: no branch
-            if (2 ** n_log2) > maxn // 2:
+            if (2**n_log2) > maxn // 2:
                 break
 
-        maxrp = (opslimit // 4) // (2 ** n_log2)
+        maxrp = (opslimit // 4) // (2**n_log2)
 
         if maxrp > 0x3FFFFFFF:  # pragma: no cover
             maxrp = 0x3FFFFFFF
@@ -400,7 +400,6 @@ def crypto_pwhash_scryptsalsa208sha256_str_verify(
 
 
 def _check_argon2_limits_alg(opslimit: int, memlimit: int, alg: int) -> None:
-
     if alg == crypto_pwhash_ALG_ARGON2I13:
         if memlimit < crypto_pwhash_argon2i_MEMLIMIT_MIN:
             raise exc.ValueError(

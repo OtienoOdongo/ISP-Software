@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any
 
 from service_operations.models import OperationLog, Subscription, ClientOperation, ActivationQueue
-from service_operations.serializers import (
+from service_operations.serializers.operation_serializers import (
     OperationLogSerializer,
     OperationStatisticsSerializer,
 )

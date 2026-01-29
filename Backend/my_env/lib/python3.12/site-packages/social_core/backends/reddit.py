@@ -3,7 +3,7 @@ Reddit OAuth2 backend, docs at:
     https://python-social-auth.readthedocs.io/en/latest/backends/reddit.html
 """
 
-import base64
+from typing import Any, cast
 
 from .oauth import BaseOAuth2
 
@@ -18,14 +18,13 @@ class RedditOAuth2(BaseOAuth2):
     REDIRECT_STATE = False
     SCOPE_SEPARATOR = ","
     DEFAULT_SCOPE = ["identity"]
-    SEND_USER_AGENT = True
     EXTRA_DATA = [
         ("id", "id"),
         ("name", "username"),
         ("link_karma", "link_karma"),
         ("comment_karma", "comment_karma"),
         ("refresh_token", "refresh_token"),
-        ("expires_in", "expires"),
+        ("expires_in", "expires_in"),
     ]
 
     def get_user_details(self, response):
@@ -38,7 +37,7 @@ class RedditOAuth2(BaseOAuth2):
             "last_name": "",
         }
 
-    def user_data(self, access_token, *args, **kwargs):
+    def user_data(self, access_token: str, *args, **kwargs) -> dict[str, Any] | None:
         """Loads user data from service"""
         return self.get_json(
             "https://oauth.reddit.com/api/v1/me.json",
@@ -46,16 +45,13 @@ class RedditOAuth2(BaseOAuth2):
         )
 
     def auth_headers(self):
-        return {
-            "Authorization": b"Basic "
-            + base64.urlsafe_b64encode(
-                "{}:{}".format(*self.get_key_and_secret()).encode()
-            )
-        }
+        return {"Authorization": self.get_key_and_secret_basic_auth()}
 
-    def refresh_token_params(self, token, redirect_uri=None, *args, **kwargs):
+    def refresh_token_params(self, token: str, *args, **kwargs) -> dict[str, str]:
         params = super().refresh_token_params(token)
-        params["redirect_uri"] = self.redirect_uri or redirect_uri
+        params["redirect_uri"] = self.redirect_uri or cast(
+            "str", kwargs.get("redirect_uri")
+        )
         return params
 
     def auth_complete_credentials(self):

@@ -17,7 +17,7 @@ from service_operations.models import OperationLog, Subscription, ActivationQueu
 from service_operations.services.subscription_service import SubscriptionService
 from service_operations.services.integration_service import IntegrationService
 from service_operations.services.activation_service import ActivationService
-from service_operations.services.monitoring_service import MonitoringService
+# from service_operations.services.monitoring_service import MonitoringService
 from service_operations.models.subscription_models import UsageTracking
 from service_operations.utils.metrics import record_metric, increment_counter, measure_time
 

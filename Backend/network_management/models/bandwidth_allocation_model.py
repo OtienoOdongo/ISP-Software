@@ -137,7 +137,6 @@
 from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from account.models.admin_model import Client
 from internet_plans.models.plan_models import InternetPlan
 from payments.models.payment_config_model import Transaction
 
@@ -222,9 +221,10 @@ class BandwidthAllocation(models.Model):
     ]
 
     client = models.ForeignKey(
-        Client,
-        on_delete=models.CASCADE,
+        "authentication.UserAccount", 
+        on_delete=models.CASCADE, 
         related_name='bandwidth_allocations',
+        limit_choices_to={'user_type': 'client'},  
         help_text="Client associated with this allocation"
     )
     plan = models.ForeignKey(

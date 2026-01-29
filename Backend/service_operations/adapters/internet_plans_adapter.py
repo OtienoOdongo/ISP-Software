@@ -16,7 +16,6 @@ import uuid
 import json
 
 from service_operations.models.subscription_models import Subscription
-from service_operations.services.subscription_service import SubscriptionService
 from service_operations.utils.validators import validate_mac_address, validate_duration_hours
 
 logger = logging.getLogger(__name__)
@@ -47,6 +46,7 @@ class InternetPlansAdapter:
         Delegates PPPoE credential generation to Subscription model
         """
         try:
+            from service_operations.services.subscription_service import SubscriptionService
             # Determine client type based on access method
             if access_method == 'hotspot':
                 client_type = 'hotspot_client'
@@ -150,6 +150,7 @@ class InternetPlansAdapter:
         Uses existing activation logic
         """
         try:
+            from service_operations.services.subscription_service import SubscriptionService
             # Get subscription
             subscription = Subscription.objects.get(id=subscription_id)
             
@@ -567,6 +568,7 @@ class InternetPlansAdapter:
         Uses existing subscription service
         """
         try:
+            from service_operations.services.subscription_service import SubscriptionService
             # Use subscription service for usage update
             usage_result = SubscriptionService.update_usage(
                 subscription_id=subscription_id,
@@ -604,6 +606,7 @@ class InternetPlansAdapter:
         Uses existing subscription service
         """
         try:
+            from service_operations.services.subscription_service import SubscriptionService
             # Use subscription service for renewal
             renewal_result = SubscriptionService.renew_subscription(
                 subscription_id=subscription_id,
@@ -636,6 +639,7 @@ class InternetPlansAdapter:
         Get all subscriptions for a client
         """
         try:
+            from service_operations.services.subscription_service import SubscriptionService
             # Use subscription service for getting client subscriptions
             subscriptions_result = SubscriptionService.get_subscriptions_for_client(
                 client_id=client_id,

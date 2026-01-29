@@ -31,7 +31,7 @@ class ServiceApplicationClient(Client):
 
     def __init__(self, client_id, private_key=None, subject=None, issuer=None,
                  audience=None, **kwargs):
-        """Initalize a JWT client with defaults for implicit use later.
+        """Initialize a JWT client with defaults for implicit use later.
 
         :param client_id: Client identifier given by the OAuth provider upon
                           registration.
@@ -91,7 +91,7 @@ class ServiceApplicationClient(Client):
                          ``https://provider.com/oauth2/token``.
 
         :param expires_at: A unix expiration timestamp for the JWT. Defaults
-                           to an hour from now, i.e. ``time.time() + 3600``.
+                           to an hour from now, i.e. ``round(time.time()) + 3600``.
 
         :param issued_at: A unix timestamp of when the JWT was created.
                           Defaults to now, i.e. ``time.time()``.
@@ -99,7 +99,7 @@ class ServiceApplicationClient(Client):
         :param extra_claims: A dict of additional claims to include in the JWT.
 
         :param body: Existing request body (URL encoded string) to embed parameters
-                     into. This may contain extra paramters. Default ''.
+                     into. This may contain extra parameters. Default ''.
 
         :param scope: The scope of the access request.
 
@@ -149,7 +149,7 @@ class ServiceApplicationClient(Client):
 
         .. _`Section 3.2.1`: https://tools.ietf.org/html/rfc6749#section-3.2.1
         """
-        import jwt
+        import jwt  # noqa: PLC0415
 
         key = private_key or self.private_key
         if not key:

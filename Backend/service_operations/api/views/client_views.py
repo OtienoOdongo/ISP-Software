@@ -19,8 +19,10 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any
 
-from service_operations.models import Subscription, ClientOperation, ActivationQueue
-from service_operations.serializers import (
+from service_operations.models.subscription_models import Subscription
+from service_operations.models.client_operation_models import ClientOperation
+from service_operations.models.activation_queue_models import ActivationQueue
+from service_operations.serializers.client_serializers import (
     ClientSubscriptionRequestSerializer,
     ClientPurchaseRequestSerializer,
     ClientPaymentCallbackSerializer,
@@ -28,6 +30,7 @@ from service_operations.serializers import (
     ClientOperationSerializer,
     ClientOperationCreateSerializer,
 )
+
 from service_operations.services.subscription_service import SubscriptionService
 from service_operations.adapters.internet_plans_adapter import InternetPlansAdapter
 from service_operations.adapters.payment_adapter import PaymentAdapter

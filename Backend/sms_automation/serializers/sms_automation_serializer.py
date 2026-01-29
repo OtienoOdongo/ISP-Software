@@ -17,7 +17,7 @@ import re
 import base64
 import json
 
-from Backend.sms_automation.models.sms_automation_model import (
+from sms_automation.models.sms_automation_model import (
     SMSGatewayConfig, SMSTemplate, SMSMessage,
     SMSDeliveryLog, SMSAutomationRule, SMSQueue, SMSAnalytics
 )

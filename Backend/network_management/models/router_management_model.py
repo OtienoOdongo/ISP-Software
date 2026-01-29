@@ -804,7 +804,12 @@ class HotspotUser(models.Model):
     )
     
     router = models.ForeignKey(Router, on_delete=models.CASCADE, related_name="hotspot_users")
-    client = models.ForeignKey("account.Client", on_delete=models.CASCADE, null=True)
+    client = models.ForeignKey(
+        "authentication.UserAccount", 
+        on_delete=models.CASCADE, 
+        related_name="hotspot_user",
+        limit_choices_to={'user_type': 'client'},  
+    )
     plan = models.ForeignKey("internet_plans.InternetPlan", on_delete=models.SET_NULL, null=True)
     transaction = models.ForeignKey("payments.Transaction", on_delete=models.SET_NULL, null=True)
     mac = models.CharField(max_length=17)
@@ -887,7 +892,12 @@ class PPPoEUser(models.Model):
     )
     
     router = models.ForeignKey(Router, on_delete=models.CASCADE, related_name="pppoe_users")
-    client = models.ForeignKey("account.Client", on_delete=models.CASCADE, null=True)
+    client = models.ForeignKey(
+        "authentication.UserAccount", 
+        on_delete=models.CASCADE, 
+        related_name="pppoe_user",
+        limit_choices_to={'user_type': 'client'},  
+    )
     plan = models.ForeignKey("internet_plans.InternetPlan", on_delete=models.SET_NULL, null=True)
     transaction = models.ForeignKey("payments.Transaction", on_delete=models.SET_NULL, null=True)
     username = models.CharField(max_length=100)
@@ -966,7 +976,7 @@ class ActivationAttempt(models.Model):
         ("manual", "Manual")
     )
     
-    subscription = models.ForeignKey("internet_plans.Subscription", on_delete=models.CASCADE, null=True, blank=True)
+    subscription = models.ForeignKey("service_operations.Subscription", on_delete=models.CASCADE, null=True, blank=True)
     router = models.ForeignKey(Router, on_delete=models.CASCADE)
     attempted_at = models.DateTimeField(auto_now_add=True)
     success = models.BooleanField(default=False)

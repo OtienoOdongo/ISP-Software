@@ -412,12 +412,12 @@ class TransactionLog(models.Model):
         blank=True
     )
     client = models.ForeignKey(
-        'account.Client',
+        'authentication.UserAccount',
         on_delete=models.CASCADE,
-        related_name='transaction_logs'
+        related_name='client_transaction_logs'
     )
     subscription = models.ForeignKey(
-        'internet_plans.Subscription',
+        'service_operations.Subscription',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -436,13 +436,7 @@ class TransactionLog(models.Model):
         default='hotspot',
         help_text='Type of access method (Hotspot/PPPoE)'
     )
-    user = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='transaction_logs'
-    )
+    
     amount = models.DecimalField(
         max_digits=12,
         decimal_places=2,

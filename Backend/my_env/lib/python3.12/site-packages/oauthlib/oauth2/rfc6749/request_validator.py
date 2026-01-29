@@ -48,12 +48,12 @@ class RequestValidator:
         Headers may be accesses through request.headers and parameters found in
         both body and query can be obtained by direct attribute access, i.e.
         request.client_id for client_id in the URL query.
-		
+
         The authentication process is required to contain the identification of
         the client (i.e. search the database based on the client_id). In case the
         client doesn't exist based on the received client_id, this method has to
         return False and the HTTP response created by the library will contain
-        'invalid_client' message. 
+        'invalid_client' message.
 
         After the client identification succeeds, this method needs to set the
         client on the request, i.e. request.client = client. A client object's
@@ -191,6 +191,7 @@ class RequestValidator:
         claims associated, or `None` in case the token is unknown.
 
         Below the list of registered claims you should be interested in:
+
         - scope : space-separated list of scopes
         - client_id : client identifier
         - username : human-readable identifier for the resource owner
@@ -204,10 +205,10 @@ class RequestValidator:
         - jti : string identifier for the token
 
         Note that most of them are coming directly from JWT RFC. More details
-        can be found in `Introspect Claims`_ or `_JWT Claims`_.
+        can be found in `Introspect Claims`_ or `JWT Claims`_.
 
         The implementation can use *token_type_hint* to improve lookup
-        efficency, but must fallback to other types to be compliant with RFC.
+        efficiency, but must fallback to other types to be compliant with RFC.
 
         The dict of claims is added to request.token after this method.
 
@@ -443,6 +444,7 @@ class RequestValidator:
             - request.user
             - request.scopes
             - request.claims (if given)
+
         OBS! The request.user attribute should be set to the resource owner
         associated with this authorization code. Similarly request.scopes
         must also be set.
@@ -451,6 +453,7 @@ class RequestValidator:
 
         If PKCE is enabled (see 'is_pkce_required' and 'save_authorization_code')
         you MUST set the following based on the information stored:
+
             - request.code_challenge
             - request.code_challenge_method
 
@@ -561,7 +564,7 @@ class RequestValidator:
         OBS! The validation should also set the user attribute of the request
         to a valid resource owner, i.e. request.user = username or similar. If
         not set you will be unable to associate a token with a user in the
-        persistance method used (commonly, save_bearer_token).
+        persistence method used (commonly, save_bearer_token).
 
         :param username: Unicode username.
         :param password: Unicode password.
@@ -671,6 +674,7 @@ class RequestValidator:
 
         Method is used by:
             - Authorization Code Grant
+            - Refresh Token Grant
 
         """
         return False

@@ -25,7 +25,7 @@ from nacl.utils import StringFixer, random
 
 class SignedMessage(bytes):
     """
-    A bytes subclass that holds a messaged that has been signed by a
+    A bytes subclass that holds a message that has been signed by a
     :class:`SigningKey`.
     """
 
@@ -104,7 +104,7 @@ class VerifyKey(encoding.Encodable, StringFixer):
         """
         Verifies the signature of a signed message, returning the message
         if it has not been tampered with else raising
-        :class:`~nacl.signing.BadSignatureError`.
+        :class:`~nacl.exceptions.BadSignatureError`.
 
         :param smessage: [:class:`bytes`] Either the original messaged or a
             signature and message concated together.

@@ -1,7 +1,5 @@
 """Django ORM models for Social Auth"""
 
-from typing import Union
-
 from django.conf import settings
 from django.db import models
 from django.db.utils import IntegrityError
@@ -38,15 +36,15 @@ class AbstractUserSocialAuth(models.Model, DjangoUserMixin):
     modified = models.DateTimeField(auto_now=True)
     objects = UserSocialAuthManager()
 
+    class Meta:
+        constraints = [models.CheckConstraint(condition=~models.Q(uid=""), name="user_social_auth_uid_required")]
+        abstract = True
+
     def __str__(self):
         return str(self.user)
 
-    class Meta:
-        app_label = "social_django"
-        abstract = True
-
     @classmethod
-    def get_social_auth(cls, provider: str, uid: Union[str, int]):
+    def get_social_auth(cls, provider: str, uid: str | int):
         if not isinstance(uid, str):
             uid = str(uid)
         for social in cls.objects.select_related("user").filter(provider=provider, uid=uid):
@@ -59,7 +57,7 @@ class AbstractUserSocialAuth(models.Model, DjangoUserMixin):
     @classmethod
     def username_max_length(cls):
         username_field = cls.username_field()
-        field = cls.user_model()._meta.get_field(username_field)
+        field = cls.user_model()._meta.get_field(username_field)  # noqa: SLF001
         return field.max_length
 
     @classmethod
@@ -70,7 +68,7 @@ class AbstractUserSocialAuth(models.Model, DjangoUserMixin):
 class UserSocialAuth(AbstractUserSocialAuth):
     """Social Auth association model"""
 
-    class Meta:
+    class Meta(AbstractUserSocialAuth.Meta):
         """Meta data"""
 
         app_label = "social_django"

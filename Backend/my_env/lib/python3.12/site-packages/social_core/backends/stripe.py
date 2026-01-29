@@ -3,6 +3,8 @@ Stripe OAuth2 backend, docs at:
     https://python-social-auth.readthedocs.io/en/latest/backends/stripe.html
 """
 
+from typing import Any
+
 from .oauth import BaseOAuth2
 
 
@@ -23,7 +25,7 @@ class StripeOAuth2(BaseOAuth2):
         ("stripe_user_id", "stripe_user_id"),
     ]
 
-    def user_data(self, access_token, *args, **kwargs):
+    def user_data(self, access_token: str, *args, **kwargs) -> dict[str, Any] | None:
         """Grab user profile information from Stripe"""
         return self.get_json(
             "https://api.stripe.com/v1/account",
@@ -42,7 +44,7 @@ class StripeOAuth2(BaseOAuth2):
         }
 
     def auth_complete_params(self, state=None):
-        client_id, client_secret = self.get_key_and_secret()
+        client_id, _client_secret = self.get_key_and_secret()
         return {
             "grant_type": "authorization_code",
             "client_id": client_id,
@@ -51,11 +53,11 @@ class StripeOAuth2(BaseOAuth2):
         }
 
     def auth_headers(self):
-        client_id, client_secret = self.get_key_and_secret()
+        _client_id, client_secret = self.get_key_and_secret()
         return {
             "Accept": "application/json",
             "Authorization": f"Bearer {client_secret}",
         }
 
-    def refresh_token_params(self, refresh_token, *args, **kwargs):
-        return {"refresh_token": refresh_token, "grant_type": "refresh_token"}
+    def refresh_token_params(self, token: str, *args, **kwargs) -> dict[str, str]:
+        return {"refresh_token": token, "grant_type": "refresh_token"}

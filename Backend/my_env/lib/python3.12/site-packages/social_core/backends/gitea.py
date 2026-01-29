@@ -3,6 +3,8 @@ Gitea OAuth2 backend, docs at:
     https://python-social-auth.readthedocs.io/en/latest/backends/gitea.html
 """
 
+from typing import Any
+
 from .oauth import BaseOAuth2
 
 
@@ -18,7 +20,7 @@ class GiteaOAuth2(BaseOAuth2):
     STATE_PARAMETER = True
     EXTRA_DATA = [
         ("id", "id"),
-        ("expires_in", "expires"),
+        ("expires_in", "expires_in"),
         ("refresh_token", "refresh_token"),
     ]
 
@@ -43,8 +45,9 @@ class GiteaOAuth2(BaseOAuth2):
             "last_name": last_name,
         }
 
-    def user_data(self, access_token, *args, **kwargs):
+    def user_data(self, access_token: str, *args, **kwargs) -> dict[str, Any] | None:
         """Loads user data from service"""
         return self.get_json(
-            self.api_url("/api/v1/user"), params={"access_token": access_token}
+            self.api_url("/api/v1/user"),
+            headers={"Authorization": f"Bearer {access_token}"},
         )

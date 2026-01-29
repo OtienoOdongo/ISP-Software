@@ -43,7 +43,7 @@ class MobileApplicationClient(Client):
     redirection URI, it may be exposed to the resource owner and other
     applications residing on the same device.
     """
-    
+
     response_type = 'token'
 
     def prepare_request_uri(self, uri, redirect_uri=None, scope=None,
@@ -55,7 +55,7 @@ class MobileApplicationClient(Client):
         using the "application/x-www-form-urlencoded" format, per `Appendix B`_:
 
         :param redirect_uri:  OPTIONAL. The redirect URI must be an absolute URI
-                              and it should have been registerd with the OAuth
+                              and it should have been registered with the OAuth
                               provider prior to use. As described in `Section 3.1.2`_.
 
         :param scope:  OPTIONAL. The scope of the access request as described by

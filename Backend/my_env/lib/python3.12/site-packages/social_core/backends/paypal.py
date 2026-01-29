@@ -1,4 +1,4 @@
-import base64
+from typing import Any
 
 from .oauth import BaseOAuth2
 
@@ -20,12 +20,12 @@ class PayPalOAuth2(BaseOAuth2):
     REFRESH_TOKEN_METHOD = "POST"
     REDIRECT_STATE = False
 
-    def user_data(self, access_token, *args, **kwargs):
+    def user_data(self, access_token: str, *args, **kwargs) -> dict[str, Any] | None:
         auth_header = {"Authorization": f"Bearer {access_token}"}
         return self.get_json(self.USER_DATA_URL, headers=auth_header)
 
     def get_user_details(self, response):
-        username = response.get(self.ID_KEY).split("/")[-1]
+        username = response.get(self.id_key()).split("/")[-1]
         fullname, first_name, last_name = self.get_user_names(
             response.get("name", ""),
             response.get("given_name", ""),
@@ -48,8 +48,7 @@ class PayPalOAuth2(BaseOAuth2):
         }
 
     def auth_headers(self):
-        auth = ("{}:{}".format(*self.get_key_and_secret())).encode()
-        return {"Authorization": b"Basic " + base64.urlsafe_b64encode(auth)}
+        return {"Authorization": self.get_key_and_secret_basic_auth()}
 
     def refresh_token_params(self, token, *args, **kwargs):
         return {"refresh_token": token, "grant_type": "refresh_token"}

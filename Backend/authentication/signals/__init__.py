@@ -1,10 +1,19 @@
 """
-Authentication Signals Package
-Exports all signal-related functionality
+Authentication Signals Module
+Initializes and exports all signal-related functionality
 """
 
+# Core signal definitions and utilities
 from .core import (
-    # Signal definitions
+    # Enums and Data Classes
+    SignalType,
+    SignalStatus,
+    SignalMetadata,
+    PPPoECredentialsSignal,
+    ClientAccountSignal,
+    AccountStatusSignal,
+    
+    # Signal Definitions
     pppoe_credentials_generated,
     client_account_created,
     pppoe_credentials_updated,
@@ -12,51 +21,50 @@ from .core import (
     authentication_failed,
     send_notification,
     
-    # Core utilities
+    # Cache Manager
     SignalCacheManager,
+    
+    # Utility Functions
+    emit_signal_with_retry,
     get_signal_history,
+    health_check_signals,
     resend_failed_signals,
     test_signal_connection,
-    register_signals,
 )
 
+# Signal emitters
 from .emitters import (
-    # Emitter functions
-    emit_pppoe_credentials_generated,
-    emit_client_account_created,
-    emit_pppoe_credentials_updated,
-    emit_account_status_changed,
-    emit_authentication_failed,
+    emit_pppoe_credentials,
+    emit_client_account_creation,
+    emit_account_status_change,
+    emit_pppoe_credentials_update,
+    emit_authentication_failure,
     emit_custom_notification,
+    emit_batch_account_creations,
+    emit_bulk_pppoe_credentials,
+    get_emission_stats
 )
 
+# Validators
 from .validators import (
-    # Validation functions
     validate_signal_data,
+    validate_batch_signal_data,
+    sanitize_signal_data,
+    get_validation_summary,
+    ValidationLevel
 )
 
-from .test_utils import (
-    # Testing utilities
-    mock_signal_receiver,
-    capture_signals,
-    SignalTestSuite,
-    generate_test_pppoe_credentials_signal,
-    generate_test_client_creation_signal,
-)
-
-# Auto-import receivers when signals module is imported
-# This ensures receivers are connected when Django loads
-try:
-    from . import receivers
-    receivers_loaded = True
-except ImportError as e:
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.warning(f"Could not load signal receivers: {e}")
-    receivers_loaded = False
-
+# Export everything for easy import
 __all__ = [
-    # Signals
+    # Core
+    'SignalType',
+    'SignalStatus',
+    'SignalMetadata',
+    'PPPoECredentialsSignal',
+    'ClientAccountSignal',
+    'AccountStatusSignal',
+    
+    # Signal Definitions
     'pppoe_credentials_generated',
     'client_account_created',
     'pppoe_credentials_updated',
@@ -64,26 +72,31 @@ __all__ = [
     'authentication_failed',
     'send_notification',
     
-    # Emitters
-    'emit_pppoe_credentials_generated',
-    'emit_client_account_created',
-    'emit_pppoe_credentials_updated',
-    'emit_account_status_changed',
-    'emit_authentication_failed',
-    'emit_custom_notification',
-    
-    # Utilities
+    # Cache Manager
     'SignalCacheManager',
+    
+    # Utility Functions
+    'emit_signal_with_retry',
     'get_signal_history',
+    'health_check_signals',
     'resend_failed_signals',
     'test_signal_connection',
-    'register_signals',
-    'validate_signal_data',
     
-    # Testing
-    'mock_signal_receiver',
-    'capture_signals',
-    'SignalTestSuite',
-    'generate_test_pppoe_credentials_signal',
-    'generate_test_client_creation_signal',
+    # Emitters
+    'emit_pppoe_credentials',
+    'emit_client_account_creation',
+    'emit_account_status_change',
+    'emit_pppoe_credentials_update',
+    'emit_authentication_failure',
+    'emit_custom_notification',
+    'emit_batch_account_creations',
+    'emit_bulk_pppoe_credentials',
+    'get_emission_stats',
+    
+    # Validators
+    'validate_signal_data',
+    'validate_batch_signal_data',
+    'sanitize_signal_data',
+    'get_validation_summary',
+    'ValidationLevel'
 ]
