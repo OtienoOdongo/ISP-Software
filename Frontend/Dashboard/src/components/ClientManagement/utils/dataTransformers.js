@@ -386,7 +386,7 @@ import {
   REVENUE_SEGMENTS,
   USAGE_PATTERNS
 } from "../constants/clientConstants";
-import { formatPhoneNumber, formatCurrency, formatDate } from './formatter'; // Import from formatter.js for consistency
+import { formatPhoneNumber, formatCurrency, formatDate } from './formatters'; // Import from formatter.js for consistency
 
 export const formatClientData = (backendData) => {
   // Handle null/undefined data

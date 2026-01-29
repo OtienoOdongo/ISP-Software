@@ -357,7 +357,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Play, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
 import api from "../../../api";
-import { getThemeClasses } from "../../Shared/components";
+import { getThemeClasses } from "../../../components/ServiceManagement/Shared/components"
 
 const ActivationService = ({ subscriptions, onRefresh, theme }) => {
   const themeClasses = getThemeClasses(theme);

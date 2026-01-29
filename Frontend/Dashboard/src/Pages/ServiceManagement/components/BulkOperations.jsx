@@ -427,7 +427,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Play, Pause, RefreshCw, Trash2, CheckSquare, Square } from "lucide-react";
 import api from "../../../api";
-import { getThemeClasses } from "../../Shared/components";
+import { getThemeClasses } from "../../../components/ServiceManagement/Shared/components"
 
 const BulkOperations = ({ subscriptions, onRefresh, theme }) => {
   const themeClasses = getThemeClasses(theme);

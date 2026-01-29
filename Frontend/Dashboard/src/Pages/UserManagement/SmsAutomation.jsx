@@ -6,6 +6,7 @@ import {
   Download, Upload, Shield, Server, Loader,
   Menu, X, Home, Database, Cpu, Globe
 } from 'lucide-react';
+import { ResponsiveContainer } from 'recharts';
 import api from '../../api'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext';
@@ -18,7 +19,6 @@ import {
   LoadingOverlay,
   EmptyState,
   StatisticsCard,
-  ResponsiveContainer,
   ChartTooltip
 } from '../../components/ServiceManagement/Shared/components'
 
@@ -32,7 +32,7 @@ import QueueMonitor from '../../components/SMSAutomation/components/QueueMonitor
 import ExportManager from '../../components/SMSAutomation/components/ExportManager'
 
 // Import performance monitoring
-import usePerformanceMonitor from './hooks/usePerformanceMonitor';
+import usePerformanceMonitor from '../../components/SMSAutomation/hooks/usePerformanceMonitor'
 
 const SMSAutomation = () => {
   const { isAuthenticated, user } = useAuth();

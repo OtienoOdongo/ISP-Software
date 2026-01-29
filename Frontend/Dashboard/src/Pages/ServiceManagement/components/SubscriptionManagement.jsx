@@ -659,8 +659,7 @@ import {
   ChevronDown, ChevronUp, Download, MoreVertical, Edit, Copy
 } from "lucide-react";
 import api from "../../../api";
-import { getThemeClasses } from "../../Shared/components";
-
+import { getThemeClasses } from "../../../components/ServiceManagement/Shared/components"
 const Star = ({ filled, onClick, className }) => (
   <svg
     className={className}

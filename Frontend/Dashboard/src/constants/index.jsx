@@ -25,7 +25,7 @@ export const menuItems = [
     submenuItems: [
       { title: "Client Portal" },
       { title: "SMS Automation" },   
-      { title: "Bulk Actions" },
+    
     ],
   },
   {

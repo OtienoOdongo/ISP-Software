@@ -1,799 +1,3 @@
-
-// // ============================================================================
-// // UTILITY FUNCTIONS
-// // ============================================================================
-
-// import { formatBytes, formatTime, formatDate, formatDuration, formatCurrency } from "./formatters";
-// import { popularityLevels } from "./constants";
-
-// // Deep clone utility
-// export const deepClone = (obj) => {
-//   if (!obj || typeof obj !== 'object') return obj;
-//   if (obj instanceof Date) return new Date(obj.getTime());
-  
-//   return JSON.parse(JSON.stringify(obj));
-// };
-
-// // Debounce function
-// export const debounce = (func, wait) => {
-//   let timeout;
-//   return function executedFunction(...args) {
-//     const later = () => {
-//       clearTimeout(timeout);
-//       func(...args);
-//     };
-//     clearTimeout(timeout);
-//     timeout = setTimeout(later, wait);
-//   };
-// };
-
-// // Throttle function
-// export const throttle = (func, limit) => {
-//   let inThrottle;
-//   return function(...args) {
-//     if (!inThrottle) {
-//       func.apply(this, args);
-//       inThrottle = true;
-//       setTimeout(() => (inThrottle = false), limit);
-//     }
-//   };
-// };
-
-// // Format number with decimals
-// export const formatNumber = (value, decimals = 2) => {
-//   if (value === null || value === undefined || value === "") return "0";
-  
-//   const num = typeof value === "number" ? value : parseFloat(value);
-//   if (isNaN(num)) return "0";
-  
-//   return num.toLocaleString('en-US', {
-//     minimumFractionDigits: decimals,
-//     maximumFractionDigits: decimals
-//   });
-// };
-
-// // Calculate rating based on purchases with enhanced algorithm
-// export const calculateRating = (purchases, totalSubscribers = 0, reviews = []) => {
-//   if (!purchases || purchases === 0) return 0;
-  
-//   // Base rating from purchases (logarithmic scale)
-//   const baseRating = Math.min(5, Math.log10(purchases + 1) * 1.2);
-  
-//   // Factor in reviews if available
-//   let reviewBonus = 0;
-//   if (reviews.length > 0) {
-//     const avgReview = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
-//     reviewBonus = Math.min(1, (avgReview - 3) * 0.5); // Up to 1 star bonus from reviews
-//   }
-  
-//   // Factor in market share
-//   let marketShareBonus = 0;
-//   if (totalSubscribers > 0) {
-//     const marketShare = purchases / totalSubscribers;
-//     marketShareBonus = Math.min(0.5, marketShare * 5); // Up to 0.5 stars from market share
-//   }
-  
-//   return Math.min(5, baseRating + reviewBonus + marketShareBonus);
-// };
-
-// // Calculate popularity level based on subscriber count
-// export const calculatePopularity = (subscriberCount) => {
-//   if (subscriberCount >= popularityLevels.EXTREME.threshold) {
-//     return popularityLevels.EXTREME;
-//   } else if (subscriberCount >= popularityLevels.VERY_HIGH.threshold) {
-//     return popularityLevels.VERY_HIGH;
-//   } else if (subscriberCount >= popularityLevels.HIGH.threshold) {
-//     return popularityLevels.HIGH;
-//   } else if (subscriberCount >= popularityLevels.MEDIUM.threshold) {
-//     return popularityLevels.MEDIUM;
-//   } else {
-//     return popularityLevels.LOW;
-//   }
-// };
-
-// // Calculate category popularity metrics
-// export const calculateCategoryMetrics = (plans) => {
-//   const categoryMetrics = {};
-//   let totalSubscribers = 0;
-//   let totalRevenue = 0;
-
-//   // Calculate totals
-//   plans.forEach(plan => {
-//     const subscribers = plan.purchases || 0;
-//     const revenue = (plan.price || 0) * subscribers;
-    
-//     totalSubscribers += subscribers;
-//     totalRevenue += revenue;
-    
-//     const category = plan.category || "Uncategorized";
-    
-//     if (!categoryMetrics[category]) {
-//       categoryMetrics[category] = {
-//         subscribers: 0,
-//         plans: 0,
-//         revenue: 0,
-//         avgRating: 0,
-//         activePlans: 0,
-//         totalPlans: 0
-//       };
-//     }
-    
-//     categoryMetrics[category].subscribers += subscribers;
-//     categoryMetrics[category].plans += 1;
-//     categoryMetrics[category].revenue += revenue;
-//     categoryMetrics[category].activePlans += (plan.active ? 1 : 0);
-//     categoryMetrics[category].totalPlans += 1;
-//   });
-
-//   // Calculate averages and percentages
-//   Object.keys(categoryMetrics).forEach(category => {
-//     const metrics = categoryMetrics[category];
-    
-//     metrics.avgRating = calculateRating(metrics.subscribers, totalSubscribers);
-//     metrics.popularity = calculatePopularity(metrics.subscribers);
-//     metrics.marketShare = totalSubscribers > 0 ? (metrics.subscribers / totalSubscribers) * 100 : 0;
-//     metrics.revenueShare = totalRevenue > 0 ? (metrics.revenue / totalRevenue) * 100 : 0;
-//     metrics.planShare = plans.length > 0 ? (metrics.plans / plans.length) * 100 : 0;
-//     metrics.activeRate = metrics.totalPlans > 0 ? (metrics.activePlans / metrics.totalPlans) * 100 : 0;
-//   });
-
-//   return {
-//     categoryMetrics,
-//     totalSubscribers,
-//     totalRevenue,
-//     averageRating: totalSubscribers > 0 ? calculateRating(totalSubscribers, totalSubscribers) : 0,
-//     mostPopularCategory: Object.keys(categoryMetrics).reduce((a, b) => 
-//       categoryMetrics[a].subscribers > categoryMetrics[b].subscribers ? a : b, ''
-//     )
-//   };
-// };
-
-// // Calculate plan performance metrics
-// export const calculatePlanPerformance = (plan, totalSubscribers, totalRevenue) => {
-//   const subscribers = plan.purchases || 0;
-//   const revenue = (plan.price || 0) * subscribers;
-  
-//   const rating = calculateRating(subscribers, totalSubscribers, plan.customer_feedback || []);
-//   const popularity = calculatePopularity(subscribers);
-//   const marketShare = totalSubscribers > 0 ? (subscribers / totalSubscribers) * 100 : 0;
-//   const revenueShare = totalRevenue > 0 ? (revenue / totalRevenue) * 100 : 0;
-  
-//   // Calculate conversion rate if views data is available
-//   const conversionRate = plan.views > 0 ? (subscribers / plan.views) * 100 : 0;
-  
-//   // Calculate performance score (0-100)
-//   const performanceScore = Math.min(100,
-//     (rating * 10) + // Rating contributes up to 50 points
-//     (popularity.label === 'Extreme' ? 20 : 
-//      popularity.label === 'Very High' ? 15 :
-//      popularity.label === 'High' ? 10 :
-//      popularity.label === 'Medium' ? 5 : 0) + // Popularity contributes up to 20 points
-//     (marketShare * 0.3) + // Market share contributes up to 30 points
-//     (conversionRate * 0.5) // Conversion rate contributes up to 50 points
-//   );
-
-//   return {
-//     rating,
-//     popularity,
-//     marketShare,
-//     revenueShare,
-//     revenue,
-//     conversionRate,
-//     performanceScore,
-//     performanceLevel: performanceScore >= 80 ? 'Excellent' :
-//                      performanceScore >= 60 ? 'Good' :
-//                      performanceScore >= 40 ? 'Average' :
-//                      performanceScore >= 20 ? 'Poor' : 'Very Poor'
-//   };
-// };
-
-// // Calculate effective price with discounts
-// export const calculateEffectivePrice = (price, discountInfo) => {
-//   if (!discountInfo || !price) return parseFloat(price) || 0;
-  
-//   const basePrice = parseFloat(price);
-//   if (isNaN(basePrice)) return 0;
-  
-//   if (discountInfo.type === 'percentage') {
-//     const discount = (basePrice * discountInfo.value) / 100;
-//     return Math.max(0, basePrice - discount);
-//   } else if (discountInfo.type === 'fixed') {
-//     return Math.max(0, basePrice - discountInfo.value);
-//   }
-  
-//   return basePrice;
-// };
-
-// // Validate discount code
-// export const validateDiscountCode = (code, discountRules) => {
-//   if (!code) return { valid: false, message: "Discount code is required" };
-  
-//   const rule = discountRules.find(r => 
-//     r.code === code.toUpperCase() || 
-//     r.name.toLowerCase() === code.toLowerCase()
-//   );
-  
-//   if (!rule) {
-//     return { valid: false, message: "Invalid discount code" };
-//   }
-  
-//   const now = new Date();
-//   const startDate = rule.start_date ? new Date(rule.start_date) : null;
-//   const endDate = rule.end_date ? new Date(rule.end_date) : null;
-  
-//   if (startDate && now < startDate) {
-//     return { valid: false, message: "Discount code not yet active" };
-//   }
-  
-//   if (endDate && now > endDate) {
-//     return { valid: false, message: "Discount code has expired" };
-//   }
-  
-//   if (rule.max_uses !== null && rule.uses >= rule.max_uses) {
-//     return { valid: false, message: "Discount code usage limit reached" };
-//   }
-  
-//   return { valid: true, rule, message: "Discount code applied successfully" };
-// };
-
-// // Apply discount rules to price
-// export const applyDiscountRules = (price, discountRules, quantity = 1) => {
-//   let finalPrice = parseFloat(price);
-//   let appliedDiscounts = [];
-  
-//   if (isNaN(finalPrice) || finalPrice <= 0) return { finalPrice, appliedDiscounts };
-  
-//   // Sort discount rules by priority (highest first)
-//   const sortedRules = [...discountRules].sort((a, b) => (b.priority || 0) - (a.priority || 0));
-  
-//   sortedRules.forEach(rule => {
-//     if (!rule.active) return;
-    
-//     // Check quantity requirements
-//     if (rule.min_quantity && quantity < rule.min_quantity) return;
-//     if (rule.max_quantity && quantity > rule.max_quantity) return;
-    
-//     let discountAmount = 0;
-    
-//     if (rule.type === 'percentage') {
-//       discountAmount = (finalPrice * rule.value) / 100;
-//     } else if (rule.type === 'fixed') {
-//       discountAmount = Math.min(finalPrice, rule.value);
-//     }
-    
-//     if (discountAmount > 0) {
-//       finalPrice -= discountAmount;
-//       appliedDiscounts.push({
-//         name: rule.name,
-//         type: rule.type,
-//         value: rule.value,
-//         amount: discountAmount,
-//         ruleId: rule.id
-//       });
-//     }
-//   });
-  
-//   return {
-//     finalPrice: Math.max(0, finalPrice),
-//     appliedDiscounts,
-//     totalDiscount: appliedDiscounts.reduce((sum, d) => sum + d.amount, 0),
-//     discountPercentage: price > 0 ? ((price - finalPrice) / price) * 100 : 0
-//   };
-// };
-
-// // Calculate bulk pricing
-// export const calculateBulkPricing = (basePrice, quantity, bulkDiscounts = []) => {
-//   if (!basePrice || quantity <= 0) return basePrice;
-  
-//   const sortedDiscounts = [...bulkDiscounts].sort((a, b) => b.min_quantity - a.min_quantity);
-//   const applicableDiscount = sortedDiscounts.find(d => quantity >= d.min_quantity);
-  
-//   if (!applicableDiscount) return basePrice * quantity;
-  
-//   const discountMultiplier = (100 - applicableDiscount.discount_percentage) / 100;
-//   return (basePrice * quantity) * discountMultiplier;
-// };
-
-// // Get best discount from multiple rules
-// export const getBestDiscount = (price, discountRules, quantity = 1) => {
-//   if (!discountRules || discountRules.length === 0) return null;
-  
-//   let bestDiscount = null;
-//   let bestPrice = price;
-  
-//   discountRules.forEach(rule => {
-//     if (!rule.active) return;
-    
-//     const result = applyDiscountRules(price, [rule], quantity);
-//     if (result.finalPrice < bestPrice) {
-//       bestPrice = result.finalPrice;
-//       bestDiscount = {
-//         rule,
-//         finalPrice: result.finalPrice,
-//         discountAmount: price - result.finalPrice,
-//         discountPercentage: ((price - result.finalPrice) / price) * 100
-//       };
-//     }
-//   });
-  
-//   return bestDiscount;
-// };
-
-// // Validate required fields
-// export const validateRequired = (value, fieldName) => {
-//   if (value === null || value === undefined || value === '') {
-//     return `${fieldName} is required`;
-//   }
-  
-//   if (typeof value === 'string' && value.trim() === '') {
-//     return `${fieldName} is required`;
-//   }
-  
-//   return '';
-// };
-
-// // Validate number
-// export const validateNumber = (value, fieldName, options = {}) => {
-//   const { min, max, required = true } = options;
-  
-//   if (required && (value === null || value === undefined || value === '')) {
-//     return `${fieldName} is required`;
-//   }
-  
-//   if (value === null || value === undefined || value === '') {
-//     return ''; // Not required and empty
-//   }
-  
-//   const num = typeof value === 'number' ? value : parseFloat(value);
-//   if (isNaN(num)) {
-//     return `${fieldName} must be a valid number`;
-//   }
-  
-//   if (min !== undefined && num < min) {
-//     return `${fieldName} must be at least ${min}`;
-//   }
-  
-//   if (max !== undefined && num > max) {
-//     return `${fieldName} must be at most ${max}`;
-//   }
-  
-//   return '';
-// };
-
-// // Validate price
-// export const validatePrice = (value, planType) => {
-//   if (planType === "paid" || planType === "promotional") {
-//     const price = parseFloat(value);
-//     if (!value || isNaN(price) || price < 0) {
-//       return "Price must be a positive number for paid plans";
-//     }
-//   }
-//   return '';
-// };
-
-// // Validate email
-// export const validateEmail = (email) => {
-//   if (!email) return "Email is required";
-  
-//   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-//   if (!emailRegex.test(email)) {
-//     return "Please enter a valid email address";
-//   }
-  
-//   return '';
-// };
-
-// // Validate phone number
-// export const validatePhone = (phone) => {
-//   if (!phone) return "Phone number is required";
-  
-//   const phoneRegex = /^\+?[\d\s\-\(\)]+$/;
-//   if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
-//     return "Please enter a valid phone number";
-//   }
-  
-//   return '';
-// };
-
-// // Validate time variant configuration
-// export const validateTimeVariant = (timeVariant) => {
-//   const errors = {};
-  
-//   if (!timeVariant.is_active) {
-//     return errors; // No validation needed if not active
-//   }
-  
-//   if (timeVariant.schedule_active) {
-//     if (!timeVariant.schedule_start_date) {
-//       errors.schedule_start_date = "Schedule start date is required";
-//     }
-//     if (!timeVariant.schedule_end_date) {
-//       errors.schedule_end_date = "Schedule end date is required";
-//     }
-//     if (timeVariant.schedule_start_date && timeVariant.schedule_end_date) {
-//       const start = new Date(timeVariant.schedule_start_date);
-//       const end = new Date(timeVariant.schedule_end_date);
-//       if (end < start) {
-//         errors.schedule_end_date = "End date must be after start date";
-//       }
-//     }
-//   }
-  
-//   if (timeVariant.duration_active) {
-//     if (!timeVariant.duration_value || timeVariant.duration_value <= 0) {
-//       errors.duration_value = "Duration value must be greater than 0";
-//     }
-//     if (!timeVariant.duration_unit) {
-//       errors.duration_unit = "Duration unit is required";
-//     }
-//   }
-  
-//   return errors;
-// };
-
-// // Check if plan is available now
-// export const isPlanAvailableNow = (plan) => {
-//   if (!plan.time_variant?.is_active) return true;
-  
-//   const now = new Date();
-//   const currentTime = now.getHours() * 3600 + now.getMinutes() * 60;
-//   const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-  
-//   // Check time restrictions
-//   if (plan.time_variant.start_time && plan.time_variant.end_time) {
-//     if (currentTime < plan.time_variant.start_time || currentTime > plan.time_variant.end_time) {
-//       return false;
-//     }
-//   }
-  
-//   // Check day restrictions
-//   if (plan.time_variant.available_days?.length > 0) {
-//     if (!plan.time_variant.available_days.includes(currentDay)) {
-//       return false;
-//     }
-//   }
-  
-//   // Check schedule restrictions
-//   if (plan.time_variant.schedule_active) {
-//     const scheduleStart = new Date(plan.time_variant.schedule_start_date);
-//     const scheduleEnd = new Date(plan.time_variant.schedule_end_date);
-    
-//     if (now < scheduleStart || now > scheduleEnd) {
-//       return false;
-//     }
-//   }
-  
-//   // Check exclusion dates
-//   if (plan.time_variant.exclusion_dates?.length > 0) {
-//     const todayStr = now.toISOString().split('T')[0];
-//     if (plan.time_variant.exclusion_dates.includes(todayStr)) {
-//       return false;
-//     }
-//   }
-  
-//   return true;
-// };
-
-// // Calculate next available time
-// export const calculateNextAvailableTime = (timeVariant) => {
-//   if (!timeVariant.is_active) return null;
-  
-//   const now = new Date();
-//   const currentTime = now.getHours() * 3600 + now.getMinutes() * 60;
-  
-//   // If there's a time restriction, calculate next available time today
-//   if (timeVariant.start_time && timeVariant.end_time) {
-//     if (currentTime < timeVariant.start_time) {
-//       const hours = Math.floor(timeVariant.start_time / 3600);
-//       const minutes = Math.floor((timeVariant.start_time % 3600) / 60);
-//       return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-//     }
-//   }
-  
-//   // If there's a schedule restriction, calculate next available date
-//   if (timeVariant.schedule_active && timeVariant.schedule_start_date) {
-//     const scheduleStart = new Date(timeVariant.schedule_start_date);
-//     if (now < scheduleStart) {
-//       return formatDate(scheduleStart, true);
-//     }
-//   }
-  
-//   return null;
-// };
-
-// // Get availability summary
-// export const getAvailabilitySummary = (timeVariant) => {
-//   if (!timeVariant.is_active) {
-//     return { status: 'always_available', message: 'Available at all times' };
-//   }
-  
-//   const parts = [];
-  
-//   if (timeVariant.start_time && timeVariant.end_time) {
-//     parts.push(`${formatTime(timeVariant.start_time)}-${formatTime(timeVariant.end_time)}`);
-//   }
-  
-//   if (timeVariant.available_days?.length > 0) {
-//     if (timeVariant.available_days.length === 7) {
-//       parts.push("every day");
-//     } else if (timeVariant.available_days.length === 5 && 
-//                timeVariant.available_days.includes('monday') && 
-//                timeVariant.available_days.includes('friday')) {
-//       parts.push("weekdays only");
-//     } else {
-//       parts.push(`on ${timeVariant.available_days.map(d => 
-//         d.charAt(0).toUpperCase() + d.slice(1)
-//       ).join(', ')}`);
-//     }
-//   }
-  
-//   if (timeVariant.schedule_active) {
-//     if (timeVariant.schedule_start_date && timeVariant.schedule_end_date) {
-//       parts.push(`from ${formatDate(timeVariant.schedule_start_date)} to ${formatDate(timeVariant.schedule_end_date)}`);
-//     }
-//   }
-  
-//   const message = parts.length > 0 
-//     ? `Available ${parts.join(' ')}`
-//     : 'Available with restrictions';
-  
-//   return { status: 'restricted', message };
-// };
-
-// // Safe object entries
-// export const safeObjectEntries = (obj) => {
-//   if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
-//     return [];
-//   }
-//   return Object.entries(obj);
-// };
-
-// // Safe object keys
-// export const safeObjectKeys = (obj) => {
-//   if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
-//     return [];
-//   }
-//   return Object.keys(obj);
-// };
-
-// // Safe object values
-// export const safeObjectValues = (obj) => {
-//   if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
-//     return [];
-//   }
-//   return Object.values(obj);
-// };
-
-// // Format bandwidth display (alias for backward compatibility)
-// export const formatBandwidthDisplay = (kbps) => formatBandwidth(kbps, true);
-
-// // Re-export formatters
-// export { 
-//   formatBytes, 
-//   formatTime, 
-//   formatDate, 
-//   formatDuration, 
-//   formatCurrency 
-// };
-
-// // Analytics data processing
-// export const processAnalyticsData = (subscriptions, plans, timeRange = '30d') => {
-//   const now = new Date();
-//   let startDate = new Date();
-  
-//   switch (timeRange) {
-//     case 'today':
-//       startDate.setHours(0, 0, 0, 0);
-//       break;
-//     case 'yesterday':
-//       startDate.setDate(now.getDate() - 1);
-//       startDate.setHours(0, 0, 0, 0);
-//       const yesterdayEnd = new Date(startDate);
-//       yesterdayEnd.setHours(23, 59, 59, 999);
-//       break;
-//     case '7d':
-//       startDate.setDate(now.getDate() - 7);
-//       break;
-//     case '30d':
-//       startDate.setDate(now.getDate() - 30);
-//       break;
-//     case '90d':
-//       startDate.setDate(now.getDate() - 90);
-//       break;
-//     case '1y':
-//       startDate.setFullYear(now.getFullYear() - 1);
-//       break;
-//     default:
-//       startDate = new Date(0);
-//   }
-
-//   const filteredSubscriptions = subscriptions.filter(sub => {
-//     const subDate = new Date(sub.created_at || sub.start_date || sub.subscription_date);
-//     return subDate >= startDate;
-//   });
-
-//   const categoryStats = {};
-//   const planStats = {};
-//   const dailyStats = {};
-//   let totalRevenue = 0;
-//   let activeSubscriptions = 0;
-
-//   filteredSubscriptions.forEach(sub => {
-//     const plan = plans.find(p => p.id === sub.plan_id);
-//     if (!plan) return;
-
-//     const category = plan.category || "Uncategorized";
-//     const revenue = plan.price || 0;
-//     const subDate = new Date(sub.created_at || sub.start_date);
-//     const dateKey = subDate.toISOString().split('T')[0];
-
-//     // Daily stats
-//     if (!dailyStats[dateKey]) {
-//       dailyStats[dateKey] = {
-//         date: dateKey,
-//         subscriptions: 0,
-//         revenue: 0,
-//         active: 0
-//       };
-//     }
-//     dailyStats[dateKey].subscriptions++;
-//     dailyStats[dateKey].revenue += revenue;
-//     if (sub.status === 'active') {
-//       dailyStats[dateKey].active++;
-//     }
-
-//     // Category stats
-//     if (!categoryStats[category]) {
-//       categoryStats[category] = {
-//         subscriptions: 0,
-//         revenue: 0,
-//         active: 0,
-//         plans: new Set()
-//       };
-//     }
-//     categoryStats[category].subscriptions++;
-//     categoryStats[category].revenue += revenue;
-//     categoryStats[category].plans.add(plan.id);
-//     if (sub.status === 'active') {
-//       categoryStats[category].active++;
-//       activeSubscriptions++;
-//     }
-
-//     // Plan stats
-//     if (!planStats[plan.id]) {
-//       planStats[plan.id] = {
-//         id: plan.id,
-//         name: plan.name,
-//         category: plan.category,
-//         subscriptions: 0,
-//         revenue: 0,
-//         active: 0,
-//         price: plan.price || 0
-//       };
-//     }
-//     planStats[plan.id].subscriptions++;
-//     planStats[plan.id].revenue += revenue;
-//     if (sub.status === 'active') {
-//       planStats[plan.id].active++;
-//     }
-
-//     totalRevenue += revenue;
-//   });
-
-//   // Convert daily stats to array and sort
-//   const dailyStatsArray = Object.values(dailyStats).sort((a, b) => 
-//     new Date(a.date) - new Date(b.date)
-//   );
-
-//   // Calculate conversion rates
-//   const planStatsArray = Object.values(planStats).map(stat => ({
-//     ...stat,
-//     conversionRate: stat.subscriptions / (plan.views || 100) * 100,
-//     avgRevenuePerUser: stat.subscriptions > 0 ? stat.revenue / stat.subscriptions : 0
-//   })).sort((a, b) => b.subscriptions - a.subscriptions);
-
-//   // Enhance category stats
-//   const enhancedCategoryStats = Object.entries(categoryStats).map(([category, stats]) => ({
-//     category,
-//     subscriptions: stats.subscriptions,
-//     revenue: stats.revenue,
-//     active: stats.active,
-//     planCount: stats.plans.size,
-//     avgRevenuePerSubscription: stats.subscriptions > 0 ? stats.revenue / stats.subscriptions : 0,
-//     popularity: calculatePopularity(stats.subscriptions)
-//   })).sort((a, b) => b.subscriptions - a.subscriptions);
-
-//   return {
-//     timeRange,
-//     totalSubscriptions: filteredSubscriptions.length,
-//     activeSubscriptions,
-//     totalRevenue,
-//     avgRevenuePerSubscription: filteredSubscriptions.length > 0 ? totalRevenue / filteredSubscriptions.length : 0,
-//     categoryStats: enhancedCategoryStats,
-//     planStats: planStatsArray,
-//     topCategories: enhancedCategoryStats.slice(0, 5),
-//     topPlans: planStatsArray.slice(0, 10),
-//     dailyStats: dailyStatsArray,
-//     trends: calculateTrends(dailyStatsArray)
-//   };
-// };
-
-// // Calculate trends from daily stats
-// export const calculateTrends = (dailyStats) => {
-//   if (dailyStats.length < 2) return {};
-  
-//   const recent = dailyStats.slice(-7);
-//   const previous = dailyStats.slice(-14, -7);
-  
-//   const recentAvg = recent.reduce((sum, day) => sum + day.subscriptions, 0) / recent.length;
-//   const previousAvg = previous.reduce((sum, day) => sum + day.subscriptions, 0) / previous.length;
-  
-//   const growthRate = previousAvg > 0 ? ((recentAvg - previousAvg) / previousAvg) * 100 : 100;
-  
-//   return {
-//     growthRate,
-//     trend: growthRate > 0 ? 'up' : growthRate < 0 ? 'down' : 'stable',
-//     recentAverage: recentAvg,
-//     previousAverage: previousAvg
-//   };
-// };
-
-// // Generate unique ID
-// export const generateId = (prefix = '') => {
-//   return `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-// };
-
-// // Calculate age (for date comparisons)
-// export const calculateAge = (dateString) => {
-//   if (!dateString) return 0;
-  
-//   const birthDate = new Date(dateString);
-//   const today = new Date();
-  
-//   let age = today.getFullYear() - birthDate.getFullYear();
-//   const monthDiff = today.getMonth() - birthDate.getMonth();
-  
-//   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-//     age--;
-//   }
-  
-//   return age;
-// };
-
-// // Truncate text with ellipsis
-// export const truncateText = (text, maxLength = 100) => {
-//   if (!text || text.length <= maxLength) return text;
-  
-//   return text.substr(0, maxLength) + '...';
-// };
-
-// // Capitalize first letter
-// export const capitalize = (text) => {
-//   if (!text) return '';
-//   return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
-// };
-
-// // Generate random color
-// export const generateRandomColor = () => {
-//   const colors = [
-//     '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
-//     '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1'
-//   ];
-//   return colors[Math.floor(Math.random() * colors.length)];
-// };
-
-// // Sleep utility (for async operations)
-// export const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-
-
-
-
-
-
-
-
-
 // ============================================================================
 // UTILITY FUNCTIONS
 // ALIGNED WITH DJANGO BACKEND LOGIC
@@ -807,7 +11,7 @@ import {
   formatCurrency,
   formatDaysOfWeek 
 } from "./formatters";
-import { popularityLevels, daysOfWeek } from "./constants";
+import { popularityLevels, daysOfWeek } from "./constant";
 
 // Deep clone utility
 export const deepClone = (obj) => {
@@ -1218,6 +422,350 @@ export const getBestDiscount = (price, discountRules, quantity = 1, clientData =
   return bestDiscount;
 };
 
+// ============================================================================
+// PRICING & CALCULATION UTILITIES
+// ============================================================================
+
+/**
+ * Calculate tiered pricing based on quantity
+ * @param {number} quantity - The quantity purchased
+ * @param {Array} tiers - Array of tier objects [{min_qty: 1, price: 100}, ...]
+ * @param {string} tierType - 'volume' (price per unit) or 'tiered' (total price for tier)
+ * @returns {number} Calculated price
+ */
+export const calculateTieredPrice = (quantity, tiers, tierType = 'volume') => {
+  if (!tiers || !Array.isArray(tiers) || tiers.length === 0) {
+    return 0;
+  }
+  
+  // Sort tiers by min_qty in ascending order
+  const sortedTiers = [...tiers].sort((a, b) => a.min_qty - b.min_qty);
+  
+  // Find the applicable tier
+  let applicableTier = sortedTiers[sortedTiers.length - 1]; // Default to highest tier
+  
+  for (let i = sortedTiers.length - 1; i >= 0; i--) {
+    if (quantity >= sortedTiers[i].min_qty) {
+      applicableTier = sortedTiers[i];
+      break;
+    }
+  }
+  
+  if (tierType === 'volume') {
+    // Volume pricing: price per unit
+    return applicableTier.price * quantity;
+  } else {
+    // Tiered pricing: fixed price for the tier
+    return applicableTier.price;
+  }
+};
+
+/**
+ * Calculate percentage change between two values
+ * @param {number} oldValue - The old/original value
+ * @param {number} newValue - The new/current value
+ * @param {number} decimals - Number of decimal places (default: 1)
+ * @returns {number} Percentage change (can be negative for decrease)
+ */
+export const calculatePercentageChange = (oldValue, newValue, decimals = 1) => {
+  if (oldValue === 0 || oldValue === null || oldValue === undefined) {
+    return newValue > 0 ? 100 : 0;
+  }
+  
+  const change = ((newValue - oldValue) / oldValue) * 100;
+  return parseFloat(change.toFixed(decimals));
+};
+
+/**
+ * Calculate progressive tiered pricing (each tier applies to units in that tier)
+ * @param {number} quantity - Total quantity
+ * @param {Array} tiers - Array of tier objects [{min_qty: 1, max_qty: 10, price: 100}, ...]
+ * @returns {number} Total price
+ */
+export const calculateProgressiveTieredPrice = (quantity, tiers) => {
+  if (!tiers || !Array.isArray(tiers) || tiers.length === 0 || quantity <= 0) {
+    return 0;
+  }
+  
+  // Sort tiers by min_qty
+  const sortedTiers = [...tiers].sort((a, b) => a.min_qty - b.min_qty);
+  
+  let totalPrice = 0;
+  let remainingQuantity = quantity;
+  
+  for (let i = 0; i < sortedTiers.length && remainingQuantity > 0; i++) {
+    const tier = sortedTiers[i];
+    const nextTier = sortedTiers[i + 1];
+    
+    const tierMax = tier.max_qty || (nextTier ? nextTier.min_qty - 1 : Infinity);
+    const tierQuantity = Math.min(remainingQuantity, tierMax - tier.min_qty + 1);
+    
+    if (tierQuantity > 0) {
+      totalPrice += tier.price * tierQuantity;
+      remainingQuantity -= tierQuantity;
+    }
+  }
+  
+  return totalPrice;
+};
+
+/**
+ * Calculate discount for tiered pricing
+ * @param {number} basePrice - Original price per unit
+ * @param {number} quantity - Quantity purchased
+ * @param {Array} discountTiers - Discount tiers [{min_qty: 10, discount: 10}, ...]
+ * @param {string} discountType - 'percentage' or 'fixed'
+ * @returns {Object} { discountedPrice, discountAmount, discountPercentage }
+ */
+export const calculateTieredDiscount = (basePrice, quantity, discountTiers, discountType = 'percentage') => {
+  const totalBasePrice = basePrice * quantity;
+  
+  if (!discountTiers || !Array.isArray(discountTiers) || discountTiers.length === 0) {
+    return {
+      discountedPrice: totalBasePrice,
+      discountAmount: 0,
+      discountPercentage: 0,
+      appliedTier: null
+    };
+  }
+  
+  // Sort discount tiers by min_qty
+  const sortedTiers = [...discountTiers].sort((a, b) => b.min_qty - a.min_qty); // Descending for easier matching
+  
+  let appliedTier = null;
+  
+  for (const tier of sortedTiers) {
+    if (quantity >= tier.min_qty) {
+      appliedTier = tier;
+      break;
+    }
+  }
+  
+  if (!appliedTier) {
+    return {
+      discountedPrice: totalBasePrice,
+      discountAmount: 0,
+      discountPercentage: 0,
+      appliedTier: null
+    };
+  }
+  
+  let discountAmount = 0;
+  
+  if (discountType === 'percentage') {
+    discountAmount = totalBasePrice * (appliedTier.discount / 100);
+  } else if (discountType === 'fixed') {
+    discountAmount = Math.min(totalBasePrice, appliedTier.discount);
+  }
+  
+  const discountedPrice = totalBasePrice - discountAmount;
+  const discountPercentage = (discountAmount / totalBasePrice) * 100;
+  
+  return {
+    discountedPrice,
+    discountAmount,
+    discountPercentage: parseFloat(discountPercentage.toFixed(2)),
+    appliedTier
+  };
+};
+
+/**
+ * Filter items by price range
+ */
+export const filterByPriceRange = (items, minPrice, maxPrice, priceField = 'price') => {
+  if (!items || !Array.isArray(items)) {
+    return [];
+  }
+  
+  return items.filter(item => {
+    const price = parseFloat(item[priceField] || 0);
+    
+    // Handle min price
+    const minValid = minPrice === null || minPrice === undefined || price >= parseFloat(minPrice);
+    
+    // Handle max price
+    const maxValid = maxPrice === null || maxPrice === undefined || price <= parseFloat(maxPrice);
+    
+    return minValid && maxValid;
+  });
+};
+
+/**
+ * Calculate average price from items
+ */
+export const calculateAveragePrice = (items, priceField = 'price') => {
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return 0;
+  }
+  
+  const sum = items.reduce((total, item) => {
+    return total + parseFloat(item[priceField] || 0);
+  }, 0);
+  
+  return parseFloat((sum / items.length).toFixed(2));
+};
+
+/**
+ * Calculate median price from items
+ */
+export const calculateMedianPrice = (items, priceField = 'price') => {
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return 0;
+  }
+  
+  const prices = items
+    .map(item => parseFloat(item[priceField] || 0))
+    .sort((a, b) => a - b);
+  
+  const middle = Math.floor(prices.length / 2);
+  
+  if (prices.length % 2 === 0) {
+    return parseFloat(((prices[middle - 1] + prices[middle]) / 2).toFixed(2));
+  } else {
+    return parseFloat(prices[middle].toFixed(2));
+  }
+};
+
+/**
+ * Calculate price statistics
+ */
+export const calculatePriceStatistics = (items, priceField = 'price') => {
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return {
+      min: 0,
+      max: 0,
+      avg: 0,
+      median: 0,
+      total: 0,
+      count: 0
+    };
+  }
+  
+  const prices = items.map(item => parseFloat(item[priceField] || 0));
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const avg = prices.reduce((sum, price) => sum + price, 0) / prices.length;
+  const total = prices.reduce((sum, price) => sum + price, 0);
+  
+  // Calculate median
+  const sortedPrices = [...prices].sort((a, b) => a - b);
+  const middle = Math.floor(sortedPrices.length / 2);
+  const median = sortedPrices.length % 2 === 0
+    ? (sortedPrices[middle - 1] + sortedPrices[middle]) / 2
+    : sortedPrices[middle];
+  
+  return {
+    min: parseFloat(min.toFixed(2)),
+    max: parseFloat(max.toFixed(2)),
+    avg: parseFloat(avg.toFixed(2)),
+    median: parseFloat(median.toFixed(2)),
+    total: parseFloat(total.toFixed(2)),
+    count: items.length
+  };
+};
+
+/**
+ * Group items by price range
+ */
+export const groupByPriceRange = (items, ranges, priceField = 'price') => {
+  if (!items || !Array.isArray(items) || !ranges || !Array.isArray(ranges)) {
+    return {};
+  }
+  
+  const result = {};
+  
+  // Initialize all ranges
+  ranges.forEach(range => {
+    result[range.label] = [];
+  });
+  
+  // Add "other" category for items outside ranges
+  result.other = [];
+  
+  // Categorize items
+  items.forEach(item => {
+    const price = parseFloat(item[priceField] || 0);
+    let placed = false;
+    
+    for (const range of ranges) {
+      const min = range.min !== undefined ? parseFloat(range.min) : -Infinity;
+      const max = range.max !== undefined ? parseFloat(range.max) : Infinity;
+      
+      if (price >= min && price <= max) {
+        result[range.label].push(item);
+        placed = true;
+        break;
+      }
+    }
+    
+    if (!placed) {
+      result.other.push(item);
+    }
+  });
+  
+  return result;
+};
+
+/**
+ * Sort items by price
+ */
+export const sortByPrice = (items, order = 'asc', priceField = 'price') => {
+  if (!items || !Array.isArray(items)) {
+    return [];
+  }
+  
+  return [...items].sort((a, b) => {
+    const priceA = parseFloat(a[priceField] || 0);
+    const priceB = parseFloat(b[priceField] || 0);
+    
+    return order === 'asc' ? priceA - priceB : priceB - priceA;
+  });
+};
+
+/**
+ * Find price outliers using IQR method
+ */
+export const findPriceOutliers = (items, priceField = 'price') => {
+  if (!items || !Array.isArray(items) || items.length < 4) {
+    return { outliers: [], nonOutliers: items || [] };
+  }
+  
+  const prices = items.map(item => ({
+    item,
+    price: parseFloat(item[priceField] || 0)
+  })).sort((a, b) => a.price - b.price);
+  
+  // Calculate Q1, Q3, and IQR
+  const q1Index = Math.floor(prices.length * 0.25);
+  const q3Index = Math.floor(prices.length * 0.75);
+  
+  const q1 = prices[q1Index].price;
+  const q3 = prices[q3Index].price;
+  const iqr = q3 - q1;
+  
+  const lowerBound = q1 - (1.5 * iqr);
+  const upperBound = q3 + (1.5 * iqr);
+  
+  const outliers = prices.filter(p => p.price < lowerBound || p.price > upperBound);
+  const nonOutliers = prices.filter(p => p.price >= lowerBound && p.price <= upperBound);
+  
+  return {
+    outliers: outliers.map(o => o.item),
+    nonOutliers: nonOutliers.map(o => o.item),
+    stats: {
+      q1: parseFloat(q1.toFixed(2)),
+      q3: parseFloat(q3.toFixed(2)),
+      iqr: parseFloat(iqr.toFixed(2)),
+      lowerBound: parseFloat(lowerBound.toFixed(2)),
+      upperBound: parseFloat(upperBound.toFixed(2))
+    }
+  };
+};
+
+// ============================================================================
+// VALIDATION UTILITIES
+// ============================================================================
+
 // Validate required fields
 export const validateRequired = (value, fieldName) => {
   if (value === null || value === undefined || value === '') {
@@ -1536,6 +1084,10 @@ export const getAvailabilitySummary = (timeVariant) => {
     restrictions: parts 
   };
 };
+
+// ============================================================================
+// DATA MANIPULATION UTILITIES
+// ============================================================================
 
 // Safe object entries
 export const safeObjectEntries = (obj) => {
@@ -2183,7 +1735,73 @@ export const debounceAdvanced = (func, wait, options = {}) => {
   return debounced;
 };
 
-// Export all utility functions
+export const getAccessTypeColor = (accessType) => {
+  const colorSchemes = {
+    hotspot: {
+      light: { bg: 'bg-blue-100', text: 'text-blue-800' },
+      dark: { bg: 'bg-blue-800', text: 'text-blue-200' }
+    },
+    pppoe: {
+      light: { bg: 'bg-green-100', text: 'text-green-800' },
+      dark: { bg: 'bg-green-800', text: 'text-green-200' }
+    },
+    dual: {
+      light: { bg: 'bg-purple-100', text: 'text-purple-800' },
+      dark: { bg: 'bg-purple-800', text: 'text-purple-200' }
+    }
+  };
+
+  return colorSchemes[accessType] || {
+    light: { bg: 'bg-gray-100', text: 'text-gray-800' },
+    dark: { bg: 'bg-gray-800', text: 'text-gray-200' }
+  };
+};
+
+// Calculate plan statistics
+export const calculatePlanStatistics = (plans) => {
+  if (!plans || !Array.isArray(plans)) {
+    return {
+      totalPlans: 0,
+      totalPurchases: 0,
+      totalActivePlans: 0,
+      highPriorityPlans: 0,
+      freeTrialPlans: 0,
+      paidPlans: 0,
+      inactivePlans: 0,
+      totalRevenue: 0,
+      filteredCount: 0
+    };
+  }
+
+  // Calculate basic statistics
+  const totalPlans = plans.length;
+  const totalPurchases = plans.reduce((sum, plan) => sum + (plan.purchases || 0), 0);
+  const totalActivePlans = plans.filter(plan => plan.active).length;
+  const highPriorityPlans = plans.filter(plan => plan.priority === 'high').length;
+  const freeTrialPlans = plans.filter(plan => plan.plan_type === 'free_trial').length;
+  const paidPlans = plans.filter(plan => plan.plan_type === 'paid').length;
+  const inactivePlans = plans.filter(plan => !plan.active).length;
+  const totalRevenue = plans.reduce((sum, plan) => {
+    return sum + ((plan.price || 0) * (plan.purchases || 0));
+  }, 0);
+
+  return {
+    totalPlans,
+    totalPurchases,
+    totalActivePlans,
+    highPriorityPlans,
+    freeTrialPlans,
+    paidPlans,
+    inactivePlans,
+    totalRevenue,
+    filteredCount: totalPlans
+  };
+};
+
+// ============================================================================
+// DEFAULT EXPORT
+// ============================================================================
+
 export default {
   deepClone,
   debounce,
@@ -2198,6 +1816,21 @@ export default {
   applyDiscountRules,
   calculateBulkPricing,
   getBestDiscount,
+  
+  // Pricing and calculation utilities
+  calculateTieredPrice,
+  calculatePercentageChange,
+  calculateProgressiveTieredPrice,
+  calculateTieredDiscount,
+  filterByPriceRange,
+  calculateAveragePrice,
+  calculateMedianPrice,
+  calculatePriceStatistics,
+  groupByPriceRange,
+  sortByPrice,
+  findPriceOutliers,
+  
+  // Validation utilities
   validateRequired,
   validateNumber,
   validatePrice,
@@ -2207,6 +1840,9 @@ export default {
   isPlanAvailableNow,
   calculateNextAvailableTime,
   getAvailabilitySummary,
+  validateAccessMethods,
+  
+  // Data manipulation utilities
   safeObjectEntries,
   safeObjectKeys,
   safeObjectValues,
@@ -2218,10 +1854,6 @@ export default {
   formatBandwidthDisplay,
   processAnalyticsData,
   calculateTrends,
-  formatError,
-  formatSuccess,
-  formatApiError,
-  validateAccessMethods,
   parseTimeString,
   isEmpty,
   deepMerge,
@@ -2239,5 +1871,22 @@ export default {
   compose,
   curry,
   throttleAdvanced,
-  debounceAdvanced
+  debounceAdvanced,
+  
+  // UI utilities
+  getAccessTypeColor,
+  calculatePlanStatistics,
+  
+  // Error handling
+  formatError,
+  formatSuccess,
+  formatApiError
 };
+
+
+
+
+
+
+
+

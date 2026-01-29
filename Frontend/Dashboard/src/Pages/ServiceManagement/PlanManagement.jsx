@@ -1140,6 +1140,2503 @@
 
 
 
+// import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+// import { motion, AnimatePresence } from "framer-motion";
+// import {
+//   Plus, Pencil, Trash2, Copy, Eye, ChevronDown, ChevronUp, X, Save,
+//   Users, Download, Upload, BarChart3, Wifi, Cable, Server, Check,
+//   ArrowLeft, Settings, Zap, Clock, Shield, DollarSign, Package,
+//   TrendingUp, PieChart, Box, Calendar, Filter, Search, Star,
+//   Tag, Percent, Layers, Activity, Award, Target, FileText,
+//   Globe, Smartphone, Gauge, Database, Network, RefreshCw,
+//   Bell, AlertCircle, Timer, CalendarDays,
+//   CalendarClock, AlertTriangle,
+//   CreditCard, TrendingDown, BadgePercent, ArrowRight,
+//   CalendarOff, Sun, Moon, CheckCircle, XCircle,
+//   EyeOff, Radio, Router,
+//   HardDrive, Cpu, ShieldCheck, Cloud, Lock, Unlock,
+//   Battery, BatteryCharging, WifiOff, Infinity as InfinityIcon
+// } from "lucide-react";
+// import { FaSpinner } from "react-icons/fa";
+// import { toast, ToastContainer } from "react-toastify";
+// import 'react-toastify/dist/ReactToastify.css'; 
+// // Context and API
+// import { useTheme } from "../../context/ThemeContext"
+// import api from "../../api"
+
+// // Shared components and utilities
+// import { 
+//   getThemeClasses, 
+//   EnhancedSelect, 
+//   ConfirmationModal, 
+//   MobileSuccessAlert,
+//   LoadingOverlay,
+//   EmptyState,
+//   AvailabilityBadge,
+//   PriceBadge,
+//   PlanTypeBadge,
+//   StatisticsCard
+// } from "../../components/ServiceManagement/Shared/components"
+// import { 
+//   deepClone, 
+//   debounce,
+//   validateTimeVariant,
+//   isPlanAvailableNow,
+//   calculateNextAvailableTime,
+//   getAvailabilitySummary,
+//   calculateRating,
+//   getAccessTypeColor
+// } from "../../components/ServiceManagement/Shared/utils"
+// import { formatCurrency, formatDate, formatTime, formatNumber, } from "../../components/ServiceManagement/Shared/formatters"
+// import { 
+//   planTypes, 
+//   categories, 
+//   priorityOptions,
+//   timeUnits,
+//   daysOfWeek,
+//   timeZoneOptions,
+//   deviceLimitOptions,
+//   sessionTimeoutOptions,
+//   idleTimeoutOptions
+// } from "../../components/ServiceManagement/Shared/constant"
+
+// // Components
+// import PlanList from "../../components/ServiceManagement/PlanManagement/PlanList"
+// import PlanBasicDetails from "../../components/ServiceManagement/PlanManagement/PlanBasicDetails"
+// import HotspotConfiguration from "../../components/ServiceManagement/PlanManagement/HotspotConfiguration"
+// import PPPoEConfiguration from "../../components/ServiceManagement/PlanManagement/PPPoEConfiguration"
+// import PlanAdvancedSettings from "../../components/ServiceManagement/PlanManagement/PlanAdvancedSettings"
+// import PlanAnalytics from "../../components/ServiceManagement/PlanManagement/PlanAnalytics"
+// import PlanTemplates from "../../components/ServiceManagement/Templates/PlanTemplates"
+// import PlanTypeSelectionModal from "../../components/ServiceManagement/PlanManagement/PlanTypeSelectionModal"
+// import AnalyticsTypeSelectionModal from "../../components/ServiceManagement/PlanManagement/AnalyticsTypeSelectionModal"
+// import TimeVariantConfig from "../../components/ServiceManagement/PlanManagement/TimeVariantConfig"
+// import PricingConfiguration from "../../components/ServiceManagement/PlanManagement/PricingConfiguration"
+
+// // Hooks
+// import usePlanForm, { getInitialFormState } from "../../components/ServiceManagement/PlanManagement/hooks/usePlanForm"
+// import useTimeVariant, { getInitialTimeVariantState } from "../../components/ServiceManagement/PlanManagement/hooks/useTimeVariant"
+// import usePricing, { getInitialPricingState } from "../../components/ServiceManagement/PlanManagement/hooks/usePricing"
+
+// // Responsive utilities
+// import useMediaQuery  from "../../components/ServiceManagement/PlanManagement/hooks/useMediaQuery"
+
+// // API Service with all endpoints
+// const PlanApiService = {
+//   // Plans
+//   async getPlans(params = {}) {
+//     const queryParams = new URLSearchParams();
+//     Object.entries(params).forEach(([key, value]) => {
+//       if (value !== null && value !== undefined && value !== '') {
+//         queryParams.append(key, value);
+//       }
+//     });
+    
+//     const response = await api.get(`/api/internet_plans/plans/?${queryParams}`);
+//     return response.data;
+//   },
+
+//   async getPlan(id) {
+//     const response = await api.get(`/api/internet_plans/plans/${id}/`);
+//     return response.data;
+//   },
+
+//   async createPlan(planData) {
+//     const response = await api.post('/api/internet_plans/plans/', planData);
+//     return response.data;
+//   },
+
+//   async updatePlan(id, planData) {
+//     const response = await api.put(`/api/internet_plans/plans/${id}/`, planData);
+//     return response.data;
+//   },
+
+//   async deletePlan(id) {
+//     const response = await api.delete(`/api/internet_plans/plans/${id}/`);
+//     return response.data;
+//   },
+
+//   // Templates
+//   async getTemplates() {
+//     const response = await api.get('/api/internet_plans/templates/');
+//     return response.data;
+//   },
+
+//   async getTemplate(id) {
+//     const response = await api.get(`/api/internet_plans/templates/${id}/`);
+//     return response.data;
+//   },
+
+//   async createTemplate(templateData) {
+//     const response = await api.post('/api/internet_plans/templates/', templateData);
+//     return response.data;
+//   },
+
+//   async updateTemplate(id, templateData) {
+//     const response = await api.put(`/api/internet_plans/templates/${id}/`, templateData);
+//     return response.data;
+//   },
+
+//   async deleteTemplate(id) {
+//     const response = await api.delete(`/api/internet_plans/templates/${id}/`);
+//     return response.data;
+//   },
+
+//   async createPlanFromTemplate(templateId, planData) {
+//     const response = await api.post(`/api/internet_plans/templates/${templateId}/create-plan/`, planData);
+//     return response.data;
+//   },
+
+//   // Time Variant
+//   async getTimeVariant(id) {
+//     const response = await api.get(`/api/internet_plans/time-variant/${id}/`);
+//     return response.data;
+//   },
+
+//   async getTimeVariants(params = {}) {
+//     const queryParams = new URLSearchParams(params);
+//     const response = await api.get(`/api/internet_plans/time-variant/?${queryParams}`);
+//     return response.data;
+//   },
+
+//   async createTimeVariant(timeVariantData) {
+//     const response = await api.post('/api/internet_plans/time-variant/', timeVariantData);
+//     return response.data;
+//   },
+
+//   async updateTimeVariant(id, timeVariantData) {
+//     const response = await api.put(`/api/internet_plans/time-variant/${id}/`, timeVariantData);
+//     return response.data;
+//   },
+
+//   async deleteTimeVariant(id) {
+//     const response = await api.delete(`/api/internet_plans/time-variant/${id}/`);
+//     return response.data;
+//   },
+
+//   async testTimeVariant(testData) {
+//     const response = await api.post('/api/internet_plans/time-variant/test/', testData);
+//     return response.data;
+//   },
+
+//   // Pricing
+//   async getPriceMatrices(params = {}) {
+//     const queryParams = new URLSearchParams(params);
+//     const response = await api.get(`/api/internet_plans/pricing/matrices/?${queryParams}`);
+//     return response.data;
+//   },
+
+//   async getPriceMatrix(id) {
+//     const response = await api.get(`/api/internet_plans/pricing/matrices/${id}/`);
+//     return response.data;
+//   },
+
+//   async createPriceMatrix(priceMatrixData) {
+//     const response = await api.post('/api/internet_plans/pricing/matrices/', priceMatrixData);
+//     return response.data;
+//   },
+
+//   async updatePriceMatrix(id, priceMatrixData) {
+//     const response = await api.put(`/api/internet_plans/pricing/matrices/${id}/`, priceMatrixData);
+//     return response.data;
+//   },
+
+//   async deletePriceMatrix(id) {
+//     const response = await api.delete(`/api/internet_plans/pricing/matrices/${id}/`);
+//     return response.data;
+//   },
+
+//   // Discount Rules
+//   async getDiscountRules(params = {}) {
+//     const queryParams = new URLSearchParams(params);
+//     const response = await api.get(`/api/internet_plans/pricing/rules/?${queryParams}`);
+//     return response.data;
+//   },
+
+//   async getDiscountRule(id) {
+//     const response = await api.get(`/api/internet_plans/pricing/rules/${id}/`);
+//     return response.data;
+//   },
+
+//   async createDiscountRule(discountRuleData) {
+//     const response = await api.post('/api/internet_plans/pricing/rules/', discountRuleData);
+//     return response.data;
+//   },
+
+//   async updateDiscountRule(id, discountRuleData) {
+//     const response = await api.put(`/api/internet_plans/pricing/rules/${id}/`, discountRuleData);
+//     return response.data;
+//   },
+
+//   async deleteDiscountRule(id) {
+//     const response = await api.delete(`/api/internet_plans/pricing/rules/${id}/`);
+//     return response.data;
+//   },
+
+//   // Calculations and Checks
+//   async calculatePrice(planId, quantity = 1, discountCode = null, clientData = {}) {
+//     const response = await api.post('/api/internet_plans/pricing/calculate/', {
+//       plan_id: planId,
+//       quantity,
+//       discount_code: discountCode,
+//       client_data: clientData
+//     });
+//     return response.data;
+//   },
+
+//   async calculateBulkPrices(calculations) {
+//     const response = await api.post('/api/internet_plans/pricing/calculate/bulk/', {
+//       calculations
+//     });
+//     return response.data;
+//   },
+
+//   async checkAvailability(planId, timestamp = null) {
+//     const response = await api.post('/api/internet_plans/plans/availability/check/', {
+//       plan_id: planId,
+//       timestamp
+//     });
+//     return response.data;
+//   },
+
+//   // Statistics and Analytics
+//   async getPlanStatistics() {
+//     const response = await api.get('/api/internet_plans/plans/statistics/');
+//     return response.data;
+//   },
+
+//   async getPricingStatistics() {
+//     const response = await api.get('/api/internet_plans/pricing/statistics/');
+//     return response.data;
+//   },
+
+//   async getAnalyticsData(analyticsType = 'general', timeRange = '30d') {
+//     const response = await api.get(`/api/internet_plans/analytics/?type=${analyticsType}&range=${timeRange}`);
+//     return response.data;
+//   },
+
+//   async exportAnalyticsData(analyticsType, timeRange, format = 'json') {
+//     const response = await api.get(`/api/internet_plans/analytics/export/?type=${analyticsType}&range=${timeRange}&format=${format}`);
+//     return response.data;
+//   }
+// };
+
+// // Cache management for better performance
+// const PlanCache = {
+//   plans: new Map(),
+//   templates: new Map(),
+//   timeVariants: new Map(),
+//   priceMatrices: new Map(),
+//   discountRules: new Map(),
+  
+//   get(key, cacheType) {
+//     const cache = this[cacheType];
+//     return cache.get(key);
+//   },
+  
+//   set(key, value, cacheType) {
+//     const cache = this[cacheType];
+//     cache.set(key, value);
+//   },
+  
+//   delete(key, cacheType) {
+//     const cache = this[cacheType];
+//     cache.delete(key);
+//   },
+  
+//   clear(cacheType = null) {
+//     if (cacheType) {
+//       this[cacheType].clear();
+//     } else {
+//       this.plans.clear();
+//       this.templates.clear();
+//       this.timeVariants.clear();
+//       this.priceMatrices.clear();
+//       this.discountRules.clear();
+//     }
+//   }
+// };
+
+// // Enhanced PlanDataStructure class
+// class PlanDataStructure {
+//   constructor() {
+//     this.plans = [];
+//     this.indexes = {
+//       byId: new Map(),
+//       byCategory: new Map(),
+//       byPlanType: new Map(),
+//       byAccessType: new Map(),
+//       byAvailability: new Map(),
+//       byPriceRange: new Map()
+//     };
+//   }
+
+//   addPlan(plan) {
+//     this.plans.push(plan);
+//     this.updateIndexes(plan);
+//   }
+
+//   updatePlan(plan) {
+//     const index = this.plans.findIndex(p => p.id === plan.id);
+//     if (index !== -1) {
+//       // Remove old indexes
+//       const oldPlan = this.plans[index];
+//       this.removeFromIndexes(oldPlan);
+      
+//       // Update plan
+//       this.plans[index] = plan;
+//       this.updateIndexes(plan);
+//     }
+//   }
+
+//   removePlan(planId) {
+//     const index = this.plans.findIndex(p => p.id === planId);
+//     if (index !== -1) {
+//       const plan = this.plans[index];
+//       this.removeFromIndexes(plan);
+//       this.plans.splice(index, 1);
+//     }
+//   }
+
+//   updateIndexes(plan) {
+//     // By ID
+//     this.indexes.byId.set(plan.id, plan);
+    
+//     // By Category
+//     if (!this.indexes.byCategory.has(plan.category)) {
+//       this.indexes.byCategory.set(plan.category, []);
+//     }
+//     this.indexes.byCategory.get(plan.category).push(plan);
+    
+//     // By Plan Type
+//     if (!this.indexes.byPlanType.has(plan.planType)) {
+//       this.indexes.byPlanType.set(plan.planType, []);
+//     }
+//     this.indexes.byPlanType.get(plan.planType).push(plan);
+    
+//     // By Access Type
+//     const enabledMethods = this.getEnabledAccessMethods(plan);
+//     enabledMethods.forEach(method => {
+//       if (!this.indexes.byAccessType.has(method)) {
+//         this.indexes.byAccessType.set(method, []);
+//       }
+//       this.indexes.byAccessType.get(method).push(plan);
+//     });
+    
+//     // By Availability
+//     const isAvailable = isPlanAvailableNow(plan);
+//     const availabilityKey = isAvailable ? 'available' : 'unavailable';
+//     if (!this.indexes.byAvailability.has(availabilityKey)) {
+//       this.indexes.byAvailability.set(availabilityKey, []);
+//     }
+//     this.indexes.byAvailability.get(availabilityKey).push(plan);
+    
+//     // By Price Range
+//     const price = parseFloat(plan.price) || 0;
+//     const priceRangeKey = this.getPriceRangeKey(price);
+//     if (!this.indexes.byPriceRange.has(priceRangeKey)) {
+//       this.indexes.byPriceRange.set(priceRangeKey, []);
+//     }
+//     this.indexes.byPriceRange.get(priceRangeKey).push(plan);
+//   }
+
+//   removeFromIndexes(plan) {
+//     // Remove from all indexes
+//     this.indexes.byId.delete(plan.id);
+    
+//     // Remove from category index
+//     const categoryPlans = this.indexes.byCategory.get(plan.category);
+//     if (categoryPlans) {
+//       const index = categoryPlans.findIndex(p => p.id === plan.id);
+//       if (index !== -1) categoryPlans.splice(index, 1);
+//     }
+    
+//     // Remove from plan type index
+//     const planTypePlans = this.indexes.byPlanType.get(plan.planType);
+//     if (planTypePlans) {
+//       const index = planTypePlans.findIndex(p => p.id === plan.id);
+//       if (index !== -1) planTypePlans.splice(index, 1);
+//     }
+    
+//     // Remove from access type index
+//     const enabledMethods = this.getEnabledAccessMethods(plan);
+//     enabledMethods.forEach(method => {
+//       const accessTypePlans = this.indexes.byAccessType.get(method);
+//       if (accessTypePlans) {
+//         const index = accessTypePlans.findIndex(p => p.id === plan.id);
+//         if (index !== -1) accessTypePlans.splice(index, 1);
+//       }
+//     });
+    
+//     // Remove from availability index
+//     const isAvailable = isPlanAvailableNow(plan);
+//     const availabilityKey = isAvailable ? 'available' : 'unavailable';
+//     const availabilityPlans = this.indexes.byAvailability.get(availabilityKey);
+//     if (availabilityPlans) {
+//       const index = availabilityPlans.findIndex(p => p.id === plan.id);
+//       if (index !== -1) availabilityPlans.splice(index, 1);
+//     }
+    
+//     // Remove from price range index
+//     const price = parseFloat(plan.price) || 0;
+//     const priceRangeKey = this.getPriceRangeKey(price);
+//     const priceRangePlans = this.indexes.byPriceRange.get(priceRangeKey);
+//     if (priceRangePlans) {
+//       const index = priceRangePlans.findIndex(p => p.id === plan.id);
+//       if (index !== -1) priceRangePlans.splice(index, 1);
+//     }
+//   }
+
+//   getPriceRangeKey(price) {
+//     if (price === 0) return 'free';
+//     if (price < 500) return '0-500';
+//     if (price < 1000) return '500-1000';
+//     if (price < 5000) return '1000-5000';
+//     return '5000+';
+//   }
+
+//   getEnabledAccessMethods(plan) {
+//     if (plan.get_enabled_access_methods) {
+//       return plan.get_enabled_access_methods();
+//     }
+//     if (plan.enabled_access_methods) {
+//       return plan.enabled_access_methods;
+//     }
+//     if (plan.accessMethods) {
+//       const methods = [];
+//       if (plan.accessMethods.hotspot?.enabled) methods.push('hotspot');
+//       if (plan.accessMethods.pppoe?.enabled) methods.push('pppoe');
+//       return methods;
+//     }
+//     if (plan.access_methods) {
+//       const methods = [];
+//       if (plan.access_methods.hotspot?.enabled) methods.push('hotspot');
+//       if (plan.access_methods.pppoe?.enabled) methods.push('pppoe');
+//       return methods;
+//     }
+//     return [];
+//   }
+
+//   search(query) {
+//     const results = [];
+//     const queryLower = query.toLowerCase();
+    
+//     // Binary search implementation for sorted arrays
+//     const performBinarySearch = (array, property) => {
+//       let left = 0;
+//       let right = array.length - 1;
+      
+//       while (left <= right) {
+//         const mid = Math.floor((left + right) / 2);
+//         const value = (array[mid][property] || '').toString().toLowerCase();
+        
+//         if (value.includes(queryLower)) {
+//           // Found a match, now expand to find all matches
+//           let start = mid;
+//           let end = mid;
+          
+//           // Expand left
+//           while (start > 0 && (array[start - 1][property] || '').toString().toLowerCase().includes(queryLower)) {
+//             start--;
+//           }
+          
+//           // Expand right
+//           while (end < array.length - 1 && (array[end + 1][property] || '').toString().toLowerCase().includes(queryLower)) {
+//             end++;
+//           }
+          
+//           return array.slice(start, end + 1);
+//         }
+        
+//         if (value < queryLower) {
+//           left = mid + 1;
+//         } else {
+//           right = mid - 1;
+//         }
+//       }
+      
+//       return [];
+//     };
+    
+//     // Search by name (sorted)
+//     const sortedByName = [...this.plans].sort((a, b) => 
+//       (a.name || '').toString().localeCompare(b.name || '')
+//     );
+//     const nameResults = performBinarySearch(sortedByName, 'name');
+    
+//     // Search by description (sorted)
+//     const sortedByDesc = [...this.plans].sort((a, b) => 
+//       (a.description || '').toString().localeCompare(b.description || '')
+//     );
+//     const descResults = performBinarySearch(sortedByDesc, 'description');
+    
+//     // Merge results, removing duplicates
+//     const allResults = new Map();
+//     [...nameResults, ...descResults].forEach(plan => {
+//       if (!allResults.has(plan.id)) {
+//         allResults.set(plan.id, plan);
+//       }
+//     });
+    
+//     return Array.from(allResults.values());
+//   }
+
+//   filter(filters) {
+//     let results = [...this.plans];
+    
+//     // Apply category filter using index if available
+//     if (filters.category && this.indexes.byCategory.has(filters.category)) {
+//       results = results.filter(plan => 
+//         this.indexes.byCategory.get(filters.category)?.some(p => p.id === plan.id)
+//       );
+//     }
+    
+//     // Apply plan type filter
+//     if (filters.planType) {
+//       results = results.filter(plan => plan.planType === filters.planType);
+//     }
+    
+//     // Apply access type filter using index
+//     if (filters.accessType) {
+//       results = results.filter(plan => {
+//         const enabledMethods = this.getEnabledAccessMethods(plan);
+//         if (filters.accessType === 'both') {
+//           return enabledMethods.includes('hotspot') && enabledMethods.includes('pppoe');
+//         }
+//         return enabledMethods.includes(filters.accessType);
+//       });
+//     }
+    
+//     // Apply availability filter using index
+//     if (filters.availability !== null) {
+//       const availabilityKey = filters.availability ? 'available' : 'unavailable';
+//       results = results.filter(plan => 
+//         this.indexes.byAvailability.get(availabilityKey)?.some(p => p.id === plan.id)
+//       );
+//     }
+    
+//     // Apply price range filter using index
+//     if (filters.priceRange) {
+//       results = results.filter(plan => {
+//         const planPrice = parseFloat(plan.price) || 0;
+//         return planPrice >= filters.priceRange.min && planPrice <= filters.priceRange.max;
+//       });
+//     }
+    
+//     // Apply time variant filter
+//     if (filters.hasTimeVariant !== null) {
+//       results = results.filter(plan => 
+//         filters.hasTimeVariant ? plan.time_variant?.is_active : !plan.time_variant?.is_active
+//       );
+//     }
+    
+//     return results;
+//   }
+
+//   sort(field, direction = 'asc') {
+//     return [...this.plans].sort((a, b) => {
+//       let aValue = a[field];
+//       let bValue = b[field];
+      
+//       // Handle special sorting cases
+//       switch (field) {
+//         case 'price':
+//           aValue = parseFloat(aValue) || 0;
+//           bValue = parseFloat(bValue) || 0;
+//           break;
+//         case 'created_at':
+//         case 'updated_at':
+//           aValue = new Date(aValue).getTime();
+//           bValue = new Date(bValue).getTime();
+//           break;
+//         case 'name':
+//         case 'description':
+//           aValue = (aValue || '').toString().toLowerCase();
+//           bValue = (bValue || '').toString().toLowerCase();
+//           break;
+//       }
+      
+//       if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+//       if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+//       return 0;
+//     });
+//   }
+
+//   getStatistics() {
+//     const stats = {
+//       total: this.plans.length,
+//       byCategory: {},
+//       byPlanType: {},
+//       byAccessType: {},
+//       byAvailability: {},
+//       priceStats: {
+//         totalRevenue: 0,
+//         averagePrice: 0,
+//         minPrice: Infinity,
+//         maxPrice: 0
+//       }
+//     };
+    
+//     this.plans.forEach(plan => {
+//       // Category stats
+//       stats.byCategory[plan.category] = (stats.byCategory[plan.category] || 0) + 1;
+      
+//       // Plan type stats
+//       stats.byPlanType[plan.planType] = (stats.byPlanType[plan.planType] || 0) + 1;
+      
+//       // Access type stats
+//       const enabledMethods = this.getEnabledAccessMethods(plan);
+//       enabledMethods.forEach(method => {
+//         stats.byAccessType[method] = (stats.byAccessType[method] || 0) + 1;
+//       });
+      
+//       // Availability stats
+//       const isAvailable = isPlanAvailableNow(plan);
+//       const availabilityKey = isAvailable ? 'available' : 'unavailable';
+//       stats.byAvailability[availabilityKey] = (stats.byAvailability[availabilityKey] || 0) + 1;
+      
+//       // Price stats
+//       const price = parseFloat(plan.price) || 0;
+//       const purchases = plan.purchases || 0;
+//       stats.priceStats.totalRevenue += price * purchases;
+//       stats.priceStats.minPrice = Math.min(stats.priceStats.minPrice, price);
+//       stats.priceStats.maxPrice = Math.max(stats.priceStats.maxPrice, price);
+//     });
+    
+//     // Calculate average price
+//     const totalPrice = this.plans.reduce((sum, plan) => sum + (parseFloat(plan.price) || 0), 0);
+//     stats.priceStats.averagePrice = this.plans.length > 0 ? totalPrice / this.plans.length : 0;
+    
+//     return stats;
+//   }
+// }
+
+// const normalizeBackendPlan = (backendPlan) => {
+//   if (!backendPlan) return null;
+
+//   const normalized = {
+//     id: backendPlan.id,
+//     planType: backendPlan.planType || backendPlan.plan_type || "paid",
+//     name: backendPlan.name || "",
+//     price: backendPlan.price ? parseFloat(backendPlan.price) : 0,
+//     active: backendPlan.active !== undefined ? backendPlan.active : true,
+//     category: backendPlan.category || "Residential",
+//     description: backendPlan.description || "",
+//     purchases: backendPlan.purchases || 0,
+//     priority_level: backendPlan.priority_level || 4,
+//     router_specific: backendPlan.router_specific || false,
+//     allowed_routers_ids: backendPlan.allowed_routers_ids || [],
+//     FUP_policy: backendPlan.FUP_policy || "",
+//     FUP_threshold: backendPlan.FUP_threshold || 80,
+//     template: backendPlan.template || null,
+//     created_at: backendPlan.created_at || backendPlan.createdAt || new Date().toISOString(),
+//     updated_at: backendPlan.updated_at || backendPlan.updatedAt || new Date().toISOString(),
+    
+//     // Access methods with backend structure
+//     access_methods: {
+//       hotspot: {
+//         enabled: backendPlan.access_methods?.hotspot?.enabled || false,
+//         downloadSpeed: backendPlan.access_methods?.hotspot?.downloadSpeed || { value: "", unit: "Mbps" },
+//         uploadSpeed: backendPlan.access_methods?.hotspot?.uploadSpeed || { value: "", unit: "Mbps" },
+//         dataLimit: backendPlan.access_methods?.hotspot?.dataLimit || { value: "", unit: "GB" },
+//         usageLimit: backendPlan.access_methods?.hotspot?.usageLimit || { value: "", unit: "Hours" },
+//         bandwidthLimit: backendPlan.access_methods?.hotspot?.bandwidthLimit || 0,
+//         maxDevices: backendPlan.access_methods?.hotspot?.maxDevices || 1,
+//         sessionTimeout: backendPlan.access_methods?.hotspot?.sessionTimeout || 86400,
+//         idleTimeout: backendPlan.access_methods?.hotspot?.idleTimeout || 300,
+//         validityPeriod: backendPlan.access_methods?.hotspot?.validityPeriod || { value: "", unit: "Days" },
+//         macBinding: backendPlan.access_methods?.hotspot?.macBinding || false
+//       },
+//       pppoe: {
+//         enabled: backendPlan.access_methods?.pppoe?.enabled || false,
+//         downloadSpeed: backendPlan.access_methods?.pppoe?.downloadSpeed || { value: "", unit: "Mbps" },
+//         uploadSpeed: backendPlan.access_methods?.pppoe?.uploadSpeed || { value: "", unit: "Mbps" },
+//         dataLimit: backendPlan.access_methods?.pppoe?.dataLimit || { value: "", unit: "GB" },
+//         usageLimit: backendPlan.access_methods?.pppoe?.usageLimit || { value: "", unit: "Hours" },
+//         bandwidthLimit: backendPlan.access_methods?.pppoe?.bandwidthLimit || 0,
+//         maxDevices: backendPlan.access_methods?.pppoe?.maxDevices || 1,
+//         sessionTimeout: backendPlan.access_methods?.pppoe?.sessionTimeout || 86400,
+//         idleTimeout: backendPlan.access_methods?.pppoe?.idleTimeout || 300,
+//         validityPeriod: backendPlan.access_methods?.pppoe?.validityPeriod || { value: "", unit: "Days" },
+//         macBinding: backendPlan.access_methods?.pppoe?.macBinding || false,
+//         ipPool: backendPlan.access_methods?.pppoe?.ipPool || "pppoe-pool-1",
+//         serviceName: backendPlan.access_methods?.pppoe?.serviceName || "",
+//         mtu: backendPlan.access_methods?.pppoe?.mtu || 1492
+//       }
+//     },
+
+//     // Time variant data
+//     time_variant: backendPlan.time_variant ? {
+//       ...getInitialTimeVariantState(),
+//       ...backendPlan.time_variant
+//     } : null,
+
+//     // Pricing data
+//     pricing_info: backendPlan.pricing_info || null,
+//     time_variant_id: backendPlan.time_variant_id || null,
+//     pricing_matrix_id: backendPlan.pricing_matrix_id || null,
+//     discount_rule_ids: backendPlan.discount_rule_ids || []
+//   };
+
+//   // Determine access type based on enabled methods
+//   const enabledMethods = [];
+//   if (normalized.access_methods.hotspot.enabled) enabledMethods.push('hotspot');
+//   if (normalized.access_methods.pppoe.enabled) enabledMethods.push('pppoe');
+  
+//   normalized.accessType = enabledMethods.length === 2 ? 'both' : 
+//                          enabledMethods.length === 1 ? enabledMethods[0] : 'hotspot';
+  
+//   normalized.enabled_access_methods = enabledMethods;
+
+//   return normalized;
+// };
+
+// const preparePlanForBackend = (frontendPlan) => {
+//   const planData = {
+//     plan_type: frontendPlan.plan_type || frontendPlan.planType,
+//     name: frontendPlan.name?.trim() || "",
+//     price: parseFloat(frontendPlan.price) || 0,
+//     active: frontendPlan.active !== false,
+//     category: frontendPlan.category,
+//     description: frontendPlan.description?.trim() || "",
+    
+//     // Access methods - match backend structure exactly
+//     access_methods: {
+//       hotspot: {
+//         enabled: frontendPlan.access_methods.hotspot.enabled || false,
+//         downloadSpeed: {
+//           value: frontendPlan.access_methods.hotspot.downloadSpeed.value || "10",
+//           unit: frontendPlan.access_methods.hotspot.downloadSpeed.unit || "Mbps"
+//         },
+//         uploadSpeed: {
+//           value: frontendPlan.access_methods.hotspot.uploadSpeed.value || "5",
+//           unit: frontendPlan.access_methods.hotspot.uploadSpeed.unit || "Mbps"
+//         },
+//         dataLimit: {
+//           value: frontendPlan.access_methods.hotspot.dataLimit.value || "10",
+//           unit: frontendPlan.access_methods.hotspot.dataLimit.unit || "GB"
+//         },
+//         usageLimit: {
+//           value: frontendPlan.access_methods.hotspot.usageLimit.value || "24",
+//           unit: frontendPlan.access_methods.hotspot.usageLimit.unit || "Hours"
+//         },
+//         bandwidthLimit: parseInt(frontendPlan.access_methods.hotspot.bandwidthLimit) || 0,
+//         maxDevices: parseInt(frontendPlan.access_methods.hotspot.maxDevices) || 1,
+//         sessionTimeout: parseInt(frontendPlan.access_methods.hotspot.sessionTimeout) || 86400,
+//         idleTimeout: parseInt(frontendPlan.access_methods.hotspot.idleTimeout) || 300,
+//         validityPeriod: {
+//           value: frontendPlan.access_methods.hotspot.validityPeriod.value || "30",
+//           unit: frontendPlan.access_methods.hotspot.validityPeriod.unit || "Days"
+//         },
+//         macBinding: frontendPlan.access_methods.hotspot.macBinding || false
+//       },
+//       pppoe: {
+//         enabled: frontendPlan.access_methods.pppoe.enabled || false,
+//         downloadSpeed: {
+//           value: frontendPlan.access_methods.pppoe.downloadSpeed.value || "10",
+//           unit: frontendPlan.access_methods.pppoe.downloadSpeed.unit || "Mbps"
+//         },
+//         uploadSpeed: {
+//           value: frontendPlan.access_methods.pppoe.uploadSpeed.value || "5",
+//           unit: frontendPlan.access_methods.pppoe.uploadSpeed.unit || "Mbps"
+//         },
+//         dataLimit: {
+//           value: frontendPlan.access_methods.pppoe.dataLimit.value || "10",
+//           unit: frontendPlan.access_methods.pppoe.dataLimit.unit || "GB"
+//         },
+//         usageLimit: {
+//           value: frontendPlan.access_methods.pppoe.usageLimit.value || "24",
+//           unit: frontendPlan.access_methods.pppoe.usageLimit.unit || "Hours"
+//         },
+//         bandwidthLimit: parseInt(frontendPlan.access_methods.pppoe.bandwidthLimit) || 0,
+//         maxDevices: parseInt(frontendPlan.access_methods.pppoe.maxDevices) || 1,
+//         sessionTimeout: parseInt(frontendPlan.access_methods.pppoe.sessionTimeout) || 86400,
+//         idleTimeout: parseInt(frontendPlan.access_methods.pppoe.idleTimeout) || 300,
+//         validityPeriod: {
+//           value: frontendPlan.access_methods.pppoe.validityPeriod.value || "30",
+//           unit: frontendPlan.access_methods.pppoe.validityPeriod.unit || "Days"
+//         },
+//         macBinding: frontendPlan.access_methods.pppoe.macBinding || false,
+//         ipPool: frontendPlan.access_methods.pppoe.ipPool || "pppoe-pool-1",
+//         serviceName: frontendPlan.access_methods.pppoe.serviceName || "",
+//         mtu: parseInt(frontendPlan.access_methods.pppoe.mtu) || 1492
+//       }
+//     },
+
+//     priority_level: frontendPlan.priority_level || 4,
+//     router_specific: frontendPlan.router_specific || false,
+//     allowed_routers_ids: frontendPlan.router_specific ? frontendPlan.allowed_routers_ids : [],
+//     FUP_policy: frontendPlan.FUP_policy || "",
+//     FUP_threshold: frontendPlan.FUP_threshold || 80,
+    
+//     // Template reference
+//     template: frontendPlan.template || null,
+    
+//     // Time variant reference
+//     time_variant_id: frontendPlan.time_variant_id || null,
+    
+//     // Pricing references
+//     pricing_matrix_id: frontendPlan.pricing_matrix_id || null,
+//     discount_rule_ids: frontendPlan.discount_rule_ids || []
+//   };
+
+//   return planData;
+// };
+
+// const PlanManagement = () => {
+//   const { theme } = useTheme();
+//   const themeClasses = getThemeClasses(theme);
+  
+//   // Responsive hooks
+//   const isMobile = useMediaQuery('(max-width: 768px)');
+//   const isTablet = useMediaQuery('(min-width: 769px) and (max-width: 1024px)');
+//   const isDesktop = useMediaQuery('(min-width: 1025px)');
+  
+//   // Form management - using usePlanForm hook
+//   const {
+//     form,
+//     setForm,
+//     errors,
+//     setErrors,
+//     touched,
+//     handleChange,
+//     handleAccessTypeChange,
+//     handleAccessMethodChange,
+//     handleAccessMethodNestedChange,
+//     handleFieldBlur,
+//     validateForm,
+//     resetForm,
+//     updateFormFields,
+//     getEnabledAccessMethods,
+//     getAccessType
+//   } = usePlanForm();
+
+//   // Time variant hook
+//   const {
+//     timeVariant: timeVariantState,
+//     setTimeVariant: setTimeVariantState,
+//     errors: timeVariantErrors,
+//     validateTimeVariant: validateTimeVariantHook,
+//     canActivate: canActivateTimeVariant,
+//     isAvailableNow: isTimeVariantAvailableNow,
+//     getNextAvailableTime: getTimeVariantNextAvailable,
+//     getAvailabilitySummary: getTimeVariantAvailabilitySummary
+//   } = useTimeVariant();
+
+//   // Pricing hook
+//   const {
+//     pricing: pricingState,
+//     setPricing: setPricingState,
+//     errors: pricingErrors,
+//     validatePricing: validatePricingHook,
+//     calculatePriceForQuantity,
+//     calculateBulkPrices,
+//     calculatePriceBreakdown,
+//     resetPricing: resetPricingHook
+//   } = usePricing();
+
+//   // State management with optimized data structures
+//   const [plansData, setPlansData] = useState(() => new PlanDataStructure());
+//   const [templates, setTemplates] = useState([]);
+//   const [routers, setRouters] = useState([]);
+//   const [priceMatrices, setPriceMatrices] = useState([]);
+//   const [discountRules, setDiscountRules] = useState([]);
+//   const [isLoading, setIsLoading] = useState(false);
+//   const [viewMode, setViewMode] = useState("list");
+//   const [editingPlan, setEditingPlan] = useState(null);
+//   const [selectedPlan, setSelectedPlan] = useState(null);
+//   const [activeTab, setActiveTab] = useState("basic");
+//   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+//   const [planToDelete, setPlanToDelete] = useState(null);
+//   const [mobileSuccessAlert, setMobileSuccessAlert] = useState({ visible: false, message: "" });
+//   const [showPlanTypeModal, setShowPlanTypeModal] = useState(false);
+//   const [showAnalyticsTypeModal, setShowAnalyticsTypeModal] = useState(false);
+//   const [selectedAnalyticsType, setSelectedAnalyticsType] = useState(null);
+//   const [analyticsData, setAnalyticsData] = useState(null);
+//   const [analyticsTimeRange, setAnalyticsTimeRange] = useState("30d");
+  
+//   // Enhanced state
+//   const [showTimeVariantConfig, setShowTimeVariantConfig] = useState(false);
+//   const [showPricingConfig, setShowPricingConfig] = useState(false);
+//   const [priceCalculationResult, setPriceCalculationResult] = useState(null);
+//   const [availabilityCheckResult, setAvailabilityCheckResult] = useState(null);
+//   const [searchQuery, setSearchQuery] = useState("");
+//   const [filteredPlans, setFilteredPlans] = useState([]);
+//   const [activeFilters, setActiveFilters] = useState({
+//     category: null,
+//     planType: null,
+//     accessType: null,
+//     availability: null,
+//     priceRange: null,
+//     hasTimeVariant: null
+//   });
+//   const [sortConfig, setSortConfig] = useState({
+//     field: "name",
+//     direction: "asc"
+//   });
+
+//   // Ref for debounced search
+//   const searchDebounceRef = useRef(null);
+
+//   // Mobile success alert
+//   const showMobileSuccess = useCallback((message) => {
+//     setMobileSuccessAlert({ visible: true, message });
+//     setTimeout(() => {
+//       setMobileSuccessAlert({ visible: false, message: "" });
+//     }, 3000);
+//   }, []);
+
+//   // Fetch all data with caching
+//   const fetchData = useCallback(async () => {
+//     setIsLoading(true);
+//     try {
+//       // Check cache first for faster loading
+//       const cachedPlans = PlanCache.get('all', 'plans');
+//       const cachedTemplates = PlanCache.get('all', 'templates');
+//       const cachedPriceMatrices = PlanCache.get('all', 'priceMatrices');
+//       const cachedDiscountRules = PlanCache.get('all', 'discountRules');
+
+//       let plansData, templatesData, priceMatricesData, discountRulesData;
+
+//       // Fetch plans with caching
+//       if (cachedPlans) {
+//         plansData = cachedPlans;
+//       } else {
+//         const response = await PlanApiService.getPlans();
+//         plansData = response;
+//         PlanCache.set('all', response, 'plans');
+//       }
+
+//       // Fetch templates with caching
+//       if (cachedTemplates) {
+//         templatesData = cachedTemplates;
+//       } else {
+//         const response = await PlanApiService.getTemplates();
+//         templatesData = response.results || response;
+//         PlanCache.set('all', templatesData, 'templates');
+//       }
+
+//       // Fetch price matrices with caching
+//       if (cachedPriceMatrices) {
+//         priceMatricesData = cachedPriceMatrices;
+//       } else {
+//         const response = await PlanApiService.getPriceMatrices();
+//         priceMatricesData = response.results || response;
+//         PlanCache.set('all', priceMatricesData, 'priceMatrices');
+//       }
+
+//       // Fetch discount rules with caching
+//       if (cachedDiscountRules) {
+//         discountRulesData = cachedDiscountRules;
+//       } else {
+//         const response = await PlanApiService.getDiscountRules();
+//         discountRulesData = response.results || response;
+//         PlanCache.set('all', discountRulesData, 'discountRules');
+//       }
+
+//       // Process plans into data structure
+//       const newPlansData = new PlanDataStructure();
+//       const normalizedPlans = (plansData.results || plansData).map(normalizeBackendPlan);
+//       normalizedPlans.forEach(plan => newPlansData.addPlan(plan));
+      
+//       setPlansData(newPlansData);
+//       setFilteredPlans(normalizedPlans);
+//       setTemplates(templatesData);
+//       setPriceMatrices(priceMatricesData);
+//       setDiscountRules(discountRulesData);
+
+//       // Fetch routers if available
+//       try {
+//         const routersResponse = await api.get('/api/network_management/routers/');
+//         setRouters(routersResponse.data.results || routersResponse.data);
+//       } catch (error) {
+//         console.warn('Could not fetch routers:', error);
+//         setRouters([]);
+//       }
+//     } catch (error) {
+//       console.error('Error fetching data:', error);
+//       const message = "Failed to load data from server";
+//       if (isMobile) {
+//         showMobileSuccess(message);
+//       } else {
+//         toast.error(`${message}: ${error.response?.data?.detail || error.message}`);
+//       }
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   }, [isMobile, showMobileSuccess]);
+
+//   // Fetch analytics data
+//   const fetchAnalyticsData = useCallback(async (type = 'general', timeRange = '30d') => {
+//     setIsLoading(true);
+//     try {
+//       const response = await PlanApiService.getAnalyticsData(type, timeRange);
+//       setAnalyticsData(response);
+//       return response;
+//     } catch (error) {
+//       console.error('Error fetching analytics data:', error);
+//       toast.error('Failed to load analytics data');
+//       return null;
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   }, []);
+
+//   // Export analytics data
+//   const exportAnalyticsData = useCallback(async (analyticsType, timeRange) => {
+//     try {
+//       const response = await PlanApiService.exportAnalyticsData(analyticsType, timeRange, 'json');
+      
+//       // Create download link
+//       const dataStr = JSON.stringify(response, null, 2);
+//       const dataBlob = new Blob([dataStr], { type: 'application/json' });
+//       const url = window.URL.createObjectURL(dataBlob);
+//       const link = document.createElement('a');
+//       link.href = url;
+//       link.download = `analytics-${analyticsType}-${timeRange}-${new Date().toISOString().split('T')[0]}.json`;
+//       document.body.appendChild(link);
+//       link.click();
+//       document.body.removeChild(link);
+//       window.URL.revokeObjectURL(url);
+      
+//       toast.success('Analytics data exported successfully');
+//     } catch (error) {
+//       console.error('Error exporting analytics data:', error);
+//       toast.error('Failed to export analytics data');
+//     }
+//   }, []);
+
+//   // Refresh analytics data
+//   const refreshAnalyticsData = useCallback(() => {
+//     if (selectedAnalyticsType) {
+//       return fetchAnalyticsData(selectedAnalyticsType, analyticsTimeRange);
+//     }
+//     return Promise.resolve();
+//   }, [selectedAnalyticsType, analyticsTimeRange, fetchAnalyticsData]);
+
+//   // Filter and search plans with debouncing
+//   useEffect(() => {
+//     if (searchDebounceRef.current) {
+//       clearTimeout(searchDebounceRef.current);
+//     }
+
+//     searchDebounceRef.current = setTimeout(() => {
+//       let results;
+      
+//       // If there's a search query, use the optimized search
+//       if (searchQuery.trim()) {
+//         results = plansData.search(searchQuery.trim());
+//       } else {
+//         // Otherwise use filter with indexes
+//         results = plansData.filter(activeFilters);
+//       }
+      
+//       // Apply sorting
+//       results = results.sort((a, b) => {
+//         let aValue = a[sortConfig.field];
+//         let bValue = b[sortConfig.field];
+        
+//         switch (sortConfig.field) {
+//           case 'price':
+//             aValue = parseFloat(aValue) || 0;
+//             bValue = parseFloat(bValue) || 0;
+//             break;
+//           case 'created_at':
+//           case 'updated_at':
+//             aValue = new Date(aValue).getTime();
+//             bValue = new Date(bValue).getTime();
+//             break;
+//           case 'name':
+//           case 'description':
+//             aValue = (aValue || '').toString().toLowerCase();
+//             bValue = (bValue || '').toString().toLowerCase();
+//             break;
+//         }
+        
+//         if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+//         if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+//         return 0;
+//       });
+      
+//       setFilteredPlans(results);
+//     }, 300); // 300ms debounce delay
+
+//     return () => {
+//       if (searchDebounceRef.current) {
+//         clearTimeout(searchDebounceRef.current);
+//       }
+//     };
+//   }, [plansData, searchQuery, activeFilters, sortConfig]);
+
+//   // Load data on component mount
+//   useEffect(() => {
+//     fetchData();
+//   }, [fetchData]);
+
+//   // Apply filter
+//   const applyFilter = useCallback((filterType, value) => {
+//     setActiveFilters(prev => ({
+//       ...prev,
+//       [filterType]: value
+//     }));
+//   }, []);
+
+//   // Clear filters
+//   const clearFilters = useCallback(() => {
+//     setActiveFilters({
+//       category: null,
+//       planType: null,
+//       accessType: null,
+//       availability: null,
+//       priceRange: null,
+//       hasTimeVariant: null
+//     });
+//     setSearchQuery("");
+//   }, []);
+
+//   // Handle sort
+//   const handleSort = useCallback((field) => {
+//     setSortConfig(prev => ({
+//       field,
+//       direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
+//     }));
+//   }, []);
+
+//   // Start new plan creation
+//   const startNewPlan = useCallback((planType = "hotspot", creationMethod = "create", templateId = null) => {
+//     resetForm();
+//     resetPricingHook();
+//     setTimeVariantState(getInitialTimeVariantState());
+    
+//     const initialForm = getInitialFormState();
+    
+//     initialForm.accessType = planType === 'dual' ? 'both' : planType;
+//     initialForm.access_methods.hotspot.enabled = planType === 'hotspot' || planType === 'dual';
+//     initialForm.access_methods.pppoe.enabled = planType === 'pppoe' || planType === 'dual';
+//     initialForm.plan_type = "paid";
+//     initialForm.active = true;
+//     initialForm.priority_level = 4;
+    
+//     // If using template, apply template settings
+//     if (creationMethod === 'template' && templateId) {
+//       const template = templates.find(t => t.id === templateId);
+//       if (template) {
+//         initialForm.name = `${template.name} - Copy`;
+//         initialForm.category = template.category || "Residential";
+//         initialForm.price = template.base_price?.toString() || "0";
+//         initialForm.description = template.description || "";
+        
+//         if (template.access_methods) {
+//           initialForm.access_methods = deepClone(template.access_methods);
+//         }
+        
+//         if (template.time_variant) {
+//           setTimeVariantState(template.time_variant);
+//         }
+//       }
+//     }
+    
+//     setForm(initialForm);
+//     setEditingPlan(null);
+//     setActiveTab("basic");
+//     setViewMode("form");
+//     setShowPlanTypeModal(false);
+//   }, [resetForm, resetPricingHook, setTimeVariantState, templates, setForm]);
+
+//   // Edit plan
+//   const editPlan = useCallback((plan) => {
+//     const normalizedPlan = normalizeBackendPlan(plan);
+//     setForm(deepClone(normalizedPlan));
+    
+//     // Load time variant if exists
+//     if (normalizedPlan.time_variant) {
+//       setTimeVariantState(normalizedPlan.time_variant);
+//     }
+    
+//     // Load pricing if exists
+//     if (normalizedPlan.pricing_info) {
+//       setPricingState(normalizedPlan.pricing_info);
+//     }
+    
+//     setEditingPlan(deepClone(normalizedPlan));
+//     setActiveTab("basic");
+//     setViewMode("form");
+//   }, [setForm, setTimeVariantState, setPricingState]);
+
+//   // View plan details
+//   const viewPlanDetails = useCallback((plan) => {
+//     setSelectedPlan(normalizeBackendPlan(plan));
+//     setViewMode("details");
+//   }, []);
+
+//   // Check plan availability
+//   const checkAvailability = useCallback(async (planId) => {
+//     try {
+//       const result = await PlanApiService.checkAvailability(planId);
+//       setAvailabilityCheckResult(result);
+//       return result;
+//     } catch (error) {
+//       console.error('Error checking availability:', error);
+//       toast.error('Failed to check availability');
+//       return null;
+//     }
+//   }, []);
+
+//   // Calculate price
+//   const calculatePrice = useCallback(async (planId, quantity = 1) => {
+//     try {
+//       const result = await PlanApiService.calculatePrice(planId, quantity);
+//       setPriceCalculationResult(result);
+//       return result;
+//     } catch (error) {
+//       console.error('Error calculating price:', error);
+//       toast.error('Failed to calculate price');
+//       return null;
+//     }
+//   }, []);
+
+//   // Save plan with optimistic updates
+//   const savePlan = async () => {
+//     // Validate form
+//     const isFormValid = validateForm();
+//     if (!isFormValid) {
+//       const message = "Please fix validation errors before saving";
+//       isMobile ? showMobileSuccess(message) : toast.error(message);
+//       return;
+//     }
+
+//     // Validate time variant if active
+//     if (timeVariantState.is_active) {
+//       const timeVariantValid = validateTimeVariantHook();
+//       if (!timeVariantValid) {
+//         const message = "Please fix time variant validation errors";
+//         isMobile ? showMobileSuccess(message) : toast.error(message);
+//         return;
+//       }
+//     }
+
+//     // Validate pricing if configured
+//     if (pricingState.price) {
+//       const pricingValid = validatePricingHook();
+//       if (!pricingValid) {
+//         const message = "Please fix pricing validation errors";
+//         isMobile ? showMobileSuccess(message) : toast.error(message);
+//         return;
+//       }
+//     }
+
+//     setIsLoading(true);
+    
+//     // Prepare plan data
+//     const planData = preparePlanForBackend(form);
+    
+//     // Add time variant if active
+//     if (timeVariantState.is_active) {
+//       planData.time_variant = timeVariantState;
+//     }
+    
+//     // Add pricing if configured
+//     if (pricingState.price) {
+//       planData.pricing_info = pricingState;
+//     }
+
+//     // Optimistic update
+//     const optimisticPlan = normalizeBackendPlan({
+//       ...planData,
+//       id: editingPlan?.id || `temp_${Date.now()}`,
+//       created_at: editingPlan ? editingPlan.created_at : new Date().toISOString(),
+//       updated_at: new Date().toISOString(),
+//       purchases: editingPlan?.purchases || 0,
+//       time_variant: timeVariantState.is_active ? timeVariantState : null,
+//       pricing_info: pricingState.price ? pricingState : null
+//     });
+
+//     if (editingPlan) {
+//       // Optimistic update for editing
+//       const updatedPlansData = new PlanDataStructure();
+//       plansData.plans.forEach(plan => {
+//         if (plan.id === editingPlan.id) {
+//           updatedPlansData.addPlan(optimisticPlan);
+//         } else {
+//           updatedPlansData.addPlan(plan);
+//         }
+//       });
+//       setPlansData(updatedPlansData);
+//     } else {
+//       // Optimistic add for new plan
+//       const updatedPlansData = new PlanDataStructure();
+//       plansData.plans.forEach(plan => updatedPlansData.addPlan(plan));
+//       updatedPlansData.addPlan(optimisticPlan);
+//       setPlansData(updatedPlansData);
+//     }
+
+//     try {
+//       let response;
+//       let message;
+
+//       if (editingPlan) {
+//         // Update existing plan
+//         response = await PlanApiService.updatePlan(editingPlan.id, planData);
+//         const updatedPlan = normalizeBackendPlan(response.data);
+        
+//         // Update cache
+//         PlanCache.set(updatedPlan.id, updatedPlan, 'plans');
+//         PlanCache.delete('all', 'plans'); // Invalidate cache
+        
+//         // Update data structure
+//         const finalPlansData = new PlanDataStructure();
+//         plansData.plans.forEach(plan => {
+//           if (plan.id === updatedPlan.id) {
+//             finalPlansData.addPlan(updatedPlan);
+//           } else {
+//             finalPlansData.addPlan(plan);
+//           }
+//         });
+//         setPlansData(finalPlansData);
+        
+//         message = `Plan "${planData.name}" updated successfully`;
+//       } else {
+//         // Create new plan
+//         response = await PlanApiService.createPlan(planData);
+//         const newPlan = normalizeBackendPlan(response.data);
+        
+//         // Update cache
+//         PlanCache.set(newPlan.id, newPlan, 'plans');
+//         PlanCache.delete('all', 'plans'); // Invalidate cache
+        
+//         // Update data structure
+//         const finalPlansData = new PlanDataStructure();
+//         plansData.plans.forEach(plan => finalPlansData.addPlan(plan));
+//         finalPlansData.addPlan(newPlan);
+//         setPlansData(finalPlansData);
+        
+//         message = `Plan "${planData.name}" created successfully`;
+//       }
+
+//       // Show success message
+//       isMobile ? showMobileSuccess(message) : toast.success(message);
+
+//       // Reset and return to list
+//       resetForm();
+//       resetPricingHook();
+//       setTimeVariantState(getInitialTimeVariantState());
+//       setEditingPlan(null);
+//       setViewMode("list");
+
+//     } catch (error) {
+//       console.error('Error saving plan:', error);
+      
+//       // Revert optimistic update on error
+//       fetchData();
+      
+//       const errorMessage = error.response?.data?.detail || 
+//                           error.response?.data?.message || 
+//                           error.message || 
+//                           'Failed to save plan';
+//       isMobile ? showMobileSuccess(errorMessage) : toast.error(errorMessage);
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   };
+
+//   // Delete plan with optimistic update
+//   const confirmDelete = useCallback((plan) => {
+//     setPlanToDelete(plan);
+//     setDeleteModalOpen(true);
+//   }, []);
+
+//   const deletePlan = async () => {
+//     if (!planToDelete) return;
+    
+//     setIsLoading(true);
+    
+//     // Optimistic update
+//     const optimisticPlansData = new PlanDataStructure();
+//     plansData.plans.forEach(plan => {
+//       if (plan.id !== planToDelete.id) {
+//         optimisticPlansData.addPlan(plan);
+//       }
+//     });
+//     setPlansData(optimisticPlansData);
+    
+//     if (selectedPlan?.id === planToDelete.id) {
+//       setSelectedPlan(null);
+//       setViewMode("list");
+//     }
+    
+//     try {
+//       await PlanApiService.deletePlan(planToDelete.id);
+      
+//       // Update cache
+//       PlanCache.delete(planToDelete.id, 'plans');
+//       PlanCache.delete('all', 'plans'); // Invalidate cache
+      
+//       const message = `Plan "${planToDelete.name}" deleted successfully`;
+//       isMobile ? showMobileSuccess(message) : toast.success(message);
+//     } catch (error) {
+//       console.error('Error deleting plan:', error);
+      
+//       // Revert optimistic update on error
+//       fetchData();
+      
+//       const errorMessage = error.response?.data?.detail || 'Failed to delete plan';
+//       isMobile ? showMobileSuccess(errorMessage) : toast.error(errorMessage);
+//     } finally {
+//       setIsLoading(false);
+//       setDeleteModalOpen(false);
+//       setPlanToDelete(null);
+//     }
+//   };
+
+//   // Duplicate plan
+//   const duplicatePlan = useCallback(async (plan) => {
+//     setIsLoading(true);
+    
+//     // Optimistic update
+//     const planCopy = {
+//       ...plan,
+//       id: `temp_${Date.now()}`,
+//       name: `${plan.name} (Copy)`,
+//       purchases: 0,
+//       created_at: new Date().toISOString(),
+//       updated_at: new Date().toISOString()
+//     };
+    
+//     const optimisticPlansData = new PlanDataStructure();
+//     plansData.plans.forEach(p => optimisticPlansData.addPlan(p));
+//     optimisticPlansData.addPlan(planCopy);
+//     setPlansData(optimisticPlansData);
+    
+//     try {
+//       const planData = preparePlanForBackend(planCopy);
+//       const response = await PlanApiService.createPlan(planData);
+//       const newPlan = normalizeBackendPlan(response.data);
+      
+//       // Update data structure with real data
+//       const finalPlansData = new PlanDataStructure();
+//       plansData.plans.forEach(p => {
+//         if (p.id !== planCopy.id) {
+//           finalPlansData.addPlan(p);
+//         }
+//       });
+//       finalPlansData.addPlan(newPlan);
+//       setPlansData(finalPlansData);
+      
+//       // Update cache
+//       PlanCache.set(newPlan.id, newPlan, 'plans');
+//       PlanCache.delete('all', 'plans'); // Invalidate cache
+      
+//       const message = `Plan "${newPlan.name}" duplicated successfully`;
+//       isMobile ? showMobileSuccess(message) : toast.success(message);
+//     } catch (error) {
+//       console.error('Error duplicating plan:', error);
+      
+//       // Revert optimistic update on error
+//       fetchData();
+      
+//       const errorMessage = error.response?.data?.detail || 'Failed to duplicate plan';
+//       isMobile ? showMobileSuccess(errorMessage) : toast.error(errorMessage);
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   }, [plansData, isMobile, showMobileSuccess, fetchData]);
+
+//   // Toggle plan status with optimistic update
+//   const togglePlanStatus = useCallback(async (plan) => {
+//     setIsLoading(true);
+    
+//     // Optimistic update
+//     const updatedPlan = {
+//       ...plan,
+//       active: !plan.active,
+//       updated_at: new Date().toISOString()
+//     };
+    
+//     const optimisticPlansData = new PlanDataStructure();
+//     plansData.plans.forEach(p => {
+//       if (p.id === plan.id) {
+//         optimisticPlansData.addPlan(updatedPlan);
+//       } else {
+//         optimisticPlansData.addPlan(p);
+//       }
+//     });
+//     setPlansData(optimisticPlansData);
+    
+//     try {
+//       const planData = preparePlanForBackend(plan);
+//       planData.active = !plan.active;
+      
+//       const response = await PlanApiService.updatePlan(plan.id, planData);
+//       const finalPlan = normalizeBackendPlan(response.data);
+      
+//       // Update data structure with real data
+//       const finalPlansData = new PlanDataStructure();
+//       plansData.plans.forEach(p => {
+//         if (p.id === plan.id) {
+//           finalPlansData.addPlan(finalPlan);
+//         } else {
+//           finalPlansData.addPlan(p);
+//         }
+//       });
+//       setPlansData(finalPlansData);
+      
+//       // Update cache
+//       PlanCache.set(finalPlan.id, finalPlan, 'plans');
+//       PlanCache.delete('all', 'plans'); // Invalidate cache
+      
+//       const message = `Plan "${plan.name}" ${finalPlan.active ? 'activated' : 'deactivated'} successfully`;
+//       isMobile ? showMobileSuccess(message) : toast.success(message);
+//     } catch (error) {
+//       console.error('Error toggling plan status:', error);
+      
+//       // Revert optimistic update on error
+//       fetchData();
+      
+//       const errorMessage = error.response?.data?.detail || 'Failed to update plan status';
+//       isMobile ? showMobileSuccess(errorMessage) : toast.error(errorMessage);
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   }, [plansData, isMobile, showMobileSuccess, fetchData]);
+
+//   // Apply template
+//   const applyTemplate = useCallback((template) => {
+//     const newForm = getInitialFormState();
+    
+//     // Apply template settings
+//     newForm.name = template.name || "";
+//     newForm.category = template.category || "Residential";
+//     newForm.price = template.base_price?.toString() || template.basePrice?.toString() || "0";
+//     newForm.description = template.description || "";
+//     newForm.access_methods = template.access_methods || template.accessMethods || getInitialFormState().access_methods;
+    
+//     // Determine access type
+//     const enabledMethods = [];
+//     if (newForm.access_methods.hotspot?.enabled) enabledMethods.push('hotspot');
+//     if (newForm.access_methods.pppoe?.enabled) enabledMethods.push('pppoe');
+//     newForm.accessType = enabledMethods.length === 2 ? 'both' : 
+//                          enabledMethods.length === 1 ? enabledMethods[0] : 'hotspot';
+    
+//     // Apply time variant if exists
+//     if (template.time_variant || template.timeVariant) {
+//       setTimeVariantState(template.time_variant || template.timeVariant);
+//     }
+    
+//     // Apply pricing if exists
+//     if (template.pricing_info) {
+//       setPricingState(template.pricing_info);
+//     }
+    
+//     newForm.plan_type = parseFloat(newForm.price) > 0 ? "paid" : "free_trial";
+//     newForm.priority_level = 4;
+//     newForm.active = true;
+    
+//     setForm(newForm);
+//     setEditingPlan(null);
+//     setActiveTab("basic");
+//     setViewMode("form");
+    
+//     const message = `Template "${template.name}" applied`;
+//     isMobile ? showMobileSuccess(message) : toast.success(message);
+//   }, [setForm, setTimeVariantState, setPricingState, isMobile, showMobileSuccess]);
+
+//   // Create plan from template
+//   const createPlanFromTemplate = useCallback(async (templateId, planData) => {
+//     setIsLoading(true);
+    
+//     try {
+//       const response = await PlanApiService.createPlanFromTemplate(templateId, planData);
+//       const newPlan = normalizeBackendPlan(response.data);
+      
+//       // Update data structure
+//       const finalPlansData = new PlanDataStructure();
+//       plansData.plans.forEach(p => finalPlansData.addPlan(p));
+//       finalPlansData.addPlan(newPlan);
+//       setPlansData(finalPlansData);
+      
+//       // Update cache
+//       PlanCache.set(newPlan.id, newPlan, 'plans');
+//       PlanCache.delete('all', 'plans'); // Invalidate cache
+      
+//       const message = `Plan created from template successfully`;
+//       isMobile ? showMobileSuccess(message) : toast.success(message);
+      
+//       setViewMode("list");
+//       return response.data;
+//     } catch (error) {
+//       console.error('Error creating plan from template:', error);
+      
+//       const errorMessage = error.response?.data?.detail || 'Failed to create plan from template';
+//       isMobile ? showMobileSuccess(errorMessage) : toast.error(errorMessage);
+//       throw error;
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   }, [plansData, isMobile, showMobileSuccess]);
+
+//   // Handle analytics selection
+//   const handleAnalyticsSelect = useCallback(async (analyticsType) => {
+//     setSelectedAnalyticsType(analyticsType);
+//     setShowAnalyticsTypeModal(false);
+//     setViewMode("analytics");
+    
+//     // Fetch analytics data
+//     await fetchAnalyticsData(analyticsType, analyticsTimeRange);
+//   }, [analyticsTimeRange, fetchAnalyticsData]);
+
+//   // Handle analytics time range change
+//   const handleAnalyticsTimeRangeChange = useCallback((timeRange) => {
+//     setAnalyticsTimeRange(timeRange);
+//     if (selectedAnalyticsType) {
+//       fetchAnalyticsData(selectedAnalyticsType, timeRange);
+//     }
+//   }, [selectedAnalyticsType, fetchAnalyticsData]);
+
+//   // Dynamic tabs responsive design
+//   const getTabs = useCallback(() => {
+//     const baseTabs = [
+//       { id: "basic", label: "Basic Details", icon: Settings },
+//       { id: "advanced", label: "Advanced", icon: Server },
+//     ];
+
+//     // Add access-specific tab
+//     const enabledMethods = getEnabledAccessMethods();
+//     if (enabledMethods.includes('hotspot')) {
+//       baseTabs.splice(1, 0, { id: "hotspot", label: "Hotspot", icon: Wifi });
+//     }
+//     if (enabledMethods.includes('pppoe')) {
+//       baseTabs.splice(enabledMethods.includes('hotspot') ? 2 : 1, 0, 
+//         { id: "pppoe", label: "PPPoE", icon: Cable });
+//     }
+
+//     // Add time variant tab if enabled
+//     if (timeVariantState.is_active) {
+//       baseTabs.push({ id: "time_variant", label: "Time Settings", icon: Clock });
+//     }
+
+//     // Add pricing tab
+//     baseTabs.push({ id: "pricing", label: "Pricing", icon: DollarSign });
+
+//     return baseTabs;
+//   }, [getEnabledAccessMethods, timeVariantState.is_active]);
+
+//   // Render tabs with responsive design
+//   const renderTabs = () => {
+//     const tabs = getTabs();
+    
+//     return (
+//       <div className={`p-2 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light} mb-4 overflow-x-auto`}>
+//         <div className="flex space-x-1 min-w-max">
+//           {tabs.map((tab) => {
+//             const IconComponent = tab.icon;
+//             const isActive = activeTab === tab.id;
+//             const buttonSize = isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-2 text-sm';
+//             const iconSize = isMobile ? 'w-3 h-3' : 'w-4 h-4';
+            
+//             return (
+//               <button
+//                 key={tab.id}
+//                 onClick={() => setActiveTab(tab.id)}
+//                 className={`
+//                   ${buttonSize} rounded-lg font-medium transition-colors flex items-center gap-2 whitespace-nowrap
+//                   ${isActive 
+//                     ? "bg-indigo-600 text-white shadow-md" 
+//                     : `${themeClasses.text.secondary} hover:${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`
+//                   }
+//                 `}
+//               >
+//                 <IconComponent className={`${iconSize}`} />
+//                 <span className={isMobile ? 'hidden sm:inline' : 'inline'}>
+//                   {isMobile && !isDesktop ? tab.label.split(' ')[0] : tab.label}
+//                 </span>
+//               </button>
+//             );
+//           })}
+//         </div>
+//       </div>
+//     );
+//   };
+
+//   // Render form content based on active tab
+//   const renderFormContent = () => {
+//     const commonProps = {
+//       form,
+//       errors,
+//       theme,
+//       isMobile
+//     };
+
+//     switch (activeTab) {
+//       case "basic":
+//         return (
+//           <PlanBasicDetails
+//             {...commonProps}
+//             touched={touched}
+//             onChange={handleChange}
+//             onAccessTypeChange={handleAccessTypeChange}
+//             onBlur={handleFieldBlur}
+//           />
+//         );
+//       case "hotspot":
+//         return (
+//           <HotspotConfiguration
+//             {...commonProps}
+//             onChange={handleAccessMethodChange}
+//             onNestedChange={handleAccessMethodNestedChange}
+//           />
+//         );
+//       case "pppoe":
+//         return (
+//           <PPPoEConfiguration
+//             {...commonProps}
+//             onChange={handleAccessMethodChange}
+//             onNestedChange={handleAccessMethodNestedChange}
+//           />
+//         );
+//       case "advanced":
+//         return (
+//           <PlanAdvancedSettings
+//             {...commonProps}
+//             onChange={handleChange}
+//             routers={routers}
+//           />
+//         );
+//       case "time_variant":
+//         return (
+//           <TimeVariantConfig
+//             timeVariant={timeVariantState}
+//             onChange={(field, value) => {
+//               // Update time variant state
+//               const newTimeVariant = { ...timeVariantState, [field]: value };
+//               setTimeVariantState(newTimeVariant);
+              
+//               // Update form if needed
+//               if (field === 'is_active' && !value) {
+//                 handleChange('time_variant_id', null);
+//               }
+//             }}
+//             errors={timeVariantErrors}
+//             theme={theme}
+//             isMobile={isMobile}
+//           />
+//         );
+//       case "pricing":
+//         return (
+//           <PricingConfiguration
+//             {...commonProps}
+//             priceMatrices={priceMatrices}
+//             discountRules={discountRules}
+//             onChange={handleChange}
+//             onCalculatePrice={() => editingPlan && calculatePrice(editingPlan.id)}
+//             priceCalculationResult={priceCalculationResult}
+//             pricingState={pricingState}
+//             pricingErrors={pricingErrors}
+//             onPricingChange={(field, value) => {
+//               const newPricing = { ...pricingState, [field]: value };
+//               setPricingState(newPricing);
+//             }}
+//             onCalculatePricing={(quantity) => {
+//               if (pricingState.price) {
+//                 const breakdown = calculatePriceBreakdown(quantity);
+//                 setPriceCalculationResult({
+//                   success: true,
+//                   data: breakdown
+//                 });
+//                 return breakdown;
+//               }
+//               return null;
+//             }}
+//           />
+//         );
+//       default:
+//         return null;
+//     }
+//   };
+
+//   // Helper component for plan details view
+//   const DetailRow = ({ label, children, theme }) => (
+//     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2">
+//       <span className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+//         {label}:
+//       </span>
+//       <div className="sm:text-right text-sm">
+//         {children}
+//       </div>
+//     </div>
+//   );
+
+//   const DetailCard = ({ icon, title, value, theme }) => (
+//     <div className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
+//       <div className="flex items-center mb-2">
+//         {icon}
+//         <span className="ml-2 text-sm font-medium">{title}</span>
+//       </div>
+//       <div className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+//         {value}
+//       </div>
+//     </div>
+//   );
+
+//   // Render plan details view with responsive design
+//   const renderPlanDetails = () => {
+//     if (!selectedPlan) return null;
+
+//     const isAvailable = isPlanAvailableNow(selectedPlan);
+//     const nextAvailable = calculateNextAvailableTime(selectedPlan.time_variant);
+//     const availabilitySummary = getAvailabilitySummary(selectedPlan.time_variant);
+
+//     return (
+//       <div className={`min-h-screen p-3 sm:p-4 md:p-6 transition-colors duration-300 ${themeClasses.bg.primary}`}>
+//         <main className="max-w-6xl mx-auto space-y-4 sm:space-y-6 md:space-y-8">
+//           {/* Header - Responsive */}
+//           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+//             <div className="flex-1 min-w-0">
+//               <button
+//                 onClick={() => setViewMode("list")}
+//                 className={`mb-3 flex items-center text-sm ${themeClasses.text.secondary} hover:${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}
+//               >
+//                 <ArrowLeft className="w-4 h-4 mr-2" />
+//                 Back to Plans
+//               </button>
+//               <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500 truncate">
+//                 {selectedPlan.name || 'Unnamed Plan'} Details
+//               </h1>
+//               <p className={`mt-1 text-sm sm:text-base ${themeClasses.text.secondary}`}>
+//                 Complete plan information and specifications
+//               </p>
+//             </div>
+//             <div className="flex items-center space-x-2 self-end sm:self-auto">
+//               <motion.button 
+//                 onClick={() => editPlan(selectedPlan)}
+//                 className={`px-3 py-2 rounded-lg text-sm flex items-center ${themeClasses.button.primary}`}
+//                 whileHover={{ scale: 1.05 }}
+//                 whileTap={{ scale: 0.95 }}
+//               >
+//                 <Pencil className="w-4 h-4 mr-2" />
+//                 <span className={isMobile ? 'hidden sm:inline' : 'inline'}>Edit</span>
+//               </motion.button>
+//               <motion.button 
+//                 onClick={() => duplicatePlan(selectedPlan)}
+//                 className={`px-3 py-2 rounded-lg text-sm flex items-center ${themeClasses.button.secondary}`}
+//                 whileHover={{ scale: 1.05 }}
+//                 whileTap={{ scale: 0.95 }}
+//               >
+//                 <Copy className="w-4 h-4 mr-2" />
+//                 <span className={isMobile ? 'hidden sm:inline' : 'inline'}>Duplicate</span>
+//               </motion.button>
+//             </div>
+//           </div>
+
+//           {/* Availability Badge - Responsive */}
+//           <div className={`p-4 rounded-xl border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+//             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+//               <div className="flex-1">
+//                 <h3 className={`text-lg font-semibold mb-2 ${themeClasses.text.primary}`}>
+//                   Availability Status
+//                 </h3>
+//                 <div className="flex flex-wrap items-center gap-2">
+//                   <AvailabilityBadge
+//                     status={isAvailable ? "available" : "unavailable"}
+//                     message={availabilitySummary.message}
+//                     theme={theme}
+//                     size={isMobile ? "sm" : "md"}
+//                     showIcon
+//                   />
+//                   {nextAvailable && (
+//                     <div className={`text-sm flex items-center ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>
+//                       <Clock className="w-3 h-3 mr-1" />
+//                       Next: {nextAvailable}
+//                     </div>
+//                   )}
+//                 </div>
+//               </div>
+//               <button
+//                 onClick={() => checkAvailability(selectedPlan.id)}
+//                 className={`px-4 py-2 rounded-lg ${themeClasses.button.info} whitespace-nowrap text-sm sm:text-base`}
+//               >
+//                 Check Availability
+//               </button>
+//             </div>
+//           </div>
+
+//           {/* Plan Details Grid - Responsive */}
+//           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+//             {/* Basic Information Card */}
+//             <div className={`p-4 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+//               <h3 className="text-lg font-semibold mb-4 flex items-center">
+//                 <Settings className="w-5 h-5 mr-3 text-indigo-600" />
+//                 Basic Information
+//               </h3>
+//               <div className="space-y-3">
+//                 <DetailRow label="Type" theme={theme}>
+//                   <PlanTypeBadge type={selectedPlan.planType} theme={theme} size="sm" />
+//                 </DetailRow>
+//                 <DetailRow label="Category" theme={theme}>
+//                   <span className={themeClasses.text.primary}>{selectedPlan.category}</span>
+//                 </DetailRow>
+//                 <DetailRow label="Price" theme={theme}>
+//                   <PriceBadge 
+//                     price={selectedPlan.price} 
+//                     originalPrice={selectedPlan.pricing_info?.original_price}
+//                     currency="KES"
+//                     theme={theme}
+//                     size="md"
+//                   />
+//                 </DetailRow>
+//                 <DetailRow label="Status" theme={theme}>
+//                   <span className={`font-medium ${selectedPlan.active ? "text-green-600" : "text-red-600"}`}>
+//                     {selectedPlan.active ? "Active" : "Inactive"}
+//                   </span>
+//                 </DetailRow>
+//                 <DetailRow label="Subscribers" theme={theme}>
+//                   <span className="font-bold text-indigo-600">{selectedPlan.purchases || 0}</span>
+//                 </DetailRow>
+//               </div>
+//             </div>
+
+//             {/* Configuration Card */}
+//             <div className={`p-4 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+//               <h3 className="text-lg font-semibold mb-4 flex items-center">
+//                 <Zap className="w-5 h-5 mr-3 text-indigo-600" />
+//                 Configuration
+//               </h3>
+//               <div className="space-y-3">
+//                 <DetailRow label="Access Type" theme={theme}>
+//                   <span className="flex items-center gap-2">
+//                     {selectedPlan.enabled_access_methods.map(method => {
+//                       const accessTypeColor = getAccessTypeColor(method);
+//                       return (
+//                         <span key={method} className={`inline-flex items-center px-2 py-1 rounded text-xs ${
+//                           theme === 'dark' 
+//                             ? `${accessTypeColor.dark.bg} ${accessTypeColor.dark.text}`
+//                             : `${accessTypeColor.light.bg} ${accessTypeColor.light.text}`
+//                         }`}>
+//                           {method === 'hotspot' ? <Wifi className="w-3 h-3 mr-1" /> : <Cable className="w-3 h-3 mr-1" />}
+//                           {method.toUpperCase()}
+//                         </span>
+//                       );
+//                     })}
+//                   </span>
+//                 </DetailRow>
+//                 {selectedPlan.enabled_access_methods.includes('hotspot') && (
+//                   <>
+//                     <DetailRow label="Download Speed" theme={theme}>
+//                       <span className={themeClasses.text.primary}>
+//                         {selectedPlan.access_methods.hotspot.downloadSpeed.value} {selectedPlan.access_methods.hotspot.downloadSpeed.unit}
+//                       </span>
+//                     </DetailRow>
+//                     <DetailRow label="Data Limit" theme={theme}>
+//                       <span className={themeClasses.text.primary}>
+//                         {selectedPlan.access_methods.hotspot.dataLimit.value} {selectedPlan.access_methods.hotspot.dataLimit.unit}
+//                       </span>
+//                     </DetailRow>
+//                   </>
+//                 )}
+//                 {selectedPlan.enabled_access_methods.includes('pppoe') && (
+//                   <>
+//                     <DetailRow label="Upload Speed" theme={theme}>
+//                       <span className={themeClasses.text.primary}>
+//                         {selectedPlan.access_methods.pppoe.uploadSpeed.value} {selectedPlan.access_methods.pppoe.uploadSpeed.unit}
+//                       </span>
+//                     </DetailRow>
+//                     <DetailRow label="IP Pool" theme={theme}>
+//                       <span className={themeClasses.text.primary}>
+//                         {selectedPlan.access_methods.pppoe.ipPool}
+//                       </span>
+//                     </DetailRow>
+//                   </>
+//                 )}
+//               </div>
+//             </div>
+
+//             {/* Time Variant Card - Full width on mobile, spans columns on desktop */}
+//             {selectedPlan.time_variant?.is_active && (
+//               <div className={`p-4 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light} md:col-span-2 lg:col-span-1`}>
+//                 <h3 className="text-lg font-semibold mb-4 flex items-center">
+//                   <Clock className="w-5 h-5 mr-3 text-indigo-600" />
+//                   Time Restrictions
+//                 </h3>
+//                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+//                   {selectedPlan.time_variant.start_time && selectedPlan.time_variant.end_time && (
+//                     <DetailCard 
+//                       icon={<Clock className="w-4 h-4 text-blue-500" />}
+//                       title="Time Range"
+//                       value={`${formatTime(selectedPlan.time_variant.start_time)} - ${formatTime(selectedPlan.time_variant.end_time)}`}
+//                       theme={theme}
+//                     />
+//                   )}
+                  
+//                   {selectedPlan.time_variant.available_days?.length > 0 && (
+//                     <DetailCard 
+//                       icon={<CalendarDays className="w-4 h-4 text-green-500" />}
+//                       title="Available Days"
+//                       value={selectedPlan.time_variant.available_days.map(day => 
+//                         daysOfWeek.find(d => d.value === day)?.label || day
+//                       ).join(', ')}
+//                       theme={theme}
+//                     />
+//                   )}
+                  
+//                   {selectedPlan.time_variant.schedule_active && (
+//                     <DetailCard 
+//                       icon={<CalendarClock className="w-4 h-4 text-purple-500" />}
+//                       title="Schedule"
+//                       value={`${formatDate(selectedPlan.time_variant.schedule_start_date)} to ${formatDate(selectedPlan.time_variant.schedule_end_date)}`}
+//                       theme={theme}
+//                     />
+//                   )}
+//                 </div>
+//               </div>
+//             )}
+
+//             {/* Action Buttons - Responsive */}
+//             <div className="md:col-span-2 lg:col-span-3 flex flex-col sm:flex-row gap-3 pt-4">
+//               <motion.button
+//                 onClick={() => togglePlanStatus(selectedPlan)}
+//                 className={`px-4 py-3 rounded-lg flex-1 text-center text-sm sm:text-base ${
+//                   selectedPlan.active 
+//                     ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400'
+//                     : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400'
+//                 }`}
+//                 whileHover={{ scale: 1.02 }}
+//                 whileTap={{ scale: 0.98 }}
+//               >
+//                 {selectedPlan.active ? 'Deactivate Plan' : 'Activate Plan'}
+//               </motion.button>
+              
+//               <motion.button
+//                 onClick={() => duplicatePlan(selectedPlan)}
+//                 className="px-4 py-3 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 flex-1 text-center text-sm sm:text-base"
+//                 whileHover={{ scale: 1.02 }}
+//                 whileTap={{ scale: 0.98 }}
+//               >
+//                 Duplicate Plan
+//               </motion.button>
+//             </div>
+//           </div>
+//         </main>
+//       </div>
+//     );
+//   };
+
+//   // Check form validity
+//   const isFormValid = useMemo(() => {
+//     // Basic validations
+//     if (!form.name?.trim() || !form.category || !form.plan_type) {
+//       return false;
+//     }
+
+//     // Price validation for paid plans
+//     if (form.plan_type === "paid") {
+//       const price = parseFloat(form.price);
+//       if (isNaN(price) || price < 0) {
+//         return false;
+//       }
+//     }
+
+//     // Check at least one access method is enabled
+//     const hasEnabledMethods = form.access_methods.hotspot.enabled || form.access_methods.pppoe.enabled;
+//     if (!hasEnabledMethods) {
+//       return false;
+//     }
+
+//     // Check enabled methods have required fields
+//     if (form.access_methods.hotspot.enabled) {
+//       if (!form.access_methods.hotspot.downloadSpeed.value || 
+//           !form.access_methods.hotspot.uploadSpeed.value) {
+//         return false;
+//       }
+//     }
+
+//     if (form.access_methods.pppoe.enabled) {
+//       if (!form.access_methods.pppoe.downloadSpeed.value || 
+//           !form.access_methods.pppoe.uploadSpeed.value) {
+//         return false;
+//       }
+//     }
+
+//     // Validate time variant if active
+//     if (timeVariantState.is_active) {
+//       const timeVariantErrors = validateTimeVariant(timeVariantState);
+//       if (Object.keys(timeVariantErrors).length > 0) {
+//         return false;
+//       }
+//     }
+
+//     return true;
+//   }, [form, timeVariantState]);
+
+//   // Main render with responsive container
+//   return (
+//     <div className="min-h-screen transition-colors duration-300">
+//       {/* Analytics View */}
+//       <AnimatePresence>
+//         {viewMode === "analytics" && (
+//           <motion.div
+//             initial={{ opacity: 0, y: 20 }}
+//             animate={{ opacity: 1, y: 0 }}
+//             exit={{ opacity: 0, y: -20 }}
+//             className={`${themeClasses.bg.primary}`}
+//           >
+//             <PlanAnalytics
+//               plans={filteredPlans}
+//               templates={templates}
+//               onBack={() => {
+//                 setViewMode("list");
+//                 setSelectedAnalyticsType(null);
+//                 setAnalyticsData(null);
+//               }}
+//               analyticsType={selectedAnalyticsType}
+//               analyticsData={analyticsData}
+//               timeRange={analyticsTimeRange}
+//               onTimeRangeChange={handleAnalyticsTimeRangeChange}
+//               onExportData={() => exportAnalyticsData(selectedAnalyticsType, analyticsTimeRange)}
+//               onRefreshAnalytics={refreshAnalyticsData}
+//               theme={theme}
+//               isMobile={isMobile}
+//             />
+//           </motion.div>
+//         )}
+//       </AnimatePresence>
+
+//       {/* Templates View */}
+//       <AnimatePresence>
+//         {viewMode === "templates" && (
+//           <motion.div
+//             initial={{ opacity: 0, x: -20 }}
+//             animate={{ opacity: 1, x: 0 }}
+//             exit={{ opacity: 0, x: 20 }}
+//             className={`${themeClasses.bg.primary}`}
+//           >
+//             <PlanTemplates
+//               templates={templates}
+//               onApplyTemplate={applyTemplate}
+//               onCreateFromTemplate={createPlanFromTemplate}
+//               onBack={() => setViewMode("list")}
+//               theme={theme}
+//               isMobile={isMobile}
+//             />
+//           </motion.div>
+//         )}
+//       </AnimatePresence>
+
+//       {/* List View */}
+//       <AnimatePresence>
+//         {viewMode === "list" && (
+//           <motion.div
+//             initial={{ opacity: 0 }}
+//             animate={{ opacity: 1 }}
+//             exit={{ opacity: 0 }}
+//             className={`${themeClasses.bg.primary}`}
+//           >
+//             <PlanList
+//               plans={filteredPlans}
+//               isLoading={isLoading}
+//               onEditPlan={editPlan}
+//               onViewDetails={viewPlanDetails}
+//               onDeletePlan={confirmDelete}
+//               onDuplicatePlan={duplicatePlan}
+//               onToggleStatus={togglePlanStatus}
+//               onNewPlan={() => setShowPlanTypeModal(true)}
+//               onViewAnalytics={() => setShowAnalyticsTypeModal(true)}
+//               onViewTemplates={() => setViewMode("templates")}
+//               theme={theme}
+//               isMobile={isMobile}
+//               isTablet={isTablet}
+//               isDesktop={isDesktop}
+//               searchQuery={searchQuery}
+//               onSearchChange={setSearchQuery}
+//               activeFilters={activeFilters}
+//               onApplyFilter={applyFilter}
+//               onClearFilters={clearFilters}
+//               sortConfig={sortConfig}
+//               onSort={handleSort}
+//             />
+//           </motion.div>
+//         )}
+//       </AnimatePresence>
+
+//       {/* Form View */}
+//       <AnimatePresence>
+//         {viewMode === "form" && (
+//           <motion.div
+//             initial={{ opacity: 0, scale: 0.95 }}
+//             animate={{ opacity: 1, scale: 1 }}
+//             exit={{ opacity: 0, scale: 0.95 }}
+//             className={`min-h-screen p-3 sm:p-4 md:p-6 transition-colors duration-300 ${themeClasses.bg.primary}`}
+//           >
+//             <main className="max-w-6xl mx-auto space-y-4 sm:space-y-6 md:space-y-8">
+//               {/* Header - Responsive */}
+//               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+//                 <div className="flex-1 min-w-0">
+//                   <button
+//                     onClick={() => {
+//                       setViewMode("list");
+//                       resetForm();
+//                       resetPricingHook();
+//                       setTimeVariantState(getInitialTimeVariantState());
+//                       setEditingPlan(null);
+//                     }}
+//                     className={`mb-3 flex items-center text-sm ${themeClasses.text.secondary} hover:${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}
+//                   >
+//                     <ArrowLeft className="w-4 h-4 mr-2" />
+//                     Back to Plans
+//                   </button>
+//                   <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500 truncate">
+//                     {editingPlan ? "Edit Plan" : "Create New Plan"}
+//                   </h1>
+//                   <p className={`mt-1 text-sm sm:text-base ${themeClasses.text.secondary}`}>
+//                     {editingPlan ? "Update your internet plan details" : "Configure your new internet service plan"}
+//                   </p>
+//                 </div>
+//                 <div className="flex items-center space-x-2 self-end sm:self-auto">
+//                   {timeVariantState.is_active && (
+//                     <motion.button
+//                       onClick={() => {
+//                         const newTimeVariant = { 
+//                           ...timeVariantState, 
+//                           force_available: !timeVariantState.force_available 
+//                         };
+//                         setTimeVariantState(newTimeVariant);
+//                       }}
+//                       className={`px-3 py-1 text-xs rounded-full flex items-center ${
+//                         timeVariantState.force_available
+//                           ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+//                           : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+//                       }`}
+//                       whileHover={{ scale: 1.05 }}
+//                       whileTap={{ scale: 0.95 }}
+//                     >
+//                       <AlertTriangle className="w-3 h-3 mr-1" />
+//                       {timeVariantState.force_available ? 'Forced Available' : 'Time Restricted'}
+//                     </motion.button>
+//                   )}
+//                 </div>
+//               </div>
+
+//               {/* Status Bar - Responsive */}
+//               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+//                 <div className={`p-4 rounded-lg border ${
+//                   form.accessType === 'hotspot' 
+//                     ? (theme === 'dark' ? 'bg-blue-900/20 border-blue-700' : 'bg-blue-50 border-blue-200')
+//                     : (theme === 'dark' ? 'bg-green-900/20 border-green-700' : 'bg-green-50 border-green-200')
+//                 }`}>
+//                   <div className="flex items-center">
+//                     {form.accessType === 'hotspot' ? (
+//                       <Wifi className="w-5 h-5 text-blue-600 mr-3" />
+//                     ) : (
+//                       <Cable className="w-5 h-5 text-green-600 mr-3" />
+//                     )}
+//                     <div>
+//                       <span className="text-sm font-medium">
+//                         {form.accessType === 'hotspot' ? 'Hotspot Plan' : 'PPPoE Plan'}
+//                       </span>
+//                       <div className="text-xs mt-1 opacity-75">
+//                         {form.access_methods.hotspot.enabled && form.access_methods.pppoe.enabled 
+//                           ? 'Both access methods enabled' 
+//                           : form.access_methods.hotspot.enabled 
+//                             ? 'Hotspot only' 
+//                             : 'PPPoE only'}
+//                       </div>
+//                     </div>
+//                   </div>
+//                 </div>
+                
+//                 <div className={`p-4 rounded-lg border ${
+//                   theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+//                 }`}>
+//                   <div className="flex items-center justify-between">
+//                     <div>
+//                       <span className="text-sm font-medium">Availability</span>
+//                       <div className="text-xs mt-1 opacity-75">
+//                         {timeVariantState.is_active 
+//                           ? 'Time restricted' 
+//                           : 'Available at all times'}
+//                       </div>
+//                     </div>
+//                     <button
+//                       onClick={() => {
+//                         // Toggle time variant
+//                         const newTimeVariant = { 
+//                           ...timeVariantState, 
+//                           is_active: !timeVariantState.is_active 
+//                         };
+//                         setTimeVariantState(newTimeVariant);
+//                         if (newTimeVariant.is_active) {
+//                           setActiveTab("time_variant");
+//                         }
+//                       }}
+//                       className="text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400"
+//                     >
+//                       {timeVariantState.is_active ? 'Disable' : 'Configure'}
+//                     </button>
+//                   </div>
+//                 </div>
+//               </div>
+
+//               {/* Tabs */}
+//               {renderTabs()}
+
+//               {/* Form Content */}
+//               <div className="space-y-4 lg:space-y-6">
+//                 {renderFormContent()}
+//               </div>
+
+//               {/* Form Actions - Responsive */}
+//               <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4">
+//                 <motion.button 
+//                   onClick={() => {
+//                     setViewMode("list");
+//                     resetForm();
+//                     resetPricingHook();
+//                     setTimeVariantState(getInitialTimeVariantState());
+//                     setEditingPlan(null);
+//                   }} 
+//                   className={`px-4 py-3 rounded-lg shadow-md ${themeClasses.button.secondary} flex-1 sm:flex-none text-sm sm:text-base`}
+//                   whileHover={{ scale: 1.05 }}
+//                   whileTap={{ scale: 0.95 }}
+//                 >
+//                   Cancel
+//                 </motion.button>
+                
+//                 <motion.button 
+//                   onClick={() => editingPlan && calculatePrice(editingPlan.id)}
+//                   disabled={!editingPlan || isLoading}
+//                   className={`px-4 py-3 rounded-lg shadow-md ${
+//                     theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
+//                   } text-white flex-1 sm:flex-none disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base`}
+//                   whileHover={{ scale: editingPlan ? 1.05 : 1 }}
+//                   whileTap={{ scale: editingPlan ? 0.95 : 1 }}
+//                 >
+//                   <DollarSign className="w-4 h-4 mr-2 inline" />
+//                   Calculate Price
+//                 </motion.button>
+                
+//                 <motion.button 
+//                   onClick={savePlan}
+//                   disabled={!isFormValid || isLoading}
+//                   className={`px-4 py-3 rounded-lg shadow-md flex items-center justify-center ${
+//                     isFormValid && !isLoading 
+//                       ? themeClasses.button.success 
+//                       : 'bg-gray-400 cursor-not-allowed dark:bg-gray-700'
+//                   } flex-1 sm:flex-none text-sm sm:text-base`}
+//                   whileHover={isFormValid && !isLoading ? { scale: 1.05 } : {}}
+//                   whileTap={isFormValid && !isLoading ? { scale: 0.95 } : {}}
+//                 >
+//                   {isLoading ? (
+//                     <>
+//                       <FaSpinner className="w-4 h-4 mr-2 animate-spin" />
+//                       Saving...
+//                     </>
+//                   ) : (
+//                     <>
+//                       <Save className="w-4 h-4 mr-2" />
+//                       {editingPlan ? "Update Plan" : "Create Plan"}
+//                     </>
+//                   )}
+//                 </motion.button>
+//               </div>
+//             </main>
+//           </motion.div>
+//         )}
+//       </AnimatePresence>
+
+//       {/* Details View */}
+//       <AnimatePresence>
+//         {viewMode === "details" && renderPlanDetails()}
+//       </AnimatePresence>
+
+//       {/* Modals */}
+//       <PlanTypeSelectionModal
+//         isOpen={showPlanTypeModal}
+//         onClose={() => setShowPlanTypeModal(false)}
+//         onSelect={({ planType, creationMethod, templateId }) => 
+//           startNewPlan(planType, creationMethod, templateId)
+//         }
+//         templates={templates}
+//         theme={theme}
+//         isMobile={isMobile}
+//       />
+
+//       <AnalyticsTypeSelectionModal
+//         isOpen={showAnalyticsTypeModal}
+//         onClose={() => setShowAnalyticsTypeModal(false)}
+//         onSelect={handleAnalyticsSelect}
+//         plans={plansData.plans}
+//         theme={theme}
+//         isMobile={isMobile}
+//       />
+
+//       {/* Mobile Success Alert */}
+//       <MobileSuccessAlert 
+//         message={mobileSuccessAlert.message}
+//         isVisible={mobileSuccessAlert.visible}
+//         onClose={() => setMobileSuccessAlert({ visible: false, message: "" })}
+//         theme={theme}
+//       />
+
+//       {/* Delete Confirmation Modal */}
+//       <ConfirmationModal
+//         isOpen={deleteModalOpen}
+//         onClose={() => {
+//           setDeleteModalOpen(false);
+//           setPlanToDelete(null);
+//         }}
+//         onConfirm={deletePlan}
+//         title="Delete Plan"
+//         message={`Are you sure you want to delete "${planToDelete?.name}"? This action cannot be undone.`}
+//         confirmText="Delete"
+//         cancelText="Cancel"
+//         type="danger"
+//         theme={theme}
+//         isMobile={isMobile}
+//         isLoading={isLoading}
+//       />
+
+//       {/* Loading Overlay */}
+//       <LoadingOverlay 
+//         isVisible={isLoading && viewMode === 'list'}
+//         message="Loading plans..."
+//         theme={theme}
+//       />
+
+//       {/* Toast Container */}
+//       <ToastContainer 
+//         position={isMobile ? "top-center" : "top-right"}
+//         autoClose={3000}
+//         hideProgressBar={false}
+//         newestOnTop
+//         closeOnClick
+//         rtl={false}
+//         pauseOnFocusLoss
+//         draggable
+//         pauseOnHover
+//         theme={theme}
+//         style={{
+//           fontSize: isMobile ? '12px' : '14px',
+//           width: isMobile ? '90%' : 'auto'
+//         }}
+//       />
+//     </div>
+//   );
+// };
+
+// export default PlanManagement;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -1159,7 +3656,7 @@ import {
 } from "lucide-react";
 import { FaSpinner } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastToastify.css";
+import 'react-toastify/dist/ReactToastify.css'; 
 
 // Context and API
 import { useTheme } from "../../context/ThemeContext"
@@ -1180,10 +3677,6 @@ import {
 } from "../../components/ServiceManagement/Shared/components"
 import { 
   deepClone, 
-  formatNumber, 
-  formatCurrency,
-  formatTime,
-  formatDate,
   debounce,
   validateTimeVariant,
   isPlanAvailableNow,
@@ -1192,6 +3685,7 @@ import {
   calculateRating,
   getAccessTypeColor
 } from "../../components/ServiceManagement/Shared/utils"
+import { formatCurrency, formatDate, formatTime, formatNumber } from "../../components/ServiceManagement/Shared/formatters"
 import { 
   planTypes, 
   categories, 
@@ -1223,245 +3717,380 @@ import useTimeVariant, { getInitialTimeVariantState } from "../../components/Ser
 import usePricing, { getInitialPricingState } from "../../components/ServiceManagement/PlanManagement/hooks/usePricing"
 
 // Responsive utilities
-import { useMediaQuery } from "../../hooks/useMediaQuery"
+import useMediaQuery from "../../components/ServiceManagement/PlanManagement/hooks/useMediaQuery"
 
-// API Service with all endpoints
+// Fixed API Service with all endpoints
 const PlanApiService = {
   // Plans
   async getPlans(params = {}) {
-    const queryParams = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== null && value !== undefined && value !== '') {
-        queryParams.append(key, value);
-      }
-    });
-    
-    const response = await api.get(`/api/internet_plans/plans/?${queryParams}`);
-    return response.data;
+    try {
+      const queryParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+          queryParams.append(key, value);
+        }
+      });
+      
+      const url = `/api/internet_plans/plans/${queryParams.toString() ? `?${queryParams}` : ''}`;
+      const response = await api.get(url);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching plans:', error);
+      throw error;
+    }
   },
 
   async getPlan(id) {
-    const response = await api.get(`/api/internet_plans/plans/${id}/`);
-    return response.data;
+    try {
+      const response = await api.get(`/api/internet_plans/plans/${id}/`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching plan ${id}:`, error);
+      throw error;
+    }
   },
 
   async createPlan(planData) {
-    const response = await api.post('/api/internet_plans/plans/', planData);
-    return response.data;
+    try {
+      const response = await api.post('/api/internet_plans/plans/', planData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating plan:', error);
+      throw error;
+    }
   },
 
   async updatePlan(id, planData) {
-    const response = await api.put(`/api/internet_plans/plans/${id}/`, planData);
-    return response.data;
+    try {
+      const response = await api.put(`/api/internet_plans/plans/${id}/`, planData);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating plan ${id}:`, error);
+      throw error;
+    }
   },
 
   async deletePlan(id) {
-    const response = await api.delete(`/api/internet_plans/plans/${id}/`);
-    return response.data;
+    try {
+      const response = await api.delete(`/api/internet_plans/plans/${id}/`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error deleting plan ${id}:`, error);
+      throw error;
+    }
   },
 
   // Templates
   async getTemplates() {
-    const response = await api.get('/api/internet_plans/templates/');
-    return response.data;
+    try {
+      const response = await api.get('/api/internet_plans/templates/');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+      throw error;
+    }
   },
 
   async getTemplate(id) {
-    const response = await api.get(`/api/internet_plans/templates/${id}/`);
-    return response.data;
+    try {
+      const response = await api.get(`/api/internet_plans/templates/${id}/`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching template ${id}:`, error);
+      throw error;
+    }
   },
 
   async createTemplate(templateData) {
-    const response = await api.post('/api/internet_plans/templates/', templateData);
-    return response.data;
+    try {
+      const response = await api.post('/api/internet_plans/templates/', templateData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating template:', error);
+      throw error;
+    }
   },
 
   async updateTemplate(id, templateData) {
-    const response = await api.put(`/api/internet_plans/templates/${id}/`, templateData);
-    return response.data;
+    try {
+      const response = await api.put(`/api/internet_plans/templates/${id}/`, templateData);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating template ${id}:`, error);
+      throw error;
+    }
   },
 
   async deleteTemplate(id) {
-    const response = await api.delete(`/api/internet_plans/templates/${id}/`);
-    return response.data;
+    try {
+      const response = await api.delete(`/api/internet_plans/templates/${id}/`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error deleting template ${id}:`, error);
+      throw error;
+    }
   },
 
   async createPlanFromTemplate(templateId, planData) {
-    const response = await api.post(`/api/internet_plans/templates/${templateId}/create-plan/`, planData);
-    return response.data;
+    try {
+      const response = await api.post(`/api/internet_plans/templates/${templateId}/create-plan/`, planData);
+      return response.data;
+    } catch (error) {
+      console.error(`Error creating plan from template ${templateId}:`, error);
+      throw error;
+    }
   },
 
   // Time Variant
   async getTimeVariant(id) {
-    const response = await api.get(`/api/internet_plans/time-variant/${id}/`);
-    return response.data;
+    try {
+      const response = await api.get(`/api/internet_plans/time-variant/${id}/`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching time variant ${id}:`, error);
+      throw error;
+    }
   },
 
   async getTimeVariants(params = {}) {
-    const queryParams = new URLSearchParams(params);
-    const response = await api.get(`/api/internet_plans/time-variant/?${queryParams}`);
-    return response.data;
+    try {
+      const queryParams = new URLSearchParams(params);
+      const response = await api.get(`/api/internet_plans/time-variant/?${queryParams}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching time variants:', error);
+      throw error;
+    }
   },
 
   async createTimeVariant(timeVariantData) {
-    const response = await api.post('/api/internet_plans/time-variant/', timeVariantData);
-    return response.data;
+    try {
+      const response = await api.post('/api/internet_plans/time-variant/', timeVariantData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating time variant:', error);
+      throw error;
+    }
   },
 
   async updateTimeVariant(id, timeVariantData) {
-    const response = await api.put(`/api/internet_plans/time-variant/${id}/`, timeVariantData);
-    return response.data;
+    try {
+      const response = await api.put(`/api/internet_plans/time-variant/${id}/`, timeVariantData);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating time variant ${id}:`, error);
+      throw error;
+    }
   },
 
   async deleteTimeVariant(id) {
-    const response = await api.delete(`/api/internet_plans/time-variant/${id}/`);
-    return response.data;
+    try {
+      const response = await api.delete(`/api/internet_plans/time-variant/${id}/`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error deleting time variant ${id}:`, error);
+      throw error;
+    }
   },
 
   async testTimeVariant(testData) {
-    const response = await api.post('/api/internet_plans/time-variant/test/', testData);
-    return response.data;
+    try {
+      const response = await api.post('/api/internet_plans/time-variant/test/', testData);
+      return response.data;
+    } catch (error) {
+      console.error('Error testing time variant:', error);
+      throw error;
+    }
   },
 
   // Pricing
   async getPriceMatrices(params = {}) {
-    const queryParams = new URLSearchParams(params);
-    const response = await api.get(`/api/internet_plans/pricing/matrices/?${queryParams}`);
-    return response.data;
+    try {
+      const queryParams = new URLSearchParams(params);
+      const response = await api.get(`/api/internet_plans/pricing/matrices/?${queryParams}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching price matrices:', error);
+      throw error;
+    }
   },
 
   async getPriceMatrix(id) {
-    const response = await api.get(`/api/internet_plans/pricing/matrices/${id}/`);
-    return response.data;
+    try {
+      const response = await api.get(`/api/internet_plans/pricing/matrices/${id}/`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching price matrix ${id}:`, error);
+      throw error;
+    }
   },
 
   async createPriceMatrix(priceMatrixData) {
-    const response = await api.post('/api/internet_plans/pricing/matrices/', priceMatrixData);
-    return response.data;
+    try {
+      const response = await api.post('/api/internet_plans/pricing/matrices/', priceMatrixData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating price matrix:', error);
+      throw error;
+    }
   },
 
   async updatePriceMatrix(id, priceMatrixData) {
-    const response = await api.put(`/api/internet_plans/pricing/matrices/${id}/`, priceMatrixData);
-    return response.data;
+    try {
+      const response = await api.put(`/api/internet_plans/pricing/matrices/${id}/`, priceMatrixData);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating price matrix ${id}:`, error);
+      throw error;
+    }
   },
 
   async deletePriceMatrix(id) {
-    const response = await api.delete(`/api/internet_plans/pricing/matrices/${id}/`);
-    return response.data;
+    try {
+      const response = await api.delete(`/api/internet_plans/pricing/matrices/${id}/`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error deleting price matrix ${id}:`, error);
+      throw error;
+    }
   },
 
   // Discount Rules
   async getDiscountRules(params = {}) {
-    const queryParams = new URLSearchParams(params);
-    const response = await api.get(`/api/internet_plans/pricing/rules/?${queryParams}`);
-    return response.data;
+    try {
+      const queryParams = new URLSearchParams(params);
+      const response = await api.get(`/api/internet_plans/pricing/rules/?${queryParams}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching discount rules:', error);
+      throw error;
+    }
   },
 
   async getDiscountRule(id) {
-    const response = await api.get(`/api/internet_plans/pricing/rules/${id}/`);
-    return response.data;
+    try {
+      const response = await api.get(`/api/internet_plans/pricing/rules/${id}/`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching discount rule ${id}:`, error);
+      throw error;
+    }
   },
 
   async createDiscountRule(discountRuleData) {
-    const response = await api.post('/api/internet_plans/pricing/rules/', discountRuleData);
-    return response.data;
+    try {
+      const response = await api.post('/api/internet_plans/pricing/rules/', discountRuleData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating discount rule:', error);
+      throw error;
+    }
   },
 
   async updateDiscountRule(id, discountRuleData) {
-    const response = await api.put(`/api/internet_plans/pricing/rules/${id}/`, discountRuleData);
-    return response.data;
+    try {
+      const response = await api.put(`/api/internet_plans/pricing/rules/${id}/`, discountRuleData);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating discount rule ${id}:`, error);
+      throw error;
+    }
   },
 
   async deleteDiscountRule(id) {
-    const response = await api.delete(`/api/internet_plans/pricing/rules/${id}/`);
-    return response.data;
+    try {
+      const response = await api.delete(`/api/internet_plans/pricing/rules/${id}/`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error deleting discount rule ${id}:`, error);
+      throw error;
+    }
   },
 
   // Calculations and Checks
   async calculatePrice(planId, quantity = 1, discountCode = null, clientData = {}) {
-    const response = await api.post('/api/internet_plans/pricing/calculate/', {
-      plan_id: planId,
-      quantity,
-      discount_code: discountCode,
-      client_data: clientData
-    });
-    return response.data;
+    try {
+      const response = await api.post('/api/internet_plans/pricing/calculate/', {
+        plan_id: planId,
+        quantity,
+        discount_code: discountCode,
+        client_data: clientData
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error calculating price:', error);
+      throw error;
+    }
   },
 
   async calculateBulkPrices(calculations) {
-    const response = await api.post('/api/internet_plans/pricing/calculate/bulk/', {
-      calculations
-    });
-    return response.data;
+    try {
+      const response = await api.post('/api/internet_plans/pricing/calculate/bulk/', {
+        calculations
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error calculating bulk prices:', error);
+      throw error;
+    }
   },
 
   async checkAvailability(planId, timestamp = null) {
-    const response = await api.post('/api/internet_plans/plans/availability/check/', {
-      plan_id: planId,
-      timestamp
-    });
-    return response.data;
+    try {
+      const response = await api.post('/api/internet_plans/plans/availability/check/', {
+        plan_id: planId,
+        timestamp
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error checking availability:', error);
+      throw error;
+    }
   },
 
   // Statistics and Analytics
   async getPlanStatistics() {
-    const response = await api.get('/api/internet_plans/plans/statistics/');
-    return response.data;
+    try {
+      const response = await api.get('/api/internet_plans/plans/statistics/');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching plan statistics:', error);
+      throw error;
+    }
   },
 
   async getPricingStatistics() {
-    const response = await api.get('/api/internet_plans/pricing/statistics/');
-    return response.data;
+    try {
+      const response = await api.get('/api/internet_plans/pricing/statistics/');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching pricing statistics:', error);
+      throw error;
+    }
   },
 
   async getAnalyticsData(analyticsType = 'general', timeRange = '30d') {
-    const response = await api.get(`/api/internet_plans/analytics/?type=${analyticsType}&range=${timeRange}`);
-    return response.data;
+    try {
+      const response = await api.get(`/api/internet_plans/analytics/?type=${analyticsType}&range=${timeRange}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching analytics data:', error);
+      throw error;
+    }
   },
 
   async exportAnalyticsData(analyticsType, timeRange, format = 'json') {
-    const response = await api.get(`/api/internet_plans/analytics/export/?type=${analyticsType}&range=${timeRange}&format=${format}`);
-    return response.data;
-  }
-};
-
-// Cache management for better performance
-const PlanCache = {
-  plans: new Map(),
-  templates: new Map(),
-  timeVariants: new Map(),
-  priceMatrices: new Map(),
-  discountRules: new Map(),
-  
-  get(key, cacheType) {
-    const cache = this[cacheType];
-    return cache.get(key);
-  },
-  
-  set(key, value, cacheType) {
-    const cache = this[cacheType];
-    cache.set(key, value);
-  },
-  
-  delete(key, cacheType) {
-    const cache = this[cacheType];
-    cache.delete(key);
-  },
-  
-  clear(cacheType = null) {
-    if (cacheType) {
-      this[cacheType].clear();
-    } else {
-      this.plans.clear();
-      this.templates.clear();
-      this.timeVariants.clear();
-      this.priceMatrices.clear();
-      this.discountRules.clear();
+    try {
+      const response = await api.get(`/api/internet_plans/analytics/export/?type=${analyticsType}&range=${timeRange}&format=${format}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error exporting analytics data:', error);
+      throw error;
     }
   }
 };
 
-// Enhanced PlanDataStructure class
+// Fixed PlanDataStructure class with proper error handling
 class PlanDataStructure {
   constructor() {
     this.plans = [];
@@ -1476,11 +4105,21 @@ class PlanDataStructure {
   }
 
   addPlan(plan) {
+    if (!plan || !plan.id) {
+      console.error('Invalid plan object provided to addPlan:', plan);
+      return;
+    }
+    
     this.plans.push(plan);
     this.updateIndexes(plan);
   }
 
   updatePlan(plan) {
+    if (!plan || !plan.id) {
+      console.error('Invalid plan object provided to updatePlan:', plan);
+      return;
+    }
+    
     const index = this.plans.findIndex(p => p.id === plan.id);
     if (index !== -1) {
       // Remove old indexes
@@ -1503,91 +4142,103 @@ class PlanDataStructure {
   }
 
   updateIndexes(plan) {
-    // By ID
-    this.indexes.byId.set(plan.id, plan);
-    
-    // By Category
-    if (!this.indexes.byCategory.has(plan.category)) {
-      this.indexes.byCategory.set(plan.category, []);
-    }
-    this.indexes.byCategory.get(plan.category).push(plan);
-    
-    // By Plan Type
-    if (!this.indexes.byPlanType.has(plan.planType)) {
-      this.indexes.byPlanType.set(plan.planType, []);
-    }
-    this.indexes.byPlanType.get(plan.planType).push(plan);
-    
-    // By Access Type
-    const enabledMethods = this.getEnabledAccessMethods(plan);
-    enabledMethods.forEach(method => {
-      if (!this.indexes.byAccessType.has(method)) {
-        this.indexes.byAccessType.set(method, []);
+    try {
+      // By ID
+      this.indexes.byId.set(plan.id, plan);
+      
+      // By Category
+      const category = plan.category || 'Uncategorized';
+      if (!this.indexes.byCategory.has(category)) {
+        this.indexes.byCategory.set(category, []);
       }
-      this.indexes.byAccessType.get(method).push(plan);
-    });
-    
-    // By Availability
-    const isAvailable = isPlanAvailableNow(plan);
-    const availabilityKey = isAvailable ? 'available' : 'unavailable';
-    if (!this.indexes.byAvailability.has(availabilityKey)) {
-      this.indexes.byAvailability.set(availabilityKey, []);
+      this.indexes.byCategory.get(category).push(plan);
+      
+      // By Plan Type
+      const planType = plan.planType || plan.plan_type || 'paid';
+      if (!this.indexes.byPlanType.has(planType)) {
+        this.indexes.byPlanType.set(planType, []);
+      }
+      this.indexes.byPlanType.get(planType).push(plan);
+      
+      // By Access Type
+      const enabledMethods = this.getEnabledAccessMethods(plan);
+      enabledMethods.forEach(method => {
+        if (!this.indexes.byAccessType.has(method)) {
+          this.indexes.byAccessType.set(method, []);
+        }
+        this.indexes.byAccessType.get(method).push(plan);
+      });
+      
+      // By Availability
+      const isAvailable = isPlanAvailableNow(plan);
+      const availabilityKey = isAvailable ? 'available' : 'unavailable';
+      if (!this.indexes.byAvailability.has(availabilityKey)) {
+        this.indexes.byAvailability.set(availabilityKey, []);
+      }
+      this.indexes.byAvailability.get(availabilityKey).push(plan);
+      
+      // By Price Range
+      const price = parseFloat(plan.price) || 0;
+      const priceRangeKey = this.getPriceRangeKey(price);
+      if (!this.indexes.byPriceRange.has(priceRangeKey)) {
+        this.indexes.byPriceRange.set(priceRangeKey, []);
+      }
+      this.indexes.byPriceRange.get(priceRangeKey).push(plan);
+    } catch (error) {
+      console.error('Error updating indexes for plan:', plan, error);
     }
-    this.indexes.byAvailability.get(availabilityKey).push(plan);
-    
-    // By Price Range
-    const price = parseFloat(plan.price) || 0;
-    const priceRangeKey = this.getPriceRangeKey(price);
-    if (!this.indexes.byPriceRange.has(priceRangeKey)) {
-      this.indexes.byPriceRange.set(priceRangeKey, []);
-    }
-    this.indexes.byPriceRange.get(priceRangeKey).push(plan);
   }
 
   removeFromIndexes(plan) {
-    // Remove from all indexes
-    this.indexes.byId.delete(plan.id);
-    
-    // Remove from category index
-    const categoryPlans = this.indexes.byCategory.get(plan.category);
-    if (categoryPlans) {
-      const index = categoryPlans.findIndex(p => p.id === plan.id);
-      if (index !== -1) categoryPlans.splice(index, 1);
-    }
-    
-    // Remove from plan type index
-    const planTypePlans = this.indexes.byPlanType.get(plan.planType);
-    if (planTypePlans) {
-      const index = planTypePlans.findIndex(p => p.id === plan.id);
-      if (index !== -1) planTypePlans.splice(index, 1);
-    }
-    
-    // Remove from access type index
-    const enabledMethods = this.getEnabledAccessMethods(plan);
-    enabledMethods.forEach(method => {
-      const accessTypePlans = this.indexes.byAccessType.get(method);
-      if (accessTypePlans) {
-        const index = accessTypePlans.findIndex(p => p.id === plan.id);
-        if (index !== -1) accessTypePlans.splice(index, 1);
+    try {
+      // Remove from all indexes
+      this.indexes.byId.delete(plan.id);
+      
+      // Remove from category index
+      const category = plan.category || 'Uncategorized';
+      const categoryPlans = this.indexes.byCategory.get(category);
+      if (categoryPlans) {
+        const index = categoryPlans.findIndex(p => p.id === plan.id);
+        if (index !== -1) categoryPlans.splice(index, 1);
       }
-    });
-    
-    // Remove from availability index
-    const isAvailable = isPlanAvailableNow(plan);
-    const availabilityKey = isAvailable ? 'available' : 'unavailable';
-    const availabilityPlans = this.indexes.byAvailability.get(availabilityKey);
-    if (availabilityPlans) {
-      const index = availabilityPlans.findIndex(p => p.id === plan.id);
-      if (index !== -1) availabilityPlans.splice(index, 1);
-    }
-    
-    // Remove from price range index
-    const price = parseFloat(plan.price) || 0;
-    const priceRangeKey = this.getPriceRangeKey(price);
-    const priceRangePlans = this.indexes.byPriceRange.get(priceRangeKey);
-    if (priceRangePlans) {
-      const index = priceRangePlans.findIndex(p => p.id === plan.id);
-      if (index !== -1) priceRangePlans.splice(index, 1);
+      
+      // Remove from plan type index
+      const planType = plan.planType || plan.plan_type || 'paid';
+      const planTypePlans = this.indexes.byPlanType.get(planType);
+      if (planTypePlans) {
+        const index = planTypePlans.findIndex(p => p.id === plan.id);
+        if (index !== -1) planTypePlans.splice(index, 1);
+      }
+      
+      // Remove from access type index
+      const enabledMethods = this.getEnabledAccessMethods(plan);
+      enabledMethods.forEach(method => {
+        const accessTypePlans = this.indexes.byAccessType.get(method);
+        if (accessTypePlans) {
+          const index = accessTypePlans.findIndex(p => p.id === plan.id);
+          if (index !== -1) accessTypePlans.splice(index, 1);
+        }
+      });
+      
+      // Remove from availability index
+      const isAvailable = isPlanAvailableNow(plan);
+      const availabilityKey = isAvailable ? 'available' : 'unavailable';
+      const availabilityPlans = this.indexes.byAvailability.get(availabilityKey);
+      if (availabilityPlans) {
+        const index = availabilityPlans.findIndex(p => p.id === plan.id);
+        if (index !== -1) availabilityPlans.splice(index, 1);
+      }
+      
+      // Remove from price range index
+      const price = parseFloat(plan.price) || 0;
+      const priceRangeKey = this.getPriceRangeKey(price);
+      const priceRangePlans = this.indexes.byPriceRange.get(priceRangeKey);
+      if (priceRangePlans) {
+        const index = priceRangePlans.findIndex(p => p.id === plan.id);
+        if (index !== -1) priceRangePlans.splice(index, 1);
+      }
+    } catch (error) {
+      console.error('Error removing indexes for plan:', plan, error);
     }
   }
 
@@ -1600,393 +4251,467 @@ class PlanDataStructure {
   }
 
   getEnabledAccessMethods(plan) {
-    if (plan.get_enabled_access_methods) {
-      return plan.get_enabled_access_methods();
-    }
-    if (plan.enabled_access_methods) {
-      return plan.enabled_access_methods;
-    }
-    if (plan.accessMethods) {
+    try {
+      // Handle different plan structures
+      if (plan.get_enabled_access_methods) {
+        return plan.get_enabled_access_methods();
+      }
+      
+      if (plan.enabled_access_methods && Array.isArray(plan.enabled_access_methods)) {
+        return plan.enabled_access_methods;
+      }
+      
       const methods = [];
-      if (plan.accessMethods.hotspot?.enabled) methods.push('hotspot');
-      if (plan.accessMethods.pppoe?.enabled) methods.push('pppoe');
+      
+      // Check for hotspot access
+      const hotspotEnabled = 
+        (plan.access_methods?.hotspot?.enabled === true) ||
+        (plan.accessMethods?.hotspot?.enabled === true) ||
+        (plan.access_methods?.hotspot && typeof plan.access_methods.hotspot === 'object' && plan.access_methods.hotspot.enabled !== false) ||
+        (plan.access_methods && plan.access_methods.hotspot === true);
+      
+      if (hotspotEnabled) methods.push('hotspot');
+      
+      // Check for pppoe access
+      const pppoeEnabled = 
+        (plan.access_methods?.pppoe?.enabled === true) ||
+        (plan.accessMethods?.pppoe?.enabled === true) ||
+        (plan.access_methods?.pppoe && typeof plan.access_methods.pppoe === 'object' && plan.access_methods.pppoe.enabled !== false) ||
+        (plan.access_methods && plan.access_methods.pppoe === true);
+      
+      if (pppoeEnabled) methods.push('pppoe');
+      
       return methods;
+    } catch (error) {
+      console.error('Error getting enabled access methods:', plan, error);
+      return [];
     }
-    if (plan.access_methods) {
-      const methods = [];
-      if (plan.access_methods.hotspot?.enabled) methods.push('hotspot');
-      if (plan.access_methods.pppoe?.enabled) methods.push('pppoe');
-      return methods;
-    }
-    return [];
   }
 
   search(query) {
-    const results = [];
-    const queryLower = query.toLowerCase();
-    
-    // Binary search implementation for sorted arrays
-    const performBinarySearch = (array, property) => {
-      let left = 0;
-      let right = array.length - 1;
+    try {
+      const results = [];
+      const queryLower = query.toLowerCase();
       
-      while (left <= right) {
-        const mid = Math.floor((left + right) / 2);
-        const value = (array[mid][property] || '').toString().toLowerCase();
+      // Simple linear search for now - you can implement binary search later
+      this.plans.forEach(plan => {
+        const name = (plan.name || '').toString().toLowerCase();
+        const description = (plan.description || '').toString().toLowerCase();
+        const category = (plan.category || '').toString().toLowerCase();
         
-        if (value.includes(queryLower)) {
-          // Found a match, now expand to find all matches
-          let start = mid;
-          let end = mid;
-          
-          // Expand left
-          while (start > 0 && (array[start - 1][property] || '').toString().toLowerCase().includes(queryLower)) {
-            start--;
-          }
-          
-          // Expand right
-          while (end < array.length - 1 && (array[end + 1][property] || '').toString().toLowerCase().includes(queryLower)) {
-            end++;
-          }
-          
-          return array.slice(start, end + 1);
+        if (name.includes(queryLower) || 
+            description.includes(queryLower) || 
+            category.includes(queryLower)) {
+          results.push(plan);
         }
-        
-        if (value < queryLower) {
-          left = mid + 1;
-        } else {
-          right = mid - 1;
-        }
-      }
+      });
       
+      return results;
+    } catch (error) {
+      console.error('Error searching plans:', error);
       return [];
-    };
-    
-    // Search by name (sorted)
-    const sortedByName = [...this.plans].sort((a, b) => 
-      (a.name || '').toString().localeCompare(b.name || '')
-    );
-    const nameResults = performBinarySearch(sortedByName, 'name');
-    
-    // Search by description (sorted)
-    const sortedByDesc = [...this.plans].sort((a, b) => 
-      (a.description || '').toString().localeCompare(b.description || '')
-    );
-    const descResults = performBinarySearch(sortedByDesc, 'description');
-    
-    // Merge results, removing duplicates
-    const allResults = new Map();
-    [...nameResults, ...descResults].forEach(plan => {
-      if (!allResults.has(plan.id)) {
-        allResults.set(plan.id, plan);
-      }
-    });
-    
-    return Array.from(allResults.values());
+    }
   }
 
   filter(filters) {
-    let results = [...this.plans];
-    
-    // Apply category filter using index if available
-    if (filters.category && this.indexes.byCategory.has(filters.category)) {
-      results = results.filter(plan => 
-        this.indexes.byCategory.get(filters.category)?.some(p => p.id === plan.id)
-      );
+    try {
+      let results = [...this.plans];
+      
+      // Apply category filter
+      if (filters.category && filters.category !== 'all') {
+        results = results.filter(plan => (plan.category || 'Uncategorized') === filters.category);
+      }
+      
+      // Apply plan type filter
+      if (filters.planType && filters.planType !== 'all') {
+        results = results.filter(plan => (plan.planType || plan.plan_type || 'paid') === filters.planType);
+      }
+      
+      // Apply access type filter
+      if (filters.accessType && filters.accessType !== 'all') {
+        results = results.filter(plan => {
+          const enabledMethods = this.getEnabledAccessMethods(plan);
+          if (filters.accessType === 'both') {
+            return enabledMethods.includes('hotspot') && enabledMethods.includes('pppoe');
+          }
+          return enabledMethods.includes(filters.accessType);
+        });
+      }
+      
+      // Apply availability filter
+      if (filters.availability !== null && filters.availability !== 'all') {
+        const isAvailable = filters.availability === 'available';
+        results = results.filter(plan => isPlanAvailableNow(plan) === isAvailable);
+      }
+      
+      // Apply price range filter
+      if (filters.priceRange) {
+        results = results.filter(plan => {
+          const planPrice = parseFloat(plan.price) || 0;
+          return planPrice >= filters.priceRange.min && planPrice <= filters.priceRange.max;
+        });
+      }
+      
+      // Apply time variant filter
+      if (filters.hasTimeVariant !== null && filters.hasTimeVariant !== 'all') {
+        results = results.filter(plan => 
+          filters.hasTimeVariant === 'yes' 
+            ? plan.time_variant?.is_active 
+            : !plan.time_variant?.is_active
+        );
+      }
+      
+      return results;
+    } catch (error) {
+      console.error('Error filtering plans:', error);
+      return this.plans;
     }
-    
-    // Apply plan type filter
-    if (filters.planType) {
-      results = results.filter(plan => plan.planType === filters.planType);
-    }
-    
-    // Apply access type filter using index
-    if (filters.accessType) {
-      results = results.filter(plan => {
-        const enabledMethods = this.getEnabledAccessMethods(plan);
-        if (filters.accessType === 'both') {
-          return enabledMethods.includes('hotspot') && enabledMethods.includes('pppoe');
-        }
-        return enabledMethods.includes(filters.accessType);
-      });
-    }
-    
-    // Apply availability filter using index
-    if (filters.availability !== null) {
-      const availabilityKey = filters.availability ? 'available' : 'unavailable';
-      results = results.filter(plan => 
-        this.indexes.byAvailability.get(availabilityKey)?.some(p => p.id === plan.id)
-      );
-    }
-    
-    // Apply price range filter using index
-    if (filters.priceRange) {
-      results = results.filter(plan => {
-        const planPrice = parseFloat(plan.price) || 0;
-        return planPrice >= filters.priceRange.min && planPrice <= filters.priceRange.max;
-      });
-    }
-    
-    // Apply time variant filter
-    if (filters.hasTimeVariant !== null) {
-      results = results.filter(plan => 
-        filters.hasTimeVariant ? plan.time_variant?.is_active : !plan.time_variant?.is_active
-      );
-    }
-    
-    return results;
   }
 
   sort(field, direction = 'asc') {
-    return [...this.plans].sort((a, b) => {
-      let aValue = a[field];
-      let bValue = b[field];
-      
-      // Handle special sorting cases
-      switch (field) {
-        case 'price':
-          aValue = parseFloat(aValue) || 0;
-          bValue = parseFloat(bValue) || 0;
-          break;
-        case 'created_at':
-        case 'updated_at':
-          aValue = new Date(aValue).getTime();
-          bValue = new Date(bValue).getTime();
-          break;
-        case 'name':
-        case 'description':
-          aValue = (aValue || '').toString().toLowerCase();
-          bValue = (bValue || '').toString().toLowerCase();
-          break;
-      }
-      
-      if (aValue < bValue) return direction === 'asc' ? -1 : 1;
-      if (aValue > bValue) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
+    try {
+      return [...this.plans].sort((a, b) => {
+        let aValue = a[field];
+        let bValue = b[field];
+        
+        // Handle special sorting cases
+        switch (field) {
+          case 'price':
+            aValue = parseFloat(aValue) || 0;
+            bValue = parseFloat(bValue) || 0;
+            break;
+          case 'created_at':
+          case 'updated_at':
+            aValue = new Date(aValue || 0).getTime();
+            bValue = new Date(bValue || 0).getTime();
+            break;
+          case 'name':
+          case 'description':
+            aValue = (aValue || '').toString().toLowerCase();
+            bValue = (bValue || '').toString().toLowerCase();
+            break;
+          case 'purchases':
+            aValue = parseInt(aValue) || 0;
+            bValue = parseInt(bValue) || 0;
+            break;
+        }
+        
+        if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    } catch (error) {
+      console.error('Error sorting plans:', error);
+      return this.plans;
+    }
   }
 
   getStatistics() {
-    const stats = {
-      total: this.plans.length,
-      byCategory: {},
-      byPlanType: {},
-      byAccessType: {},
-      byAvailability: {},
-      priceStats: {
-        totalRevenue: 0,
-        averagePrice: 0,
-        minPrice: Infinity,
-        maxPrice: 0
-      }
-    };
-    
-    this.plans.forEach(plan => {
-      // Category stats
-      stats.byCategory[plan.category] = (stats.byCategory[plan.category] || 0) + 1;
+    try {
+      const stats = {
+        total: this.plans.length,
+        byCategory: {},
+        byPlanType: {},
+        byAccessType: {},
+        byAvailability: {},
+        priceStats: {
+          totalRevenue: 0,
+          averagePrice: 0,
+          minPrice: Infinity,
+          maxPrice: 0
+        }
+      };
       
-      // Plan type stats
-      stats.byPlanType[plan.planType] = (stats.byPlanType[plan.planType] || 0) + 1;
-      
-      // Access type stats
-      const enabledMethods = this.getEnabledAccessMethods(plan);
-      enabledMethods.forEach(method => {
-        stats.byAccessType[method] = (stats.byAccessType[method] || 0) + 1;
+      this.plans.forEach(plan => {
+        // Category stats
+        const category = plan.category || 'Uncategorized';
+        stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
+        
+        // Plan type stats
+        const planType = plan.planType || plan.plan_type || 'paid';
+        stats.byPlanType[planType] = (stats.byPlanType[planType] || 0) + 1;
+        
+        // Access type stats
+        const enabledMethods = this.getEnabledAccessMethods(plan);
+        enabledMethods.forEach(method => {
+          stats.byAccessType[method] = (stats.byAccessType[method] || 0) + 1;
+        });
+        
+        // Availability stats
+        const isAvailable = isPlanAvailableNow(plan);
+        const availabilityKey = isAvailable ? 'available' : 'unavailable';
+        stats.byAvailability[availabilityKey] = (stats.byAvailability[availabilityKey] || 0) + 1;
+        
+        // Price stats
+        const price = parseFloat(plan.price) || 0;
+        const purchases = plan.purchases || 0;
+        stats.priceStats.totalRevenue += price * purchases;
+        stats.priceStats.minPrice = Math.min(stats.priceStats.minPrice, price);
+        stats.priceStats.maxPrice = Math.max(stats.priceStats.maxPrice, price);
       });
       
-      // Availability stats
-      const isAvailable = isPlanAvailableNow(plan);
-      const availabilityKey = isAvailable ? 'available' : 'unavailable';
-      stats.byAvailability[availabilityKey] = (stats.byAvailability[availabilityKey] || 0) + 1;
+      // Calculate average price
+      const totalPrice = this.plans.reduce((sum, plan) => sum + (parseFloat(plan.price) || 0), 0);
+      stats.priceStats.averagePrice = this.plans.length > 0 ? totalPrice / this.plans.length : 0;
       
-      // Price stats
-      const price = parseFloat(plan.price) || 0;
-      const purchases = plan.purchases || 0;
-      stats.priceStats.totalRevenue += price * purchases;
-      stats.priceStats.minPrice = Math.min(stats.priceStats.minPrice, price);
-      stats.priceStats.maxPrice = Math.max(stats.priceStats.maxPrice, price);
-    });
-    
-    // Calculate average price
-    const totalPrice = this.plans.reduce((sum, plan) => sum + (parseFloat(plan.price) || 0), 0);
-    stats.priceStats.averagePrice = this.plans.length > 0 ? totalPrice / this.plans.length : 0;
-    
-    return stats;
+      return stats;
+    } catch (error) {
+      console.error('Error getting statistics:', error);
+      return {
+        total: 0,
+        byCategory: {},
+        byPlanType: {},
+        byAccessType: {},
+        byAvailability: {},
+        priceStats: {
+          totalRevenue: 0,
+          averagePrice: 0,
+          minPrice: 0,
+          maxPrice: 0
+        }
+      };
+    }
   }
 }
 
+// Fixed normalizeBackendPlan function
 const normalizeBackendPlan = (backendPlan) => {
   if (!backendPlan) return null;
 
-  const normalized = {
-    id: backendPlan.id,
-    planType: backendPlan.planType || backendPlan.plan_type || "paid",
-    name: backendPlan.name || "",
-    price: backendPlan.price ? parseFloat(backendPlan.price) : 0,
-    active: backendPlan.active !== undefined ? backendPlan.active : true,
-    category: backendPlan.category || "Residential",
-    description: backendPlan.description || "",
-    purchases: backendPlan.purchases || 0,
-    priority_level: backendPlan.priority_level || 4,
-    router_specific: backendPlan.router_specific || false,
-    allowed_routers_ids: backendPlan.allowed_routers_ids || [],
-    FUP_policy: backendPlan.FUP_policy || "",
-    FUP_threshold: backendPlan.FUP_threshold || 80,
-    template: backendPlan.template || null,
-    created_at: backendPlan.created_at || backendPlan.createdAt || new Date().toISOString(),
-    updated_at: backendPlan.updated_at || backendPlan.updatedAt || new Date().toISOString(),
-    
-    // Access methods with backend structure
-    access_methods: {
-      hotspot: {
-        enabled: backendPlan.access_methods?.hotspot?.enabled || false,
-        downloadSpeed: backendPlan.access_methods?.hotspot?.downloadSpeed || { value: "", unit: "Mbps" },
-        uploadSpeed: backendPlan.access_methods?.hotspot?.uploadSpeed || { value: "", unit: "Mbps" },
-        dataLimit: backendPlan.access_methods?.hotspot?.dataLimit || { value: "", unit: "GB" },
-        usageLimit: backendPlan.access_methods?.hotspot?.usageLimit || { value: "", unit: "Hours" },
-        bandwidthLimit: backendPlan.access_methods?.hotspot?.bandwidthLimit || 0,
-        maxDevices: backendPlan.access_methods?.hotspot?.maxDevices || 1,
-        sessionTimeout: backendPlan.access_methods?.hotspot?.sessionTimeout || 86400,
-        idleTimeout: backendPlan.access_methods?.hotspot?.idleTimeout || 300,
-        validityPeriod: backendPlan.access_methods?.hotspot?.validityPeriod || { value: "", unit: "Days" },
-        macBinding: backendPlan.access_methods?.hotspot?.macBinding || false
+  try {
+    const normalized = {
+      id: backendPlan.id || backendPlan._id || `temp_${Date.now()}`,
+      planType: backendPlan.planType || backendPlan.plan_type || "paid",
+      name: backendPlan.name || "",
+      price: backendPlan.price !== undefined ? parseFloat(backendPlan.price) : 0,
+      active: backendPlan.active !== undefined ? Boolean(backendPlan.active) : true,
+      category: backendPlan.category || "Residential",
+      description: backendPlan.description || "",
+      purchases: backendPlan.purchases || 0,
+      priority_level: backendPlan.priority_level || 4,
+      router_specific: Boolean(backendPlan.router_specific),
+      allowed_routers_ids: backendPlan.allowed_routers_ids || [],
+      FUP_policy: backendPlan.FUP_policy || "",
+      FUP_threshold: backendPlan.FUP_threshold || 80,
+      template: backendPlan.template || null,
+      created_at: backendPlan.created_at || backendPlan.createdAt || new Date().toISOString(),
+      updated_at: backendPlan.updated_at || backendPlan.updatedAt || new Date().toISOString(),
+      
+      // Access methods with proper fallbacks
+      access_methods: {
+        hotspot: {
+          enabled: Boolean(backendPlan.access_methods?.hotspot?.enabled) || 
+                  Boolean(backendPlan.accessMethods?.hotspot?.enabled) || false,
+          downloadSpeed: backendPlan.access_methods?.hotspot?.downloadSpeed || 
+                       backendPlan.accessMethods?.hotspot?.downloadSpeed || 
+                       { value: "10", unit: "Mbps" },
+          uploadSpeed: backendPlan.access_methods?.hotspot?.uploadSpeed || 
+                      backendPlan.accessMethods?.hotspot?.uploadSpeed || 
+                      { value: "5", unit: "Mbps" },
+          dataLimit: backendPlan.access_methods?.hotspot?.dataLimit || 
+                    backendPlan.accessMethods?.hotspot?.dataLimit || 
+                    { value: "10", unit: "GB" },
+          usageLimit: backendPlan.access_methods?.hotspot?.usageLimit || 
+                     backendPlan.accessMethods?.hotspot?.usageLimit || 
+                     { value: "24", unit: "Hours" },
+          bandwidthLimit: parseInt(backendPlan.access_methods?.hotspot?.bandwidthLimit || 
+                                  backendPlan.accessMethods?.hotspot?.bandwidthLimit || 0),
+          maxDevices: parseInt(backendPlan.access_methods?.hotspot?.maxDevices || 
+                              backendPlan.accessMethods?.hotspot?.maxDevices || 1),
+          sessionTimeout: parseInt(backendPlan.access_methods?.hotspot?.sessionTimeout || 
+                                  backendPlan.accessMethods?.hotspot?.sessionTimeout || 86400),
+          idleTimeout: parseInt(backendPlan.access_methods?.hotspot?.idleTimeout || 
+                               backendPlan.accessMethods?.hotspot?.idleTimeout || 300),
+          validityPeriod: backendPlan.access_methods?.hotspot?.validityPeriod || 
+                         backendPlan.accessMethods?.hotspot?.validityPeriod || 
+                         { value: "30", unit: "Days" },
+          macBinding: Boolean(backendPlan.access_methods?.hotspot?.macBinding || 
+                             backendPlan.accessMethods?.hotspot?.macBinding || false)
+        },
+        pppoe: {
+          enabled: Boolean(backendPlan.access_methods?.pppoe?.enabled) || 
+                  Boolean(backendPlan.accessMethods?.pppoe?.enabled) || false,
+          downloadSpeed: backendPlan.access_methods?.pppoe?.downloadSpeed || 
+                       backendPlan.accessMethods?.pppoe?.downloadSpeed || 
+                       { value: "10", unit: "Mbps" },
+          uploadSpeed: backendPlan.access_methods?.pppoe?.uploadSpeed || 
+                      backendPlan.accessMethods?.pppoe?.uploadSpeed || 
+                      { value: "5", unit: "Mbps" },
+          dataLimit: backendPlan.access_methods?.pppoe?.dataLimit || 
+                    backendPlan.accessMethods?.pppoe?.dataLimit || 
+                    { value: "10", unit: "GB" },
+          usageLimit: backendPlan.access_methods?.pppoe?.usageLimit || 
+                     backendPlan.accessMethods?.pppoe?.usageLimit || 
+                     { value: "24", unit: "Hours" },
+          bandwidthLimit: parseInt(backendPlan.access_methods?.pppoe?.bandwidthLimit || 
+                                  backendPlan.accessMethods?.pppoe?.bandwidthLimit || 0),
+          maxDevices: parseInt(backendPlan.access_methods?.pppoe?.maxDevices || 
+                              backendPlan.accessMethods?.pppoe?.maxDevices || 1),
+          sessionTimeout: parseInt(backendPlan.access_methods?.pppoe?.sessionTimeout || 
+                                  backendPlan.accessMethods?.pppoe?.sessionTimeout || 86400),
+          idleTimeout: parseInt(backendPlan.access_methods?.pppoe?.idleTimeout || 
+                               backendPlan.accessMethods?.pppoe?.idleTimeout || 300),
+          validityPeriod: backendPlan.access_methods?.pppoe?.validityPeriod || 
+                         backendPlan.accessMethods?.pppoe?.validityPeriod || 
+                         { value: "30", unit: "Days" },
+          macBinding: Boolean(backendPlan.access_methods?.pppoe?.macBinding || 
+                             backendPlan.accessMethods?.pppoe?.macBinding || false),
+          ipPool: backendPlan.access_methods?.pppoe?.ipPool || 
+                 backendPlan.accessMethods?.pppoe?.ipPool || "pppoe-pool-1",
+          serviceName: backendPlan.access_methods?.pppoe?.serviceName || 
+                      backendPlan.accessMethods?.pppoe?.serviceName || "",
+          mtu: parseInt(backendPlan.access_methods?.pppoe?.mtu || 
+                       backendPlan.accessMethods?.pppoe?.mtu || 1492)
+        }
       },
-      pppoe: {
-        enabled: backendPlan.access_methods?.pppoe?.enabled || false,
-        downloadSpeed: backendPlan.access_methods?.pppoe?.downloadSpeed || { value: "", unit: "Mbps" },
-        uploadSpeed: backendPlan.access_methods?.pppoe?.uploadSpeed || { value: "", unit: "Mbps" },
-        dataLimit: backendPlan.access_methods?.pppoe?.dataLimit || { value: "", unit: "GB" },
-        usageLimit: backendPlan.access_methods?.pppoe?.usageLimit || { value: "", unit: "Hours" },
-        bandwidthLimit: backendPlan.access_methods?.pppoe?.bandwidthLimit || 0,
-        maxDevices: backendPlan.access_methods?.pppoe?.maxDevices || 1,
-        sessionTimeout: backendPlan.access_methods?.pppoe?.sessionTimeout || 86400,
-        idleTimeout: backendPlan.access_methods?.pppoe?.idleTimeout || 300,
-        validityPeriod: backendPlan.access_methods?.pppoe?.validityPeriod || { value: "", unit: "Days" },
-        macBinding: backendPlan.access_methods?.pppoe?.macBinding || false,
-        ipPool: backendPlan.access_methods?.pppoe?.ipPool || "pppoe-pool-1",
-        serviceName: backendPlan.access_methods?.pppoe?.serviceName || "",
-        mtu: backendPlan.access_methods?.pppoe?.mtu || 1492
-      }
-    },
 
-    // Time variant data
-    time_variant: backendPlan.time_variant ? {
-      ...getInitialTimeVariantState(),
-      ...backendPlan.time_variant
-    } : null,
+      // Time variant data
+      time_variant: backendPlan.time_variant || null,
 
-    // Pricing data
-    pricing_info: backendPlan.pricing_info || null,
-    time_variant_id: backendPlan.time_variant_id || null,
-    pricing_matrix_id: backendPlan.pricing_matrix_id || null,
-    discount_rule_ids: backendPlan.discount_rule_ids || []
-  };
+      // Pricing data
+      pricing_info: backendPlan.pricing_info || null,
+      time_variant_id: backendPlan.time_variant_id || null,
+      pricing_matrix_id: backendPlan.pricing_matrix_id || null,
+      discount_rule_ids: backendPlan.discount_rule_ids || []
+    };
 
-  // Determine access type based on enabled methods
-  const enabledMethods = [];
-  if (normalized.access_methods.hotspot.enabled) enabledMethods.push('hotspot');
-  if (normalized.access_methods.pppoe.enabled) enabledMethods.push('pppoe');
-  
-  normalized.accessType = enabledMethods.length === 2 ? 'both' : 
-                         enabledMethods.length === 1 ? enabledMethods[0] : 'hotspot';
-  
-  normalized.enabled_access_methods = enabledMethods;
+    // Determine access type based on enabled methods
+    const enabledMethods = [];
+    if (normalized.access_methods.hotspot.enabled) enabledMethods.push('hotspot');
+    if (normalized.access_methods.pppoe.enabled) enabledMethods.push('pppoe');
+    
+    normalized.accessType = enabledMethods.length === 2 ? 'both' : 
+                           enabledMethods.length === 1 ? enabledMethods[0] : 'hotspot';
+    
+    normalized.enabled_access_methods = enabledMethods;
 
-  return normalized;
+    return normalized;
+  } catch (error) {
+    console.error('Error normalizing backend plan:', backendPlan, error);
+    // Return a minimal valid plan object
+    return {
+      id: `error_${Date.now()}`,
+      planType: "paid",
+      name: "Error Plan",
+      price: 0,
+      active: false,
+      category: "Error",
+      description: "Error loading plan",
+      purchases: 0,
+      priority_level: 4,
+      router_specific: false,
+      allowed_routers_ids: [],
+      FUP_policy: "",
+      FUP_threshold: 80,
+      access_methods: {
+        hotspot: { enabled: false, downloadSpeed: { value: "0", unit: "Mbps" } },
+        pppoe: { enabled: false, downloadSpeed: { value: "0", unit: "Mbps" } }
+      },
+      accessType: "hotspot",
+      enabled_access_methods: []
+    };
+  }
 };
 
+// Fixed preparePlanForBackend function
 const preparePlanForBackend = (frontendPlan) => {
-  const planData = {
-    plan_type: frontendPlan.plan_type || frontendPlan.planType,
-    name: frontendPlan.name?.trim() || "",
-    price: parseFloat(frontendPlan.price) || 0,
-    active: frontendPlan.active !== false,
-    category: frontendPlan.category,
-    description: frontendPlan.description?.trim() || "",
-    
-    // Access methods - match backend structure exactly
-    access_methods: {
-      hotspot: {
-        enabled: frontendPlan.access_methods.hotspot.enabled || false,
-        downloadSpeed: {
-          value: frontendPlan.access_methods.hotspot.downloadSpeed.value || "10",
-          unit: frontendPlan.access_methods.hotspot.downloadSpeed.unit || "Mbps"
+  try {
+    const planData = {
+      plan_type: frontendPlan.plan_type || frontendPlan.planType || "paid",
+      name: (frontendPlan.name || "").trim(),
+      price: parseFloat(frontendPlan.price) || 0,
+      active: frontendPlan.active !== false,
+      category: frontendPlan.category || "Residential",
+      description: (frontendPlan.description || "").trim(),
+      
+      // Access methods - handle both structure types
+      access_methods: {
+        hotspot: {
+          enabled: Boolean(frontendPlan.access_methods?.hotspot?.enabled) || false,
+          downloadSpeed: {
+            value: frontendPlan.access_methods?.hotspot?.downloadSpeed?.value?.toString() || "10",
+            unit: frontendPlan.access_methods?.hotspot?.downloadSpeed?.unit || "Mbps"
+          },
+          uploadSpeed: {
+            value: frontendPlan.access_methods?.hotspot?.uploadSpeed?.value?.toString() || "5",
+            unit: frontendPlan.access_methods?.hotspot?.uploadSpeed?.unit || "Mbps"
+          },
+          dataLimit: {
+            value: frontendPlan.access_methods?.hotspot?.dataLimit?.value?.toString() || "10",
+            unit: frontendPlan.access_methods?.hotspot?.dataLimit?.unit || "GB"
+          },
+          usageLimit: {
+            value: frontendPlan.access_methods?.hotspot?.usageLimit?.value?.toString() || "24",
+            unit: frontendPlan.access_methods?.hotspot?.usageLimit?.unit || "Hours"
+          },
+          bandwidthLimit: parseInt(frontendPlan.access_methods?.hotspot?.bandwidthLimit) || 0,
+          maxDevices: parseInt(frontendPlan.access_methods?.hotspot?.maxDevices) || 1,
+          sessionTimeout: parseInt(frontendPlan.access_methods?.hotspot?.sessionTimeout) || 86400,
+          idleTimeout: parseInt(frontendPlan.access_methods?.hotspot?.idleTimeout) || 300,
+          validityPeriod: {
+            value: frontendPlan.access_methods?.hotspot?.validityPeriod?.value?.toString() || "30",
+            unit: frontendPlan.access_methods?.hotspot?.validityPeriod?.unit || "Days"
+          },
+          macBinding: Boolean(frontendPlan.access_methods?.hotspot?.macBinding) || false
         },
-        uploadSpeed: {
-          value: frontendPlan.access_methods.hotspot.uploadSpeed.value || "5",
-          unit: frontendPlan.access_methods.hotspot.uploadSpeed.unit || "Mbps"
-        },
-        dataLimit: {
-          value: frontendPlan.access_methods.hotspot.dataLimit.value || "10",
-          unit: frontendPlan.access_methods.hotspot.dataLimit.unit || "GB"
-        },
-        usageLimit: {
-          value: frontendPlan.access_methods.hotspot.usageLimit.value || "24",
-          unit: frontendPlan.access_methods.hotspot.usageLimit.unit || "Hours"
-        },
-        bandwidthLimit: parseInt(frontendPlan.access_methods.hotspot.bandwidthLimit) || 0,
-        maxDevices: parseInt(frontendPlan.access_methods.hotspot.maxDevices) || 1,
-        sessionTimeout: parseInt(frontendPlan.access_methods.hotspot.sessionTimeout) || 86400,
-        idleTimeout: parseInt(frontendPlan.access_methods.hotspot.idleTimeout) || 300,
-        validityPeriod: {
-          value: frontendPlan.access_methods.hotspot.validityPeriod.value || "30",
-          unit: frontendPlan.access_methods.hotspot.validityPeriod.unit || "Days"
-        },
-        macBinding: frontendPlan.access_methods.hotspot.macBinding || false
+        pppoe: {
+          enabled: Boolean(frontendPlan.access_methods?.pppoe?.enabled) || false,
+          downloadSpeed: {
+            value: frontendPlan.access_methods?.pppoe?.downloadSpeed?.value?.toString() || "10",
+            unit: frontendPlan.access_methods?.pppoe?.downloadSpeed?.unit || "Mbps"
+          },
+          uploadSpeed: {
+            value: frontendPlan.access_methods?.pppoe?.uploadSpeed?.value?.toString() || "5",
+            unit: frontendPlan.access_methods?.pppoe?.uploadSpeed?.unit || "Mbps"
+          },
+          dataLimit: {
+            value: frontendPlan.access_methods?.pppoe?.dataLimit?.value?.toString() || "10",
+            unit: frontendPlan.access_methods?.pppoe?.dataLimit?.unit || "GB"
+          },
+          usageLimit: {
+            value: frontendPlan.access_methods?.pppoe?.usageLimit?.value?.toString() || "24",
+            unit: frontendPlan.access_methods?.pppoe?.usageLimit?.unit || "Hours"
+          },
+          bandwidthLimit: parseInt(frontendPlan.access_methods?.pppoe?.bandwidthLimit) || 0,
+          maxDevices: parseInt(frontendPlan.access_methods?.pppoe?.maxDevices) || 1,
+          sessionTimeout: parseInt(frontendPlan.access_methods?.pppoe?.sessionTimeout) || 86400,
+          idleTimeout: parseInt(frontendPlan.access_methods?.pppoe?.idleTimeout) || 300,
+          validityPeriod: {
+            value: frontendPlan.access_methods?.pppoe?.validityPeriod?.value?.toString() || "30",
+            unit: frontendPlan.access_methods?.pppoe?.validityPeriod?.unit || "Days"
+          },
+          macBinding: Boolean(frontendPlan.access_methods?.pppoe?.macBinding) || false,
+          ipPool: frontendPlan.access_methods?.pppoe?.ipPool || "pppoe-pool-1",
+          serviceName: frontendPlan.access_methods?.pppoe?.serviceName || "",
+          mtu: parseInt(frontendPlan.access_methods?.pppoe?.mtu) || 1492
+        }
       },
-      pppoe: {
-        enabled: frontendPlan.access_methods.pppoe.enabled || false,
-        downloadSpeed: {
-          value: frontendPlan.access_methods.pppoe.downloadSpeed.value || "10",
-          unit: frontendPlan.access_methods.pppoe.downloadSpeed.unit || "Mbps"
-        },
-        uploadSpeed: {
-          value: frontendPlan.access_methods.pppoe.uploadSpeed.value || "5",
-          unit: frontendPlan.access_methods.pppoe.uploadSpeed.unit || "Mbps"
-        },
-        dataLimit: {
-          value: frontendPlan.access_methods.pppoe.dataLimit.value || "10",
-          unit: frontendPlan.access_methods.pppoe.dataLimit.unit || "GB"
-        },
-        usageLimit: {
-          value: frontendPlan.access_methods.pppoe.usageLimit.value || "24",
-          unit: frontendPlan.access_methods.pppoe.usageLimit.unit || "Hours"
-        },
-        bandwidthLimit: parseInt(frontendPlan.access_methods.pppoe.bandwidthLimit) || 0,
-        maxDevices: parseInt(frontendPlan.access_methods.pppoe.maxDevices) || 1,
-        sessionTimeout: parseInt(frontendPlan.access_methods.pppoe.sessionTimeout) || 86400,
-        idleTimeout: parseInt(frontendPlan.access_methods.pppoe.idleTimeout) || 300,
-        validityPeriod: {
-          value: frontendPlan.access_methods.pppoe.validityPeriod.value || "30",
-          unit: frontendPlan.access_methods.pppoe.validityPeriod.unit || "Days"
-        },
-        macBinding: frontendPlan.access_methods.pppoe.macBinding || false,
-        ipPool: frontendPlan.access_methods.pppoe.ipPool || "pppoe-pool-1",
-        serviceName: frontendPlan.access_methods.pppoe.serviceName || "",
-        mtu: parseInt(frontendPlan.access_methods.pppoe.mtu) || 1492
-      }
-    },
 
-    priority_level: frontendPlan.priority_level || 4,
-    router_specific: frontendPlan.router_specific || false,
-    allowed_routers_ids: frontendPlan.router_specific ? frontendPlan.allowed_routers_ids : [],
-    FUP_policy: frontendPlan.FUP_policy || "",
-    FUP_threshold: frontendPlan.FUP_threshold || 80,
-    
-    // Template reference
-    template: frontendPlan.template || null,
-    
-    // Time variant reference
-    time_variant_id: frontendPlan.time_variant_id || null,
-    
-    // Pricing references
-    pricing_matrix_id: frontendPlan.pricing_matrix_id || null,
-    discount_rule_ids: frontendPlan.discount_rule_ids || []
-  };
+      priority_level: parseInt(frontendPlan.priority_level) || 4,
+      router_specific: Boolean(frontendPlan.router_specific),
+      allowed_routers_ids: frontendPlan.router_specific ? (frontendPlan.allowed_routers_ids || []) : [],
+      FUP_policy: frontendPlan.FUP_policy || "",
+      FUP_threshold: parseInt(frontendPlan.FUP_threshold) || 80,
+      
+      // Template reference
+      template: frontendPlan.template || null,
+      
+      // Time variant reference
+      time_variant_id: frontendPlan.time_variant_id || null,
+      
+      // Pricing references
+      pricing_matrix_id: frontendPlan.pricing_matrix_id || null,
+      discount_rule_ids: frontendPlan.discount_rule_ids || []
+    };
 
-  return planData;
+    return planData;
+  } catch (error) {
+    console.error('Error preparing plan for backend:', frontendPlan, error);
+    throw error;
+  }
 };
 
+// Main PlanManagement Component
 const PlanManagement = () => {
   const { theme } = useTheme();
   const themeClasses = getThemeClasses(theme);
@@ -1996,7 +4721,7 @@ const PlanManagement = () => {
   const isTablet = useMediaQuery('(min-width: 769px) and (max-width: 1024px)');
   const isDesktop = useMediaQuery('(min-width: 1025px)');
   
-  // Form management - using usePlanForm hook
+  // Form management
   const {
     form,
     setForm,
@@ -2039,7 +4764,7 @@ const PlanManagement = () => {
     resetPricing: resetPricingHook
   } = usePricing();
 
-  // State management with optimized data structures
+  // State management
   const [plansData, setPlansData] = useState(() => new PlanDataStructure());
   const [templates, setTemplates] = useState([]);
   const [routers, setRouters] = useState([]);
@@ -2067,12 +4792,12 @@ const PlanManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredPlans, setFilteredPlans] = useState([]);
   const [activeFilters, setActiveFilters] = useState({
-    category: null,
-    planType: null,
-    accessType: null,
-    availability: null,
+    category: 'all',
+    planType: 'all',
+    accessType: 'all',
+    availability: 'all',
     priceRange: null,
-    hasTimeVariant: null
+    hasTimeVariant: 'all'
   });
   const [sortConfig, setSortConfig] = useState({
     field: "name",
@@ -2090,61 +4815,52 @@ const PlanManagement = () => {
     }, 3000);
   }, []);
 
-  // Fetch all data with caching
+  // Fetch all data with error handling
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Check cache first for faster loading
-      const cachedPlans = PlanCache.get('all', 'plans');
-      const cachedTemplates = PlanCache.get('all', 'templates');
-      const cachedPriceMatrices = PlanCache.get('all', 'priceMatrices');
-      const cachedDiscountRules = PlanCache.get('all', 'discountRules');
-
-      let plansData, templatesData, priceMatricesData, discountRulesData;
-
-      // Fetch plans with caching
-      if (cachedPlans) {
-        plansData = cachedPlans;
-      } else {
-        const response = await PlanApiService.getPlans();
-        plansData = response;
-        PlanCache.set('all', response, 'plans');
+      // Fetch plans
+      const plansResponse = await PlanApiService.getPlans();
+      const plansData = plansResponse.results || plansResponse || [];
+      
+      // Fetch templates
+      let templatesData = [];
+      try {
+        const templatesResponse = await PlanApiService.getTemplates();
+        templatesData = templatesResponse.results || templatesResponse || [];
+      } catch (error) {
+        console.warn('Could not fetch templates:', error);
       }
-
-      // Fetch templates with caching
-      if (cachedTemplates) {
-        templatesData = cachedTemplates;
-      } else {
-        const response = await PlanApiService.getTemplates();
-        templatesData = response.results || response;
-        PlanCache.set('all', templatesData, 'templates');
+      
+      // Fetch price matrices
+      let priceMatricesData = [];
+      try {
+        const priceMatricesResponse = await PlanApiService.getPriceMatrices();
+        priceMatricesData = priceMatricesResponse.results || priceMatricesResponse || [];
+      } catch (error) {
+        console.warn('Could not fetch price matrices:', error);
       }
-
-      // Fetch price matrices with caching
-      if (cachedPriceMatrices) {
-        priceMatricesData = cachedPriceMatrices;
-      } else {
-        const response = await PlanApiService.getPriceMatrices();
-        priceMatricesData = response.results || response;
-        PlanCache.set('all', priceMatricesData, 'priceMatrices');
-      }
-
-      // Fetch discount rules with caching
-      if (cachedDiscountRules) {
-        discountRulesData = cachedDiscountRules;
-      } else {
-        const response = await PlanApiService.getDiscountRules();
-        discountRulesData = response.results || response;
-        PlanCache.set('all', discountRulesData, 'discountRules');
+      
+      // Fetch discount rules
+      let discountRulesData = [];
+      try {
+        const discountRulesResponse = await PlanApiService.getDiscountRules();
+        discountRulesData = discountRulesResponse.results || discountRulesResponse || [];
+      } catch (error) {
+        console.warn('Could not fetch discount rules:', error);
       }
 
       // Process plans into data structure
       const newPlansData = new PlanDataStructure();
-      const normalizedPlans = (plansData.results || plansData).map(normalizeBackendPlan);
-      normalizedPlans.forEach(plan => newPlansData.addPlan(plan));
+      const normalizedPlans = plansData.map(normalizeBackendPlan);
+      normalizedPlans.forEach(plan => {
+        if (plan) {
+          newPlansData.addPlan(plan);
+        }
+      });
       
       setPlansData(newPlansData);
-      setFilteredPlans(normalizedPlans);
+      setFilteredPlans(normalizedPlans.filter(Boolean));
       setTemplates(templatesData);
       setPriceMatrices(priceMatricesData);
       setDiscountRules(discountRulesData);
@@ -2152,7 +4868,7 @@ const PlanManagement = () => {
       // Fetch routers if available
       try {
         const routersResponse = await api.get('/api/network_management/routers/');
-        setRouters(routersResponse.data.results || routersResponse.data);
+        setRouters(routersResponse.data.results || routersResponse.data || []);
       } catch (error) {
         console.warn('Could not fetch routers:', error);
         setRouters([]);
@@ -2225,44 +4941,25 @@ const PlanManagement = () => {
     }
 
     searchDebounceRef.current = setTimeout(() => {
-      let results;
-      
-      // If there's a search query, use the optimized search
-      if (searchQuery.trim()) {
-        results = plansData.search(searchQuery.trim());
-      } else {
-        // Otherwise use filter with indexes
-        results = plansData.filter(activeFilters);
-      }
-      
-      // Apply sorting
-      results = results.sort((a, b) => {
-        let aValue = a[sortConfig.field];
-        let bValue = b[sortConfig.field];
+      try {
+        let results;
         
-        switch (sortConfig.field) {
-          case 'price':
-            aValue = parseFloat(aValue) || 0;
-            bValue = parseFloat(bValue) || 0;
-            break;
-          case 'created_at':
-          case 'updated_at':
-            aValue = new Date(aValue).getTime();
-            bValue = new Date(bValue).getTime();
-            break;
-          case 'name':
-          case 'description':
-            aValue = (aValue || '').toString().toLowerCase();
-            bValue = (bValue || '').toString().toLowerCase();
-            break;
+        // If there's a search query, use the optimized search
+        if (searchQuery.trim()) {
+          results = plansData.search(searchQuery.trim());
+        } else {
+          // Otherwise use filter with indexes
+          results = plansData.filter(activeFilters);
         }
         
-        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
-      });
-      
-      setFilteredPlans(results);
+        // Apply sorting
+        results = plansData.sort(sortConfig.field, sortConfig.direction);
+        
+        setFilteredPlans(results);
+      } catch (error) {
+        console.error('Error filtering and searching plans:', error);
+        setFilteredPlans(plansData.plans);
+      }
     }, 300); // 300ms debounce delay
 
     return () => {
@@ -2288,12 +4985,12 @@ const PlanManagement = () => {
   // Clear filters
   const clearFilters = useCallback(() => {
     setActiveFilters({
-      category: null,
-      planType: null,
-      accessType: null,
-      availability: null,
+      category: 'all',
+      planType: 'all',
+      accessType: 'all',
+      availability: 'all',
       priceRange: null,
-      hasTimeVariant: null
+      hasTimeVariant: 'all'
     });
     setSearchQuery("");
   }, []);
@@ -2308,69 +5005,85 @@ const PlanManagement = () => {
 
   // Start new plan creation
   const startNewPlan = useCallback((planType = "hotspot", creationMethod = "create", templateId = null) => {
-    resetForm();
-    resetPricingHook();
-    setTimeVariantState(getInitialTimeVariantState());
-    
-    const initialForm = getInitialFormState();
-    
-    initialForm.accessType = planType === 'dual' ? 'both' : planType;
-    initialForm.access_methods.hotspot.enabled = planType === 'hotspot' || planType === 'dual';
-    initialForm.access_methods.pppoe.enabled = planType === 'pppoe' || planType === 'dual';
-    initialForm.plan_type = "paid";
-    initialForm.active = true;
-    initialForm.priority_level = 4;
-    
-    // If using template, apply template settings
-    if (creationMethod === 'template' && templateId) {
-      const template = templates.find(t => t.id === templateId);
-      if (template) {
-        initialForm.name = `${template.name} - Copy`;
-        initialForm.category = template.category || "Residential";
-        initialForm.price = template.base_price?.toString() || "0";
-        initialForm.description = template.description || "";
-        
-        if (template.access_methods) {
-          initialForm.access_methods = deepClone(template.access_methods);
-        }
-        
-        if (template.time_variant) {
-          setTimeVariantState(template.time_variant);
+    try {
+      resetForm();
+      resetPricingHook();
+      setTimeVariantState(getInitialTimeVariantState());
+      
+      const initialForm = getInitialFormState();
+      
+      initialForm.accessType = planType === 'dual' ? 'both' : planType;
+      initialForm.access_methods.hotspot.enabled = planType === 'hotspot' || planType === 'dual';
+      initialForm.access_methods.pppoe.enabled = planType === 'pppoe' || planType === 'dual';
+      initialForm.plan_type = "paid";
+      initialForm.active = true;
+      initialForm.priority_level = 4;
+      
+      // If using template, apply template settings
+      if (creationMethod === 'template' && templateId) {
+        const template = templates.find(t => t.id === templateId);
+        if (template) {
+          initialForm.name = `${template.name} - Copy`;
+          initialForm.category = template.category || "Residential";
+          initialForm.price = template.base_price?.toString() || "0";
+          initialForm.description = template.description || "";
+          
+          if (template.access_methods) {
+            initialForm.access_methods = deepClone(template.access_methods);
+          }
+          
+          if (template.time_variant) {
+            setTimeVariantState(template.time_variant);
+          }
         }
       }
+      
+      setForm(initialForm);
+      setEditingPlan(null);
+      setActiveTab("basic");
+      setViewMode("form");
+      setShowPlanTypeModal(false);
+    } catch (error) {
+      console.error('Error starting new plan:', error);
+      toast.error('Failed to initialize new plan');
     }
-    
-    setForm(initialForm);
-    setEditingPlan(null);
-    setActiveTab("basic");
-    setViewMode("form");
-    setShowPlanTypeModal(false);
   }, [resetForm, resetPricingHook, setTimeVariantState, templates, setForm]);
 
   // Edit plan
   const editPlan = useCallback((plan) => {
-    const normalizedPlan = normalizeBackendPlan(plan);
-    setForm(deepClone(normalizedPlan));
-    
-    // Load time variant if exists
-    if (normalizedPlan.time_variant) {
-      setTimeVariantState(normalizedPlan.time_variant);
+    try {
+      const normalizedPlan = normalizeBackendPlan(plan);
+      setForm(deepClone(normalizedPlan));
+      
+      // Load time variant if exists
+      if (normalizedPlan.time_variant) {
+        setTimeVariantState(normalizedPlan.time_variant);
+      }
+      
+      // Load pricing if exists
+      if (normalizedPlan.pricing_info) {
+        setPricingState(normalizedPlan.pricing_info);
+      }
+      
+      setEditingPlan(deepClone(normalizedPlan));
+      setActiveTab("basic");
+      setViewMode("form");
+    } catch (error) {
+      console.error('Error editing plan:', error);
+      toast.error('Failed to load plan for editing');
     }
-    
-    // Load pricing if exists
-    if (normalizedPlan.pricing_info) {
-      setPricingState(normalizedPlan.pricing_info);
-    }
-    
-    setEditingPlan(deepClone(normalizedPlan));
-    setActiveTab("basic");
-    setViewMode("form");
   }, [setForm, setTimeVariantState, setPricingState]);
 
   // View plan details
   const viewPlanDetails = useCallback((plan) => {
-    setSelectedPlan(normalizeBackendPlan(plan));
-    setViewMode("details");
+    try {
+      const normalizedPlan = normalizeBackendPlan(plan);
+      setSelectedPlan(normalizedPlan);
+      setViewMode("details");
+    } catch (error) {
+      console.error('Error viewing plan details:', error);
+      toast.error('Failed to load plan details');
+    }
   }, []);
 
   // Check plan availability
@@ -2401,91 +5114,87 @@ const PlanManagement = () => {
 
   // Save plan with optimistic updates
   const savePlan = async () => {
-    // Validate form
-    const isFormValid = validateForm();
-    if (!isFormValid) {
-      const message = "Please fix validation errors before saving";
-      isMobile ? showMobileSuccess(message) : toast.error(message);
-      return;
-    }
-
-    // Validate time variant if active
-    if (timeVariantState.is_active) {
-      const timeVariantValid = validateTimeVariantHook();
-      if (!timeVariantValid) {
-        const message = "Please fix time variant validation errors";
-        isMobile ? showMobileSuccess(message) : toast.error(message);
-        return;
-      }
-    }
-
-    // Validate pricing if configured
-    if (pricingState.price) {
-      const pricingValid = validatePricingHook();
-      if (!pricingValid) {
-        const message = "Please fix pricing validation errors";
-        isMobile ? showMobileSuccess(message) : toast.error(message);
-        return;
-      }
-    }
-
-    setIsLoading(true);
-    
-    // Prepare plan data
-    const planData = preparePlanForBackend(form);
-    
-    // Add time variant if active
-    if (timeVariantState.is_active) {
-      planData.time_variant = timeVariantState;
-    }
-    
-    // Add pricing if configured
-    if (pricingState.price) {
-      planData.pricing_info = pricingState;
-    }
-
-    // Optimistic update
-    const optimisticPlan = normalizeBackendPlan({
-      ...planData,
-      id: editingPlan?.id || `temp_${Date.now()}`,
-      created_at: editingPlan ? editingPlan.created_at : new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      purchases: editingPlan?.purchases || 0,
-      time_variant: timeVariantState.is_active ? timeVariantState : null,
-      pricing_info: pricingState.price ? pricingState : null
-    });
-
-    if (editingPlan) {
-      // Optimistic update for editing
-      const updatedPlansData = new PlanDataStructure();
-      plansData.plans.forEach(plan => {
-        if (plan.id === editingPlan.id) {
-          updatedPlansData.addPlan(optimisticPlan);
-        } else {
-          updatedPlansData.addPlan(plan);
-        }
-      });
-      setPlansData(updatedPlansData);
-    } else {
-      // Optimistic add for new plan
-      const updatedPlansData = new PlanDataStructure();
-      plansData.plans.forEach(plan => updatedPlansData.addPlan(plan));
-      updatedPlansData.addPlan(optimisticPlan);
-      setPlansData(updatedPlansData);
-    }
-
     try {
+      // Validate form
+      const isFormValid = validateForm();
+      if (!isFormValid) {
+        const message = "Please fix validation errors before saving";
+        isMobile ? showMobileSuccess(message) : toast.error(message);
+        return;
+      }
+
+      // Validate time variant if active
+      if (timeVariantState.is_active) {
+        const timeVariantValid = validateTimeVariantHook();
+        if (!timeVariantValid) {
+          const message = "Please fix time variant validation errors";
+          isMobile ? showMobileSuccess(message) : toast.error(message);
+          return;
+        }
+      }
+
+      // Validate pricing if configured
+      if (pricingState.price) {
+        const pricingValid = validatePricingHook();
+        if (!pricingValid) {
+          const message = "Please fix pricing validation errors";
+          isMobile ? showMobileSuccess(message) : toast.error(message);
+          return;
+        }
+      }
+
+      setIsLoading(true);
+      
+      // Prepare plan data
+      const planData = preparePlanForBackend(form);
+      
+      // Add time variant if active
+      if (timeVariantState.is_active) {
+        planData.time_variant = timeVariantState;
+      }
+      
+      // Add pricing if configured
+      if (pricingState.price) {
+        planData.pricing_info = pricingState;
+      }
+
+      // Optimistic update
+      const optimisticPlan = normalizeBackendPlan({
+        ...planData,
+        id: editingPlan?.id || `temp_${Date.now()}`,
+        created_at: editingPlan ? editingPlan.created_at : new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        purchases: editingPlan?.purchases || 0,
+        time_variant: timeVariantState.is_active ? timeVariantState : null,
+        pricing_info: pricingState.price ? pricingState : null
+      });
+
+      if (editingPlan) {
+        // Optimistic update for editing
+        const updatedPlansData = new PlanDataStructure();
+        plansData.plans.forEach(plan => {
+          if (plan.id === editingPlan.id) {
+            updatedPlansData.addPlan(optimisticPlan);
+          } else {
+            updatedPlansData.addPlan(plan);
+          }
+        });
+        setPlansData(updatedPlansData);
+      } else {
+        // Optimistic add for new plan
+        const updatedPlansData = new PlanDataStructure();
+        plansData.plans.forEach(plan => updatedPlansData.addPlan(plan));
+        updatedPlansData.addPlan(optimisticPlan);
+        setPlansData(updatedPlansData);
+      }
+
       let response;
       let message;
 
       if (editingPlan) {
         // Update existing plan
         response = await PlanApiService.updatePlan(editingPlan.id, planData);
-        const updatedPlan = normalizeBackendPlan(response.data);
-        
-        // Update cache
-        PlanCache.set(updatedPlan.id, updatedPlan, 'plans');
-        PlanCache.delete('all', 'plans'); // Invalidate cache
+        const updatedPlan = normalizeBackendPlan(response);
         
         // Update data structure
         const finalPlansData = new PlanDataStructure();
@@ -2502,11 +5211,7 @@ const PlanManagement = () => {
       } else {
         // Create new plan
         response = await PlanApiService.createPlan(planData);
-        const newPlan = normalizeBackendPlan(response.data);
-        
-        // Update cache
-        PlanCache.set(newPlan.id, newPlan, 'plans');
-        PlanCache.delete('all', 'plans'); // Invalidate cache
+        const newPlan = normalizeBackendPlan(response);
         
         // Update data structure
         const finalPlansData = new PlanDataStructure();
@@ -2571,10 +5276,6 @@ const PlanManagement = () => {
     try {
       await PlanApiService.deletePlan(planToDelete.id);
       
-      // Update cache
-      PlanCache.delete(planToDelete.id, 'plans');
-      PlanCache.delete('all', 'plans'); // Invalidate cache
-      
       const message = `Plan "${planToDelete.name}" deleted successfully`;
       isMobile ? showMobileSuccess(message) : toast.success(message);
     } catch (error) {
@@ -2596,25 +5297,25 @@ const PlanManagement = () => {
   const duplicatePlan = useCallback(async (plan) => {
     setIsLoading(true);
     
-    // Optimistic update
-    const planCopy = {
-      ...plan,
-      id: `temp_${Date.now()}`,
-      name: `${plan.name} (Copy)`,
-      purchases: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    
-    const optimisticPlansData = new PlanDataStructure();
-    plansData.plans.forEach(p => optimisticPlansData.addPlan(p));
-    optimisticPlansData.addPlan(planCopy);
-    setPlansData(optimisticPlansData);
-    
     try {
+      // Optimistic update
+      const planCopy = {
+        ...plan,
+        id: `temp_${Date.now()}`,
+        name: `${plan.name} (Copy)`,
+        purchases: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      const optimisticPlansData = new PlanDataStructure();
+      plansData.plans.forEach(p => optimisticPlansData.addPlan(p));
+      optimisticPlansData.addPlan(planCopy);
+      setPlansData(optimisticPlansData);
+      
       const planData = preparePlanForBackend(planCopy);
       const response = await PlanApiService.createPlan(planData);
-      const newPlan = normalizeBackendPlan(response.data);
+      const newPlan = normalizeBackendPlan(response);
       
       // Update data structure with real data
       const finalPlansData = new PlanDataStructure();
@@ -2625,10 +5326,6 @@ const PlanManagement = () => {
       });
       finalPlansData.addPlan(newPlan);
       setPlansData(finalPlansData);
-      
-      // Update cache
-      PlanCache.set(newPlan.id, newPlan, 'plans');
-      PlanCache.delete('all', 'plans'); // Invalidate cache
       
       const message = `Plan "${newPlan.name}" duplicated successfully`;
       isMobile ? showMobileSuccess(message) : toast.success(message);
@@ -2649,29 +5346,29 @@ const PlanManagement = () => {
   const togglePlanStatus = useCallback(async (plan) => {
     setIsLoading(true);
     
-    // Optimistic update
-    const updatedPlan = {
-      ...plan,
-      active: !plan.active,
-      updated_at: new Date().toISOString()
-    };
-    
-    const optimisticPlansData = new PlanDataStructure();
-    plansData.plans.forEach(p => {
-      if (p.id === plan.id) {
-        optimisticPlansData.addPlan(updatedPlan);
-      } else {
-        optimisticPlansData.addPlan(p);
-      }
-    });
-    setPlansData(optimisticPlansData);
-    
     try {
+      // Optimistic update
+      const updatedPlan = {
+        ...plan,
+        active: !plan.active,
+        updated_at: new Date().toISOString()
+      };
+      
+      const optimisticPlansData = new PlanDataStructure();
+      plansData.plans.forEach(p => {
+        if (p.id === plan.id) {
+          optimisticPlansData.addPlan(updatedPlan);
+        } else {
+          optimisticPlansData.addPlan(p);
+        }
+      });
+      setPlansData(optimisticPlansData);
+      
       const planData = preparePlanForBackend(plan);
       planData.active = !plan.active;
       
       const response = await PlanApiService.updatePlan(plan.id, planData);
-      const finalPlan = normalizeBackendPlan(response.data);
+      const finalPlan = normalizeBackendPlan(response);
       
       // Update data structure with real data
       const finalPlansData = new PlanDataStructure();
@@ -2683,10 +5380,6 @@ const PlanManagement = () => {
         }
       });
       setPlansData(finalPlansData);
-      
-      // Update cache
-      PlanCache.set(finalPlan.id, finalPlan, 'plans');
-      PlanCache.delete('all', 'plans'); // Invalidate cache
       
       const message = `Plan "${plan.name}" ${finalPlan.active ? 'activated' : 'deactivated'} successfully`;
       isMobile ? showMobileSuccess(message) : toast.success(message);
@@ -2705,43 +5398,48 @@ const PlanManagement = () => {
 
   // Apply template
   const applyTemplate = useCallback((template) => {
-    const newForm = getInitialFormState();
-    
-    // Apply template settings
-    newForm.name = template.name || "";
-    newForm.category = template.category || "Residential";
-    newForm.price = template.base_price?.toString() || template.basePrice?.toString() || "0";
-    newForm.description = template.description || "";
-    newForm.access_methods = template.access_methods || template.accessMethods || getInitialFormState().access_methods;
-    
-    // Determine access type
-    const enabledMethods = [];
-    if (newForm.access_methods.hotspot?.enabled) enabledMethods.push('hotspot');
-    if (newForm.access_methods.pppoe?.enabled) enabledMethods.push('pppoe');
-    newForm.accessType = enabledMethods.length === 2 ? 'both' : 
-                         enabledMethods.length === 1 ? enabledMethods[0] : 'hotspot';
-    
-    // Apply time variant if exists
-    if (template.time_variant || template.timeVariant) {
-      setTimeVariantState(template.time_variant || template.timeVariant);
+    try {
+      const newForm = getInitialFormState();
+      
+      // Apply template settings
+      newForm.name = template.name || "";
+      newForm.category = template.category || "Residential";
+      newForm.price = template.base_price?.toString() || template.basePrice?.toString() || "0";
+      newForm.description = template.description || "";
+      newForm.access_methods = template.access_methods || template.accessMethods || getInitialFormState().access_methods;
+      
+      // Determine access type
+      const enabledMethods = [];
+      if (newForm.access_methods.hotspot?.enabled) enabledMethods.push('hotspot');
+      if (newForm.access_methods.pppoe?.enabled) enabledMethods.push('pppoe');
+      newForm.accessType = enabledMethods.length === 2 ? 'both' : 
+                          enabledMethods.length === 1 ? enabledMethods[0] : 'hotspot';
+      
+      // Apply time variant if exists
+      if (template.time_variant || template.timeVariant) {
+        setTimeVariantState(template.time_variant || template.timeVariant);
+      }
+      
+      // Apply pricing if exists
+      if (template.pricing_info) {
+        setPricingState(template.pricing_info);
+      }
+      
+      newForm.plan_type = parseFloat(newForm.price) > 0 ? "paid" : "free_trial";
+      newForm.priority_level = 4;
+      newForm.active = true;
+      
+      setForm(newForm);
+      setEditingPlan(null);
+      setActiveTab("basic");
+      setViewMode("form");
+      
+      const message = `Template "${template.name}" applied`;
+      isMobile ? showMobileSuccess(message) : toast.success(message);
+    } catch (error) {
+      console.error('Error applying template:', error);
+      toast.error('Failed to apply template');
     }
-    
-    // Apply pricing if exists
-    if (template.pricing_info) {
-      setPricingState(template.pricing_info);
-    }
-    
-    newForm.plan_type = parseFloat(newForm.price) > 0 ? "paid" : "free_trial";
-    newForm.priority_level = 4;
-    newForm.active = true;
-    
-    setForm(newForm);
-    setEditingPlan(null);
-    setActiveTab("basic");
-    setViewMode("form");
-    
-    const message = `Template "${template.name}" applied`;
-    isMobile ? showMobileSuccess(message) : toast.success(message);
   }, [setForm, setTimeVariantState, setPricingState, isMobile, showMobileSuccess]);
 
   // Create plan from template
@@ -2750,7 +5448,7 @@ const PlanManagement = () => {
     
     try {
       const response = await PlanApiService.createPlanFromTemplate(templateId, planData);
-      const newPlan = normalizeBackendPlan(response.data);
+      const newPlan = normalizeBackendPlan(response);
       
       // Update data structure
       const finalPlansData = new PlanDataStructure();
@@ -2758,15 +5456,11 @@ const PlanManagement = () => {
       finalPlansData.addPlan(newPlan);
       setPlansData(finalPlansData);
       
-      // Update cache
-      PlanCache.set(newPlan.id, newPlan, 'plans');
-      PlanCache.delete('all', 'plans'); // Invalidate cache
-      
       const message = `Plan created from template successfully`;
       isMobile ? showMobileSuccess(message) : toast.success(message);
       
       setViewMode("list");
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Error creating plan from template:', error);
       
@@ -3107,7 +5801,7 @@ const PlanManagement = () => {
               <div className="space-y-3">
                 <DetailRow label="Access Type" theme={theme}>
                   <span className="flex items-center gap-2">
-                    {selectedPlan.enabled_access_methods.map(method => {
+                    {selectedPlan.enabled_access_methods?.map(method => {
                       const accessTypeColor = getAccessTypeColor(method);
                       return (
                         <span key={method} className={`inline-flex items-center px-2 py-1 rounded text-xs ${
@@ -3122,7 +5816,7 @@ const PlanManagement = () => {
                     })}
                   </span>
                 </DetailRow>
-                {selectedPlan.enabled_access_methods.includes('hotspot') && (
+                {selectedPlan.enabled_access_methods?.includes('hotspot') && (
                   <>
                     <DetailRow label="Download Speed" theme={theme}>
                       <span className={themeClasses.text.primary}>
@@ -3136,7 +5830,7 @@ const PlanManagement = () => {
                     </DetailRow>
                   </>
                 )}
-                {selectedPlan.enabled_access_methods.includes('pppoe') && (
+                {selectedPlan.enabled_access_methods?.includes('pppoe') && (
                   <>
                     <DetailRow label="Upload Speed" theme={theme}>
                       <span className={themeClasses.text.primary}>
@@ -3225,49 +5919,54 @@ const PlanManagement = () => {
 
   // Check form validity
   const isFormValid = useMemo(() => {
-    // Basic validations
-    if (!form.name?.trim() || !form.category || !form.plan_type) {
+    try {
+      // Basic validations
+      if (!form.name?.trim() || !form.category || !form.plan_type) {
+        return false;
+      }
+
+      // Price validation for paid plans
+      if (form.plan_type === "paid") {
+        const price = parseFloat(form.price);
+        if (isNaN(price) || price < 0) {
+          return false;
+        }
+      }
+
+      // Check at least one access method is enabled
+      const hasEnabledMethods = form.access_methods?.hotspot?.enabled || form.access_methods?.pppoe?.enabled;
+      if (!hasEnabledMethods) {
+        return false;
+      }
+
+      // Check enabled methods have required fields
+      if (form.access_methods?.hotspot?.enabled) {
+        if (!form.access_methods.hotspot.downloadSpeed?.value || 
+            !form.access_methods.hotspot.uploadSpeed?.value) {
+          return false;
+        }
+      }
+
+      if (form.access_methods?.pppoe?.enabled) {
+        if (!form.access_methods.pppoe.downloadSpeed?.value || 
+            !form.access_methods.pppoe.uploadSpeed?.value) {
+          return false;
+        }
+      }
+
+      // Validate time variant if active
+      if (timeVariantState.is_active) {
+        const timeVariantErrors = validateTimeVariant(timeVariantState);
+        if (Object.keys(timeVariantErrors).length > 0) {
+          return false;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error validating form:', error);
       return false;
     }
-
-    // Price validation for paid plans
-    if (form.plan_type === "paid") {
-      const price = parseFloat(form.price);
-      if (isNaN(price) || price < 0) {
-        return false;
-      }
-    }
-
-    // Check at least one access method is enabled
-    const hasEnabledMethods = form.access_methods.hotspot.enabled || form.access_methods.pppoe.enabled;
-    if (!hasEnabledMethods) {
-      return false;
-    }
-
-    // Check enabled methods have required fields
-    if (form.access_methods.hotspot.enabled) {
-      if (!form.access_methods.hotspot.downloadSpeed.value || 
-          !form.access_methods.hotspot.uploadSpeed.value) {
-        return false;
-      }
-    }
-
-    if (form.access_methods.pppoe.enabled) {
-      if (!form.access_methods.pppoe.downloadSpeed.value || 
-          !form.access_methods.pppoe.uploadSpeed.value) {
-        return false;
-      }
-    }
-
-    // Validate time variant if active
-    if (timeVariantState.is_active) {
-      const timeVariantErrors = validateTimeVariant(timeVariantState);
-      if (Object.keys(timeVariantErrors).length > 0) {
-        return false;
-      }
-    }
-
-    return true;
   }, [form, timeVariantState]);
 
   // Main render with responsive container
@@ -3436,9 +6135,9 @@ const PlanManagement = () => {
                         {form.accessType === 'hotspot' ? 'Hotspot Plan' : 'PPPoE Plan'}
                       </span>
                       <div className="text-xs mt-1 opacity-75">
-                        {form.access_methods.hotspot.enabled && form.access_methods.pppoe.enabled 
+                        {form.access_methods?.hotspot?.enabled && form.access_methods?.pppoe?.enabled 
                           ? 'Both access methods enabled' 
-                          : form.access_methods.hotspot.enabled 
+                          : form.access_methods?.hotspot?.enabled 
                             ? 'Hotspot only' 
                             : 'PPPoE only'}
                       </div>

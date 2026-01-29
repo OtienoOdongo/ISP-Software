@@ -1044,7 +1044,7 @@ import { FaPlus, FaEdit, FaTrash, FaSearch, FaFilter, FaReceipt, FaSpinner, FaTi
 import { format, parseISO } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import api from '../../../api'
-import { EnhancedSelect, EnhancedDatePicker, AccessTypeBadge, ConfirmationModal } from '../../ServiceManagement/Shared/components'
+import { EnhancedSelect,  DateRangePicker, AccessTypeBadge, ConfirmationModal } from '../../ServiceManagement/Shared/components'
 
 // Predefined expense categories for ISP business
 const PREDEFINED_CATEGORIES = [

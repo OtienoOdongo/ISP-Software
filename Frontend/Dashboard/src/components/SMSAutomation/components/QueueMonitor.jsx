@@ -13,7 +13,7 @@ import {
   StatisticsCard
 } from '../../ServiceManagement/Shared/components'
 
-import { formatQueueAge, formatProcessingTime } from '../utils/formatters'
+import { formatTimeAgo, formatDeliveryTime } from '../utils/formatters'
 
 const QueueMonitor = ({ queue, loading, theme, refreshData, realTimeUpdates }) => {
   const [selectedItem, setSelectedItem] = useState(null);

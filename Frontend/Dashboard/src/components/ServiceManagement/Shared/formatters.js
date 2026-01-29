@@ -428,7 +428,7 @@ export const formatDate = (dateString, includeTime = false) => {
       ...(includeTime && { 
         hour: '2-digit', 
         minute: '2-digit',
-        hour12: true 
+        hour12: true, 
       })
     };
     
@@ -849,3 +849,4 @@ export const formatDiscountRuleType = (type) => {
   
   return typeMap[type] || type.charAt(0).toUpperCase() + type.slice(1);
 };
+

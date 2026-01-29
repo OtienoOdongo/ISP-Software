@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
-import { validatePrice, validateNumber, formatCurrency } from "../Shared/utils";
+import { validatePrice, validateNumber } from '../../Shared/utils.js'
+import { formatCurrency } from '../../Shared/formatters.js'; 
 
 // Initial pricing state
 export const getInitialPricingState = () => ({

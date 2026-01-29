@@ -755,15 +755,15 @@ import {
 } from 'react-icons/fi';
 import { FaSpinner } from 'react-icons/fa';
 // Hooks
-import useClientData from '../../hooks/useClientData';
-import useAnalytics from '../../hooks/useAnalytics';
-import useClientFilters from '../../hooks/useClientFilters';
+import useClientData from '../../components/ClientManagement/hooks/useClientData'
+import useAnalytics from '../../components/ClientManagement/hooks/useAnalytics';
+import useClientFilters from '../../components/ClientManagement/hooks/useClientFilters';
 // Components
-import Card from '../../components/UI/Card';
-import StatsCard from '../../components/UI/StatsCard';
-import Modal from '../../components/UI/Modal';
-import DataTable from '../../components/UI/DataTable';
-import ResponsiveGrid from '../../components/Layouts/ResponsiveGrid';
+import Card from '../../components/ClientManagement/UI/Card'
+import StatsCard from '../../components/ClientManagement/UI/StatsCard';
+import Modal from '../../components/ClientManagement/UI/Modal';
+import DataTable from '../../components/ClientManagement/UI/DataTable';
+import ResponsiveGrid from '../../components/ClientManagement/Layout/ResponsiveGrid';
 // Client Management Components
 import ClientDashboard from '../../components/ClientManagement/ClientDashboard';
 import ClientFilters from '../../components/ClientManagement/ClientFilters';
@@ -774,11 +774,11 @@ import ClientActions from '../../components/ClientManagement/ClientActions';
 import AnalyticsChart from '../../components/ClientManagement/AnalyticsChart';
 import CommissionTracker from '../../components/ClientManagement/CommissionTracker';
 // Utils
-import { exportToCSV, exportToExcel } from '../../utils/exporters';
-import { formatCurrency, formatDate, formatPhoneNumber } from '../../utils/formatters';
-import { validateForm } from '../../utils/validators';
-import { EnhancedSelect } from '../../components/components'; // Import EnhancedSelect from components.jsx
-import { getThemeClasses } from '../../components/components'; // Import getThemeClasses from components.jsx
+// import { exportToCSV, exportToExcel } from '../../utils/exporters';
+import { formatCurrency, formatDate, formatPhoneNumber } from '../../components/ClientManagement/utils/formatters'
+import { validateForm } from '../../components/ClientManagement/utils/validators'
+import { EnhancedSelect, getThemeClasses } from '../../components/ServiceManagement/Shared/components'
+
 
 const Subscribers = () => {
   const { isAuthenticated, user } = useAuth();

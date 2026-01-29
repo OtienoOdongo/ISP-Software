@@ -370,9 +370,8 @@ import {
   FiTrendingDown,
   FiBarChart2,
   FiPieChart,
-  FiLineChart
 } from 'react-icons/fi';
-import { FaSpinner } from 'react-icons/fa';
+import { FaSpinner, FaChartLine } from 'react-icons/fa';
 import { getThemeClasses } from '../ServiceManagement/Shared/components'
 
 const AnalyticsChart = ({
@@ -527,8 +526,8 @@ const AnalyticsChart = ({
     switch (type) {
       case 'bar': return <FiBarChart2 />;
       case 'pie': return <FiPieChart />;
-      case 'line': return <FiLineChart />;
-      default: return <FiLineChart />;
+      case 'line': return <FaChartLine />;
+      default: return <FaChartLine />;
     }
   };
 

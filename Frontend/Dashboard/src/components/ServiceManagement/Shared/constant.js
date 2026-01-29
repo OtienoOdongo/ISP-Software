@@ -567,6 +567,612 @@
 
 
 
+// // ============================================================================
+// // PLAN MANAGEMENT CONSTANTS
+// // ALIGNED WITH DJANGO BACKEND MODELS
+// // ============================================================================
+
+// // Plan types (matches InternetPlan.PLAN_TYPES)
+// export const planTypes = Object.freeze([
+//   { value: "paid", label: "Paid Plan" },
+//   { value: "free_trial", label: "Free Trial" },
+//   { value: "promotional", label: "Promotional" }
+// ]);
+
+// // Plan categories (matches InternetPlan.CATEGORIES)
+// export const categories = Object.freeze([
+//   { value: "Residential", label: "Residential" },
+//   { value: "Business", label: "Business" },
+//   { value: "Promotional", label: "Promotional" },
+//   { value: "Enterprise", label: "Enterprise" },
+//   { value: "Hotspot", label: "Hotspot Only" },
+//   { value: "PPPoE", label: "PPPoE Only" },
+//   { value: "Dual", label: "Hotspot & PPPoE" }
+// ]);
+
+// // Access methods (simplified - only technical specs)
+// export const accessMethods = Object.freeze([
+//   { value: "hotspot", label: "Hotspot Only", icon: "Wifi" },
+//   { value: "pppoe", label: "PPPoE Only", icon: "Cable" },
+//   { value: "both", label: "Both Methods", icon: "Server" }
+// ]);
+
+// // Days of week for availability (matches TimeVariantConfig.DAYS_OF_WEEK)
+// export const daysOfWeek = Object.freeze([
+//   { value: "mon", label: "Monday" },
+//   { value: "tue", label: "Tuesday" },
+//   { value: "wed", label: "Wednesday" },
+//   { value: "thu", label: "Thursday" },
+//   { value: "fri", label: "Friday" },
+//   { value: "sat", label: "Saturday" },
+//   { value: "sun", label: "Sunday" }
+// ]);
+
+// // Time units for duration (matches TimeVariantConfig.TIME_UNITS)
+// export const timeUnits = Object.freeze([
+//   { value: "hours", label: "Hours" },
+//   { value: "days", label: "Days" },
+//   { value: "weeks", label: "Weeks" },
+//   { value: "months", label: "Months" }
+// ]);
+
+// // Timezone options for time variant (IANA format)
+// export const timeZoneOptions = Object.freeze([
+//   { value: "Africa/Nairobi", label: "EAT (Nairobi)" },
+//   { value: "Africa/Cairo", label: "EET (Cairo)" },
+//   { value: "Africa/Johannesburg", label: "SAST (Johannesburg)" },
+//   { value: "UTC", label: "UTC" },
+//   { value: "America/New_York", label: "EST (New York)" },
+//   { value: "Europe/London", label: "GMT (London)" },
+//   { value: "Asia/Dubai", label: "GST (Dubai)" },
+//   { value: "Asia/Singapore", label: "SGT (Singapore)" },
+//   { value: "Asia/Tokyo", label: "JST (Tokyo)" }
+// ]);
+
+// // Speed units (for technical specs)
+// export const speedUnits = Object.freeze([
+//   { value: "Kbps", label: "Kbps" },
+//   { value: "Mbps", label: "Mbps" },
+//   { value: "Gbps", label: "Gbps" }
+// ]);
+
+// // Data units (for data limits)
+// export const dataUnits = Object.freeze([
+//   { value: "MB", label: "MB" },
+//   { value: "GB", label: "GB" },
+//   { value: "TB", label: "TB" }
+// ]);
+
+// // Usage limit units
+// export const usageUnits = Object.freeze([
+//   { value: "Minutes", label: "Minutes" },
+//   { value: "Hours", label: "Hours" },
+//   { value: "Days", label: "Days" }
+// ]);
+
+// // Validity period units
+// export const validityUnits = Object.freeze([
+//   { value: "Hours", label: "Hours" },
+//   { value: "Days", label: "Days" },
+//   { value: "Weeks", label: "Weeks" },
+//   { value: "Months", label: "Months" }
+// ]);
+
+// // Priority levels (matches InternetPlan.PRIORITY_LEVELS)
+// export const priorityOptions = Object.freeze([
+//   { value: 1, label: "Lowest", description: "Background tasks" },
+//   { value: 2, label: "Low", description: "Basic browsing" },
+//   { value: 3, label: "Medium", description: "Standard usage" },
+//   { value: 4, label: "High", description: "Streaming & gaming" },
+//   { value: 5, label: "Highest", description: "Business critical" },
+//   { value: 6, label: "Critical", description: "Emergency services" },
+//   { value: 7, label: "Premium", description: "VIP customers" },
+//   { value: 8, label: "VIP", description: "Executive priority" }
+// ]);
+
+// // FUP (Fair Usage Policy) thresholds (matches InternetPlan.FUP_threshold)
+// export const FUPThresholds = Object.freeze([
+//   { value: 50, label: "50% - Light Usage" },
+//   { value: 60, label: "60% - Moderate Usage" },
+//   { value: 70, label: "70% - Heavy Usage" },
+//   { value: 80, label: "80% - Very Heavy Usage" },
+//   { value: 90, label: "90% - Extreme Usage" },
+//   { value: 95, label: "95% - Critical Usage" }
+// ]);
+
+// // Device limit options
+// export const deviceLimitOptions = Object.freeze([
+//   { value: 1, label: "1 Device" },
+//   { value: 2, label: "2 Devices" },
+//   { value: 3, label: "3 Devices" },
+//   { value: 5, label: "5 Devices" },
+//   { value: 10, label: "10 Devices" },
+//   { value: 20, label: "20 Devices" },
+//   { value: 50, label: "50 Devices" },
+//   { value: 100, label: "100 Devices" }
+// ]);
+
+// // Session timeout options (seconds)
+// export const sessionTimeoutOptions = Object.freeze([
+//   { value: 3600, label: "1 Hour" },
+//   { value: 7200, label: "2 Hours" },
+//   { value: 14400, label: "4 Hours" },
+//   { value: 28800, label: "8 Hours" },
+//   { value: 43200, label: "12 Hours" },
+//   { value: 86400, label: "24 Hours" },
+//   { value: 172800, label: "48 Hours" },
+//   { value: 259200, label: "3 Days" },
+//   { value: 604800, label: "1 Week" }
+// ]);
+
+// // Idle timeout options (seconds)
+// export const idleTimeoutOptions = Object.freeze([
+//   { value: 60, label: "1 Minute" },
+//   { value: 300, label: "5 Minutes" },
+//   { value: 600, label: "10 Minutes" },
+//   { value: 900, label: "15 Minutes" },
+//   { value: 1800, label: "30 Minutes" },
+//   { value: 3600, label: "1 Hour" },
+//   { value: 7200, label: "2 Hours" }
+// ]);
+
+// // IP Pool options for PPPoE
+// export const ipPoolOptions = Object.freeze([
+//   { value: "pppoe-pool-1", label: "PPPoE Pool 1" },
+//   { value: "pppoe-pool-2", label: "PPPoE Pool 2" },
+//   { value: "dynamic-pool", label: "Dynamic Pool" },
+//   { value: "static-pool", label: "Static IP Pool" }
+// ]);
+
+// // Plan templates (SIMPLIFIED - only technical specs)
+// export const templateTypes = Object.freeze([
+//   {
+//     id: "residential-basic",
+//     name: "Residential Basic",
+//     description: "Affordable home internet with standard speeds",
+//     category: "Residential",
+//     basePrice: 1499,
+//     accessMethods: {
+//       hotspot: {
+//         enabled: true,
+//         downloadSpeed: { value: "10", unit: "Mbps" },
+//         uploadSpeed: { value: "5", unit: "Mbps" },
+//         dataLimit: { value: "100", unit: "GB" },
+//         usageLimit: { value: "720", unit: "Hours" },
+//         maxDevices: 3,
+//         sessionTimeout: 86400,
+//         idleTimeout: 300,
+//         validityPeriod: { value: "30", unit: "Days" },
+//         macBinding: false
+//       },
+//       pppoe: {
+//         enabled: false,
+//         downloadSpeed: { value: "10", unit: "Mbps" },
+//         uploadSpeed: { value: "5", unit: "Mbps" },
+//         dataLimit: { value: "100", unit: "GB" },
+//         usageLimit: { value: "720", unit: "Hours" },
+//         maxDevices: 3,
+//         sessionTimeout: 86400,
+//         idleTimeout: 300,
+//         validityPeriod: { value: "30", unit: "Days" },
+//         macBinding: false,
+//         ipPool: "pppoe-pool-1",
+//         mtu: 1492
+//       }
+//     },
+//     time_variant: {
+//       is_active: false
+//     }
+//   },
+//   {
+//     id: "business-pro",
+//     name: "Business Pro",
+//     description: "High-speed plan for business users",
+//     category: "Business",
+//     basePrice: 7999,
+//     accessMethods: {
+//       hotspot: {
+//         enabled: false
+//       },
+//       pppoe: {
+//         enabled: true,
+//         downloadSpeed: { value: "100", unit: "Mbps" },
+//         uploadSpeed: { value: "50", unit: "Mbps" },
+//         dataLimit: { value: "Unlimited", unit: "Unlimited" },
+//         usageLimit: { value: "Unlimited", unit: "Unlimited" },
+//         maxDevices: 50,
+//         sessionTimeout: 259200,
+//         idleTimeout: 3600,
+//         validityPeriod: { value: "30", unit: "Days" },
+//         macBinding: true,
+//         ipPool: "business-pool",
+//         mtu: 1492
+//       }
+//     },
+//     time_variant: {
+//       is_active: false
+//     }
+//   },
+//   {
+//     id: "student-night",
+//     name: "Student Night Plan",
+//     description: "Affordable plan for students during off-peak hours",
+//     category: "Promotional",
+//     basePrice: 999,
+//     accessMethods: {
+//       hotspot: {
+//         enabled: true,
+//         downloadSpeed: { value: "20", unit: "Mbps" },
+//         uploadSpeed: { value: "5", unit: "Mbps" },
+//         dataLimit: { value: "Unlimited", unit: "Unlimited" },
+//         usageLimit: { value: "480", unit: "Hours" },
+//         maxDevices: 2,
+//         sessionTimeout: 28800,
+//         idleTimeout: 600,
+//         validityPeriod: { value: "30", unit: "Days" },
+//         macBinding: false
+//       },
+//       pppoe: {
+//         enabled: false
+//       }
+//     },
+//     time_variant: {
+//       is_active: true,
+//       start_time: "22:00",
+//       end_time: "06:00",
+//       available_days: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+//       schedule_active: false,
+//       timezone: "Africa/Nairobi"
+//     }
+//   },
+//   {
+//     id: "public-wifi",
+//     name: "Public WiFi",
+//     description: "Basic public WiFi access",
+//     category: "Public",
+//     basePrice: 0,
+//     accessMethods: {
+//       hotspot: {
+//         enabled: true,
+//         downloadSpeed: { value: "5", unit: "Mbps" },
+//         uploadSpeed: { value: "1", unit: "Mbps" },
+//         dataLimit: { value: "1", unit: "GB" },
+//         usageLimit: { value: "2", unit: "Hours" },
+//         maxDevices: 1,
+//         sessionTimeout: 7200,
+//         idleTimeout: 300,
+//         validityPeriod: { value: "1", unit: "Days" },
+//         macBinding: false
+//       },
+//       pppoe: {
+//         enabled: false
+//       }
+//     },
+//     time_variant: {
+//       is_active: false
+//     }
+//   }
+// ]);
+
+// // Bandwidth presets (Kbps)
+// export const bandwidthPresets = Object.freeze([
+//   { value: 256, label: "0.25 Mbps", category: "Basic" },
+//   { value: 512, label: "0.5 Mbps", category: "Basic" },
+//   { value: 1024, label: "1 Mbps", category: "Basic" },
+//   { value: 2048, label: "2 Mbps", category: "Standard" },
+//   { value: 5120, label: "5 Mbps", category: "Standard" },
+//   { value: 10240, label: "10 Mbps", category: "Premium" },
+//   { value: 20480, label: "20 Mbps", category: "Premium" },
+//   { value: 51200, label: "50 Mbps", category: "Business" },
+//   { value: 102400, label: "100 Mbps", category: "Business" },
+//   { value: 204800, label: "200 Mbps", category: "Enterprise" }
+// ]);
+
+// // Data limit presets
+// export const dataLimitPresets = Object.freeze([
+//   { value: "1", unit: "GB", label: "1 GB", category: "Basic" },
+//   { value: "5", unit: "GB", label: "5 GB", category: "Basic" },
+//   { value: "10", unit: "GB", label: "10 GB", category: "Standard" },
+//   { value: "20", unit: "GB", label: "20 GB", category: "Standard" },
+//   { value: "50", unit: "GB", label: "50 GB", category: "Premium" },
+//   { value: "100", unit: "GB", label: "100 GB", category: "Premium" },
+//   { value: "200", unit: "GB", label: "200 GB", category: "Business" },
+//   { value: "500", unit: "GB", label: "500 GB", category: "Business" },
+//   { value: "1000", unit: "GB", label: "1 TB", category: "Enterprise" },
+//   { value: "Unlimited", unit: "Unlimited", label: "Unlimited", category: "Enterprise" }
+// ]);
+
+// // Usage limit presets
+// export const usageLimitPresets = Object.freeze([
+//   { value: "1", unit: "Hours", label: "1 Hour", category: "Short" },
+//   { value: "2", unit: "Hours", label: "2 Hours", category: "Short" },
+//   { value: "4", unit: "Hours", label: "4 Hours", category: "Standard" },
+//   { value: "8", unit: "Hours", label: "8 Hours", category: "Standard" },
+//   { value: "12", unit: "Hours", label: "12 Hours", category: "Extended" },
+//   { value: "24", unit: "Hours", label: "24 Hours", category: "Extended" },
+//   { value: "168", unit: "Hours", label: "1 Week", category: "Extended" },
+//   { value: "Unlimited", unit: "Unlimited", label: "Unlimited", category: "Unlimited" }
+// ]);
+
+// // Validity period presets
+// export const validityPeriodPresets = Object.freeze([
+//   { value: "1", unit: "Hours", label: "1 Hour", category: "Short" },
+//   { value: "24", unit: "Hours", label: "1 Day", category: "Daily" },
+//   { value: "168", unit: "Hours", label: "1 Week", category: "Weekly" },
+//   { value: "720", unit: "Hours", label: "1 Month", category: "Monthly" },
+//   { value: "2160", unit: "Hours", label: "3 Months", category: "Quarterly" },
+//   { value: "4320", unit: "Hours", label: "6 Months", category: "Semi-Annual" },
+//   { value: "8760", unit: "Hours", label: "1 Year", category: "Annual" }
+// ]);
+
+// // Pricing matrix types (matches PriceMatrix.DISCOUNT_TYPES)
+// export const pricingMatrixTypes = Object.freeze([
+//   { value: "percentage", label: "Percentage Discount" },
+//   { value: "fixed", label: "Fixed Amount" },
+//   { value: "tiered", label: "Tiered Pricing" },
+//   { value: "volume", label: "Volume Discount" }
+// ]);
+
+// // Price matrix applies to (matches PriceMatrix.APPLIES_TO)
+// export const pricingAppliesTo = Object.freeze([
+//   { value: "plan", label: "Specific Plan" },
+//   { value: "category", label: "Plan Category" },
+//   { value: "all", label: "All Plans" }
+// ]);
+
+// // Discount rule types (matches DiscountRule.RULE_TYPES)
+// export const discountRuleTypes = Object.freeze([
+//   { value: "first_time", label: "First Time Purchase" },
+//   { value: "loyalty", label: "Loyalty Discount" },
+//   { value: "seasonal", label: "Seasonal Promotion" },
+//   { value: "referral", label: "Referral Bonus" },
+//   { value: "bulk", label: "Bulk Purchase" }
+// ]);
+
+// // Plan statuses
+// export const planStatuses = Object.freeze([
+//   { value: "active", label: "Active", color: "text-green-600", bgColor: "bg-green-100" },
+//   { value: "inactive", label: "Inactive", color: "text-red-600", bgColor: "bg-red-100" },
+//   { value: "draft", label: "Draft", color: "text-yellow-600", bgColor: "bg-yellow-100" },
+//   { value: "archived", label: "Archived", color: "text-gray-600", bgColor: "bg-gray-100" }
+// ]);
+
+// // Availability statuses (matches backend availability codes)
+// export const availabilityStatuses = Object.freeze([
+//   { value: "available", label: "Available Now", color: "green" },
+//   { value: "time_restricted", label: "Time Restricted", color: "yellow" },
+//   { value: "scheduled", label: "Scheduled", color: "blue" },
+//   { value: "unavailable", label: "Unavailable", color: "red" },
+//   { value: "always_available", label: "Always Available", color: "green" }
+// ]);
+
+// // Analytics types
+// export const analyticsTypes = Object.freeze([
+//   { value: "revenue", label: "Revenue Analytics", icon: "DollarSign" },
+//   { value: "usage", label: "Usage Analytics", icon: "Activity" },
+//   { value: "popularity", label: "Popularity Analytics", icon: "TrendingUp" },
+//   { value: "availability", label: "Availability Analytics", icon: "Clock" }
+// ]);
+
+// // Analytics time ranges
+// export const analyticsTimeRanges = Object.freeze([
+//   { value: "today", label: "Today" },
+//   { value: "yesterday", label: "Yesterday" },
+//   { value: "7d", label: "Last 7 Days" },
+//   { value: "30d", label: "Last 30 Days" },
+//   { value: "90d", label: "Last 90 Days" }
+// ]);
+
+// // Popularity levels based on purchase count
+// export const popularityLevels = Object.freeze({
+//   LOW: { 
+//     threshold: 10, 
+//     color: "text-gray-500", 
+//     bgColor: "bg-gray-100 dark:bg-gray-800",
+//     label: "Low" 
+//   },
+//   MEDIUM: { 
+//     threshold: 50, 
+//     color: "text-yellow-500", 
+//     bgColor: "bg-yellow-100 dark:bg-yellow-900/30",
+//     label: "Medium" 
+//   },
+//   HIGH: { 
+//     threshold: 100, 
+//     color: "text-orange-500", 
+//     bgColor: "bg-orange-100 dark:bg-orange-900/30",
+//     label: "High" 
+//   },
+//   VERY_HIGH: { 
+//     threshold: 200, 
+//     color: "text-red-500", 
+//     bgColor: "bg-red-100 dark:bg-red-900/30",
+//     label: "Very High" 
+//   },
+//   EXTREME: { 
+//     threshold: 500, 
+//     color: "text-purple-500", 
+//     bgColor: "bg-purple-100 dark:bg-purple-900/30",
+//     label: "Extreme" 
+//   }
+// });
+
+// // Default plan features (for display purposes)
+// export const defaultPlanFeatures = Object.freeze([
+//   "24/7 Customer Support",
+//   "99.9% Uptime Guarantee",
+//   "Monthly Billing",
+//   "No Contract Required",
+//   "Advanced Security"
+// ]);
+
+// // Default plan limitations
+// export const defaultPlanLimitations = Object.freeze([
+//   "Fair Usage Policy applies",
+//   "Speed may vary during peak hours",
+//   "Subject to network availability"
+// ]);
+
+// // MTU options for PPPoE
+// export const mtuOptions = Object.freeze([
+//   { value: 1492, label: "1492 (Default)" },
+//   { value: 1500, label: "1500 (Standard)" },
+//   { value: 1454, label: "1454 (PPPoEoA)" },
+//   { value: 1480, label: "1480 (Reduced)" }
+// ]);
+
+// // Plan sort options
+// export const planSortOptions = Object.freeze([
+//   { value: "name", label: "Name (A-Z)" },
+//   { value: "-name", label: "Name (Z-A)" },
+//   { value: "price", label: "Price (Low to High)" },
+//   { value: "-price", label: "Price (High to Low)" },
+//   { value: "purchases", label: "Popularity (Low to High)" },
+//   { value: "-purchases", label: "Popularity (High to Low)" },
+//   { value: "priority_level", label: "Priority (Low to High)" },
+//   { value: "-priority_level", label: "Priority (High to Low)" },
+//   { value: "created_at", label: "Date Created (Oldest)" },
+//   { value: "-created_at", label: "Date Created (Newest)" }
+// ]);
+
+// // Plan filter options
+// export const planFilterOptions = Object.freeze({
+//   category: categories,
+//   planType: planTypes,
+//   accessType: accessMethods,
+//   hasTimeVariant: [
+//     { value: true, label: "With Time Restrictions" },
+//     { value: false, label: "Without Time Restrictions" }
+//   ],
+//   availability: [
+//     { value: true, label: "Available Now" },
+//     { value: false, label: "Currently Unavailable" }
+//   ]
+// });
+
+
+
+
+
+
+// // Exclusion types for time variant configurations
+// export const exclusionTypes = [
+//   { value: 'single_date', label: 'Single Date', description: 'Exclude one specific date' },
+//   { value: 'date_range', label: 'Date Range', description: 'Exclude a range of dates' },
+//   { value: 'weekly', label: 'Weekly Pattern', description: 'Exclude every week on specific days' },
+//   { value: 'monthly', label: 'Monthly Pattern', description: 'Exclude specific days each month' },
+//   { value: 'custom', label: 'Custom Pattern', description: 'Exclude based on custom rules' }
+// ];
+
+// // Optional: exclusion day options for weekly patterns
+// export const exclusionDays = [
+//   { value: 'mon', label: 'Monday' },
+//   { value: 'tue', label: 'Tuesday' },
+//   { value: 'wed', label: 'Wednesday' },
+//   { value: 'thu', label: 'Thursday' },
+//   { value: 'fri', label: 'Friday' },
+//   { value: 'sat', label: 'Saturday' },
+//   { value: 'sun', label: 'Sunday' }
+// ];
+
+
+
+
+// // Recurrence patterns for time variant configurations
+// export const recurrencePatterns = [
+//   { 
+//     value: 'daily', 
+//     label: 'Daily', 
+//     description: 'Every day',
+//     icon: 'calendar-day'
+//   },
+//   { 
+//     value: 'weekly', 
+//     label: 'Weekly', 
+//     description: 'Specific days each week',
+//     icon: 'calendar-week'
+//   },
+//   { 
+//     value: 'monthly', 
+//     label: 'Monthly', 
+//     description: 'Specific days each month',
+//     icon: 'calendar-month'
+//   },
+//   { 
+//     value: 'custom', 
+//     label: 'Custom Pattern', 
+//     description: 'Custom recurrence rules',
+//     icon: 'calendar-alt'
+//   },
+//   { 
+//     value: 'weekdays', 
+//     label: 'Weekdays Only', 
+//     description: 'Monday to Friday',
+//     icon: 'briefcase'
+//   },
+//   { 
+//     value: 'weekends', 
+//     label: 'Weekends Only', 
+//     description: 'Saturday and Sunday',
+//     icon: 'umbrella-beach'
+//   }
+// ];
+
+// // Recurrence interval options
+// export const recurrenceIntervals = [
+//   { value: 1, label: 'Every' },
+//   { value: 2, label: 'Every 2nd' },
+//   { value: 3, label: 'Every 3rd' },
+//   { value: 4, label: 'Every 4th' },
+//   { value: 5, label: 'Every 5th' },
+//   { value: 6, label: 'Every 6th' },
+//   { value: 7, label: 'Every 7th' }
+// ];
+
+// // Monthly recurrence options
+// export const monthlyRecurrenceOptions = [
+//   { value: 'specific_day', label: 'Specific Day of Month', description: 'e.g., 15th of each month' },
+//   { value: 'specific_weekday', label: 'Specific Weekday of Month', description: 'e.g., 2nd Monday of each month' },
+//   { value: 'last_day', label: 'Last Day of Month', description: 'Last day of each month' },
+//   { value: 'first_day', label: 'First Day of Month', description: 'First day of each month' }
+// ];
+
+
+// // Time range presets
+// export const timeRangePresets = [
+//   { value: 'morning', label: 'Morning', startTime: '06:00', endTime: '12:00' },
+//   { value: 'afternoon', label: 'Afternoon', startTime: '12:00', endTime: '18:00' },
+//   { value: 'evening', label: 'Evening', startTime: '18:00', endTime: '22:00' },
+//   { value: 'night', label: 'Night', startTime: '22:00', endTime: '06:00' },
+//   { value: 'business_hours', label: 'Business Hours', startTime: '08:00', endTime: '17:00' },
+//   { value: 'custom', label: 'Custom Range', startTime: '', endTime: '' }
+// ];
+
+
+
+
+
+// // Client type restrictions (if you need this for your form)
+// export const clientTypeRestrictions = Object.freeze([
+//   { value: "all", label: "All Client Types" },
+//   { value: "individual", label: "Individual Users Only" },
+//   { value: "business", label: "Business Clients Only" },
+//   { value: "residential", label: "Residential Only" },
+//   { value: "premium", label: "Premium Clients Only" }
+// ]);
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ============================================================================
 // PLAN MANAGEMENT CONSTANTS
 // ALIGNED WITH DJANGO BACKEND MODELS
@@ -854,55 +1460,56 @@ export const templateTypes = Object.freeze([
   }
 ]);
 
-// Bandwidth presets (Kbps)
+// Bandwidth presets (Kbps) - FIXED: Added description property
 export const bandwidthPresets = Object.freeze([
-  { value: 256, label: "0.25 Mbps", category: "Basic" },
-  { value: 512, label: "0.5 Mbps", category: "Basic" },
-  { value: 1024, label: "1 Mbps", category: "Basic" },
-  { value: 2048, label: "2 Mbps", category: "Standard" },
-  { value: 5120, label: "5 Mbps", category: "Standard" },
-  { value: 10240, label: "10 Mbps", category: "Premium" },
-  { value: 20480, label: "20 Mbps", category: "Premium" },
-  { value: 51200, label: "50 Mbps", category: "Business" },
-  { value: 102400, label: "100 Mbps", category: "Business" },
-  { value: 204800, label: "200 Mbps", category: "Enterprise" }
+  { value: 0, label: "Unlimited", description: "No bandwidth restrictions", category: "Unlimited" },
+  { value: 256, label: "0.25 Mbps", description: "Basic browsing and email", category: "Basic" },
+  { value: 512, label: "0.5 Mbps", description: "Light browsing and messaging", category: "Basic" },
+  { value: 1024, label: "1 Mbps", description: "Standard web browsing", category: "Basic" },
+  { value: 2048, label: "2 Mbps", description: "SD video streaming", category: "Standard" },
+  { value: 5120, label: "5 Mbps", description: "HD video streaming", category: "Standard" },
+  { value: 10240, label: "10 Mbps", description: "Multiple HD streams", category: "Premium" },
+  { value: 20480, label: "20 Mbps", description: "4K streaming", category: "Premium" },
+  { value: 51200, label: "50 Mbps", description: "Business applications", category: "Business" },
+  { value: 102400, label: "100 Mbps", description: "High-speed business", category: "Business" },
+  { value: 204800, label: "200 Mbps", description: "Enterprise grade", category: "Enterprise" }
 ]);
 
-// Data limit presets
+// Data limit presets - FIXED: Added description property
 export const dataLimitPresets = Object.freeze([
-  { value: "1", unit: "GB", label: "1 GB", category: "Basic" },
-  { value: "5", unit: "GB", label: "5 GB", category: "Basic" },
-  { value: "10", unit: "GB", label: "10 GB", category: "Standard" },
-  { value: "20", unit: "GB", label: "20 GB", category: "Standard" },
-  { value: "50", unit: "GB", label: "50 GB", category: "Premium" },
-  { value: "100", unit: "GB", label: "100 GB", category: "Premium" },
-  { value: "200", unit: "GB", label: "200 GB", category: "Business" },
-  { value: "500", unit: "GB", label: "500 GB", category: "Business" },
-  { value: "1000", unit: "GB", label: "1 TB", category: "Enterprise" },
-  { value: "Unlimited", unit: "Unlimited", label: "Unlimited", category: "Enterprise" }
+  { value: "1", unit: "GB", label: "1 GB", description: "Light usage", category: "Basic" },
+  { value: "5", unit: "GB", label: "5 GB", description: "Basic usage", category: "Basic" },
+  { value: "10", unit: "GB", label: "10 GB", description: "Standard usage", category: "Standard" },
+  { value: "20", unit: "GB", label: "20 GB", description: "Moderate usage", category: "Standard" },
+  { value: "50", unit: "GB", label: "50 GB", description: "Heavy usage", category: "Premium" },
+  { value: "100", unit: "GB", label: "100 GB", description: "Very heavy usage", category: "Premium" },
+  { value: "200", unit: "GB", label: "200 GB", description: "Business usage", category: "Business" },
+  { value: "500", unit: "GB", label: "500 GB", description: "High business usage", category: "Business" },
+  { value: "1000", unit: "GB", label: "1 TB", description: "Enterprise usage", category: "Enterprise" },
+  { value: "Unlimited", unit: "Unlimited", label: "Unlimited", description: "No data limits", category: "Enterprise" }
 ]);
 
-// Usage limit presets
+// Usage limit presets - FIXED: Added description property
 export const usageLimitPresets = Object.freeze([
-  { value: "1", unit: "Hours", label: "1 Hour", category: "Short" },
-  { value: "2", unit: "Hours", label: "2 Hours", category: "Short" },
-  { value: "4", unit: "Hours", label: "4 Hours", category: "Standard" },
-  { value: "8", unit: "Hours", label: "8 Hours", category: "Standard" },
-  { value: "12", unit: "Hours", label: "12 Hours", category: "Extended" },
-  { value: "24", unit: "Hours", label: "24 Hours", category: "Extended" },
-  { value: "168", unit: "Hours", label: "1 Week", category: "Extended" },
-  { value: "Unlimited", unit: "Unlimited", label: "Unlimited", category: "Unlimited" }
+  { value: "1", unit: "Hours", label: "1 Hour", description: "Very short sessions", category: "Short" },
+  { value: "2", unit: "Hours", label: "2 Hours", description: "Short sessions", category: "Short" },
+  { value: "4", unit: "Hours", label: "4 Hours", description: "Standard sessions", category: "Standard" },
+  { value: "8", unit: "Hours", label: "8 Hours", description: "Full work day", category: "Standard" },
+  { value: "12", unit: "Hours", label: "12 Hours", description: "Extended sessions", category: "Extended" },
+  { value: "24", unit: "Hours", label: "24 Hours", description: "Full day access", category: "Extended" },
+  { value: "168", unit: "Hours", label: "1 Week", description: "Week-long access", category: "Extended" },
+  { value: "Unlimited", unit: "Unlimited", label: "Unlimited", description: "No time limits", category: "Unlimited" }
 ]);
 
-// Validity period presets
+// Validity period presets - FIXED: Added description property
 export const validityPeriodPresets = Object.freeze([
-  { value: "1", unit: "Hours", label: "1 Hour", category: "Short" },
-  { value: "24", unit: "Hours", label: "1 Day", category: "Daily" },
-  { value: "168", unit: "Hours", label: "1 Week", category: "Weekly" },
-  { value: "720", unit: "Hours", label: "1 Month", category: "Monthly" },
-  { value: "2160", unit: "Hours", label: "3 Months", category: "Quarterly" },
-  { value: "4320", unit: "Hours", label: "6 Months", category: "Semi-Annual" },
-  { value: "8760", unit: "Hours", label: "1 Year", category: "Annual" }
+  { value: "1", unit: "Hours", label: "1 Hour", description: "Very short term", category: "Short" },
+  { value: "24", unit: "Hours", label: "1 Day", description: "Daily plans", category: "Daily" },
+  { value: "168", unit: "Hours", label: "1 Week", description: "Weekly plans", category: "Weekly" },
+  { value: "720", unit: "Hours", label: "1 Month", description: "Monthly plans", category: "Monthly" },
+  { value: "2160", unit: "Hours", label: "3 Months", description: "Quarterly plans", category: "Quarterly" },
+  { value: "4320", unit: "Hours", label: "6 Months", description: "Semi-annual plans", category: "Semi-Annual" },
+  { value: "8760", unit: "Hours", label: "1 Year", description: "Annual plans", category: "Annual" }
 ]);
 
 // Pricing matrix types (matches PriceMatrix.DISCOUNT_TYPES)
@@ -1049,3 +1656,101 @@ export const planFilterOptions = Object.freeze({
     { value: false, label: "Currently Unavailable" }
   ]
 });
+
+// Exclusion types for time variant configurations
+export const exclusionTypes = [
+  { value: 'single_date', label: 'Single Date', description: 'Exclude one specific date' },
+  { value: 'date_range', label: 'Date Range', description: 'Exclude a range of dates' },
+  { value: 'weekly', label: 'Weekly Pattern', description: 'Exclude every week on specific days' },
+  { value: 'monthly', label: 'Monthly Pattern', description: 'Exclude specific days each month' },
+  { value: 'custom', label: 'Custom Pattern', description: 'Exclude based on custom rules' }
+];
+
+// Optional: exclusion day options for weekly patterns
+export const exclusionDays = [
+  { value: 'mon', label: 'Monday' },
+  { value: 'tue', label: 'Tuesday' },
+  { value: 'wed', label: 'Wednesday' },
+  { value: 'thu', label: 'Thursday' },
+  { value: 'fri', label: 'Friday' },
+  { value: 'sat', label: 'Saturday' },
+  { value: 'sun', label: 'Sunday' }
+];
+
+// Recurrence patterns for time variant configurations
+export const recurrencePatterns = [
+  { 
+    value: 'daily', 
+    label: 'Daily', 
+    description: 'Every day',
+    icon: 'calendar-day'
+  },
+  { 
+    value: 'weekly', 
+    label: 'Weekly', 
+    description: 'Specific days each week',
+    icon: 'calendar-week'
+  },
+  { 
+    value: 'monthly', 
+    label: 'Monthly', 
+    description: 'Specific days each month',
+    icon: 'calendar-month'
+  },
+  { 
+    value: 'custom', 
+    label: 'Custom Pattern', 
+    description: 'Custom recurrence rules',
+    icon: 'calendar-alt'
+  },
+  { 
+    value: 'weekdays', 
+    label: 'Weekdays Only', 
+    description: 'Monday to Friday',
+    icon: 'briefcase'
+  },
+  { 
+    value: 'weekends', 
+    label: 'Weekends Only', 
+    description: 'Saturday and Sunday',
+    icon: 'umbrella-beach'
+  }
+];
+
+// Recurrence interval options
+export const recurrenceIntervals = [
+  { value: 1, label: 'Every' },
+  { value: 2, label: 'Every 2nd' },
+  { value: 3, label: 'Every 3rd' },
+  { value: 4, label: 'Every 4th' },
+  { value: 5, label: 'Every 5th' },
+  { value: 6, label: 'Every 6th' },
+  { value: 7, label: 'Every 7th' }
+];
+
+// Monthly recurrence options
+export const monthlyRecurrenceOptions = [
+  { value: 'specific_day', label: 'Specific Day of Month', description: 'e.g., 15th of each month' },
+  { value: 'specific_weekday', label: 'Specific Weekday of Month', description: 'e.g., 2nd Monday of each month' },
+  { value: 'last_day', label: 'Last Day of Month', description: 'Last day of each month' },
+  { value: 'first_day', label: 'First Day of Month', description: 'First day of each month' }
+];
+
+// Time range presets
+export const timeRangePresets = [
+  { value: 'morning', label: 'Morning', startTime: '06:00', endTime: '12:00' },
+  { value: 'afternoon', label: 'Afternoon', startTime: '12:00', endTime: '18:00' },
+  { value: 'evening', label: 'Evening', startTime: '18:00', endTime: '22:00' },
+  { value: 'night', label: 'Night', startTime: '22:00', endTime: '06:00' },
+  { value: 'business_hours', label: 'Business Hours', startTime: '08:00', endTime: '17:00' },
+  { value: 'custom', label: 'Custom Range', startTime: '', endTime: '' }
+];
+
+// Client type restrictions (if you need this for your form)
+export const clientTypeRestrictions = Object.freeze([
+  { value: "all", label: "All Client Types" },
+  { value: "individual", label: "Individual Users Only" },
+  { value: "business", label: "Business Clients Only" },
+  { value: "residential", label: "Residential Only" },
+  { value: "premium", label: "Premium Clients Only" }
+]);

@@ -582,8 +582,7 @@
 // src/pages/ServiceOperations/components/RouterCompatibility.jsx
 import React from "react";
 import { Wifi, Cable, Check, X } from "lucide-react";
-import { getThemeClasses } from "../../Shared/components";
-
+import { getThemeClasses } from "../../../components/ServiceManagement/Shared/components"
 const RouterCompatibility = ({ plans = [], routers = [], theme }) => {
   const themeClasses = getThemeClasses(theme);
 

@@ -1,7 +1,7 @@
 // src/pages/ServiceOperations/components/SystemMonitoring.jsx
 import React from "react";
 import { Activity, Heart, Zap, AlertCircle, CheckCircle } from "lucide-react";
-import { getThemeClasses } from "../../Shared/components";
+import { getThemeClasses } from "../../../components/ServiceManagement/Shared/components"
 
 const SystemMonitoring = ({ healthStatus, queueStats, operationStats, theme }) => {
   const themeClasses = getThemeClasses(theme);

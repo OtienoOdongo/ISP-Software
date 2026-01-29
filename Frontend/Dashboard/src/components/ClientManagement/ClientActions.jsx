@@ -578,7 +578,7 @@ import {
 } from 'react-icons/fi';
 import { FaSpinner } from 'react-icons/fa';
 import Modal from '../ClientManagement/UI/Modal'
-import { formatCurrency, formatDate } from '../../utils/formatters';
+import { formatCurrency, formatDate } from './utils/formatters';
 import ClientService from '../ClientManagement/services/ClientService'
 import { getThemeClasses, EnhancedSelect } from '../ServiceManagement/Shared/components' 
 

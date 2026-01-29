@@ -1,7 +1,7 @@
 // src/pages/ServiceOperations/components/OperationLogs.jsx
 import React, { useState, useEffect } from "react";
 import api from "../../../api";
-import { getThemeClasses } from "../../Shared/components";
+import { getThemeClasses } from "../../../components/ServiceManagement/Shared/components"
 import { Terminal, AlertCircle, CheckCircle, Info } from "lucide-react";
 
 const OperationLogs = ({ theme }) => {

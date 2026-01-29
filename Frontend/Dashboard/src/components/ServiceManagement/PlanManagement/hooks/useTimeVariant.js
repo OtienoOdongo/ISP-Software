@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
-import { validateTimeVariant as validateTimeVariantUtil } from "../Shared/utils";
-import { timeZoneOptions, daysOfWeek, timeUnits } from "../Shared/constant";
+import { validateTimeVariant as validateTimeVariantUtil } from "../../Shared/utils.js";
+import { timeZoneOptions, daysOfWeek, timeUnits } from "../../Shared/constant.js";
 
 // Initial time variant state
 export const getInitialTimeVariantState = () => ({

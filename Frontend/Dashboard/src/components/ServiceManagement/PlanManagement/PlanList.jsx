@@ -524,7 +524,8 @@ import {
 } from "lucide-react";
 import { FaSpinner } from "react-icons/fa";
 import { EnhancedSelect, getThemeClasses, AvailabilityBadge, PriceBadge, PlanTypeBadge } from "../Shared/components"
-import { formatNumber, formatBytes, formatDuration, calculateRating, isPlanAvailableNow } from "../Shared/utils"
+import {  calculateRating, isPlanAvailableNow, formatNumber } from "../Shared/utils"
+import {  formatBytes, formatDuration } from "../Shared/formatters"
 import { categories, planTypes } from "../Shared/constant"
 
 // Star component

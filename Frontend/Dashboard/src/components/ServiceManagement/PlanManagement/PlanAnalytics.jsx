@@ -1240,12 +1240,8 @@ import {
   TrendingDown, Globe, Shield, Package
 } from "lucide-react";
 import { EnhancedSelect, getThemeClasses } from "../Shared/components"
-import { 
-  formatNumber, 
-  formatCurrency,
-  calculatePlanStatistics,
-  getAccessTypeColor
-} from "../Shared/utils"
+import { processAnalyticsData as calculatePlanStatistics, getAccessTypeColor } from "../Shared/utils"
+import { formatNumber, formatCurrency } from "../Shared/formatters"
 import { categories, planTypes } from "../Shared/constant"
 
 // Enhanced Progress Bar

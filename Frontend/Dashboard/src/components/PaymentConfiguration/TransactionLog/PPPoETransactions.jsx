@@ -531,7 +531,7 @@ import { CSVLink } from 'react-csv';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import api from '../../../api';
-import { EnhancedSelect, EnhancedDatePicker } from '../../ServiceManagement/Shared/components';
+import { EnhancedSelect, DateRangePicker } from '../../ServiceManagement/Shared/components';
 
 const PPPoETransactions = ({ filters, onFilterChange, onRefresh, onTransactionSelect, loading, error, theme }) => {
   const [pppoeTransactions, setPppoeTransactions] = useState([]);

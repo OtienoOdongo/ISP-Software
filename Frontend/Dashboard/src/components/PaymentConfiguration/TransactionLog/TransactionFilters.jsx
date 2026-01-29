@@ -296,7 +296,7 @@ import { FaSearch, FaDownload } from 'react-icons/fa';
 import { CSVLink } from 'react-csv';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { EnhancedSelect, EnhancedDatePicker } from '../../ServiceManagement/Shared/components';
+import { EnhancedSelect, DateRangePicker  } from '../../ServiceManagement/Shared/components';
 import api from '../../../api';
 
 const TransactionFilters = ({ filters, onFilterChange, onRefresh, loading, theme }) => {
@@ -521,7 +521,7 @@ const TransactionFilters = ({ filters, onFilterChange, onRefresh, loading, theme
 
         {/* Date Pickers */}
         <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-          <EnhancedDatePicker
+          <DateRangePicker 
             selected={filters.startDate}
             onChange={(date) => handleDateChange('startDate', date)}
             selectsStart
@@ -531,7 +531,7 @@ const TransactionFilters = ({ filters, onFilterChange, onRefresh, loading, theme
             theme={theme}
             className="w-full sm:w-40"
           />
-          <EnhancedDatePicker
+          <DateRangePicker 
             selected={filters.endDate}
             onChange={(date) => handleDateChange('endDate', date)}
             selectsEnd

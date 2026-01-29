@@ -543,7 +543,7 @@ import ResetPasswordConfirm from "./components/auth/ResetPasswordConfirm";
 import DashboardOverview from "./Pages/DashBoard/DashboardOverview";
 import Subscribers from "./Pages/UserManagement/Subscribers";
 import SmsAutomation from "./Pages/UserManagement/SmsAutomation";
-import BulkActions from "./Pages/UserManagement/BulkActions";
+
 
 // Service Plans
 import PlanManagement from "./Pages/ServiceManagement/PlanManagement"; 
@@ -587,7 +587,7 @@ const routeConfig = {
         { index: true, element: <Navigate to="client-portal" replace /> },
         { path: "client-portal", element: <Subscribers /> },
         { path: "sms-automation", element: <SmsAutomation /> },
-        { path: "bulk-actions", element: <BulkActions /> },
+      
       ],
     },
     // Updated to match "Service Plans" menu

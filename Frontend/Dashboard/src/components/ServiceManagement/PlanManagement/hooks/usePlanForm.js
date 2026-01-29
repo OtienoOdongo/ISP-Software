@@ -256,7 +256,7 @@ import {
   validateNumber, 
   validatePrice,
   validateTimeVariant as validateTimeVariantUtil
-} from "../../Shared/utils";
+} from "../../Shared/utils.js";
 import { 
   planTypes, 
   categories, 

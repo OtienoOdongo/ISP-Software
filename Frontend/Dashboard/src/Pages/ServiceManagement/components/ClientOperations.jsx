@@ -1,7 +1,7 @@
 // src/pages/ServiceOperations/components/ClientOperations.jsx
 import React, { useState, useEffect } from "react";
 import api from "../../../api";
-import { getThemeClasses } from "../../Shared/components";
+import { getThemeClasses } from "../../../components/ServiceManagement/Shared/components"
 import { FileText, Clock, Check, X, AlertTriangle } from "lucide-react";
 
 const ClientOperations = ({ theme }) => {
