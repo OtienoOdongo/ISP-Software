@@ -810,8 +810,8 @@ class HotspotUser(models.Model):
         related_name="hotspot_user",
         limit_choices_to={'user_type': 'client'},  
     )
-    plan = models.ForeignKey("internet_plans.InternetPlan", on_delete=models.SET_NULL, null=True)
-    transaction = models.ForeignKey("payments.Transaction", on_delete=models.SET_NULL, null=True)
+    # plan = models.ForeignKey("internet_plans.InternetPlan", on_delete=models.SET_NULL, null=True)
+    # transaction = models.ForeignKey("payments.Transaction", on_delete=models.SET_NULL, null=True)
     mac = models.CharField(max_length=17)
     ip = models.GenericIPAddressField()
     connected_at = models.DateTimeField(default=timezone.now)
@@ -898,8 +898,8 @@ class PPPoEUser(models.Model):
         related_name="pppoe_user",
         limit_choices_to={'user_type': 'client'},  
     )
-    plan = models.ForeignKey("internet_plans.InternetPlan", on_delete=models.SET_NULL, null=True)
-    transaction = models.ForeignKey("payments.Transaction", on_delete=models.SET_NULL, null=True)
+    # plan = models.ForeignKey("internet_plans.InternetPlan", on_delete=models.SET_NULL, null=True)
+    # transaction = models.ForeignKey("payments.Transaction", on_delete=models.SET_NULL, null=True)
     username = models.CharField(max_length=100)
     password = models.CharField(max_length=100)
     service_name = models.CharField(max_length=100, blank=True)
@@ -992,7 +992,13 @@ class ActivationAttempt(models.Model):
     )
     
     # NEW: Technician workflow association
-    technician = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    technician = models.ForeignKey(
+        'authentication.UserAccount', 
+        limit_choices_to={'user_type__in': ['staff', 'admin']}, 
+        on_delete=models.SET_NULL, 
+        null=True,
+        blank=True
+    )
     workflow_type = models.CharField(max_length=50, blank=True, null=True)
 
     class Meta:
@@ -1151,7 +1157,13 @@ class RouterAuditLog(models.Model):
     router = models.ForeignKey(Router, on_delete=models.CASCADE, related_name="audit_logs", null=True, blank=True  )
     action = models.CharField(max_length=20, choices=ACTION_TYPES)
     description = models.TextField()
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(
+        'authentication.UserAccount',
+        on_delete=models.SET_NULL,
+        limit_choices_to={'user_type': 'client'},  
+        null=True, 
+        blank=True
+    )
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.TextField(blank=True)
     changes = models.JSONField(default=dict, blank=True)
@@ -1201,7 +1213,12 @@ class BulkOperation(models.Model):
     operation_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     operation_type = models.CharField(max_length=20, choices=OPERATION_TYPES)
     routers = models.ManyToManyField(Router, related_name="bulk_operations")
-    initiated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    initiated_by = models.ForeignKey(
+        'authentication.UserAccount', 
+        on_delete=models.CASCADE,
+        null=True,
+        limit_choices_to={'user_type__in': ['staff', 'admin']}
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     results = models.JSONField(default=dict, blank=True)
     started_at = models.DateTimeField(default=timezone.now)

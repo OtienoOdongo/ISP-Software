@@ -3900,3 +3900,23 @@ WARNING 2026-01-29 15:02:01,809 log 22414 140330763531968 Not Found: /api/servic
 WARNING 2026-01-29 15:02:02,113 log 22414 140330808637120 Not Found: /api/service_operations/activations/statistics/
 WARNING 2026-01-29 15:02:07,571 log 22414 140330771924672 Not Found: /api/service_operations/client_operations/
 WARNING 2026-01-29 15:02:07,853 log 22414 140330808637120 Not Found: /api/service_operations/client_operations/
+WARNING 2026-01-30 08:44:38,166 log 5178 140225100641984 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-01-30 08:44:38,509 log 5178 140225100641984 Unauthorized: /api/auth/users/me/
+WARNING 2026-01-30 08:56:53,417 log 5178 140225100641984 Unauthorized: /api/internet_plans/plans/
+WARNING 2026-01-30 08:56:53,717 log 5178 140225100641984 Unauthorized: /api/internet_plans/templates/
+ERROR 2026-01-30 08:56:53,921 log 5178 140225100641984 Internal Server Error: /api/internet_plans/pricing/matrices/
+ERROR 2026-01-30 08:56:54,299 log 5178 140225100641984 Internal Server Error: /api/internet_plans/pricing/rules/
+WARNING 2026-01-30 08:58:09,165 log 5178 140225100641984 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-01-30 08:58:11,018 log 5178 140225100641984 Unauthorized: /api/auth/users/me/
+WARNING 2026-01-30 09:01:42,826 log 5178 140225100641984 Unauthorized: /api/internet_plans/plans/
+WARNING 2026-01-30 09:01:43,265 log 5178 140225100641984 Unauthorized: /api/internet_plans/templates/
+ERROR 2026-01-30 09:01:44,508 log 5178 140225100641984 Internal Server Error: /api/internet_plans/pricing/matrices/
+ERROR 2026-01-30 09:01:44,655 log 5178 140225100641984 Internal Server Error: /api/internet_plans/pricing/rules/
+WARNING 2026-01-30 09:02:20,899 log 5178 140225100641984 Unauthorized: /api/dashboard/
+WARNING 2026-01-30 11:28:56,710 log 22922 140302644934336 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-01-30 11:28:58,210 log 22922 140302644934336 Unauthorized: /api/auth/users/me/
+WARNING 2026-01-30 11:42:00,575 log 22922 140302644934336 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-01-30 11:42:00,593 log 22922 140302644934336 Unauthorized: /api/auth/users/me/
+WARNING 2026-01-30 11:55:02,230 log 22922 140302644934336 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-01-30 11:55:02,307 log 22922 140302644934336 Unauthorized: /api/auth/users/me/
+ERROR 2026-01-30 12:34:56,564 log 22922 140302644934336 Internal Server Error: /api/internet_plans/plans/

@@ -383,9 +383,7 @@ class PlanTemplate(models.Model):
         ('Business', 'Business'),
         ('Promotional', 'Promotional'),
         ('Enterprise', 'Enterprise'),
-        ('Hotspot', 'Hotspot Only'),
-        ('PPPoE', 'PPPoE Only'),
-        ('Dual', 'Hotspot & PPPoE'),
+       
     )
     
     # Core Template Fields
@@ -647,9 +645,7 @@ class InternetPlan(models.Model):
         ('Business', 'Business'),
         ('Promotional', 'Promotional'),
         ('Enterprise', 'Enterprise'),
-        ('Hotspot', 'Hotspot Only'),
-        ('PPPoE', 'PPPoE Only'),
-        ('Dual', 'Hotspot & PPPoE'),
+       
     )
     
     PRIORITY_LEVELS = (
@@ -707,12 +703,12 @@ class InternetPlan(models.Model):
     # Plan Configuration
     priority_level = models.IntegerField(choices=PRIORITY_LEVELS, default=4)
     router_specific = models.BooleanField(default=False)
-    allowed_routers = models.ManyToManyField(
-        'network_management.Router',
-        blank=True,
-        related_name='allowed_plans',
-        help_text="Routers where this plan can be used (if router_specific)"
-    )
+    # allowed_routers = models.ManyToManyField(
+    #     'network_management.Router',
+    #     blank=True,
+    #     related_name='allowed_plans',
+    #     help_text="Routers where this plan can be used (if router_specific)"
+    # )
     
     # FUP (Fair Usage Policy)
     FUP_policy = models.TextField(blank=True, default="")
@@ -844,8 +840,7 @@ class InternetPlan(models.Model):
                 'idleTimeout': 300,
                 'validityPeriod': {'value': '30', 'unit': 'Days'},
                 'macBinding': False,
-                # Removed: captivePortalEnabled, authenticationType, splashPage, redirectUrl,
-                # concurrentConnections, dnsServers
+               
             },
             'pppoe': {
                 'enabled': False,
@@ -862,7 +857,7 @@ class InternetPlan(models.Model):
                 'ipPool': 'pppoe-pool-1',
                 'serviceName': '',
                 'mtu': 1492,
-                # Removed: dnsServers
+              
             }
         }
     

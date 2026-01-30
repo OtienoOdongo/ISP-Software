@@ -137,8 +137,7 @@
 from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from internet_plans.models.plan_models import InternetPlan
-from payments.models.payment_config_model import Transaction
+
 
 class QoSProfile(models.Model):
     """
@@ -228,19 +227,19 @@ class BandwidthAllocation(models.Model):
         help_text="Client associated with this allocation"
     )
     plan = models.ForeignKey(
-        InternetPlan,
+        "internet_plans.InternetPlan",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         help_text="Internet plan for this allocation"
     )
-    transaction = models.ForeignKey(
-        Transaction,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        help_text="Transaction associated with this allocation"
-    )
+    # transaction = models.ForeignKey(
+    #     "payments.Transaction", 
+    #     on_delete=models.SET_NULL,
+    #     null=True,
+    #     blank=True,
+    #     help_text="Transaction associated with this allocation"
+    # )
     qos_profile = models.ForeignKey(
         QoSProfile,
         on_delete=models.SET_NULL,
