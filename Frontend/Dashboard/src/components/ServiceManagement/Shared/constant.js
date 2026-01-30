@@ -1191,9 +1191,7 @@ export const categories = Object.freeze([
   { value: "Business", label: "Business" },
   { value: "Promotional", label: "Promotional" },
   { value: "Enterprise", label: "Enterprise" },
-  { value: "Hotspot", label: "Hotspot Only" },
-  { value: "PPPoE", label: "PPPoE Only" },
-  { value: "Dual", label: "Hotspot & PPPoE" }
+  
 ]);
 
 // Access methods (simplified - only technical specs)
