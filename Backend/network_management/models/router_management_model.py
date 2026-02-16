@@ -810,8 +810,8 @@ class HotspotUser(models.Model):
         related_name="hotspot_user",
         limit_choices_to={'user_type': 'client'},  
     )
-    # plan = models.ForeignKey("internet_plans.InternetPlan", on_delete=models.SET_NULL, null=True)
-    # transaction = models.ForeignKey("payments.Transaction", on_delete=models.SET_NULL, null=True)
+    plan = models.ForeignKey("internet_plans.InternetPlan", on_delete=models.SET_NULL, null=True)
+    transaction = models.ForeignKey("payments.Transaction", on_delete=models.SET_NULL, null=True)
     mac = models.CharField(max_length=17)
     ip = models.GenericIPAddressField()
     connected_at = models.DateTimeField(default=timezone.now)
@@ -898,8 +898,8 @@ class PPPoEUser(models.Model):
         related_name="pppoe_user",
         limit_choices_to={'user_type': 'client'},  
     )
-    # plan = models.ForeignKey("internet_plans.InternetPlan", on_delete=models.SET_NULL, null=True)
-    # transaction = models.ForeignKey("payments.Transaction", on_delete=models.SET_NULL, null=True)
+    plan = models.ForeignKey("internet_plans.InternetPlan", on_delete=models.SET_NULL, null=True)
+    transaction = models.ForeignKey("payments.Transaction", on_delete=models.SET_NULL, null=True)
     username = models.CharField(max_length=100)
     password = models.CharField(max_length=100)
     service_name = models.CharField(max_length=100, blank=True)

@@ -35,9 +35,9 @@ class SMSService:
     
     def __init__(self):
         self.gateways = {}
+        self._lock = threading.Lock()  
         self.load_gateways()
         self.executor = ThreadPoolExecutor(max_workers=10)
-        self._lock = threading.Lock()
     
     def load_gateways(self):
         """Load configured gateways"""

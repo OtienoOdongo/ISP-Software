@@ -233,13 +233,13 @@ class BandwidthAllocation(models.Model):
         blank=True,
         help_text="Internet plan for this allocation"
     )
-    # transaction = models.ForeignKey(
-    #     "payments.Transaction", 
-    #     on_delete=models.SET_NULL,
-    #     null=True,
-    #     blank=True,
-    #     help_text="Transaction associated with this allocation"
-    # )
+    transaction = models.ForeignKey(
+        "payments.Transaction", 
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Transaction associated with this allocation"
+    )
     qos_profile = models.ForeignKey(
         QoSProfile,
         on_delete=models.SET_NULL,

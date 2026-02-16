@@ -1,13 +1,889 @@
+
+
+
+
+# """
+# Internet Plans - Plan Serializers with Time Variant Support
+# PRODUCTION READY: Complete with all required serializers, proper validation, and error handling
+# FIXED: Validation issues resolved with proper integration of validators and None value handling
+# """
+
+# from rest_framework import serializers
+# from django.core.exceptions import ValidationError
+# from django.db import transaction
+# from django.db.models import Q
+# from django.utils import timezone
+# from decimal import Decimal
+# import logging
+# from django.core.cache import cache
+
+# from internet_plans.models.plan_models import InternetPlan, PlanTemplate, TimeVariantConfig
+# from internet_plans.utils.validators import (
+#     validate_access_methods,
+#     validate_price,
+#     validate_duration_hours,
+#     validate_time_variant,
+#     validate_date_format,
+#     validate_future_date
+# )
+
+# logger = logging.getLogger(__name__)
+
+
+# class TimeVariantConfigSerializer(serializers.ModelSerializer):
+#     """
+#     Serializer for Time Variant Configuration
+#     """
+    
+#     is_available_now = serializers.SerializerMethodField(read_only=True)
+#     availability_summary = serializers.SerializerMethodField(read_only=True)
+#     next_available_time = serializers.SerializerMethodField(read_only=True)
+    
+#     class Meta:
+#         model = TimeVariantConfig
+#         fields = [
+#             'id', 'is_active', 'start_time', 'end_time', 'available_days',
+#             'schedule_active', 'schedule_start_date', 'schedule_end_date',
+#             'duration_active', 'duration_value', 'duration_unit', 'duration_start_date',
+#             'exclusion_dates', 'timezone', 'force_available', 'created_at', 'updated_at',
+#             'is_available_now', 'availability_summary', 'next_available_time'
+#         ]
+#         read_only_fields = ['id', 'created_at', 'updated_at']
+    
+#     def get_is_available_now(self, obj):
+#         return obj.is_available_now()
+    
+#     def get_availability_summary(self, obj):
+#         return obj.get_availability_summary()
+    
+#     def get_next_available_time(self, obj):
+#         return obj.get_next_available_time()
+    
+#     def validate(self, data):
+#         """Validate time variant configuration using validators"""
+#         errors = validate_time_variant(data)
+        
+#         if errors:
+#             raise serializers.ValidationError(errors)
+        
+#         return data
+
+
+# class InternetPlanSerializer(serializers.ModelSerializer):
+#     """
+#     Serializer for Internet Plans - Production Ready
+#     FIXED: Proper validation integration with utils.validators and None value handling
+#     """
+    
+#     # Write-only fields for IDs
+#     template_id = serializers.UUIDField(
+#         write_only=True,
+#         required=False,
+#         allow_null=True,
+#         help_text="Template ID to copy configuration from"
+#     )
+    
+#     time_variant_id = serializers.UUIDField(
+#         write_only=True,
+#         required=False,
+#         allow_null=True,
+#         help_text="Time variant configuration ID"
+#     )
+    
+#     allowed_routers_ids = serializers.ListField(
+#         child=serializers.IntegerField(),
+#         write_only=True,
+#         required=False,
+#         default=list,
+#         help_text="List of allowed router IDs (only if router_specific is true)"
+#     )
+    
+#     # Read-only computed fields
+#     allowed_routers = serializers.SerializerMethodField(read_only=True)
+#     enabled_access_methods = serializers.SerializerMethodField(read_only=True)
+#     access_type = serializers.SerializerMethodField(read_only=True)
+#     is_available_now = serializers.SerializerMethodField(read_only=True)
+#     availability_info = serializers.SerializerMethodField(read_only=True)
+#     time_variant_summary = serializers.SerializerMethodField(read_only=True)
+#     technical_config = serializers.SerializerMethodField(read_only=True)
+#     created_by_info = serializers.SerializerMethodField(read_only=True)
+#     has_time_variant = serializers.SerializerMethodField(read_only=True)
+#     price_formatted = serializers.SerializerMethodField(read_only=True)
+    
+#     # Related objects
+#     time_variant = TimeVariantConfigSerializer(read_only=True)
+    
+#     class Meta:
+#         model = InternetPlan
+#         fields = [
+#             # Core fields
+#             'id', 'plan_type', 'name', 'price', 'price_formatted', 'active', 'category', 'description',
+            
+#             # Configuration
+#             'access_methods', 'priority_level', 'router_specific',
+#             'fup_policy', 'fup_threshold',
+            
+#             # Relationship IDs (write-only)
+#             'template_id', 'time_variant_id', 'allowed_routers_ids',
+            
+#             # Related objects (read-only)
+#             'time_variant', 'allowed_routers',
+            
+#             # Metadata
+#             'purchases', 'client_sessions', 'created_at', 'updated_at', 'created_by',
+            
+#             # Computed fields
+#             'enabled_access_methods', 'access_type', 'is_available_now',
+#             'availability_info', 'time_variant_summary', 'technical_config',
+#             'created_by_info', 'has_time_variant'
+#         ]
+#         read_only_fields = [
+#             'id', 'purchases', 'client_sessions', 'created_at', 'updated_at',
+#             'created_by', 'allowed_routers', 'time_variant', 'enabled_access_methods',
+#             'access_type', 'is_available_now', 'availability_info', 'time_variant_summary',
+#             'technical_config', 'created_by_info', 'has_time_variant', 'price_formatted'
+#         ]
+    
+#     def get_enabled_access_methods(self, obj):
+#         return obj.get_enabled_access_methods()
+    
+#     def get_access_type(self, obj):
+#         return obj.get_access_type()
+    
+#     def get_is_available_now(self, obj):
+#         availability = obj.is_available_for_client()
+#         return availability.get('available', False)
+    
+#     def get_availability_info(self, obj):
+#         return obj.is_available_for_client()
+    
+#     def get_time_variant_summary(self, obj):
+#         return obj.get_time_variant_summary()
+    
+#     def get_technical_config(self, obj):
+#         configs = {}
+#         for method in obj.get_enabled_access_methods():
+#             configs[method] = obj.get_technical_config(method)
+#         return configs
+    
+#     def get_allowed_routers(self, obj):
+#         try:
+#             from network_management.serializers.router_management_serializer import RouterSerializer
+#             return RouterSerializer(obj.allowed_routers.all(), many=True).data
+#         except ImportError:
+#             return []
+    
+#     def get_created_by_info(self, obj):
+#         if obj.created_by:
+#             return {
+#                 'id': obj.created_by.id,
+#                 'email': obj.created_by.email,
+#                 'username': getattr(obj.created_by, 'username', None)
+#             }
+#         return None
+    
+#     def get_has_time_variant(self, obj):
+#         return obj.has_time_variant()
+    
+#     def get_price_formatted(self, obj):
+#         return f"KSH {float(obj.price):,.2f}"
+    
+#     def _clean_access_methods(self, access_methods):
+#         """
+#         Clean access methods by removing None values and empty strings
+#         """
+#         if not isinstance(access_methods, dict):
+#             return access_methods
+        
+#         cleaned = {}
+#         for method, config in access_methods.items():
+#             if not isinstance(config, dict):
+#                 cleaned[method] = config
+#                 continue
+            
+#             cleaned_config = {}
+#             for key, value in config.items():
+#                 # Handle None values - skip them (will use model defaults)
+#                 if value is None:
+#                     continue
+                
+#                 # Handle empty strings for various fields
+#                 if isinstance(value, str) and value.strip() == '':
+#                     # For required fields, keep empty string will fail validation
+#                     # For optional fields, skip to use default
+#                     if key in ['ip_pool', 'service_name']:
+#                         # Optional string fields - keep as empty string
+#                         cleaned_config[key] = ''
+#                     elif key in ['download_speed', 'upload_speed', 'data_limit', 'usage_limit']:
+#                         # Required fields - keep as is, validation will catch
+#                         cleaned_config[key] = value
+#                     else:
+#                         # Skip other empty strings
+#                         continue
+#                 else:
+#                     cleaned_config[key] = value
+            
+#             cleaned[method] = cleaned_config
+        
+#         return cleaned
+    
+#     def validate(self, data):
+#         """Validate plan data using utils.validators"""
+#         errors = {}
+        
+#         # Validate name uniqueness
+#         name = data.get('name')
+#         instance_id = self.instance.id if self.instance else None
+#         if name:
+#             # Check for empty/whitespace only names
+#             if not name.strip():
+#                 errors['name'] = 'Plan name cannot be empty'
+#             elif InternetPlan.objects.filter(name=name).exclude(id=instance_id).exists():
+#                 errors['name'] = f'A plan with the name "{name}" already exists'
+        
+#         # Determine if zero price is allowed based on plan type
+#         plan_type = data.get('plan_type', '').lower()
+#         is_free_trial = plan_type == 'free_trial'
+        
+#         # Validate price using validator - FIXED: Properly handle allow_zero
+#         price = data.get('price')
+#         if price is not None:
+#             # For free trial, allow zero price
+#             allow_zero = is_free_trial
+#             is_valid_price, price_result = validate_price(price, allow_zero)
+            
+#             if not is_valid_price:
+#                 # price_result is an error message string
+#                 errors['price'] = str(price_result)
+#             else:
+#                 # price_result is a Decimal
+#                 data['price'] = price_result
+        
+#         # Additional validation for free trial
+#         if is_free_trial:
+#             # Double-check price is zero
+#             final_price = data.get('price', Decimal('0'))
+#             if final_price != Decimal('0'):
+#                 errors['price'] = 'Free Trial plans must have price set to 0'
+        
+#         # Validate access methods using validator - Clean None values first
+#         access_methods = data.get('access_methods')
+#         if access_methods:
+#             # Clean the access methods data - remove None values that will use defaults
+#             cleaned_access_methods = self._clean_access_methods(access_methods)
+#             is_valid, error_message = validate_access_methods(cleaned_access_methods)
+#             if not is_valid:
+#                 errors['access_methods'] = error_message
+#             else:
+#                 # Update with cleaned data
+#                 data['access_methods'] = cleaned_access_methods
+#         else:
+#             errors['access_methods'] = 'Access methods configuration is required'
+        
+#         # Validate FUP threshold
+#         fup_threshold = data.get('fup_threshold')
+#         if fup_threshold is not None:
+#             try:
+#                 threshold = int(fup_threshold)
+#                 if threshold < 1 or threshold > 100:
+#                     errors['fup_threshold'] = 'FUP threshold must be between 1% and 100%'
+#             except (ValueError, TypeError):
+#                 errors['fup_threshold'] = 'FUP threshold must be a valid number'
+        
+#         # Validate router-specific settings
+#         router_specific = data.get('router_specific', False)
+#         allowed_routers_ids = data.get('allowed_routers_ids', [])
+        
+#         if router_specific and not allowed_routers_ids:
+#             errors['allowed_routers_ids'] = 'Allowed routers are required for router-specific plans'
+#         elif not router_specific and allowed_routers_ids:
+#             errors['allowed_routers_ids'] = 'Allowed routers can only be specified for router-specific plans'
+        
+#         # Validate priority level
+#         priority_level = data.get('priority_level')
+#         if priority_level is not None:
+#             try:
+#                 priority = int(priority_level)
+#                 if priority < 1 or priority > 8:
+#                     errors['priority_level'] = 'Priority level must be between 1 and 8'
+#             except (ValueError, TypeError):
+#                 errors['priority_level'] = 'Priority level must be a valid number'
+        
+#         if errors:
+#             raise serializers.ValidationError(errors)
+        
+#         return data
+    
+#     def create(self, validated_data):
+#         """Create plan with proper relationship handling"""
+#         # Extract relationship IDs
+#         template_id = validated_data.pop('template_id', None)
+#         time_variant_id = validated_data.pop('time_variant_id', None)
+#         allowed_routers_ids = validated_data.pop('allowed_routers_ids', [])
+        
+#         # Set created_by from request
+#         request = self.context.get('request')
+#         if request and request.user.is_authenticated:
+#             validated_data['created_by'] = request.user
+        
+#         with transaction.atomic():
+#             # Handle template
+#             if template_id:
+#                 try:
+#                     template = PlanTemplate.objects.get(id=template_id, is_active=True)
+#                     validated_data['template'] = template
+#                 except PlanTemplate.DoesNotExist:
+#                     raise serializers.ValidationError({
+#                         'template_id': 'Template not found or inactive'
+#                     })
+            
+#             # Handle time variant
+#             if time_variant_id:
+#                 try:
+#                     time_variant = TimeVariantConfig.objects.get(id=time_variant_id)
+#                     validated_data['time_variant'] = time_variant
+#                 except TimeVariantConfig.DoesNotExist:
+#                     raise serializers.ValidationError({
+#                         'time_variant_id': 'Time variant configuration not found'
+#                     })
+            
+#             # Create plan
+#             plan = InternetPlan.objects.create(**validated_data)
+            
+#             # Handle allowed routers
+#             if plan.router_specific and allowed_routers_ids:
+#                 try:
+#                     from network_management.models.router_management_model import Router
+#                     routers = Router.objects.filter(id__in=allowed_routers_ids, is_active=True)
+#                     plan.allowed_routers.set(routers)
+#                 except ImportError:
+#                     logger.warning("Network management app not installed")
+        
+#         # Clear cache
+#         cache.delete_pattern("internet_plans:*")
+#         cache.delete(f"internet_plan:{plan.id}")
+        
+#         return plan
+    
+#     def update(self, instance, validated_data):
+#         """Update plan with proper relationship handling"""
+#         template_id = validated_data.pop('template_id', None)
+#         time_variant_id = validated_data.pop('time_variant_id', None)
+#         allowed_routers_ids = validated_data.pop('allowed_routers_ids', None)
+        
+#         with transaction.atomic():
+#             # Handle template
+#             if template_id is not None:
+#                 if template_id:
+#                     try:
+#                         template = PlanTemplate.objects.get(id=template_id, is_active=True)
+#                         instance.template = template
+#                     except PlanTemplate.DoesNotExist:
+#                         raise serializers.ValidationError({
+#                             'template_id': 'Template not found or inactive'
+#                         })
+#                 else:
+#                     instance.template = None
+            
+#             # Handle time variant
+#             if time_variant_id is not None:
+#                 if time_variant_id:
+#                     try:
+#                         time_variant = TimeVariantConfig.objects.get(id=time_variant_id)
+#                         instance.time_variant = time_variant
+#                     except TimeVariantConfig.DoesNotExist:
+#                         raise serializers.ValidationError({
+#                             'time_variant_id': 'Time variant configuration not found'
+#                         })
+#                 else:
+#                     instance.time_variant = None
+            
+#             # Update instance fields
+#             for attr, value in validated_data.items():
+#                 setattr(instance, attr, value)
+            
+#             instance.save()
+            
+#             # Handle allowed routers
+#             if allowed_routers_ids is not None:
+#                 if instance.router_specific:
+#                     try:
+#                         from network_management.models.router_management_model import Router
+#                         routers = Router.objects.filter(id__in=allowed_routers_ids, is_active=True)
+#                         instance.allowed_routers.set(routers)
+#                     except ImportError:
+#                         logger.warning("Network management app not installed")
+#                 else:
+#                     instance.allowed_routers.clear()
+        
+#         # Clear cache
+#         cache.delete_pattern("internet_plans:*")
+#         cache.delete(f"internet_plan:{instance.id}")
+        
+#         return instance
+
+
+# class InternetPlanListSerializer(serializers.ModelSerializer):
+#     """
+#     Simplified serializer for plan listing
+#     """
+    
+#     access_type = serializers.SerializerMethodField(read_only=True)
+#     is_available_now = serializers.SerializerMethodField(read_only=True)
+#     price_formatted = serializers.SerializerMethodField(read_only=True)
+#     has_time_variant = serializers.SerializerMethodField(read_only=True)
+    
+#     class Meta:
+#         model = InternetPlan
+#         fields = [
+#             'id', 'name', 'price', 'price_formatted', 'plan_type', 'category',
+#             'description', 'access_type', 'is_available_now', 'purchases',
+#             'active', 'priority_level', 'created_at', 'has_time_variant'
+#         ]
+    
+#     def get_access_type(self, obj):
+#         return obj.get_access_type()
+    
+#     def get_is_available_now(self, obj):
+#         availability = obj.is_available_for_client()
+#         return availability.get('available', False)
+    
+#     def get_price_formatted(self, obj):
+#         return f"KSH {float(obj.price):,.2f}"
+    
+#     def get_has_time_variant(self, obj):
+#         return obj.has_time_variant()
+
+
+# class InternetPlanCreateSerializer(serializers.ModelSerializer):
+#     """
+#     Serializer for creating new plans - Optimized for frontend
+#     """
+    
+#     template_id = serializers.UUIDField(
+#         write_only=True,
+#         required=False,
+#         allow_null=True
+#     )
+    
+#     time_variant_id = serializers.UUIDField(
+#         write_only=True,
+#         required=False,
+#         allow_null=True
+#     )
+    
+#     allowed_routers_ids = serializers.ListField(
+#         child=serializers.IntegerField(),
+#         write_only=True,
+#         required=False,
+#         default=list
+#     )
+    
+#     class Meta:
+#         model = InternetPlan
+#         fields = [
+#             'plan_type', 'name', 'price', 'active', 'category', 'description',
+#             'access_methods', 'priority_level', 'router_specific',
+#             'fup_policy', 'fup_threshold',
+#             'template_id', 'time_variant_id', 'allowed_routers_ids'
+#         ]
+    
+#     def validate(self, data):
+#         """Validate creation data"""
+#         errors = {}
+        
+#         # Required fields
+#         if not data.get('name'):
+#             errors['name'] = 'Plan name is required'
+#         elif not data['name'].strip():
+#             errors['name'] = 'Plan name cannot be empty'
+        
+#         if not data.get('category'):
+#             errors['category'] = 'Category is required'
+        
+#         if data.get('price') is None:
+#             errors['price'] = 'Price is required'
+        
+#         # Free trial validation - FIXED: More explicit
+#         plan_type = data.get('plan_type')
+#         if plan_type == 'free_trial':
+#             price = data.get('price')
+#             if price != 0 and price != Decimal('0'):
+#                 errors['price'] = 'Free Trial plans must have price set to 0'
+        
+#         # Validate router-specific settings
+#         router_specific = data.get('router_specific', False)
+#         allowed_routers_ids = data.get('allowed_routers_ids', [])
+        
+#         if router_specific and not allowed_routers_ids:
+#             errors['allowed_routers_ids'] = 'Allowed routers are required for router-specific plans'
+        
+#         if errors:
+#             raise serializers.ValidationError(errors)
+        
+#         return data
+    
+#     def create(self, validated_data):
+#         """Use main serializer for creation"""
+#         serializer = InternetPlanSerializer(
+#             data=validated_data,
+#             context=self.context
+#         )
+#         serializer.is_valid(raise_exception=True)
+#         return serializer.save()
+
+
+# class InternetPlanUpdateSerializer(serializers.ModelSerializer):
+#     """
+#     Serializer for updating existing plans
+#     """
+    
+#     template_id = serializers.UUIDField(
+#         write_only=True,
+#         required=False,
+#         allow_null=True
+#     )
+    
+#     time_variant_id = serializers.UUIDField(
+#         write_only=True,
+#         required=False,
+#         allow_null=True
+#     )
+    
+#     allowed_routers_ids = serializers.ListField(
+#         child=serializers.IntegerField(),
+#         write_only=True,
+#         required=False
+#     )
+    
+#     class Meta:
+#         model = InternetPlan
+#         fields = [
+#             'plan_type', 'name', 'price', 'active', 'category', 'description',
+#             'access_methods', 'priority_level', 'router_specific',
+#             'fup_policy', 'fup_threshold',
+#             'template_id', 'time_variant_id', 'allowed_routers_ids'
+#         ]
+    
+#     def validate(self, data):
+#         """Validate update data"""
+#         errors = {}
+        
+#         # Name uniqueness check
+#         name = data.get('name')
+#         if name is not None:
+#             if not name.strip():
+#                 errors['name'] = 'Plan name cannot be empty'
+#             elif self.instance and InternetPlan.objects.filter(name=name).exclude(id=self.instance.id).exists():
+#                 errors['name'] = f'A plan with the name "{name}" already exists'
+        
+#         # Free trial validation
+#         if data.get('plan_type') == 'free_trial':
+#             price = data.get('price')
+#             if price is not None and price != Decimal('0'):
+#                 errors['price'] = 'Free Trial plans must have price set to 0'
+        
+#         # Validate access methods if provided
+#         access_methods = data.get('access_methods')
+#         if access_methods:
+#             # Let the main serializer handle detailed validation
+#             pass
+        
+#         # Validate router-specific settings
+#         router_specific = data.get('router_specific')
+#         allowed_routers_ids = data.get('allowed_routers_ids')
+        
+#         if router_specific is not None:
+#             if router_specific and not allowed_routers_ids:
+#                 errors['allowed_routers_ids'] = 'Allowed routers are required for router-specific plans'
+#             elif not router_specific and allowed_routers_ids:
+#                 errors['allowed_routers_ids'] = 'Allowed routers can only be specified for router-specific plans'
+        
+#         if errors:
+#             raise serializers.ValidationError(errors)
+        
+#         return data
+    
+#     def update(self, instance, validated_data):
+#         """Use main serializer for update"""
+#         serializer = InternetPlanSerializer(
+#             instance,
+#             data=validated_data,
+#             context=self.context,
+#             partial=True
+#         )
+#         serializer.is_valid(raise_exception=True)
+#         return serializer.save()
+
+
+# class InternetPlanDetailSerializer(serializers.ModelSerializer):
+#     """
+#     Detailed serializer for individual plan view
+#     """
+    
+#     # Related objects
+#     time_variant = TimeVariantConfigSerializer(read_only=True)
+#     allowed_routers = serializers.SerializerMethodField(read_only=True)
+    
+#     # Computed fields
+#     enabled_access_methods = serializers.SerializerMethodField(read_only=True)
+#     access_type = serializers.SerializerMethodField(read_only=True)
+#     is_available_now = serializers.SerializerMethodField(read_only=True)
+#     availability_info = serializers.SerializerMethodField(read_only=True)
+#     time_variant_summary = serializers.SerializerMethodField(read_only=True)
+#     technical_config = serializers.SerializerMethodField(read_only=True)
+#     price_formatted = serializers.SerializerMethodField(read_only=True)
+    
+#     # User info
+#     created_by_info = serializers.SerializerMethodField(read_only=True)
+    
+#     class Meta:
+#         model = InternetPlan
+#         fields = [
+#             'id', 'plan_type', 'name', 'price', 'price_formatted', 'active', 'category', 'description',
+#             'access_methods', 'priority_level', 'router_specific', 
+#             'fup_policy', 'fup_threshold', 'time_variant',
+#             'allowed_routers', 'purchases', 'client_sessions',
+#             'created_at', 'updated_at', 'created_by', 'created_by_info',
+#             'enabled_access_methods', 'access_type', 'is_available_now',
+#             'availability_info', 'time_variant_summary', 'technical_config',
+#             'template'
+#         ]
+#         read_only_fields = fields
+    
+#     def get_enabled_access_methods(self, obj):
+#         return obj.get_enabled_access_methods()
+    
+#     def get_access_type(self, obj):
+#         return obj.get_access_type()
+    
+#     def get_is_available_now(self, obj):
+#         availability = obj.is_available_for_client()
+#         return availability.get('available', False)
+    
+#     def get_availability_info(self, obj):
+#         return obj.is_available_for_client()
+    
+#     def get_time_variant_summary(self, obj):
+#         return obj.get_time_variant_summary()
+    
+#     def get_technical_config(self, obj):
+#         configs = {}
+#         for method in obj.get_enabled_access_methods():
+#             configs[method] = obj.get_technical_config(method)
+#         return configs
+    
+#     def get_allowed_routers(self, obj):
+#         try:
+#             from network_management.serializers.router_management_serializer import RouterSerializer
+#             return RouterSerializer(obj.allowed_routers.all(), many=True).data
+#         except ImportError:
+#             return []
+    
+#     def get_created_by_info(self, obj):
+#         if obj.created_by:
+#             return {
+#                 'id': obj.created_by.id,
+#                 'email': obj.created_by.email,
+#                 'username': getattr(obj.created_by, 'username', None)
+#             }
+#         return None
+    
+#     def get_price_formatted(self, obj):
+#         return f"KSH {float(obj.price):,.2f}"
+
+
+# class PlanCompatibilitySerializer(serializers.Serializer):
+#     """
+#     Serializer for checking plan compatibility
+#     """
+    
+#     plan_id = serializers.UUIDField(required=True)
+#     access_method = serializers.ChoiceField(
+#         choices=[('hotspot', 'Hotspot'), ('pppoe', 'PPPoE')],
+#         required=True
+#     )
+#     router_id = serializers.IntegerField(required=False, allow_null=True)
+#     check_time_availability = serializers.BooleanField(default=True)
+    
+#     def validate(self, data):
+#         """Validate compatibility check"""
+#         plan_id = data['plan_id']
+        
+#         try:
+#             plan = InternetPlan.objects.get(id=plan_id, active=True)
+#         except InternetPlan.DoesNotExist:
+#             raise serializers.ValidationError({
+#                 'plan_id': 'Plan not found or inactive'
+#             })
+        
+#         # Check access method support
+#         access_method = data['access_method']
+#         if not plan.supports_access_method(access_method):
+#             raise serializers.ValidationError({
+#                 'access_method': f'Plan does not support {access_method} access method'
+#             })
+        
+#         # Check router compatibility
+#         router_id = data.get('router_id')
+#         if plan.router_specific and router_id:
+#             if not plan.can_be_used_on_router(router_id):
+#                 raise serializers.ValidationError({
+#                     'router_id': 'Plan cannot be used on specified router'
+#                 })
+        
+#         # Check time availability
+#         if data.get('check_time_availability', True):
+#             availability = plan.is_available_for_client()
+#             if not availability['available']:
+#                 raise serializers.ValidationError({
+#                     'availability': availability['reason'],
+#                     'code': availability['code'],
+#                     'next_available': availability.get('next_available')
+#                 })
+        
+#         self.context['plan'] = plan
+#         return data
+    
+#     def get_compatibility_result(self):
+#         """Get compatibility result"""
+#         plan = self.context.get('plan')
+#         if not plan:
+#             return None
+        
+#         return {
+#             'compatible': True,
+#             'plan_id': str(plan.id),
+#             'plan_name': plan.name,
+#             'access_method': self.validated_data['access_method'],
+#             'router_specific': plan.router_specific,
+#             'technical_config': plan.get_technical_config(self.validated_data['access_method']),
+#             'availability': plan.is_available_for_client()
+#         }
+
+
+# class PlanAvailabilityCheckSerializer(serializers.Serializer):
+#     """
+#     Serializer for checking plan availability
+#     """
+    
+#     plan_id = serializers.UUIDField(required=True)
+#     check_time_variant = serializers.BooleanField(default=True)
+    
+#     def validate(self, data):
+#         """Validate availability check"""
+#         plan_id = data['plan_id']
+        
+#         try:
+#             plan = InternetPlan.objects.get(id=plan_id, active=True)
+#         except InternetPlan.DoesNotExist:
+#             raise serializers.ValidationError({
+#                 'plan_id': 'Plan not found or inactive'
+#             })
+        
+#         self.context['plan'] = plan
+#         return data
+
+
+# class AvailablePlansRequestSerializer(serializers.Serializer):
+#     """
+#     Serializer for requesting available plans
+#     """
+    
+#     client_type = serializers.ChoiceField(
+#         choices=[('hotspot', 'Hotspot'), ('pppoe', 'PPPoE')],
+#         default='hotspot',
+#         required=False
+#     )
+    
+#     router_id = serializers.IntegerField(
+#         required=False,
+#         allow_null=True
+#     )
+    
+#     category = serializers.CharField(
+#         required=False,
+#         allow_null=True
+#     )
+    
+#     max_price = serializers.DecimalField(
+#         max_digits=10,
+#         decimal_places=2,
+#         required=False,
+#         allow_null=True
+#     )
+    
+#     include_unavailable = serializers.BooleanField(
+#         default=False
+#     )
+    
+#     def get_available_plans(self):
+#         """Get available plans based on filters"""
+#         client_type = self.validated_data['client_type']
+#         router_id = self.validated_data.get('router_id')
+#         category = self.validated_data.get('category')
+#         max_price = self.validated_data.get('max_price')
+#         include_unavailable = self.validated_data.get('include_unavailable', False)
+        
+#         if include_unavailable:
+#             queryset = InternetPlan.objects.filter(active=True).select_related('time_variant')
+            
+#             if category:
+#                 queryset = queryset.filter(category=category)
+            
+#             if max_price is not None:
+#                 queryset = queryset.filter(price__lte=max_price)
+            
+#             if client_type == 'hotspot':
+#                 queryset = queryset.filter(access_methods__hotspot__enabled=True)
+#             elif client_type == 'pppoe':
+#                 queryset = queryset.filter(access_methods__pppoe__enabled=True)
+            
+#             if router_id:
+#                 queryset = queryset.filter(
+#                     Q(router_specific=False) |
+#                     Q(router_specific=True, allowed_routers__id=router_id)
+#                 ).distinct()
+            
+#             plans = list(queryset.order_by('-priority_level', 'price'))
+#         else:
+#             plans = InternetPlan.get_available_plans_for_client(client_type, router_id)
+            
+#             if category:
+#                 plans = [p for p in plans if p.category == category]
+            
+#             if max_price is not None:
+#                 plans = [p for p in plans if p.price <= max_price]
+        
+#         serializer = InternetPlanListSerializer(plans, many=True, context=self.context)
+        
+#         return {
+#             'count': len(plans),
+#             'client_type': client_type,
+#             'filters_applied': {
+#                 'router_id': router_id,
+#                 'category': category,
+#                 'max_price': float(max_price) if max_price else None,
+#                 'include_unavailable': include_unavailable
+#             },
+#             'plans': serializer.data
+#         }
+
+
+
+
+
+
+
 """
 Internet Plans - Plan Serializers with Time Variant Support
-Maintains original serialization logic with time variant features
-Production-ready with comprehensive validation
+PRODUCTION READY: Complete with all required serializers, proper validation, and error handling
+FIXED: Access methods serialization and None value handling
 """
 
 from rest_framework import serializers
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 from decimal import Decimal
@@ -15,7 +891,14 @@ import logging
 from django.core.cache import cache
 
 from internet_plans.models.plan_models import InternetPlan, PlanTemplate, TimeVariantConfig
-from internet_plans.utils.validators import validate_access_methods
+from internet_plans.utils.validators import (
+    validate_access_methods,
+    validate_price,
+    validate_duration_hours,
+    validate_time_variant,
+    validate_date_format,
+    validate_future_date
+)
 
 logger = logging.getLogger(__name__)
 
@@ -25,210 +908,412 @@ class TimeVariantConfigSerializer(serializers.ModelSerializer):
     Serializer for Time Variant Configuration
     """
     
-    # Field mappings for API
-    isActive = serializers.BooleanField(
-        source='is_active',
-        default=False,
-        help_text="Enable time variant controls"
-    )
-    
-    startTime = serializers.TimeField(
-        source='start_time',
-        required=False,
-        allow_null=True,
-        format='%H:%M',
-        input_formats=['%H:%M', '%H:%M:%S', '%I:%M %p'],
-        help_text="Start time (24-hour format, e.g., '09:00')"
-    )
-    
-    endTime = serializers.TimeField(
-        source='end_time',
-        required=False,
-        allow_null=True,
-        format='%H:%M',
-        input_formats=['%H:%M', '%H:%M:%S', '%I:%M %p'],
-        help_text="End time (24-hour format, e.g., '17:00')"
-    )
-    
-    availableDays = serializers.ListField(
-        source='available_days',
-        child=serializers.ChoiceField(choices=[day[0] for day in TimeVariantConfig.DAYS_OF_WEEK]),
-        required=False,
-        allow_empty=True,
-        help_text="Days of week when plan is available (e.g., ['mon', 'wed', 'fri'])"
-    )
-    
-    scheduleActive = serializers.BooleanField(
-        source='schedule_active',
-        default=False,
-        help_text="Enable scheduled availability"
-    )
-    
-    scheduleStartDate = serializers.DateTimeField(
-        source='schedule_start_date',
-        required=False,
-        allow_null=True,
-        help_text="Start date for scheduled availability"
-    )
-    
-    scheduleEndDate = serializers.DateTimeField(
-        source='schedule_end_date',
-        required=False,
-        allow_null=True,
-        help_text="End date for scheduled availability"
-    )
-    
-    durationActive = serializers.BooleanField(
-        source='duration_active',
-        default=False,
-        help_text="Enable duration-based availability"
-    )
-    
-    durationValue = serializers.IntegerField(
-        source='duration_value',
-        required=False,
-        min_value=1,
-        help_text="Duration value (e.g., 7 for 7 days)"
-    )
-    
-    durationUnit = serializers.ChoiceField(
-        source='duration_unit',
-        choices=[unit[0] for unit in TimeVariantConfig.TIME_UNITS],
-        default='days',
-        help_text="Duration unit"
-    )
-    
-    durationStartDate = serializers.DateTimeField(
-        source='duration_start_date',
-        required=False,
-        allow_null=True,
-        help_text="Start date for duration-based availability"
-    )
-    
-    exclusionDates = serializers.ListField(
-        source='exclusion_dates',
-        child=serializers.DateField(),
-        required=False,
-        allow_empty=True,
-        help_text="Dates when plan is NOT available (YYYY-MM-DD format)"
-    )
-    
-    forceAvailable = serializers.BooleanField(
-        source='force_available',
-        default=False,
-        help_text="Override all time restrictions"
-    )
-    
-    # Read-only fields
-    isAvailableNow = serializers.SerializerMethodField(
-        read_only=True,
-        help_text="Whether plan is available for purchase right now"
-    )
-    
-    availabilitySummary = serializers.SerializerMethodField(
-        read_only=True,
-        help_text="Human-readable availability summary"
-    )
-    
-    nextAvailableTime = serializers.SerializerMethodField(
-        read_only=True,
-        help_text="Next available time if currently unavailable"
-    )
+    is_available_now = serializers.SerializerMethodField(read_only=True)
+    availability_summary = serializers.SerializerMethodField(read_only=True)
+    next_available_time = serializers.SerializerMethodField(read_only=True)
     
     class Meta:
         model = TimeVariantConfig
         fields = [
-            'id', 'isActive', 'startTime', 'endTime', 'availableDays',
-            'scheduleActive', 'scheduleStartDate', 'scheduleEndDate',
-            'durationActive', 'durationValue', 'durationUnit', 'durationStartDate',
-            'exclusionDates', 'timezone', 'forceAvailable',
-            'isAvailableNow', 'availabilitySummary', 'nextAvailableTime',
-            'created_at', 'updated_at'
+            'id', 'is_active', 'start_time', 'end_time', 'available_days',
+            'schedule_active', 'schedule_start_date', 'schedule_end_date',
+            'duration_active', 'duration_value', 'duration_unit', 'duration_start_date',
+            'exclusion_dates', 'timezone', 'force_available', 'created_at', 'updated_at',
+            'is_available_now', 'availability_summary', 'next_available_time'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'isAvailableNow', 
-                          'availabilitySummary', 'nextAvailableTime']
+        read_only_fields = ['id', 'created_at', 'updated_at']
     
-    def get_isAvailableNow(self, obj):
-        """Get current availability status"""
-        return obj.is_available_now() if obj.is_active else True
+    def get_is_available_now(self, obj):
+        return obj.is_available_now()
     
-    def get_availabilitySummary(self, obj):
-        """Get availability summary"""
-        return obj.get_availability_summary() if obj.is_active else {
-            'status': 'always_available',
-            'message': 'Available at all times'
-        }
+    def get_availability_summary(self, obj):
+        return obj.get_availability_summary()
     
-    def get_nextAvailableTime(self, obj):
-        """Get next available time"""
-        if not obj.is_active or obj.is_available_now():
-            return None
+    def get_next_available_time(self, obj):
         return obj.get_next_available_time()
     
     def validate(self, data):
-        """Validate time variant configuration"""
-        # If not active, no further validation needed
-        if not data.get('is_active', False):
-            return data
+        """Validate time variant configuration using validators"""
+        errors = validate_time_variant(data)
         
+        if errors:
+            raise serializers.ValidationError(errors)
+        
+        return data
+
+
+class InternetPlanSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Internet Plans - Production Ready
+    FIXED: Proper access methods serialization and None value handling
+    """
+    
+    # Write-only fields for IDs
+    template_id = serializers.UUIDField(
+        write_only=True,
+        required=False,
+        allow_null=True,
+        help_text="Template ID to copy configuration from"
+    )
+    
+    time_variant_id = serializers.UUIDField(
+        write_only=True,
+        required=False,
+        allow_null=True,
+        help_text="Time variant configuration ID"
+    )
+    
+    allowed_routers_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True,
+        required=False,
+        default=list,
+        help_text="List of allowed router IDs (only if router_specific is true)"
+    )
+    
+    # Read-only computed fields
+    allowed_routers = serializers.SerializerMethodField(read_only=True)
+    enabled_access_methods = serializers.SerializerMethodField(read_only=True)
+    access_type = serializers.SerializerMethodField(read_only=True)
+    is_available_now = serializers.SerializerMethodField(read_only=True)
+    availability_info = serializers.SerializerMethodField(read_only=True)
+    time_variant_summary = serializers.SerializerMethodField(read_only=True)
+    technical_config = serializers.SerializerMethodField(read_only=True)
+    created_by_info = serializers.SerializerMethodField(read_only=True)
+    has_time_variant = serializers.SerializerMethodField(read_only=True)
+    price_formatted = serializers.SerializerMethodField(read_only=True)
+    
+    # Related objects
+    time_variant = TimeVariantConfigSerializer(read_only=True)
+    
+    class Meta:
+        model = InternetPlan
+        fields = [
+            # Core fields
+            'id', 'plan_type', 'name', 'price', 'price_formatted', 'active', 'category', 'description',
+            
+            # Configuration
+            'access_methods', 'priority_level', 'router_specific',
+            'fup_policy', 'fup_threshold',
+            
+            # Relationship IDs (write-only)
+            'template_id', 'time_variant_id', 'allowed_routers_ids',
+            
+            # Related objects (read-only)
+            'time_variant', 'allowed_routers',
+            
+            # Metadata
+            'purchases', 'client_sessions', 'created_at', 'updated_at', 'created_by',
+            
+            # Computed fields
+            'enabled_access_methods', 'access_type', 'is_available_now',
+            'availability_info', 'time_variant_summary', 'technical_config',
+            'created_by_info', 'has_time_variant'
+        ]
+        read_only_fields = [
+            'id', 'purchases', 'client_sessions', 'created_at', 'updated_at',
+            'created_by', 'allowed_routers', 'time_variant', 'enabled_access_methods',
+            'access_type', 'is_available_now', 'availability_info', 'time_variant_summary',
+            'technical_config', 'created_by_info', 'has_time_variant', 'price_formatted'
+        ]
+    
+    def get_enabled_access_methods(self, obj):
+        return obj.get_enabled_access_methods()
+    
+    def get_access_type(self, obj):
+        return obj.get_access_type()
+    
+    def get_is_available_now(self, obj):
+        availability = obj.is_available_for_client()
+        return availability.get('available', False)
+    
+    def get_availability_info(self, obj):
+        return obj.is_available_for_client()
+    
+    def get_time_variant_summary(self, obj):
+        return obj.get_time_variant_summary()
+    
+    def get_technical_config(self, obj):
+        configs = {}
+        for method in obj.get_enabled_access_methods():
+            configs[method] = obj.get_technical_config(method)
+        return configs
+    
+    def get_allowed_routers(self, obj):
+        try:
+            # Use string reference to avoid circular import
+            from network_management.serializers.router_management_serializer import RouterSerializer
+            return RouterSerializer(obj.allowed_routers.all(), many=True).data
+        except ImportError:
+            return []
+    
+    def get_created_by_info(self, obj):
+        if obj.created_by:
+            return {
+                'id': obj.created_by.id,
+                'email': obj.created_by.email,
+                'username': getattr(obj.created_by, 'username', None)
+            }
+        return None
+    
+    def get_has_time_variant(self, obj):
+        return obj.has_time_variant()
+    
+    def get_price_formatted(self, obj):
+        return f"KSH {float(obj.price):,.2f}"
+    
+    def _ensure_access_methods_structure(self, access_methods):
+        """
+        Ensure access methods have proper structure with both methods present
+        """
+        if not isinstance(access_methods, dict):
+            access_methods = {}
+        
+        # Ensure both methods exist
+        if 'hotspot' not in access_methods:
+            access_methods['hotspot'] = {}
+        if 'pppoe' not in access_methods:
+            access_methods['pppoe'] = {}
+        
+        # Process each method
+        for method in ['hotspot', 'pppoe']:
+            config = access_methods[method]
+            if not isinstance(config, dict):
+                config = {}
+            
+            # Ensure enabled is boolean
+            if 'enabled' not in config:
+                config['enabled'] = method == 'hotspot'  # Default: hotspot enabled
+            elif isinstance(config['enabled'], str):
+                config['enabled'] = config['enabled'].lower() == 'true'
+            elif config['enabled'] is None:
+                config['enabled'] = False
+            
+            # Ensure required nested fields exist
+            nested_fields = ['download_speed', 'upload_speed', 'data_limit', 'usage_limit', 'validity_period']
+            for field in nested_fields:
+                if field not in config or not isinstance(config[field], dict):
+                    config[field] = {'value': '', 'unit': self._get_default_unit(field)}
+                else:
+                    # Clean nested field
+                    field_config = config[field]
+                    if not isinstance(field_config, dict):
+                        field_config = {'value': '', 'unit': self._get_default_unit(field)}
+                    if 'value' not in field_config or field_config['value'] is None:
+                        field_config['value'] = ''
+                    if 'unit' not in field_config or field_config['unit'] is None:
+                        field_config['unit'] = self._get_default_unit(field)
+                    config[field] = field_config
+            
+            # Ensure numeric fields exist
+            numeric_fields = ['bandwidth_limit', 'max_devices', 'session_timeout', 'idle_timeout']
+            for field in numeric_fields:
+                if field not in config or config[field] is None:
+                    config[field] = ''
+            
+            # PPPoE specific fields
+            if method == 'pppoe':
+                pppoe_fields = ['ip_pool', 'service_name', 'mtu']
+                for field in pppoe_fields:
+                    if field not in config or config[field] is None:
+                        config[field] = ''
+            
+            # MAC binding
+            if 'mac_binding' not in config or config['mac_binding'] is None:
+                config['mac_binding'] = False
+            elif isinstance(config['mac_binding'], str):
+                config['mac_binding'] = config['mac_binding'].lower() == 'true'
+            
+            access_methods[method] = config
+        
+        return access_methods
+    
+    def _get_default_unit(self, field):
+        """Get default unit for a field"""
+        units = {
+            'download_speed': 'mbps',
+            'upload_speed': 'mbps',
+            'data_limit': 'gb',
+            'usage_limit': 'hours',
+            'validity_period': 'days'
+        }
+        return units.get(field, '')
+    
+    def _clean_access_methods(self, access_methods):
+        """
+        Clean access methods by removing None values and empty strings
+        """
+        if not isinstance(access_methods, dict):
+            return access_methods
+        
+        cleaned = {}
+        for method, config in access_methods.items():
+            if not isinstance(config, dict):
+                cleaned[method] = config
+                continue
+            
+            cleaned_config = {}
+            for key, value in config.items():
+                # Handle None values - use defaults
+                if value is None:
+                    continue
+                
+                # Handle empty strings
+                if isinstance(value, str) and value.strip() == '':
+                    # For optional fields, keep empty string
+                    if key in ['ip_pool', 'service_name']:
+                        cleaned_config[key] = ''
+                    elif key in ['download_speed', 'upload_speed', 'data_limit', 'usage_limit', 'validity_period']:
+                        # These should be dictionaries, handle in nested processing
+                        cleaned_config[key] = value
+                    else:
+                        # Skip other empty strings
+                        continue
+                else:
+                    cleaned_config[key] = value
+            
+            # Process nested fields that might be strings instead of dictionaries
+            nested_fields = ['download_speed', 'upload_speed', 'data_limit', 'usage_limit', 'validity_period']
+            for field in nested_fields:
+                if field in cleaned_config and not isinstance(cleaned_config[field], dict):
+                    if isinstance(cleaned_config[field], str) and cleaned_config[field].strip():
+                        # Try to parse as JSON if it's a string
+                        try:
+                            import json
+                            parsed = json.loads(cleaned_config[field])
+                            if isinstance(parsed, dict):
+                                cleaned_config[field] = parsed
+                        except:
+                            # Not valid JSON, use default
+                            cleaned_config[field] = {'value': cleaned_config[field], 'unit': self._get_default_unit(field)}
+                    else:
+                        # Not a dict and not a valid string, use default
+                        cleaned_config[field] = {'value': '', 'unit': self._get_default_unit(field)}
+            
+            cleaned[method] = cleaned_config
+        
+        return cleaned
+    
+    def to_representation(self, instance):
+        """
+        Custom representation to ensure access methods are properly structured
+        """
+        data = super().to_representation(instance)
+        
+        # Ensure access methods are properly structured
+        if 'access_methods' in data:
+            data['access_methods'] = self._ensure_access_methods_structure(data['access_methods'])
+            
+            # Recalculate computed fields after ensuring structure
+            hotspot_enabled = data['access_methods'].get('hotspot', {}).get('enabled', False)
+            pppoe_enabled = data['access_methods'].get('pppoe', {}).get('enabled', False)
+            
+            enabled_methods = []
+            if hotspot_enabled:
+                enabled_methods.append('hotspot')
+            if pppoe_enabled:
+                enabled_methods.append('pppoe')
+            
+            data['enabled_access_methods'] = enabled_methods
+            
+            if hotspot_enabled and pppoe_enabled:
+                data['access_type'] = 'both'
+            elif hotspot_enabled:
+                data['access_type'] = 'hotspot'
+            elif pppoe_enabled:
+                data['access_type'] = 'pppoe'
+            else:
+                data['access_type'] = 'none'
+        
+        return data
+    
+    def validate(self, data):
+        """Validate plan data using utils.validators"""
         errors = {}
         
-        # Validate time range
-        start_time = data.get('start_time')
-        end_time = data.get('end_time')
+        # Validate name uniqueness
+        name = data.get('name')
+        instance_id = self.instance.id if self.instance else None
+        if name:
+            # Check for empty/whitespace only names
+            if not name.strip():
+                errors['name'] = 'Plan name cannot be empty'
+            elif InternetPlan.objects.filter(name=name).exclude(id=instance_id).exists():
+                errors['name'] = f'A plan with the name "{name}" already exists'
         
-        if start_time and end_time:
-            if start_time >= end_time:
-                errors['endTime'] = 'End time must be after start time'
+        # Determine if zero price is allowed based on plan type
+        plan_type = data.get('plan_type', '').lower()
+        is_free_trial = plan_type == 'free_trial'
         
-        # Validate available days
-        available_days = data.get('available_days')
-        if available_days:
-            if not isinstance(available_days, list):
-                errors['availableDays'] = 'Available days must be a list'
-            else:
-                valid_days = [day[0] for day in TimeVariantConfig.DAYS_OF_WEEK]
-                for day in available_days:
-                    if day not in valid_days:
-                        errors['availableDays'] = f'Invalid day: {day}. Must be one of {valid_days}'
-        
-        # Validate schedule dates
-        if data.get('schedule_active', False):
-            schedule_start = data.get('schedule_start_date')
-            schedule_end = data.get('schedule_end_date')
+        # Validate price using validator
+        price = data.get('price')
+        if price is not None:
+            # For free trial, allow zero price
+            allow_zero = is_free_trial
+            is_valid_price, price_result = validate_price(price, allow_zero)
             
-            if not schedule_start:
-                errors['scheduleStartDate'] = 'Schedule start date is required when schedule is active'
-            if not schedule_end:
-                errors['scheduleEndDate'] = 'Schedule end date is required when schedule is active'
-            elif schedule_start and schedule_end:
-                if schedule_start >= schedule_end:
-                    errors['scheduleEndDate'] = 'Schedule end date must be after start date'
-        
-        # Validate duration
-        if data.get('duration_active', False):
-            duration_value = data.get('duration_value')
-            duration_start = data.get('duration_start_date')
-            
-            if not duration_value or duration_value <= 0:
-                errors['durationValue'] = 'Duration value must be greater than 0'
-            if not duration_start:
-                errors['durationStartDate'] = 'Duration start date is required when duration is active'
-        
-        # Validate exclusion dates
-        exclusion_dates = data.get('exclusion_dates')
-        if exclusion_dates:
-            if not isinstance(exclusion_dates, list):
-                errors['exclusionDates'] = 'Exclusion dates must be a list'
+            if not is_valid_price:
+                # price_result is an error message string
+                errors['price'] = str(price_result)
             else:
-                # Validate date format
-                for i, date_str in enumerate(exclusion_dates):
-                    if not isinstance(date_str, str):
-                        try:
-                            # Try to serialize date object
-                            exclusion_dates[i] = date_str.isoformat()
-                        except AttributeError:
-                            errors['exclusionDates'] = f'Invalid date at index {i}'
+                # price_result is a Decimal
+                data['price'] = price_result
+        
+        # Additional validation for free trial
+        if is_free_trial:
+            # Double-check price is zero
+            final_price = data.get('price', Decimal('0'))
+            if final_price != Decimal('0'):
+                errors['price'] = 'Free Trial plans must have price set to 0'
+        
+        # Validate access methods using validator - Ensure structure first
+        access_methods = data.get('access_methods')
+        if access_methods:
+            # First ensure proper structure
+            structured_methods = self._ensure_access_methods_structure(access_methods)
+            # Clean None values
+            cleaned_access_methods = self._clean_access_methods(structured_methods)
+            # Validate
+            is_valid, error_message = validate_access_methods(cleaned_access_methods)
+            if not is_valid:
+                errors['access_methods'] = error_message
+            else:
+                # Update with cleaned data
+                data['access_methods'] = cleaned_access_methods
+        else:
+            # Use default access methods
+            default_plan = InternetPlan()
+            default_plan.set_default_access_methods()
+            data['access_methods'] = default_plan.access_methods
+        
+        # Validate FUP threshold
+        fup_threshold = data.get('fup_threshold')
+        if fup_threshold is not None:
+            try:
+                threshold = int(fup_threshold)
+                if threshold < 1 or threshold > 100:
+                    errors['fup_threshold'] = 'FUP threshold must be between 1% and 100%'
+            except (ValueError, TypeError):
+                errors['fup_threshold'] = 'FUP threshold must be a valid number'
+        
+        # Validate router-specific settings
+        router_specific = data.get('router_specific', False)
+        allowed_routers_ids = data.get('allowed_routers_ids', [])
+        
+        if router_specific and not allowed_routers_ids:
+            errors['allowed_routers_ids'] = 'Allowed routers are required for router-specific plans'
+        elif not router_specific and allowed_routers_ids:
+            errors['allowed_routers_ids'] = 'Allowed routers can only be specified for router-specific plans'
+        
+        # Validate priority level
+        priority_level = data.get('priority_level')
+        if priority_level is not None:
+            try:
+                priority = int(priority_level)
+                if priority < 1 or priority > 8:
+                    errors['priority_level'] = 'Priority level must be between 1 and 8'
+            except (ValueError, TypeError):
+                errors['priority_level'] = 'Priority level must be a valid number'
         
         if errors:
             raise serializers.ValidationError(errors)
@@ -236,409 +1321,408 @@ class TimeVariantConfigSerializer(serializers.ModelSerializer):
         return data
     
     def create(self, validated_data):
-        """Create time variant configuration"""
-        return TimeVariantConfig.objects.create(**validated_data)
-    
-    def update(self, instance, validated_data):
-        """Update time variant configuration"""
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        
-        instance.save()
-        return instance
-
-
-class InternetPlanSerializer(serializers.ModelSerializer):
-    """
-    Serializer for Internet Plans with Time Variant Support
-    """
-    
-    # Field mappings for API
-    planType = serializers.CharField(
-        source='plan_type',
-        required=True
-    )
-    
-    accessMethods = serializers.JSONField(
-        source='access_methods',
-        required=False
-    )
-    
-    allowedRouters = serializers.SerializerMethodField(
-        read_only=True
-    )
-    
-    allowedRoutersIds = serializers.ListField(
-        child=serializers.IntegerField(),
-        write_only=True,
-        required=False,
-        allow_empty=True
-    )
-    
-    template = serializers.PrimaryKeyRelatedField(
-        queryset=PlanTemplate.objects.filter(is_active=True),
-        required=False,
-        allow_null=True
-    )
-    
-    hasEnabledAccessMethods = serializers.BooleanField(
-        read_only=True
-    )
-    
-    enabledAccessMethods = serializers.SerializerMethodField(
-        read_only=True
-    )
-    
-    accessType = serializers.SerializerMethodField(
-        read_only=True
-    )
-    
-    routerCompatibility = serializers.SerializerMethodField(
-        read_only=True
-    )
-    
-    purchases = serializers.IntegerField(
-        read_only=True
-    )
-    
-    createdAt = serializers.DateTimeField(
-        source='created_at',
-        read_only=True
-    )
-    
-    updatedAt = serializers.DateTimeField(
-        source='updated_at',
-        read_only=True
-    )
-    
-    effectivePrice = serializers.SerializerMethodField(
-        read_only=True
-    )
-    
-    # Time variant fields
-    timeVariant = TimeVariantConfigSerializer(
-        required=False,
-        allow_null=True,
-        help_text="Time variant configuration"
-    )
-    
-    timeVariantId = serializers.UUIDField(
-        write_only=True,
-        required=False,
-        allow_null=True,
-        help_text="Existing time variant configuration ID"
-    )
-    
-    # Availability fields (read-only)
-    isAvailableNow = serializers.SerializerMethodField(
-        read_only=True,
-        help_text="Whether plan is available for purchase right now"
-    )
-    
-    availabilityInfo = serializers.SerializerMethodField(
-        read_only=True,
-        help_text="Detailed availability information"
-    )
-    
-    timeVariantSummary = serializers.SerializerMethodField(
-        read_only=True,
-        help_text="Time variant configuration summary"
-    )
-    
-    class Meta:
-        model = InternetPlan
-        fields = [
-            'id', 'planType', 'name', 'price', 'effectivePrice', 'active', 'category',
-            'description', 'purchases', 'client_sessions', 'createdAt', 'updatedAt',
-            'accessMethods', 'priority_level', 'router_specific',
-            'allowedRouters', 'allowedRoutersIds', 'FUP_policy',
-            'FUP_threshold', 'hasEnabledAccessMethods',
-            'enabledAccessMethods', 'template', 'accessType',
-            'routerCompatibility', 'timeVariant', 'timeVariantId',
-            'isAvailableNow', 'availabilityInfo', 'timeVariantSummary'
-        ]
-        read_only_fields = ['createdAt', 'updatedAt', 'purchases', 'client_sessions',
-                          'isAvailableNow', 'availabilityInfo', 'timeVariantSummary']
-    
-    def get_allowedRouters(self, obj):
-        """Get allowed routers"""
-        from network_management.serializers import RouterSerializer
-        return RouterSerializer(obj.allowed_routers.all(), many=True).data
-    
-    def get_enabledAccessMethods(self, obj):
-        """Get enabled access methods"""
-        return obj.get_enabled_access_methods()
-    
-    def get_accessType(self, obj):
-        """Get access type"""
-        return obj.get_access_type()
-    
-    def get_routerCompatibility(self, obj):
-        """Get router compatibility"""
-        return obj.get_router_compatibility()
-    
-    def get_effectivePrice(self, obj):
-        """Calculate effective price with discounts"""
-        from internet_plans.services.pricing_service import PricingService
-        return PricingService.calculate_effective_price(obj)
-    
-    def get_isAvailableNow(self, obj):
-        """Get current availability status"""
-        return obj.is_available_for_client()['available']
-    
-    def get_availabilityInfo(self, obj):
-        """Get detailed availability information"""
-        return obj.is_available_for_client()
-    
-    def get_timeVariantSummary(self, obj):
-        """Get time variant summary"""
-        return obj.get_time_variant_summary()
-    
-    def validate(self, data):
-        """Validate plan data - SIMPLIFIED (no client type restriction validation)"""
-        # Free Trial validation
-        if data.get('plan_type') == 'free_trial':
-            if data.get('price', 0) != 0:
-                raise serializers.ValidationError({
-                    'price': 'Free Trial plans must have price set to 0'
-                })
-            if data.get('router_specific', False):
-                raise serializers.ValidationError({
-                    'router_specific': 'Free Trial plans cannot be router-specific'
-                })
-            if data.get('priority_level', 4) > 4:
-                raise serializers.ValidationError({
-                    'priority_level': 'Free Trial plans cannot have premium priority levels'
-                })
-        
-        # Validate access methods
-        if 'access_methods' in data:
-            access_methods = data['access_methods']
-            is_valid, error = validate_access_methods(access_methods)
-            if not is_valid:
-                raise serializers.ValidationError({
-                    'accessMethods': error
-                })
-        
-        # Check for duplicate name
-        name = data.get('name')
-        if name:
-            instance_id = self.instance.id if self.instance else None
-            if InternetPlan.objects.filter(name=name).exclude(id=instance_id).exists():
-                raise serializers.ValidationError({
-                    'name': f'A plan with the name "{name}" already exists'
-                })
-        
-        return data
-    
-    def create(self, validated_data):
-        """Create plan with proper relationships"""
-        # Extract foreign key IDs
-        allowed_routers_ids = validated_data.pop('allowed_routers_ids', [])
-        template = validated_data.pop('template', None)
+        """Create plan with proper relationship handling"""
+        # Extract relationship IDs
+        template_id = validated_data.pop('template_id', None)
         time_variant_id = validated_data.pop('time_variant_id', None)
-        time_variant_data = validated_data.pop('time_variant', None)
+        allowed_routers_ids = validated_data.pop('allowed_routers_ids', [])
         
-        # Handle time variant
-        time_variant = None
-        if time_variant_id:
-            # Use existing time variant
-            try:
-                time_variant = TimeVariantConfig.objects.get(id=time_variant_id)
-            except TimeVariantConfig.DoesNotExist:
-                raise serializers.ValidationError({
-                    'timeVariantId': 'Time variant configuration not found'
-                })
-        elif time_variant_data:
-            # Create new time variant
-            time_variant_serializer = TimeVariantConfigSerializer(data=time_variant_data)
-            if time_variant_serializer.is_valid():
-                time_variant = time_variant_serializer.save()
-            else:
-                raise serializers.ValidationError({
-                    'timeVariant': time_variant_serializer.errors
-                })
+        # Ensure access methods are properly structured
+        if 'access_methods' in validated_data:
+            validated_data['access_methods'] = self._ensure_access_methods_structure(validated_data['access_methods'])
         
-        # Set default access methods if not provided
-        if 'access_methods' not in validated_data or not validated_data['access_methods']:
-            plan = InternetPlan()
-            plan.set_default_access_methods()
-            validated_data['access_methods'] = plan.access_methods
+        # Set created_by from request
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            validated_data['created_by'] = request.user
         
         with transaction.atomic():
+            # Handle template
+            if template_id:
+                try:
+                    template = PlanTemplate.objects.get(id=template_id, is_active=True)
+                    validated_data['template'] = template
+                except PlanTemplate.DoesNotExist:
+                    raise serializers.ValidationError({
+                        'template_id': 'Template not found or inactive'
+                    })
+            
+            # Handle time variant
+            if time_variant_id:
+                try:
+                    time_variant = TimeVariantConfig.objects.get(id=time_variant_id)
+                    validated_data['time_variant'] = time_variant
+                except TimeVariantConfig.DoesNotExist:
+                    raise serializers.ValidationError({
+                        'time_variant_id': 'Time variant configuration not found'
+                    })
+            
             # Create plan
             plan = InternetPlan.objects.create(**validated_data)
             
-            # Set time variant
-            if time_variant:
-                plan.time_variant = time_variant
-                plan.save(update_fields=['time_variant'])
-            
-            # Set template if provided
-            if template:
-                plan.template = template
-                plan.save(update_fields=['template'])
-            
-            # Set allowed routers
-            if allowed_routers_ids:
-                plan.allowed_routers.set(allowed_routers_ids)
+            # Handle allowed routers
+            if plan.router_specific and allowed_routers_ids:
+                try:
+                    from network_management.models.router_management_model import Router
+                    routers = Router.objects.filter(id__in=allowed_routers_ids, is_active=True)
+                    plan.allowed_routers.set(routers)
+                except ImportError:
+                    logger.warning("Network management app not installed")
         
         # Clear cache
-        cache.delete_pattern("internet_plans:*")
+        try:
+            cache.delete_pattern("internet_plans:*")
+        except AttributeError:
+            pass
         cache.delete(f"internet_plan:{plan.id}")
         
         return plan
     
     def update(self, instance, validated_data):
-        """Update plan with proper relationships"""
-        allowed_routers_ids = validated_data.pop('allowed_routers_ids', None)
-        template = validated_data.pop('template', None)
+        """Update plan with proper relationship handling"""
+        template_id = validated_data.pop('template_id', None)
         time_variant_id = validated_data.pop('time_variant_id', None)
-        time_variant_data = validated_data.pop('time_variant', None)
+        allowed_routers_ids = validated_data.pop('allowed_routers_ids', None)
         
-        # Handle time variant update
-        if time_variant_id is not None:
-            if time_variant_id:
-                try:
-                    time_variant = TimeVariantConfig.objects.get(id=time_variant_id)
-                    instance.time_variant = time_variant
-                except TimeVariantConfig.DoesNotExist:
-                    raise serializers.ValidationError({
-                        'timeVariantId': 'Time variant configuration not found'
-                    })
-            else:
-                instance.time_variant = None
-        elif time_variant_data is not None:
-            if time_variant_data:
-                # Update or create time variant
-                if instance.time_variant:
-                    time_variant_serializer = TimeVariantConfigSerializer(
-                        instance.time_variant, 
-                        data=time_variant_data, 
-                        partial=True
-                    )
-                else:
-                    time_variant_serializer = TimeVariantConfigSerializer(data=time_variant_data)
-                
-                if time_variant_serializer.is_valid():
-                    time_variant = time_variant_serializer.save()
-                    instance.time_variant = time_variant
-                else:
-                    raise serializers.ValidationError({
-                        'timeVariant': time_variant_serializer.errors
-                    })
-            else:
-                instance.time_variant = None
+        # Ensure access methods are properly structured
+        if 'access_methods' in validated_data:
+            validated_data['access_methods'] = self._ensure_access_methods_structure(validated_data['access_methods'])
         
         with transaction.atomic():
-            # Update instance
+            # Handle template
+            if template_id is not None:
+                if template_id:
+                    try:
+                        template = PlanTemplate.objects.get(id=template_id, is_active=True)
+                        instance.template = template
+                    except PlanTemplate.DoesNotExist:
+                        raise serializers.ValidationError({
+                            'template_id': 'Template not found or inactive'
+                        })
+                else:
+                    instance.template = None
+            
+            # Handle time variant
+            if time_variant_id is not None:
+                if time_variant_id:
+                    try:
+                        time_variant = TimeVariantConfig.objects.get(id=time_variant_id)
+                        instance.time_variant = time_variant
+                    except TimeVariantConfig.DoesNotExist:
+                        raise serializers.ValidationError({
+                            'time_variant_id': 'Time variant configuration not found'
+                        })
+                else:
+                    instance.time_variant = None
+            
+            # Update instance fields
             for attr, value in validated_data.items():
                 setattr(instance, attr, value)
+            
             instance.save()
             
-            # Update template if provided
-            if template is not None:
-                instance.template = template
-                instance.save(update_fields=['template'])
-            
-            # Update allowed routers if provided
+            # Handle allowed routers
             if allowed_routers_ids is not None:
-                instance.allowed_routers.set(allowed_routers_ids)
+                if instance.router_specific:
+                    try:
+                        from network_management.models.router_management_model import Router
+                        routers = Router.objects.filter(id__in=allowed_routers_ids, is_active=True)
+                        instance.allowed_routers.set(routers)
+                    except ImportError:
+                        logger.warning("Network management app not installed")
+                else:
+                    instance.allowed_routers.clear()
         
         # Clear cache
-        cache.delete_pattern("internet_plans:*")
+        try:
+            cache.delete_pattern("internet_plans:*")
+        except AttributeError:
+            pass
         cache.delete(f"internet_plan:{instance.id}")
         
         return instance
+
+
+class InternetPlanListSerializer(serializers.ModelSerializer):
+    """
+    Simplified serializer for plan listing
+    """
+    
+    access_type = serializers.SerializerMethodField(read_only=True)
+    is_available_now = serializers.SerializerMethodField(read_only=True)
+    price_formatted = serializers.SerializerMethodField(read_only=True)
+    has_time_variant = serializers.SerializerMethodField(read_only=True)
+    
+    class Meta:
+        model = InternetPlan
+        fields = [
+            'id', 'name', 'price', 'price_formatted', 'plan_type', 'category',
+            'description', 'access_type', 'is_available_now', 'purchases',
+            'active', 'priority_level', 'created_at', 'has_time_variant'
+        ]
+    
+    def get_access_type(self, obj):
+        return obj.get_access_type()
+    
+    def get_is_available_now(self, obj):
+        availability = obj.is_available_for_client()
+        return availability.get('available', False)
+    
+    def get_price_formatted(self, obj):
+        return f"KSH {float(obj.price):,.2f}"
+    
+    def get_has_time_variant(self, obj):
+        return obj.has_time_variant()
     
     def to_representation(self, instance):
-        """Custom representation"""
+        """Ensure access methods are included in list view"""
         data = super().to_representation(instance)
-        
-        # Ensure proper field names in output
-        data['planType'] = instance.plan_type
-        data['price'] = str(instance.price)
-        data['accessMethods'] = instance.access_methods
-        data['hasEnabledAccessMethods'] = instance.has_enabled_access_methods()
-        data['enabledAccessMethods'] = instance.get_enabled_access_methods()
-        data['accessType'] = instance.get_access_type()
-        
-        # Add technical configuration
-        data['technicalConfig'] = {
-            method: instance.get_technical_config(method)
-            for method in instance.get_enabled_access_methods()
-        }
-        
-        # Add time variant summary if exists
-        if instance.time_variant:
-            data['timeVariantSummary'] = instance.get_time_variant_summary()
-        
+        # Include access methods for client-side filtering
+        data['access_methods'] = instance.access_methods
         return data
 
 
 class InternetPlanCreateSerializer(serializers.ModelSerializer):
     """
-    Simplified serializer for plan creation
+    Serializer for creating new plans - Optimized for frontend
     """
     
-    time_variant = TimeVariantConfigSerializer(required=False, allow_null=True)
+    template_id = serializers.UUIDField(
+        write_only=True,
+        required=False,
+        allow_null=True
+    )
+    
+    time_variant_id = serializers.UUIDField(
+        write_only=True,
+        required=False,
+        allow_null=True
+    )
+    
+    allowed_routers_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True,
+        required=False,
+        default=list
+    )
     
     class Meta:
         model = InternetPlan
-        fields = ['name', 'plan_type', 'price', 'category', 'description', 
-                 'access_methods', 'priority_level', 'router_specific',
-                 'template', 'FUP_policy', 'FUP_threshold',
-                 'time_variant']
+        fields = [
+            'plan_type', 'name', 'price', 'active', 'category', 'description',
+            'access_methods', 'priority_level', 'router_specific',
+            'fup_policy', 'fup_threshold',
+            'template_id', 'time_variant_id', 'allowed_routers_ids'
+        ]
+    
+    def validate(self, data):
+        """Validate creation data"""
+        errors = {}
+        
+        # Required fields
+        if not data.get('name'):
+            errors['name'] = 'Plan name is required'
+        elif not data['name'].strip():
+            errors['name'] = 'Plan name cannot be empty'
+        
+        if not data.get('category'):
+            errors['category'] = 'Category is required'
+        
+        if data.get('price') is None:
+            errors['price'] = 'Price is required'
+        
+        # Free trial validation
+        plan_type = data.get('plan_type')
+        if plan_type == 'free_trial':
+            price = data.get('price')
+            if price != 0 and price != Decimal('0'):
+                errors['price'] = 'Free Trial plans must have price set to 0'
+        
+        # Validate router-specific settings
+        router_specific = data.get('router_specific', False)
+        allowed_routers_ids = data.get('allowed_routers_ids', [])
+        
+        if router_specific and not allowed_routers_ids:
+            errors['allowed_routers_ids'] = 'Allowed routers are required for router-specific plans'
+        
+        if errors:
+            raise serializers.ValidationError(errors)
+        
+        return data
+    
+    def create(self, validated_data):
+        """Use main serializer for creation"""
+        serializer = InternetPlanSerializer(
+            data=validated_data,
+            context=self.context
+        )
+        serializer.is_valid(raise_exception=True)
+        return serializer.save()
 
 
 class InternetPlanUpdateSerializer(serializers.ModelSerializer):
     """
-    Serializer for plan updates
+    Serializer for updating existing plans
     """
     
-    time_variant = TimeVariantConfigSerializer(required=False, allow_null=True)
+    template_id = serializers.UUIDField(
+        write_only=True,
+        required=False,
+        allow_null=True
+    )
+    
+    time_variant_id = serializers.UUIDField(
+        write_only=True,
+        required=False,
+        allow_null=True
+    )
+    
+    allowed_routers_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True,
+        required=False
+    )
     
     class Meta:
         model = InternetPlan
-        fields = ['name', 'price', 'category', 'description', 'active',
-                 'access_methods', 'priority_level', 'router_specific',
-                 'FUP_policy', 'FUP_threshold', 'time_variant']
+        fields = [
+            'plan_type', 'name', 'price', 'active', 'category', 'description',
+            'access_methods', 'priority_level', 'router_specific',
+            'fup_policy', 'fup_threshold',
+            'template_id', 'time_variant_id', 'allowed_routers_ids'
+        ]
+    
+    def validate(self, data):
+        """Validate update data"""
+        errors = {}
+        
+        # Name uniqueness check
+        name = data.get('name')
+        if name is not None:
+            if not name.strip():
+                errors['name'] = 'Plan name cannot be empty'
+            elif self.instance and InternetPlan.objects.filter(name=name).exclude(id=self.instance.id).exists():
+                errors['name'] = f'A plan with the name "{name}" already exists'
+        
+        # Free trial validation
+        if data.get('plan_type') == 'free_trial':
+            price = data.get('price')
+            if price is not None and price != Decimal('0'):
+                errors['price'] = 'Free Trial plans must have price set to 0'
+        
+        # Validate router-specific settings
+        router_specific = data.get('router_specific')
+        allowed_routers_ids = data.get('allowed_routers_ids')
+        
+        if router_specific is not None:
+            if router_specific and not allowed_routers_ids:
+                errors['allowed_routers_ids'] = 'Allowed routers are required for router-specific plans'
+            elif not router_specific and allowed_routers_ids:
+                errors['allowed_routers_ids'] = 'Allowed routers can only be specified for router-specific plans'
+        
+        if errors:
+            raise serializers.ValidationError(errors)
+        
+        return data
+    
+    def update(self, instance, validated_data):
+        """Use main serializer for update"""
+        serializer = InternetPlanSerializer(
+            instance,
+            data=validated_data,
+            context=self.context,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        return serializer.save()
 
 
 class InternetPlanDetailSerializer(serializers.ModelSerializer):
     """
-    Detailed serializer for plan view
+    Detailed serializer for individual plan view
     """
     
-    template_details = serializers.SerializerMethodField()
-    pricing_options = serializers.SerializerMethodField()
-    compatibility = serializers.SerializerMethodField()
-    availability = serializers.SerializerMethodField()
-    time_variant_details = TimeVariantConfigSerializer(source='time_variant')
+    # Related objects
+    time_variant = TimeVariantConfigSerializer(read_only=True)
+    allowed_routers = serializers.SerializerMethodField(read_only=True)
+    
+    # Computed fields
+    enabled_access_methods = serializers.SerializerMethodField(read_only=True)
+    access_type = serializers.SerializerMethodField(read_only=True)
+    is_available_now = serializers.SerializerMethodField(read_only=True)
+    availability_info = serializers.SerializerMethodField(read_only=True)
+    time_variant_summary = serializers.SerializerMethodField(read_only=True)
+    technical_config = serializers.SerializerMethodField(read_only=True)
+    price_formatted = serializers.SerializerMethodField(read_only=True)
+    
+    # User info
+    created_by_info = serializers.SerializerMethodField(read_only=True)
     
     class Meta:
         model = InternetPlan
-        fields = '__all__'
+        fields = [
+            'id', 'plan_type', 'name', 'price', 'price_formatted', 'active', 'category', 'description',
+            'access_methods', 'priority_level', 'router_specific', 
+            'fup_policy', 'fup_threshold', 'time_variant',
+            'allowed_routers', 'purchases', 'client_sessions',
+            'created_at', 'updated_at', 'created_by', 'created_by_info',
+            'enabled_access_methods', 'access_type', 'is_available_now',
+            'availability_info', 'time_variant_summary', 'technical_config',
+            'template'
+        ]
+        read_only_fields = fields
     
-    def get_template_details(self, obj):
-        if obj.template:
-            from internet_plans.serializers.template_serializers import PlanTemplateSerializer
-            return PlanTemplateSerializer(obj.template).data
+    def get_enabled_access_methods(self, obj):
+        return obj.get_enabled_access_methods()
+    
+    def get_access_type(self, obj):
+        return obj.get_access_type()
+    
+    def get_is_available_now(self, obj):
+        availability = obj.is_available_for_client()
+        return availability.get('available', False)
+    
+    def get_availability_info(self, obj):
+        return obj.is_available_for_client()
+    
+    def get_time_variant_summary(self, obj):
+        return obj.get_time_variant_summary()
+    
+    def get_technical_config(self, obj):
+        configs = {}
+        for method in obj.get_enabled_access_methods():
+            configs[method] = obj.get_technical_config(method)
+        return configs
+    
+    def get_allowed_routers(self, obj):
+        try:
+            from network_management.serializers.router_management_serializer import RouterSerializer
+            return RouterSerializer(obj.allowed_routers.all(), many=True).data
+        except ImportError:
+            return []
+    
+    def get_created_by_info(self, obj):
+        if obj.created_by:
+            return {
+                'id': obj.created_by.id,
+                'email': obj.created_by.email,
+                'username': getattr(obj.created_by, 'username', None)
+            }
         return None
     
-    def get_pricing_options(self, obj):
-        from internet_plans.services.pricing_service import PricingService
-        return PricingService.get_pricing_options(obj)
+    def get_price_formatted(self, obj):
+        return f"KSH {float(obj.price):,.2f}"
     
-    def get_compatibility(self, obj):
-        return {
-            'supported_access_methods': obj.get_enabled_access_methods(),
-            'router_specific': obj.router_specific,
-            'allowed_routers': obj.allowed_routers.count() if obj.router_specific else 'All'
-        }
-    
-    def get_availability(self, obj):
-        return obj.is_available_for_client()
+    def to_representation(self, instance):
+        """Ensure access methods are properly structured"""
+        data = super().to_representation(instance)
+        
+        # Create a temporary serializer to leverage the structure fixing logic
+        temp_serializer = InternetPlanSerializer()
+        if 'access_methods' in data:
+            data['access_methods'] = temp_serializer._ensure_access_methods_structure(data['access_methods'])
+        
+        return data
 
 
 class PlanCompatibilitySerializer(serializers.Serializer):
@@ -654,15 +1738,13 @@ class PlanCompatibilitySerializer(serializers.Serializer):
     router_id = serializers.IntegerField(required=False, allow_null=True)
     check_time_availability = serializers.BooleanField(default=True)
     
-    class Meta:
-        fields = ['plan_id', 'access_method', 'router_id', 'check_time_availability']
-    
     def validate(self, data):
+        """Validate compatibility check"""
         plan_id = data['plan_id']
         
-        # Get plan from cache or database
-        plan = InternetPlan.get_cached_plan(plan_id)
-        if not plan:
+        try:
+            plan = InternetPlan.objects.get(id=plan_id, active=True)
+        except InternetPlan.DoesNotExist:
             raise serializers.ValidationError({
                 'plan_id': 'Plan not found or inactive'
             })
@@ -674,7 +1756,7 @@ class PlanCompatibilitySerializer(serializers.Serializer):
                 'access_method': f'Plan does not support {access_method} access method'
             })
         
-        # Check router compatibility if router-specific
+        # Check router compatibility
         router_id = data.get('router_id')
         if plan.router_specific and router_id:
             if not plan.can_be_used_on_router(router_id):
@@ -682,7 +1764,7 @@ class PlanCompatibilitySerializer(serializers.Serializer):
                     'router_id': 'Plan cannot be used on specified router'
                 })
         
-        # Check time availability if requested
+        # Check time availability
         if data.get('check_time_availability', True):
             availability = plan.is_available_for_client()
             if not availability['available']:
@@ -692,9 +1774,7 @@ class PlanCompatibilitySerializer(serializers.Serializer):
                     'next_available': availability.get('next_available')
                 })
         
-        # Store validated data
         self.context['plan'] = plan
-        
         return data
     
     def get_compatibility_result(self):
@@ -703,72 +1783,38 @@ class PlanCompatibilitySerializer(serializers.Serializer):
         if not plan:
             return None
         
-        availability = plan.is_available_for_client(
-            self.validated_data.get('check_time_availability', True)
-        )
-        
         return {
             'compatible': True,
+            'plan_id': str(plan.id),
             'plan_name': plan.name,
-            'plan_type': plan.plan_type,
-            'access_method_supported': True,
-            'router_compatible': not plan.router_specific or self.validated_data.get('router_id') is not None,
-            'availability': availability,
-            'technical_config': plan.get_technical_config(self.validated_data['access_method'])
+            'access_method': self.validated_data['access_method'],
+            'router_specific': plan.router_specific,
+            'technical_config': plan.get_technical_config(self.validated_data['access_method']),
+            'availability': plan.is_available_for_client()
         }
 
 
 class PlanAvailabilityCheckSerializer(serializers.Serializer):
     """
-    Serializer specifically for checking plan availability
+    Serializer for checking plan availability
     """
     
     plan_id = serializers.UUIDField(required=True)
-    timestamp = serializers.DateTimeField(
-        required=False,
-        help_text="Check availability at specific time (defaults to now)"
-    )
-    
-    class Meta:
-        fields = ['plan_id', 'timestamp']
+    check_time_variant = serializers.BooleanField(default=True)
     
     def validate(self, data):
+        """Validate availability check"""
         plan_id = data['plan_id']
         
-        plan = InternetPlan.get_cached_plan(plan_id)
-        if not plan:
+        try:
+            plan = InternetPlan.objects.get(id=plan_id, active=True)
+        except InternetPlan.DoesNotExist:
             raise serializers.ValidationError({
                 'plan_id': 'Plan not found or inactive'
             })
         
         self.context['plan'] = plan
         return data
-    
-    def get_availability_result(self):
-        """Get detailed availability result"""
-        plan = self.context['plan']
-        
-        # For specific timestamp checking, we need to temporarily adjust time
-        timestamp = self.validated_data.get('timestamp')
-        
-        if timestamp:
-            # This would require more complex logic to check future availability
-            # For now, return current availability with note
-            availability = plan.is_available_for_client()
-            availability['note'] = 'Timestamp parameter not yet implemented for future checking'
-        else:
-            availability = plan.is_available_for_client()
-        
-        result = {
-            'plan_id': str(plan.id),
-            'plan_name': plan.name,
-            'availability': availability,
-            'has_time_variant': plan.has_time_variant(),
-            'time_variant_summary': plan.get_time_variant_summary(),
-            'timestamp': timezone.now().isoformat()
-        }
-        
-        return result
 
 
 class AvailablePlansRequestSerializer(serializers.Serializer):
@@ -779,37 +1825,29 @@ class AvailablePlansRequestSerializer(serializers.Serializer):
     client_type = serializers.ChoiceField(
         choices=[('hotspot', 'Hotspot'), ('pppoe', 'PPPoE')],
         default='hotspot',
-        required=False,
-        help_text="Type of client (hotspot or PPPoE)"
+        required=False
     )
     
     router_id = serializers.IntegerField(
         required=False,
-        allow_null=True,
-        help_text="Optional router ID for router-specific plans"
+        allow_null=True
     )
     
     category = serializers.CharField(
         required=False,
-        allow_null=True,
-        help_text="Filter by plan category"
+        allow_null=True
     )
     
     max_price = serializers.DecimalField(
         max_digits=10,
         decimal_places=2,
         required=False,
-        allow_null=True,
-        help_text="Maximum price filter"
+        allow_null=True
     )
     
     include_unavailable = serializers.BooleanField(
-        default=False,
-        help_text="Include plans that are currently unavailable (with reason)"
+        default=False
     )
-    
-    class Meta:
-        fields = ['client_type', 'router_id', 'category', 'max_price', 'include_unavailable']
     
     def get_available_plans(self):
         """Get available plans based on filters"""
@@ -819,51 +1857,37 @@ class AvailablePlansRequestSerializer(serializers.Serializer):
         max_price = self.validated_data.get('max_price')
         include_unavailable = self.validated_data.get('include_unavailable', False)
         
-        # Get all plans for this client type
         if include_unavailable:
-            # Get all plans and check availability individually
-            queryset = InternetPlan.objects.filter(active=True)
+            queryset = InternetPlan.objects.filter(active=True).select_related('time_variant')
             
-            # Apply filters
             if category:
                 queryset = queryset.filter(category=category)
             
             if max_price is not None:
                 queryset = queryset.filter(price__lte=max_price)
             
-            # Filter by client type
             if client_type == 'hotspot':
                 queryset = queryset.filter(access_methods__hotspot__enabled=True)
             elif client_type == 'pppoe':
                 queryset = queryset.filter(access_methods__pppoe__enabled=True)
             
-            # Filter by router
             if router_id:
                 queryset = queryset.filter(
-                    models.Q(router_specific=False) |
-                    models.Q(router_specific=True, allowed_routers__id=router_id)
+                    Q(router_specific=False) |
+                    Q(router_specific=True, allowed_routers__id=router_id)
                 ).distinct()
             
-            plans = list(queryset.select_related('time_variant').order_by('-priority_level', 'price'))
-            
-            # Add availability info to each plan
-            for plan in plans:
-                plan.availability_info = plan.is_available_for_client()
-            
+            plans = list(queryset.order_by('-priority_level', 'price'))
         else:
-            # Use optimized method for available plans only
             plans = InternetPlan.get_available_plans_for_client(client_type, router_id)
             
-            # Apply additional filters
             if category:
                 plans = [p for p in plans if p.category == category]
             
             if max_price is not None:
                 plans = [p for p in plans if p.price <= max_price]
         
-        # Serialize plans
-        from internet_plans.serializers.plan_serializers import InternetPlanSerializer
-        serializer = InternetPlanSerializer(plans, many=True, context=self.context)
+        serializer = InternetPlanListSerializer(plans, many=True, context=self.context)
         
         return {
             'count': len(plans),
