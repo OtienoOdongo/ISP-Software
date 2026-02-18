@@ -1,273 +1,149 @@
 
 
-// import React, { useState, useMemo } from "react";
+
+
+
+
+
+// // ============================================================================
+// // AnalyticsTypeSelector.jsx - CLEAN & MINIMAL
+// // ============================================================================
+
+// import React, { useState } from "react";
 // import { motion, AnimatePresence } from "framer-motion";
-// import { X, Wifi, Cable, BarChart3, TrendingUp, Users, Activity, Check, ArrowRight } from "lucide-react";
+// import { X, Wifi, Cable, Check } from "lucide-react";
 // import { getThemeClasses } from "../Shared/components";
 
-// const AnalyticsTypeSelectionModal = ({ isOpen, onClose, onSelect, theme, plans, subscriptions = [] }) => {
+// const COLORS = {
+//   hotspot: {
+//     bg: 'bg-cyan-500',
+//     bgLight: 'bg-cyan-50',
+//     bgDark: 'dark:bg-cyan-900/30',
+//     border: 'border-cyan-500',
+//     text: 'text-cyan-600',
+//     textDark: 'dark:text-cyan-400',
+//     button: 'bg-cyan-600 hover:bg-cyan-700'
+//   },
+//   pppoe: {
+//     bg: 'bg-violet-500',
+//     bgLight: 'bg-violet-50',
+//     bgDark: 'dark:bg-violet-900/30',
+//     border: 'border-violet-500',
+//     text: 'text-violet-600',
+//     textDark: 'dark:text-violet-400',
+//     button: 'bg-violet-600 hover:bg-violet-700'
+//   }
+// };
+
+// const AnalyticsTypeSelector = ({ isOpen, onClose, onSelect, theme }) => {
 //   const themeClasses = getThemeClasses(theme);
-//   const [selectedAnalyticsType, setSelectedAnalyticsType] = useState(null);
-
-//   // Calculate dynamic metrics from plans and subscriptions - moved before early return
-//   const analyticsData = useMemo(() => {
-//     // Calculate plan counts and subscribers
-//     const { hotspotPlans, pppoePlans, hotspotSubscribers, pppoeSubscribers } = plans.reduce(
-//       (acc, plan) => {
-//         if (plan.accessType === 'hotspot') {
-//           acc.hotspotPlans++;
-//           acc.hotspotSubscribers += (plan.purchases || 0);
-//         } else if (plan.accessType === 'pppoe') {
-//           acc.pppoePlans++;
-//           acc.pppoeSubscribers += (plan.purchases || 0);
-//         }
-//         return acc;
-//       },
-//       { hotspotPlans: 0, pppoePlans: 0, hotspotSubscribers: 0, pppoeSubscribers: 0 }
-//     );
-
-//     // Calculate active sessions/connections from subscriptions
-//     const now = new Date();
-//     const activeHotspotSessions = subscriptions.filter(sub => 
-//       sub.plan_id && 
-//       plans.find(p => p.id === sub.plan_id && p.accessType === 'hotspot') &&
-//       sub.status === 'active' &&
-//       (!sub.expires_at || new Date(sub.expires_at) > now)
-//     ).length;
-
-//     const activePppoeConnections = subscriptions.filter(sub => 
-//       sub.plan_id && 
-//       plans.find(p => p.id === sub.plan_id && p.accessType === 'pppoe') &&
-//       sub.status === 'active' &&
-//       (!sub.expires_at || new Date(sub.expires_at) > now)
-//     ).length;
-
-//     return {
-//       hotspotPlans,
-//       pppoePlans,
-//       hotspotSubscribers,
-//       pppoeSubscribers,
-//       activeHotspotSessions,
-//       activePppoeConnections
-//     };
-//   }, [plans, subscriptions]);
+//   const [selectedType, setSelectedType] = useState(null);
 
 //   const analyticsTypes = [
 //     {
 //       id: "hotspot",
 //       name: "Hotspot Analytics",
 //       icon: Wifi,
-//       color: "blue",
-//       description: "Comprehensive analytics for wireless hotspot plans",
-//       metrics: [
-//         { icon: Users, label: "Total Plans", value: analyticsData.hotspotPlans },
-//         { icon: TrendingUp, label: "Subscribers", value: analyticsData.hotspotSubscribers },
-//         { icon: Activity, label: "Active Sessions", value: analyticsData.activeHotspotSessions }
-//       ],
-//       features: [
-//         "User connection patterns",
-//         "Bandwidth usage analytics",
-//         "Session duration trends",
-//         "Peak usage hours"
-//       ]
+//       color: COLORS.hotspot
 //     },
 //     {
 //       id: "pppoe",
 //       name: "PPPoE Analytics",
 //       icon: Cable,
-//       color: "emerald",
-//       description: "Detailed insights for wired PPPoE connections",
-//       metrics: [
-//         { icon: Users, label: "Total Plans", value: analyticsData.pppoePlans },
-//         { icon: TrendingUp, label: "Subscribers", value: analyticsData.pppoeSubscribers },
-//         { icon: Activity, label: "Active Connections", value: analyticsData.activePppoeConnections }
-//       ],
-//       features: [
-//         "Connection stability metrics",
-//         "IP pool utilization",
-//         "Authentication logs",
-//         "Network performance"
-//       ]
+//       color: COLORS.pppoe
 //     }
 //   ];
 
-//   const getColorClasses = (color, isSelected = false) => {
-//     const baseClasses = {
-//       blue: {
-//         border: isSelected ? 'border-blue-500 ring-4 ring-blue-200 dark:ring-blue-900/30' : 'border-gray-200 dark:border-gray-600',
-//         bg: isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-gray-800',
-//         text: {
-//           primary: 'text-blue-700 dark:text-blue-300',
-//           secondary: 'text-blue-600 dark:text-blue-400'
-//         },
-//         button: 'bg-blue-600 hover:bg-blue-700 text-white'
-//       },
-//       emerald: {
-//         border: isSelected ? 'border-emerald-500 ring-4 ring-emerald-200 dark:ring-emerald-900/30' : 'border-gray-200 dark:border-gray-600',
-//         bg: isSelected ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-white dark:bg-gray-800',
-//         text: {
-//           primary: 'text-emerald-700 dark:text-emerald-300',
-//           secondary: 'text-emerald-600 dark:text-emerald-400'
-//         },
-//         button: 'bg-emerald-600 hover:bg-emerald-700 text-white'
-//       }
-//     };
-//     return baseClasses[color] || baseClasses.blue;
-//   };
-
-//   const handleAnalyticsSelect = (analyticsType) => {
-//     setSelectedAnalyticsType(analyticsType);
-//   };
-
-//   const handleContinue = () => {
-//     if (selectedAnalyticsType) {
-//       onSelect(selectedAnalyticsType);
-//     }
-//   };
-
-//   // Early return must be after all hooks
 //   if (!isOpen) return null;
 
 //   return (
 //     <AnimatePresence>
 //       {isOpen && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-3 md:p-4 bg-black bg-opacity-60 backdrop-blur-sm">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
 //           <motion.div
-//             initial={{ opacity: 0, scale: 0.9, y: 20 }}
-//             animate={{ opacity: 1, scale: 1, y: 0 }}
-//             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-//             transition={{ duration: 0.3, type: "spring", stiffness: 300, damping: 30 }}
-//             className="w-full max-w-xs sm:max-w-sm md:max-w-lg lg:max-w-xl xl:max-w-2xl 2xl:max-w-3xl rounded-3xl shadow-2xl bg-white dark:bg-gray-900 overflow-hidden"
+//             initial={{ opacity: 0, scale: 0.95 }}
+//             animate={{ opacity: 1, scale: 1 }}
+//             exit={{ opacity: 0, scale: 0.95 }}
+//             className="w-full max-w-md rounded-xl bg-white dark:bg-gray-900 shadow-xl"
 //           >
-//             {/* Header */}
-//             <div className="relative p-2 sm:p-3 md:p-4 lg:p-5 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
-//               <div className="flex items-center justify-between">
-//                 <div>
-//                   <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold mb-0.5 sm:mb-1 flex items-center">
-//                     <BarChart3 className="w-4 h-4 sm:w-5 h-5 md:w-6 h-6 lg:w-7 h-7 mr-1 sm:mr-2" />
-//                     View Analytics
-//                   </h2>
-//                   <p className="text-purple-100 text-xs sm:text-xs md:text-sm lg:text-base">
-//                     Choose analytics type to view detailed insights
-//                   </p>
-//                 </div>
-//                 <button
-//                   onClick={onClose}
-//                   className="p-1 sm:p-1.5 rounded-full hover:bg-white/20 transition-colors duration-200"
-//                 >
-//                   <X className="w-3 h-3 sm:w-4 h-4 md:w-5 h-5" />
-//                 </button>
-//               </div>
+//             {/* Simple Header */}
+//             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+//               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+//                 Select Analytics
+//               </h2>
+//               <button
+//                 onClick={onClose}
+//                 className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+//               >
+//                 <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+//               </button>
 //             </div>
 
-//             {/* Analytics Type Selection */}
-//             <div className="p-2 sm:p-3 md:p-4 lg:p-5">
-//               <div className="grid grid-cols-1 gap-2 sm:gap-3 md:gap-4 md:grid-cols-2">
-//                 {analyticsTypes.map((analyticsType) => {
-//                   const IconComponent = analyticsType.icon;
-//                   const isSelected = selectedAnalyticsType === analyticsType.id;
-//                   const colorClasses = getColorClasses(analyticsType.color, isSelected);
-                  
-//                   return (
-//                     <motion.div
-//                       key={analyticsType.id}
-//                       whileHover={{ scale: 1.02 }}
-//                       whileTap={{ scale: 0.98 }}
-//                       onClick={() => handleAnalyticsSelect(analyticsType.id)}
-//                       className={`relative p-2 sm:p-3 md:p-4 lg:p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${colorClasses.border} ${colorClasses.bg}`}
-//                     >
-//                       {/* Selection Indicator */}
-//                       <div className={`absolute -top-1 -right-1 sm:-top-1.5 -right-1.5 w-4 h-4 sm:w-5 h-5 md:w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 ${
-//                         isSelected 
-//                           ? 'scale-100 opacity-100 bg-white shadow-md' 
-//                           : 'scale-0 opacity-0'
-//                       }`}>
-//                         <Check className={`w-2.5 h-2.5 sm:w-3 h-3 md:w-4 h-4 ${colorClasses.text.secondary}`} />
-//                       </div>
+//             {/* Options - Simple Cards */}
+//             <div className="p-4 space-y-3">
+//               {analyticsTypes.map((type) => {
+//                 const Icon = type.icon;
+//                 const isSelected = selectedType === type.id;
+//                 const color = type.color;
 
-//                       {/* Header */}
-//                       <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 mb-1.5 sm:mb-2 md:mb-3">
-//                         <div className={`p-1.5 sm:p-2 md:p-2.5 rounded-xl bg-gradient-to-r ${
-//                           analyticsType.color === 'blue' ? 'from-blue-500 to-cyan-500' : 'from-emerald-500 to-green-500'
-//                         }`}>
-//                           <IconComponent className="w-3 h-3 sm:w-4 h-4 md:w-5 h-5 text-white" />
+//                 return (
+//                   <motion.div
+//                     key={type.id}
+//                     whileHover={{ scale: 1.02 }}
+//                     whileTap={{ scale: 0.98 }}
+//                     onClick={() => setSelectedType(type.id)}
+//                     className={`
+//                       relative p-4 rounded-xl border-2 cursor-pointer
+//                       transition-all duration-200
+//                       ${isSelected 
+//                         ? `${color.border} ${color.bgLight} ${color.bgDark}` 
+//                         : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+//                       }
+//                     `}
+//                   >
+//                     <div className="flex items-center justify-between">
+//                       <div className="flex items-center space-x-3">
+//                         <div className={`p-2.5 rounded-lg ${color.bg} bg-opacity-10`}>
+//                           <Icon className={`w-5 h-5 ${color.text} ${color.textDark}`} />
 //                         </div>
-//                         <div>
-//                           <h3 className={`text-sm sm:text-base md:text-lg font-bold ${colorClasses.text.primary}`}>
-//                             {analyticsType.name}
-//                           </h3>
-//                           <p className="text-xs sm:text-xs md:text-sm text-gray-600 dark:text-gray-400 mt-0.5">
-//                             {analyticsType.description}
-//                           </p>
+//                         <span className="font-medium text-gray-900 dark:text-white">
+//                           {type.name}
+//                         </span>
+//                       </div>
+                      
+//                       {isSelected && (
+//                         <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+//                           <Check className="w-3 h-3 text-white" />
 //                         </div>
-//                       </div>
+//                       )}
+//                     </div>
+//                   </motion.div>
+//                 );
+//               })}
+//             </div>
 
-//                       {/* Metrics */}
-//                       <div className="grid grid-cols-3 gap-1 sm:gap-1.5 md:gap-2 mb-1.5 sm:mb-2 md:mb-3">
-//                         {analyticsType.metrics.map((metric, index) => {
-//                           const MetricIcon = metric.icon;
-//                           return (
-//                             <div key={index} className="text-center p-1 sm:p-1.5 md:p-2 rounded-lg bg-white dark:bg-gray-700/50">
-//                               <MetricIcon className={`w-2.5 h-2.5 sm:w-3 h-3 md:w-3.5 h-3.5 mx-auto mb-0.5 ${colorClasses.text.secondary}`} />
-//                               <div className="font-bold text-xs sm:text-sm md:text-base text-gray-900 dark:text-white">
-//                                 {metric.value}
-//                               </div>
-//                               <div className="text-xs text-gray-500 dark:text-gray-400">
-//                                 {metric.label}
-//                               </div>
-//                             </div>
-//                           );
-//                         })}
-//                       </div>
-
-//                       {/* Features */}
-//                       <div>
-//                         <h4 className={`text-xs sm:text-xs md:text-sm font-semibold mb-0.5 sm:mb-1 ${colorClasses.text.secondary}`}>
-//                           Analytics Include:
-//                         </h4>
-//                         <ul className="space-y-0.5 sm:space-y-0.5 md:space-y-1">
-//                           {analyticsType.features.map((feature, index) => (
-//                             <li key={index} className="flex items-center text-xs sm:text-xs md:text-sm text-gray-600 dark:text-gray-400">
-//                               <div className="w-0.5 h-0.5 sm:w-1 h-1 rounded-full bg-gray-400 mr-1 sm:mr-1.5"></div>
-//                               {feature}
-//                             </li>
-//                           ))}
-//                         </ul>
-//                       </div>
-//                     </motion.div>
-//                   );
-//                 })}
-//               </div>
-
-//               {/* Action Buttons */}
-//               <div className="flex flex-col sm:flex-row items-center justify-between mt-2 sm:mt-3 md:mt-4 pt-2 sm:pt-3 md:pt-4 border-t border-gray-200 dark:border-gray-700 gap-2 sm:gap-3 md:gap-0">
-//                 <button
-//                   onClick={onClose}
-//                   className="w-full sm:w-auto px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 font-medium text-xs sm:text-sm"
-//                 >
-//                   Cancel
-//                 </button>
-                
-//                 <motion.button
-//                   onClick={handleContinue}
-//                   disabled={!selectedAnalyticsType}
-//                   className={`w-full sm:w-auto px-5 sm:px-6 py-1.5 sm:py-2 rounded-xl font-semibold flex items-center justify-center space-x-1.5 sm:space-x-2 transition-all duration-300 ${
-//                     selectedAnalyticsType 
-//                       ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md hover:shadow-lg' 
-//                       : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-//                   } text-xs sm:text-sm`}
-//                   whileHover={selectedAnalyticsType ? { scale: 1.05 } : {}}
-//                   whileTap={selectedAnalyticsType ? { scale: 0.95 } : {}}
-//                 >
-//                   <span>
-//                     {selectedAnalyticsType 
-//                       ? `View ${selectedAnalyticsType === 'hotspot' ? 'Hotspot' : 'PPPoE'} Analytics` 
-//                       : 'Select Analytics Type'
-//                     }
-//                   </span>
-//                   <ArrowRight className="w-3 h-3 sm:w-4 h-4" />
-//                 </motion.button>
-//               </div>
+//             {/* Simple Actions */}
+//             <div className="flex justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-700">
+//               <button
+//                 onClick={onClose}
+//                 className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+//               >
+//                 Cancel
+//               </button>
+//               <button
+//                 onClick={() => selectedType && onSelect(selectedType)}
+//                 disabled={!selectedType}
+//                 className={`
+//                   px-4 py-2 rounded-lg text-sm font-medium text-white
+//                   transition-colors
+//                   ${selectedType 
+//                     ? COLORS[selectedType].button 
+//                     : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
+//                   }
+//                 `}
+//               >
+//                 View
+//               </button>
 //             </div>
 //           </motion.div>
 //         </div>
@@ -276,311 +152,246 @@
 //   );
 // };
 
-// export default AnalyticsTypeSelectionModal;
+// export default AnalyticsTypeSelector;
 
 
 
 
+// ============================================================================
+// AnalyticsTypeSelector.jsx - ENHANCED & COLORFUL (FIXED)
+// ============================================================================
 
-
-
-
-
-
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Wifi, Cable, BarChart3, TrendingUp, Users, Activity, Check, ArrowRight } from "lucide-react";
+import { X, Wifi, Cable, Check, Zap, Activity } from "lucide-react";
 import { getThemeClasses } from "../Shared/components";
 
-const AnalyticsTypeSelectionModal = ({ isOpen, onClose, onSelect, theme, plans = [] }) => {
+const COLORS = {
+  hotspot: {
+    primary: '#06b6d4',
+    secondary: '#0891b2',
+    light: '#ecfeff',
+    dark: '#164e63',
+    gradient: 'from-cyan-500 to-blue-500',
+    bgGradient: 'bg-gradient-to-br from-cyan-500/10 to-blue-500/10',
+    border: 'border-cyan-500',
+    text: 'text-cyan-600',
+    textDark: 'dark:text-cyan-400',
+    button: 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700',
+    shadow: 'shadow-cyan-500/20'
+  },
+  pppoe: {
+    primary: '#8b5cf6',
+    secondary: '#7c3aed',
+    light: '#f5f3ff',
+    dark: '#4c1d95',
+    gradient: 'from-violet-500 to-purple-500',
+    bgGradient: 'bg-gradient-to-br from-violet-500/10 to-purple-500/10',
+    border: 'border-violet-500',
+    text: 'text-violet-600',
+    textDark: 'dark:text-violet-400',
+    button: 'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700',
+    shadow: 'shadow-violet-500/20'
+  }
+};
+
+const AnalyticsTypeSelector = ({ isOpen, onClose, onSelect, theme }) => {
   const themeClasses = getThemeClasses(theme);
-  const [selectedAnalyticsType, setSelectedAnalyticsType] = useState(null);
+  const [selectedType, setSelectedType] = useState(null);
 
-  // Calculate plan metrics only (no subscription data)
-  const analyticsData = useMemo(() => {
-    const { hotspotPlans, pppoePlans, dualPlans } = plans.reduce(
-      (acc, plan) => {
-        // Determine plan type based on enabled access methods
-        const enabledMethods = plan.get_enabled_access_methods ? 
-          plan.get_enabled_access_methods() : 
-          [];
-        
-        if (enabledMethods.includes('hotspot') && enabledMethods.includes('pppoe')) {
-          acc.dualPlans++;
-        } else if (enabledMethods.includes('hotspot')) {
-          acc.hotspotPlans++;
-        } else if (enabledMethods.includes('pppoe')) {
-          acc.pppoePlans++;
-        }
-        return acc;
-      },
-      { hotspotPlans: 0, pppoePlans: 0, dualPlans: 0 }
-    );
-
-    return {
-      hotspotPlans,
-      pppoePlans,
-      dualPlans,
-      totalPlans: plans.length,
-      // Plan purchase statistics
-      totalPurchases: plans.reduce((sum, plan) => sum + (plan.purchases || 0), 0),
-      avgPrice: plans.length > 0 ? 
-        plans.reduce((sum, plan) => sum + (parseFloat(plan.price) || 0), 0) / plans.length : 
-        0
-    };
-  }, [plans]);
-
-  // Using uncommon colors: Teal and Amber
   const analyticsTypes = [
     {
       id: "hotspot",
       name: "Hotspot Analytics",
       icon: Wifi,
-      color: "teal",
-      description: "Wireless hotspot plan performance & usage",
-      metrics: [
-        { icon: Users, label: "Total Plans", value: analyticsData.hotspotPlans },
-        { icon: TrendingUp, label: "Avg Price", value: `KSH ${analyticsData.avgPrice.toFixed(2)}` },
-        { icon: Activity, label: "Plan Usage", value: "Network Insights" }
-      ],
-      features: [
-        "Plan performance metrics",
-        "Bandwidth usage patterns",
-        "Time variant availability",
-        "Pricing effectiveness"
-      ]
+      color: COLORS.hotspot,
+      tagline: "Wireless Performance"
     },
     {
       id: "pppoe",
       name: "PPPoE Analytics",
       icon: Cable,
-      color: "amber",
-      description: "Wired PPPoE plan configuration & metrics",
-      metrics: [
-        { icon: Users, label: "Total Plans", value: analyticsData.pppoePlans },
-        { icon: TrendingUp, label: "Avg Price", value: `KSH ${analyticsData.avgPrice.toFixed(2)}` },
-        { icon: Activity, label: "Technical Specs", value: "Network Config" }
-      ],
-      features: [
-        "Technical configuration analysis",
-        "MTU and IP pool stats",
-        "Network compatibility",
-        "Router-specific usage"
-      ]
-    },
-    {
-      id: "general",
-      name: "General Analytics",
-      icon: BarChart3,
-      color: "violet",
-      description: "Overall plan management & statistics",
-      metrics: [
-        { icon: Users, label: "All Plans", value: analyticsData.totalPlans },
-        { icon: TrendingUp, label: "Total Purchases", value: analyticsData.totalPurchases },
-        { icon: Activity, label: "Dual Plans", value: analyticsData.dualPlans }
-      ],
-      features: [
-        "Plan category distribution",
-        "Time variant configurations",
-        "Pricing matrix analysis",
-        "Template usage statistics"
-      ]
+      color: COLORS.pppoe,
+      tagline: "Wired Connections"
     }
   ];
 
-  const getColorClasses = (color, isSelected = false) => {
-    const baseClasses = {
-      teal: {
-        border: isSelected ? 'border-teal-500 ring-4 ring-teal-200 dark:ring-teal-900/30' : 'border-gray-200 dark:border-gray-600',
-        bg: isSelected ? 'bg-teal-50 dark:bg-teal-900/20' : 'bg-white dark:bg-gray-800',
-        text: {
-          primary: 'text-teal-700 dark:text-teal-300',
-          secondary: 'text-teal-600 dark:text-teal-400'
-        },
-        button: 'bg-teal-600 hover:bg-teal-700 text-white'
-      },
-      amber: {
-        border: isSelected ? 'border-amber-500 ring-4 ring-amber-200 dark:ring-amber-900/30' : 'border-gray-200 dark:border-gray-600',
-        bg: isSelected ? 'bg-amber-50 dark:bg-amber-900/20' : 'bg-white dark:bg-gray-800',
-        text: {
-          primary: 'text-amber-700 dark:text-amber-300',
-          secondary: 'text-amber-600 dark:text-amber-400'
-        },
-        button: 'bg-amber-600 hover:bg-amber-700 text-white'
-      },
-      violet: {
-        border: isSelected ? 'border-violet-500 ring-4 ring-violet-200 dark:ring-violet-900/30' : 'border-gray-200 dark:border-gray-600',
-        bg: isSelected ? 'bg-violet-50 dark:bg-violet-900/20' : 'bg-white dark:bg-gray-800',
-        text: {
-          primary: 'text-violet-700 dark:text-violet-300',
-          secondary: 'text-violet-600 dark:text-violet-400'
-        },
-        button: 'bg-violet-600 hover:bg-violet-700 text-white'
-      }
-    };
-    return baseClasses[color] || baseClasses.teal;
-  };
-
-  const handleAnalyticsSelect = (analyticsType) => {
-    setSelectedAnalyticsType(analyticsType);
-  };
-
-  const handleContinue = () => {
-    if (selectedAnalyticsType) {
-      onSelect(selectedAnalyticsType);
-    }
-  };
-
   if (!isOpen) return null;
+
+  // Helper function to get border color class safely
+  const getBorderColorClass = (color, isSelected) => {
+    if (isSelected) return color.border;
+    return 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600';
+  };
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-3 md:p-4 bg-black bg-opacity-60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ duration: 0.3, type: "spring", stiffness: 300, damping: 30 }}
-            className="w-full max-w-xs sm:max-w-sm md:max-w-lg lg:max-w-xl xl:max-w-2xl 2xl:max-w-4xl rounded-3xl shadow-2xl bg-white dark:bg-gray-900 overflow-hidden"
+            transition={{ type: "spring", duration: 0.3 }}
+            className="w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 shadow-2xl overflow-hidden"
           >
-            {/* Header - Using unique teal gradient */}
-            <div className="relative p-2 sm:p-3 md:p-4 lg:p-5 bg-gradient-to-r from-teal-700 via-teal-600 to-amber-600 text-white">
-              <div className="flex items-center justify-between">
+            {/* Header with gradient */}
+            <div className="relative px-6 py-5 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-950 dark:to-gray-900">
+              <div 
+                className="absolute inset-0 opacity-20"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+                }}
+              />
+              
+              <div className="relative flex items-center justify-between">
                 <div>
-                  <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold mb-0.5 sm:mb-1 flex items-center">
-                    <BarChart3 className="w-4 h-4 sm:w-5 h-5 md:w-6 h-6 lg:w-7 h-7 mr-1 sm:mr-2" />
-                    Plan Analytics Dashboard
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-yellow-400" />
+                    Analytics Dashboard
                   </h2>
-                  <p className="text-teal-100 text-xs sm:text-xs md:text-sm lg:text-base">
-                    Select analytics view for internet plan insights
+                  <p className="text-sm text-gray-300 mt-1">
+                    Choose analytics view
                   </p>
                 </div>
-                <button
+                
+                <motion.button
+                  whileHover={{ rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={onClose}
-                  className="p-1 sm:p-1.5 rounded-full hover:bg-white/20 transition-colors duration-200"
+                  className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
                 >
-                  <X className="w-3 h-3 sm:w-4 h-4 md:w-5 h-5" />
-                </button>
+                  <X className="w-5 h-5 text-white" />
+                </motion.button>
               </div>
             </div>
 
-            {/* Analytics Type Selection */}
-            <div className="p-2 sm:p-3 md:p-4 lg:p-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
-                {analyticsTypes.map((analyticsType) => {
-                  const IconComponent = analyticsType.icon;
-                  const isSelected = selectedAnalyticsType === analyticsType.id;
-                  const colorClasses = getColorClasses(analyticsType.color, isSelected);
-                  
-                  return (
-                    <motion.div
-                      key={analyticsType.id}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleAnalyticsSelect(analyticsType.id)}
-                      className={`relative p-2 sm:p-3 md:p-4 lg:p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${colorClasses.border} ${colorClasses.bg}`}
-                    >
-                      {/* Selection Indicator */}
-                      <div className={`absolute -top-1 -right-1 sm:-top-1.5 -right-1.5 w-4 h-4 sm:w-5 h-5 md:w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 ${
-                        isSelected 
-                          ? 'scale-100 opacity-100 bg-white shadow-md' 
-                          : 'scale-0 opacity-0'
-                      }`}>
-                        <Check className={`w-2.5 h-2.5 sm:w-3 h-3 md:w-4 h-4 ${colorClasses.text.secondary}`} />
-                      </div>
+            {/* Options - Enhanced Cards */}
+            <div className="p-5 space-y-4">
+              {analyticsTypes.map((type) => {
+                const Icon = type.icon;
+                const isSelected = selectedType === type.id;
+                const color = type.color;
 
-                      {/* Header */}
-                      <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 mb-1.5 sm:mb-2 md:mb-3">
-                        <div className={`p-1.5 sm:p-2 md:p-2.5 rounded-xl ${
-                          analyticsType.color === 'teal' 
-                            ? 'bg-gradient-to-r from-teal-500 to-teal-400' 
-                            : analyticsType.color === 'amber'
-                            ? 'bg-gradient-to-r from-amber-500 to-amber-400'
-                            : 'bg-gradient-to-r from-violet-500 to-violet-400'
-                        }`}>
-                          <IconComponent className="w-3 h-3 sm:w-4 h-4 md:w-5 h-5 text-white" />
+                return (
+                  <motion.div
+                    key={type.id}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setSelectedType(type.id)}
+                    className={`
+                      relative p-5 rounded-xl cursor-pointer
+                      transition-all duration-300
+                      ${isSelected 
+                        ? `bg-gradient-to-r ${color.gradient} text-white shadow-xl ${color.shadow}` 
+                        : `${color.bgGradient} border-2 ${getBorderColorClass(color, false)} bg-white dark:bg-gray-800 shadow-md hover:shadow-lg`
+                      }
+                    `}
+                  >
+                    {/* Selection glow effect */}
+                    {isSelected && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="absolute inset-0 rounded-xl bg-white/10"
+                      />
+                    )}
+
+                    <div className="relative flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        {/* Icon container with gradient */}
+                        <div className={`
+                          p-3 rounded-xl
+                          ${isSelected 
+                            ? 'bg-white/20' 
+                            : `bg-gradient-to-br ${color.gradient} bg-opacity-10`
+                          }
+                        `}>
+                          <Icon className={`
+                            w-6 h-6
+                            ${isSelected ? 'text-white' : color.text}
+                          `} />
                         </div>
+                        
+                        {/* Text content */}
                         <div>
-                          <h3 className={`text-sm sm:text-base md:text-lg font-bold ${colorClasses.text.primary}`}>
-                            {analyticsType.name}
+                          <h3 className={`
+                            font-semibold text-lg
+                            ${isSelected ? 'text-white' : 'text-gray-900 dark:text-white'}
+                          `}>
+                            {type.name}
                           </h3>
-                          <p className="text-xs sm:text-xs md:text-sm text-gray-600 dark:text-gray-400 mt-0.5">
-                            {analyticsType.description}
+                          <p className={`
+                            text-sm flex items-center gap-1
+                            ${isSelected ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'}
+                          `}>
+                            <Activity className="w-3 h-3" />
+                            {type.tagline}
                           </p>
                         </div>
                       </div>
+                      
+                      {/* Selection indicator with animation */}
+                      {isSelected ? (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="w-7 h-7 rounded-full bg-white flex items-center justify-center shadow-lg"
+                        >
+                          <Check className="w-4 h-4 text-green-600" />
+                        </motion.div>
+                      ) : (
+                        <div className="w-7 h-7 rounded-full border-2 border-gray-300 dark:border-gray-600" />
+                      )}
+                    </div>
 
-                      {/* Metrics */}
-                      <div className="grid grid-cols-3 gap-1 sm:gap-1.5 md:gap-2 mb-1.5 sm:mb-2 md:mb-3">
-                        {analyticsType.metrics.map((metric, index) => {
-                          const MetricIcon = metric.icon;
-                          return (
-                            <div key={index} className="text-center p-1 sm:p-1.5 md:p-2 rounded-lg bg-white dark:bg-gray-700/50">
-                              <MetricIcon className={`w-2.5 h-2.5 sm:w-3 h-3 md:w-3.5 h-3.5 mx-auto mb-0.5 ${colorClasses.text.secondary}`} />
-                              <div className="font-bold text-xs sm:text-sm md:text-base text-gray-900 dark:text-white">
-                                {metric.value}
-                              </div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                {metric.label}
-                              </div>
-                            </div>
-                          );
-                        })}
+                    {/* Decorative dot pattern for selected state */}
+                    {isSelected && (
+                      <div className="absolute bottom-2 right-2 flex gap-1">
+                        <div className="w-1 h-1 rounded-full bg-white/40" />
+                        <div className="w-1 h-1 rounded-full bg-white/40" />
+                        <div className="w-1 h-1 rounded-full bg-white/40" />
                       </div>
+                    )}
+                  </motion.div>
+                );
+              })}
+            </div>
 
-                      {/* Features */}
-                      <div>
-                        <h4 className={`text-xs sm:text-xs md:text-sm font-semibold mb-0.5 sm:mb-1 ${colorClasses.text.secondary}`}>
-                          Analytics Include:
-                        </h4>
-                        <ul className="space-y-0.5 sm:space-y-0.5 md:space-y-1">
-                          {analyticsType.features.map((feature, index) => (
-                            <li key={index} className="flex items-center text-xs sm:text-xs md:text-sm text-gray-600 dark:text-gray-400">
-                              <div className={`w-0.5 h-0.5 sm:w-1 h-1 rounded-full mr-1 sm:mr-1.5 ${
-                                analyticsType.color === 'teal' ? 'bg-teal-400' :
-                                analyticsType.color === 'amber' ? 'bg-amber-400' :
-                                'bg-violet-400'
-                              }`}></div>
-                              {feature}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row items-center justify-between mt-2 sm:mt-3 md:mt-4 pt-2 sm:pt-3 md:pt-4 border-t border-gray-200 dark:border-gray-700 gap-2 sm:gap-3 md:gap-0">
-                <button
-                  onClick={onClose}
-                  className="w-full sm:w-auto px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 font-medium text-xs sm:text-sm"
-                >
-                  Cancel
-                </button>
-                
-                <motion.button
-                  onClick={handleContinue}
-                  disabled={!selectedAnalyticsType}
-                  className={`w-full sm:w-auto px-5 sm:px-6 py-1.5 sm:py-2 rounded-xl font-semibold flex items-center justify-center space-x-1.5 sm:space-x-2 transition-all duration-300 ${
-                    selectedAnalyticsType 
-                      ? 'bg-gradient-to-r from-teal-600 to-amber-600 text-white shadow-md hover:shadow-lg' 
-                      : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                  } text-xs sm:text-sm`}
-                  whileHover={selectedAnalyticsType ? { scale: 1.05 } : {}}
-                  whileTap={selectedAnalyticsType ? { scale: 0.95 } : {}}
-                >
-                  <span>
-                    {selectedAnalyticsType 
-                      ? `View ${analyticsTypes.find(a => a.id === selectedAnalyticsType)?.name}` 
-                      : 'Select Analytics Type'
-                    }
-                  </span>
-                  <ArrowRight className="w-3 h-3 sm:w-4 h-4" />
-                </motion.button>
-              </div>
+            {/* Actions with better styling */}
+            <div className="flex justify-end gap-3 p-5 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={onClose}
+                className="px-5 py-2.5 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </motion.button>
+              
+              <motion.button
+                whileHover={selectedType ? { scale: 1.05 } : {}}
+                whileTap={selectedType ? { scale: 0.95 } : {}}
+                onClick={() => selectedType && onSelect(selectedType)}
+                disabled={!selectedType}
+                className={`
+                  px-6 py-2.5 rounded-lg text-sm font-semibold text-white
+                  transition-all duration-300 flex items-center gap-2
+                  ${selectedType 
+                    ? `${COLORS[selectedType].button} shadow-lg` 
+                    : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
+                  }
+                `}
+              >
+                {selectedType ? (
+                  <>
+                    <span>View Analytics</span>
+                    <Zap className="w-4 h-4" />
+                  </>
+                ) : (
+                  'Select Option'
+                )}
+              </motion.button>
             </div>
           </motion.div>
         </div>
@@ -589,4 +400,4 @@ const AnalyticsTypeSelectionModal = ({ isOpen, onClose, onSelect, theme, plans =
   );
 };
 
-export default AnalyticsTypeSelectionModal;
+export default AnalyticsTypeSelector;

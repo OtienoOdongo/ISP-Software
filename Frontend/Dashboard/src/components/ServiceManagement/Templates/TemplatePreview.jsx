@@ -2,6 +2,10 @@
 
 
 
+
+
+
+
 // import React from "react";
 // import { motion } from "framer-motion";
 // import { X, Check, Plus, Box, Wifi, Cable, Shield, TrendingDown } from "lucide-react";
@@ -53,55 +57,58 @@
 //   const priorityInfo = getPriorityInfo(template.priority_level || 4);
 
 //   return (
-//     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black bg-opacity-50">
 //       <motion.div
 //         initial={{ opacity: 0, scale: 0.9 }}
 //         animate={{ opacity: 1, scale: 1 }}
 //         exit={{ opacity: 0, scale: 0.9 }}
-//         className={`w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-xl shadow-lg ${themeClasses.bg.card} ${themeClasses.border.light} border p-6`}
+//         className={`w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-xl shadow-lg ${themeClasses.bg.card} ${themeClasses.border.light} border p-3 sm:p-4 md:p-6`}
 //       >
-//         <div className="flex items-center justify-between mb-6">
-//           <div>
-//             <h2 className="text-2xl font-bold text-indigo-600">{template.name}</h2>
-//             <p className={`mt-1 ${themeClasses.text.secondary}`}>
+//         <div className="flex items-center justify-between mb-4 sm:mb-6">
+//           <div className="min-w-0">
+//             <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-indigo-600 truncate">
+//               {template.name}
+//             </h2>
+//             <p className={`mt-1 text-xs sm:text-sm ${themeClasses.text.secondary} truncate`}>
 //               {template.description}
 //             </p>
 //           </div>
 //           <button
 //             onClick={onClose}
-//             className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg"
+//             className="p-1 sm:p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg flex-shrink-0 ml-2"
+//             aria-label="Close preview"
 //           >
-//             <X className="w-6 h-6" />
+//             <X className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
 //           </button>
 //         </div>
 
-//         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-//           <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-//             <h4 className="font-semibold mb-2">Template Information</h4>
-//             <div className="space-y-2 text-sm">
+//         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+//           <div className={`p-3 sm:p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+//             <h4 className="font-semibold mb-2 text-sm sm:text-base">Template Information</h4>
+//             <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
 //               <div className="flex justify-between">
-//                 <span>Category:</span>
-//                 <span className="font-medium">{template.category}</span>
+//                 <span className="truncate mr-2">Category:</span>
+//                 <span className="font-medium truncate">{template.category}</span>
 //               </div>
 //               <div className="flex justify-between">
-//                 <span>Base Price:</span>
-//                 <span className="font-medium">Ksh {formatNumber(template.basePrice || template.base_price || 0)}</span>
+//                 <span className="truncate mr-2">Base Price:</span>
+//                 <span className="font-medium truncate">Ksh {formatNumber(template.basePrice || template.base_price || 0)}</span>
 //               </div>
 //               <div className="flex justify-between">
-//                 <span>Usage Count:</span>
-//                 <span className="font-medium">{template.usageCount || template.usage_count || 0}</span>
+//                 <span className="truncate mr-2">Usage Count:</span>
+//                 <span className="font-medium truncate">{template.usageCount || template.usage_count || 0}</span>
 //               </div>
 //               <div className="flex justify-between">
-//                 <span>Status:</span>
-//                 <span className={`font-medium ${
+//                 <span className="truncate mr-2">Status:</span>
+//                 <span className={`font-medium truncate ${
 //                   template.isActive !== false ? 'text-green-600' : 'text-red-600'
 //                 }`}>
 //                   {template.isActive !== false ? 'Active' : 'Inactive'}
 //                 </span>
 //               </div>
 //               <div className="flex justify-between">
-//                 <span>Visibility:</span>
-//                 <span className={`font-medium ${
+//                 <span className="truncate mr-2">Visibility:</span>
+//                 <span className={`font-medium truncate ${
 //                   template.isPublic ? 'text-green-600' : 'text-blue-600'
 //                 }`}>
 //                   {template.isPublic ? 'Public' : 'Private'}
@@ -110,26 +117,26 @@
 //             </div>
 //           </div>
 
-//           <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-//             <h4 className="font-semibold mb-2">Advanced Settings</h4>
-//             <div className="space-y-2 text-sm">
+//           <div className={`p-3 sm:p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+//             <h4 className="font-semibold mb-2 text-sm sm:text-base">Advanced Settings</h4>
+//             <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
 //               <div className="flex justify-between">
-//                 <span>Priority Level:</span>
-//                 <span className={`font-medium flex items-center ${priorityInfo.color}`}>
-//                   <TrendingDown className="w-3 h-3 mr-1" />
-//                   {priorityInfo.label}
+//                 <span className="truncate mr-2">Priority Level:</span>
+//                 <span className={`font-medium flex items-center ${priorityInfo.color} truncate`}>
+//                   <TrendingDown className="w-3 h-3 mr-1 flex-shrink-0" />
+//                   <span className="truncate">{priorityInfo.label}</span>
 //                 </span>
 //               </div>
 //               <div className="flex justify-between">
-//                 <span>Router Specific:</span>
-//                 <span className="font-medium">
+//                 <span className="truncate mr-2">Router Specific:</span>
+//                 <span className="font-medium truncate">
 //                   {template.router_specific ? 'Yes' : 'No'}
 //                 </span>
 //               </div>
 //               {template.FUP_threshold && (
 //                 <div className="flex justify-between">
-//                   <span>FUP Threshold:</span>
-//                   <span className="font-medium">
+//                   <span className="truncate mr-2">FUP Threshold:</span>
+//                   <span className="font-medium truncate">
 //                     {template.FUP_threshold}%
 //                   </span>
 //                 </div>
@@ -138,30 +145,30 @@
 //           </div>
 //         </div>
 
-//         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+//         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
 //           {/* Hotspot Configuration */}
 //           {accessMethods.hotspot?.enabled && (
-//             <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-//               <div className="flex items-center mb-4">
-//                 <Wifi className="w-6 h-6 text-blue-600 mr-3" />
-//                 <h3 className="text-lg font-semibold">Hotspot Configuration</h3>
+//             <div className={`p-3 sm:p-4 md:p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+//               <div className="flex items-center mb-3 sm:mb-4">
+//                 <Wifi className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-blue-600 mr-2 sm:mr-3 flex-shrink-0" />
+//                 <h3 className="text-base sm:text-lg font-semibold">Hotspot Configuration</h3>
 //               </div>
-//               <div className="space-y-3">
+//               <div className="space-y-2 sm:space-y-3">
 //                 <div className="flex justify-between">
-//                   <span>Download Speed:</span>
-//                   <span className="font-medium">
+//                   <span className="truncate mr-2">Download Speed:</span>
+//                   <span className="font-medium truncate">
 //                     {accessMethods.hotspot.downloadSpeed?.value || '0'} {accessMethods.hotspot.downloadSpeed?.unit || 'Mbps'}
 //                   </span>
 //                 </div>
 //                 <div className="flex justify-between">
-//                   <span>Upload Speed:</span>
-//                   <span className="font-medium">
+//                   <span className="truncate mr-2">Upload Speed:</span>
+//                   <span className="font-medium truncate">
 //                     {accessMethods.hotspot.uploadSpeed?.value || '0'} {accessMethods.hotspot.uploadSpeed?.unit || 'Mbps'}
 //                   </span>
 //                 </div>
 //                 <div className="flex justify-between">
-//                   <span>Data Limit:</span>
-//                   <span className="font-medium">
+//                   <span className="truncate mr-2">Data Limit:</span>
+//                   <span className="font-medium truncate">
 //                     {accessMethods.hotspot.dataLimit?.unit === 'Unlimited' 
 //                       ? 'Unlimited' 
 //                       : `${accessMethods.hotspot.dataLimit?.value || '0'} ${accessMethods.hotspot.dataLimit?.unit || 'GB'}`
@@ -169,8 +176,8 @@
 //                   </span>
 //                 </div>
 //                 <div className="flex justify-between">
-//                   <span>Usage Limit:</span>
-//                   <span className="font-medium">
+//                   <span className="truncate mr-2">Usage Limit:</span>
+//                   <span className="font-medium truncate">
 //                     {accessMethods.hotspot.usageLimit?.unit === 'Unlimited' 
 //                       ? 'Unlimited' 
 //                       : `${accessMethods.hotspot.usageLimit?.value || '0'} ${accessMethods.hotspot.usageLimit?.unit || 'Hours'}`
@@ -178,26 +185,26 @@
 //                   </span>
 //                 </div>
 //                 <div className="flex justify-between">
-//                   <span>Bandwidth Limit:</span>
-//                   <span className="font-medium">
+//                   <span className="truncate mr-2">Bandwidth Limit:</span>
+//                   <span className="font-medium truncate">
 //                     {formatBandwidthDisplay(accessMethods.hotspot.bandwidthLimit || 0)}
 //                   </span>
 //                 </div>
 //                 <div className="flex justify-between">
-//                   <span>Max Devices:</span>
-//                   <span className="font-medium">
+//                   <span className="truncate mr-2">Max Devices:</span>
+//                   <span className="font-medium truncate">
 //                     {accessMethods.hotspot.maxDevices === 0 ? 'Unlimited' : accessMethods.hotspot.maxDevices}
 //                   </span>
 //                 </div>
 //                 <div className="flex justify-between">
-//                   <span>Session Timeout:</span>
-//                   <span className="font-medium">
+//                   <span className="truncate mr-2">Session Timeout:</span>
+//                   <span className="font-medium truncate">
 //                     {formatTimeDisplay(accessMethods.hotspot.sessionTimeout || 86400)}
 //                   </span>
 //                 </div>
 //                 <div className="flex justify-between">
-//                   <span>MAC Binding:</span>
-//                   <span className="font-medium">
+//                   <span className="truncate mr-2">MAC Binding:</span>
+//                   <span className="font-medium truncate">
 //                     {accessMethods.hotspot.macBinding ? 'Enabled' : 'Disabled'}
 //                   </span>
 //                 </div>
@@ -207,27 +214,27 @@
 
 //           {/* PPPoE Configuration */}
 //           {accessMethods.pppoe?.enabled && (
-//             <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-//               <div className="flex items-center mb-4">
-//                 <Cable className="w-6 h-6 text-green-600 mr-3" />
-//                 <h3 className="text-lg font-semibold">PPPoE Configuration</h3>
+//             <div className={`p-3 sm:p-4 md:p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+//               <div className="flex items-center mb-3 sm:mb-4">
+//                 <Cable className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-green-600 mr-2 sm:mr-3 flex-shrink-0" />
+//                 <h3 className="text-base sm:text-lg font-semibold">PPPoE Configuration</h3>
 //               </div>
-//               <div className="space-y-3">
+//               <div className="space-y-2 sm:space-y-3">
 //                 <div className="flex justify-between">
-//                   <span>Download Speed:</span>
-//                   <span className="font-medium">
+//                   <span className="truncate mr-2">Download Speed:</span>
+//                   <span className="font-medium truncate">
 //                     {accessMethods.pppoe.downloadSpeed?.value || '0'} {accessMethods.pppoe.downloadSpeed?.unit || 'Mbps'}
 //                   </span>
 //                 </div>
 //                 <div className="flex justify-between">
-//                   <span>Upload Speed:</span>
-//                   <span className="font-medium">
+//                   <span className="truncate mr-2">Upload Speed:</span>
+//                   <span className="font-medium truncate">
 //                     {accessMethods.pppoe.uploadSpeed?.value || '0'} {accessMethods.pppoe.uploadSpeed?.unit || 'Mbps'}
 //                   </span>
 //                 </div>
 //                 <div className="flex justify-between">
-//                   <span>Data Limit:</span>
-//                   <span className="font-medium">
+//                   <span className="truncate mr-2">Data Limit:</span>
+//                   <span className="font-medium truncate">
 //                     {accessMethods.pppoe.dataLimit?.unit === 'Unlimited' 
 //                       ? 'Unlimited' 
 //                       : `${accessMethods.pppoe.dataLimit?.value || '0'} ${accessMethods.pppoe.dataLimit?.unit || 'GB'}`
@@ -235,8 +242,8 @@
 //                   </span>
 //                 </div>
 //                 <div className="flex justify-between">
-//                   <span>Usage Limit:</span>
-//                   <span className="font-medium">
+//                   <span className="truncate mr-2">Usage Limit:</span>
+//                   <span className="font-medium truncate">
 //                     {accessMethods.pppoe.usageLimit?.unit === 'Unlimited' 
 //                       ? 'Unlimited' 
 //                       : `${accessMethods.pppoe.usageLimit?.value || '0'} ${accessMethods.pppoe.usageLimit?.unit || 'Hours'}`
@@ -244,33 +251,33 @@
 //                   </span>
 //                 </div>
 //                 <div className="flex justify-between">
-//                   <span>Bandwidth Limit:</span>
-//                   <span className="font-medium">
+//                   <span className="truncate mr-2">Bandwidth Limit:</span>
+//                   <span className="font-medium truncate">
 //                     {formatBandwidthDisplay(accessMethods.pppoe.bandwidthLimit || 0)}
 //                   </span>
 //                 </div>
 //                 <div className="flex justify-between">
-//                   <span>Max Devices:</span>
-//                   <span className="font-medium">
+//                   <span className="truncate mr-2">Max Devices:</span>
+//                   <span className="font-medium truncate">
 //                     {accessMethods.pppoe.maxDevices === 0 ? 'Unlimited' : accessMethods.pppoe.maxDevices}
 //                   </span>
 //                 </div>
 //                 <div className="flex justify-between">
-//                   <span>Session Timeout:</span>
-//                   <span className="font-medium">
+//                   <span className="truncate mr-2">Session Timeout:</span>
+//                   <span className="font-medium truncate">
 //                     {formatTimeDisplay(accessMethods.pppoe.sessionTimeout || 86400)}
 //                   </span>
 //                 </div>
 //                 <div className="flex justify-between">
-//                   <span>MAC Binding:</span>
-//                   <span className="font-medium">
+//                   <span className="truncate mr-2">MAC Binding:</span>
+//                   <span className="font-medium truncate">
 //                     {accessMethods.pppoe.macBinding ? 'Enabled' : 'Disabled'}
 //                   </span>
 //                 </div>
 //                 {accessMethods.pppoe.ipPool && (
 //                   <div className="flex justify-between">
-//                     <span>IP Pool:</span>
-//                     <span className="font-medium">
+//                     <span className="truncate mr-2">IP Pool:</span>
+//                     <span className="font-medium truncate">
 //                       {accessMethods.pppoe.ipPool}
 //                     </span>
 //                   </div>
@@ -280,10 +287,11 @@
 //           )}
 //         </div>
 
-//         <div className="flex justify-end space-x-4 mt-8">
+//         <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 md:space-x-4 mt-4 sm:mt-6 md:mt-8">
 //           <button
 //             onClick={onClose}
-//             className={`px-6 py-2 rounded-lg ${themeClasses.button.secondary}`}
+//             className={`px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 rounded-lg ${themeClasses.button.secondary} text-sm sm:text-base`}
+//             type="button"
 //           >
 //             Cancel
 //           </button>
@@ -292,20 +300,22 @@
 //               onApplyTemplate(template);
 //               onClose();
 //             }}
-//             className={`px-6 py-2 rounded-lg flex items-center ${themeClasses.button.primary}`}
+//             className={`px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 rounded-lg flex items-center justify-center ${themeClasses.button.primary} text-sm sm:text-base`}
+//             type="button"
 //           >
-//             <Box className="w-4 h-4 mr-2" />
-//             Use This Template
+//             <Box className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+//             <span className="truncate">Use This Template</span>
 //           </button>
 //           <button
 //             onClick={() => {
 //               onCreateFromTemplate(template);
 //               onClose();
 //             }}
-//             className={`px-6 py-2 rounded-lg flex items-center ${themeClasses.button.success}`}
+//             className={`px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 rounded-lg flex items-center justify-center ${themeClasses.button.success} text-sm sm:text-base`}
+//             type="button"
 //           >
-//             <Plus className="w-4 h-4 mr-2" />
-//             Quick Create
+//             <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+//             <span className="truncate">Quick Create</span>
 //           </button>
 //         </div>
 //       </motion.div>
@@ -321,10 +331,9 @@
 
 
 
-
 import React from "react";
 import { motion } from "framer-motion";
-import { X, Check, Plus, Box, Wifi, Cable, Shield, TrendingDown } from "lucide-react";
+import { X, Check, Plus, Box, Wifi, Cable, Shield, TrendingDown, Clock } from "lucide-react";
 import { getThemeClasses } from "../Shared/components";
 import { formatNumber, formatBandwidthDisplay } from "../Shared/utils";
 
@@ -337,12 +346,8 @@ const TemplatePreview = ({
 }) => {
   const themeClasses = getThemeClasses(theme);
 
-  // Helper function to safely access access methods
-  const getAccessMethods = (template) => {
-    return template.accessMethods || template.access_methods || {};
-  };
-
-  const accessMethods = getAccessMethods(template);
+  // Access methods from backend (snake_case)
+  const accessMethods = template.access_methods || {};
 
   // Helper to format time for display
   const formatTimeDisplay = (seconds) => {
@@ -372,6 +377,39 @@ const TemplatePreview = ({
 
   const priorityInfo = getPriorityInfo(template.priority_level || 4);
 
+  // Format time variant summary
+  const formatTimeVariantSummary = () => {
+    if (!template.time_variant || !template.time_variant.is_active) {
+      return null;
+    }
+
+    const tv = template.time_variant;
+    const restrictions = [];
+
+    if (tv.start_time && tv.end_time) {
+      restrictions.push(`${tv.start_time} - ${tv.end_time}`);
+    }
+
+    if (tv.available_days?.length > 0) {
+      const dayMap = {
+        'mon': 'Mon', 'tue': 'Tue', 'wed': 'Wed', 
+        'thu': 'Thu', 'fri': 'Fri', 'sat': 'Sat', 'sun': 'Sun'
+      };
+      const days = tv.available_days.map(d => dayMap[d] || d).join(', ');
+      restrictions.push(days);
+    }
+
+    if (tv.schedule_active && tv.schedule_start_date && tv.schedule_end_date) {
+      const start = new Date(tv.schedule_start_date).toLocaleDateString();
+      const end = new Date(tv.schedule_end_date).toLocaleDateString();
+      restrictions.push(`${start} - ${end}`);
+    }
+
+    return restrictions.length > 0 ? restrictions.join(' • ') : 'Time restricted';
+  };
+
+  const timeVariantSummary = formatTimeVariantSummary();
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black bg-opacity-50">
       <motion.div
@@ -386,7 +424,7 @@ const TemplatePreview = ({
               {template.name}
             </h2>
             <p className={`mt-1 text-xs sm:text-sm ${themeClasses.text.secondary} truncate`}>
-              {template.description}
+              {template.description || "No description"}
             </p>
           </div>
           <button
@@ -408,26 +446,26 @@ const TemplatePreview = ({
               </div>
               <div className="flex justify-between">
                 <span className="truncate mr-2">Base Price:</span>
-                <span className="font-medium truncate">Ksh {formatNumber(template.basePrice || template.base_price || 0)}</span>
+                <span className="font-medium truncate">Ksh {formatNumber(template.base_price || 0)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="truncate mr-2">Usage Count:</span>
-                <span className="font-medium truncate">{template.usageCount || template.usage_count || 0}</span>
+                <span className="font-medium truncate">{template.usage_count || 0}</span>
               </div>
               <div className="flex justify-between">
                 <span className="truncate mr-2">Status:</span>
                 <span className={`font-medium truncate ${
-                  template.isActive !== false ? 'text-green-600' : 'text-red-600'
+                  template.is_active ? 'text-green-600' : 'text-red-600'
                 }`}>
-                  {template.isActive !== false ? 'Active' : 'Inactive'}
+                  {template.is_active ? 'Active' : 'Inactive'}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="truncate mr-2">Visibility:</span>
                 <span className={`font-medium truncate ${
-                  template.isPublic ? 'text-green-600' : 'text-blue-600'
+                  template.is_public ? 'text-green-600' : 'text-blue-600'
                 }`}>
-                  {template.isPublic ? 'Public' : 'Private'}
+                  {template.is_public ? 'Public' : 'Private'}
                 </span>
               </div>
             </div>
@@ -457,9 +495,36 @@ const TemplatePreview = ({
                   </span>
                 </div>
               )}
+              {template.has_time_variant && (
+                <div className="flex justify-between">
+                  <span className="truncate mr-2">Time Variant:</span>
+                  <span className="font-medium truncate text-purple-600 flex items-center">
+                    <Clock className="w-3 h-3 mr-1" />
+                    Enabled
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
+
+        {/* Time Variant Summary */}
+        {timeVariantSummary && (
+          <div className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg ${theme === 'dark' ? 'bg-purple-900/20 border-purple-800' : 'bg-purple-50 border-purple-200'} border`}>
+            <div className="flex items-center mb-2">
+              <Clock className="w-4 h-4 text-purple-600 mr-2" />
+              <h4 className="font-semibold text-purple-700 dark:text-purple-300">Time Variant Restrictions</h4>
+            </div>
+            <p className="text-sm text-purple-600 dark:text-purple-400">
+              {timeVariantSummary}
+            </p>
+            {template.time_variant?.is_active && !template.time_variant.is_available_now && template.time_variant.force_available && (
+              <p className="text-xs text-orange-600 mt-1">
+                ⚡ Force Available: Restrictions are temporarily overridden
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
           {/* Hotspot Configuration */}
@@ -473,55 +538,55 @@ const TemplatePreview = ({
                 <div className="flex justify-between">
                   <span className="truncate mr-2">Download Speed:</span>
                   <span className="font-medium truncate">
-                    {accessMethods.hotspot.downloadSpeed?.value || '0'} {accessMethods.hotspot.downloadSpeed?.unit || 'Mbps'}
+                    {accessMethods.hotspot.download_speed?.value || '0'} {accessMethods.hotspot.download_speed?.unit || 'Mbps'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="truncate mr-2">Upload Speed:</span>
                   <span className="font-medium truncate">
-                    {accessMethods.hotspot.uploadSpeed?.value || '0'} {accessMethods.hotspot.uploadSpeed?.unit || 'Mbps'}
+                    {accessMethods.hotspot.upload_speed?.value || '0'} {accessMethods.hotspot.upload_speed?.unit || 'Mbps'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="truncate mr-2">Data Limit:</span>
                   <span className="font-medium truncate">
-                    {accessMethods.hotspot.dataLimit?.unit === 'Unlimited' 
+                    {accessMethods.hotspot.data_limit?.unit === 'Unlimited' 
                       ? 'Unlimited' 
-                      : `${accessMethods.hotspot.dataLimit?.value || '0'} ${accessMethods.hotspot.dataLimit?.unit || 'GB'}`
+                      : `${accessMethods.hotspot.data_limit?.value || '0'} ${accessMethods.hotspot.data_limit?.unit || 'GB'}`
                     }
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="truncate mr-2">Usage Limit:</span>
                   <span className="font-medium truncate">
-                    {accessMethods.hotspot.usageLimit?.unit === 'Unlimited' 
+                    {accessMethods.hotspot.usage_limit?.unit === 'Unlimited' 
                       ? 'Unlimited' 
-                      : `${accessMethods.hotspot.usageLimit?.value || '0'} ${accessMethods.hotspot.usageLimit?.unit || 'Hours'}`
+                      : `${accessMethods.hotspot.usage_limit?.value || '0'} ${accessMethods.hotspot.usage_limit?.unit || 'Hours'}`
                     }
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="truncate mr-2">Bandwidth Limit:</span>
                   <span className="font-medium truncate">
-                    {formatBandwidthDisplay(accessMethods.hotspot.bandwidthLimit || 0)}
+                    {formatBandwidthDisplay(accessMethods.hotspot.bandwidth_limit || 0)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="truncate mr-2">Max Devices:</span>
                   <span className="font-medium truncate">
-                    {accessMethods.hotspot.maxDevices === 0 ? 'Unlimited' : accessMethods.hotspot.maxDevices}
+                    {accessMethods.hotspot.max_devices === 0 ? 'Unlimited' : accessMethods.hotspot.max_devices}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="truncate mr-2">Session Timeout:</span>
                   <span className="font-medium truncate">
-                    {formatTimeDisplay(accessMethods.hotspot.sessionTimeout || 86400)}
+                    {formatTimeDisplay(accessMethods.hotspot.session_timeout || 86400)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="truncate mr-2">MAC Binding:</span>
                   <span className="font-medium truncate">
-                    {accessMethods.hotspot.macBinding ? 'Enabled' : 'Disabled'}
+                    {accessMethods.hotspot.mac_binding ? 'Enabled' : 'Disabled'}
                   </span>
                 </div>
               </div>
@@ -539,62 +604,62 @@ const TemplatePreview = ({
                 <div className="flex justify-between">
                   <span className="truncate mr-2">Download Speed:</span>
                   <span className="font-medium truncate">
-                    {accessMethods.pppoe.downloadSpeed?.value || '0'} {accessMethods.pppoe.downloadSpeed?.unit || 'Mbps'}
+                    {accessMethods.pppoe.download_speed?.value || '0'} {accessMethods.pppoe.download_speed?.unit || 'Mbps'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="truncate mr-2">Upload Speed:</span>
                   <span className="font-medium truncate">
-                    {accessMethods.pppoe.uploadSpeed?.value || '0'} {accessMethods.pppoe.uploadSpeed?.unit || 'Mbps'}
+                    {accessMethods.pppoe.upload_speed?.value || '0'} {accessMethods.pppoe.upload_speed?.unit || 'Mbps'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="truncate mr-2">Data Limit:</span>
                   <span className="font-medium truncate">
-                    {accessMethods.pppoe.dataLimit?.unit === 'Unlimited' 
+                    {accessMethods.pppoe.data_limit?.unit === 'Unlimited' 
                       ? 'Unlimited' 
-                      : `${accessMethods.pppoe.dataLimit?.value || '0'} ${accessMethods.pppoe.dataLimit?.unit || 'GB'}`
+                      : `${accessMethods.pppoe.data_limit?.value || '0'} ${accessMethods.pppoe.data_limit?.unit || 'GB'}`
                     }
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="truncate mr-2">Usage Limit:</span>
                   <span className="font-medium truncate">
-                    {accessMethods.pppoe.usageLimit?.unit === 'Unlimited' 
+                    {accessMethods.pppoe.usage_limit?.unit === 'Unlimited' 
                       ? 'Unlimited' 
-                      : `${accessMethods.pppoe.usageLimit?.value || '0'} ${accessMethods.pppoe.usageLimit?.unit || 'Hours'}`
+                      : `${accessMethods.pppoe.usage_limit?.value || '0'} ${accessMethods.pppoe.usage_limit?.unit || 'Hours'}`
                     }
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="truncate mr-2">Bandwidth Limit:</span>
                   <span className="font-medium truncate">
-                    {formatBandwidthDisplay(accessMethods.pppoe.bandwidthLimit || 0)}
+                    {formatBandwidthDisplay(accessMethods.pppoe.bandwidth_limit || 0)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="truncate mr-2">Max Devices:</span>
                   <span className="font-medium truncate">
-                    {accessMethods.pppoe.maxDevices === 0 ? 'Unlimited' : accessMethods.pppoe.maxDevices}
+                    {accessMethods.pppoe.max_devices === 0 ? 'Unlimited' : accessMethods.pppoe.max_devices}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="truncate mr-2">Session Timeout:</span>
                   <span className="font-medium truncate">
-                    {formatTimeDisplay(accessMethods.pppoe.sessionTimeout || 86400)}
+                    {formatTimeDisplay(accessMethods.pppoe.session_timeout || 86400)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="truncate mr-2">MAC Binding:</span>
                   <span className="font-medium truncate">
-                    {accessMethods.pppoe.macBinding ? 'Enabled' : 'Disabled'}
+                    {accessMethods.pppoe.mac_binding ? 'Enabled' : 'Disabled'}
                   </span>
                 </div>
-                {accessMethods.pppoe.ipPool && (
+                {accessMethods.pppoe.ip_pool && (
                   <div className="flex justify-between">
                     <span className="truncate mr-2">IP Pool:</span>
                     <span className="font-medium truncate">
-                      {accessMethods.pppoe.ipPool}
+                      {accessMethods.pppoe.ip_pool}
                     </span>
                   </div>
                 )}

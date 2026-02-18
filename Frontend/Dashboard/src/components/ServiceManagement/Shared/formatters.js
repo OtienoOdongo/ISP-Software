@@ -850,3 +850,27 @@ export const formatDiscountRuleType = (type) => {
   return typeMap[type] || type.charAt(0).toUpperCase() + type.slice(1);
 };
 
+
+export const formatDateTime = (dateString, includeSeconds = false) => {
+  if (!dateString) return "No date";
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "Invalid date";
+    
+    const options = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      ...(includeSeconds && { second: '2-digit' }),
+      hour12: true
+    };
+    
+    return date.toLocaleDateString('en-US', options);
+  } catch (error) {
+    console.error('DateTime formatting error:', error);
+    return "Invalid date";
+  }
+};

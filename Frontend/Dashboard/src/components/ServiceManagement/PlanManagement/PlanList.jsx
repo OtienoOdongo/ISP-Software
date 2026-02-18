@@ -1,1224 +1,1116 @@
 
 
-
-
-// import React, { useState, useMemo } from "react";
+// import React, { useState, useMemo, useCallback, useRef } from "react";
 // import { motion, AnimatePresence } from "framer-motion";
-// import { 
-//   Plus, Pencil, Trash2, Eye, Users, Search, 
+// import {
+//   Plus, Pencil, Trash2, Eye, Users, Search,
 //   Wifi, Cable, BarChart3, Package, Box, Filter,
-//   ChevronDown, ChevronUp
+//   ChevronDown, ChevronUp, Clock, DollarSign, Calendar,
+//   CheckCircle, XCircle, AlertTriangle, Settings,
+//   Star, Target, TrendingUp, Zap, Shield, Download,
+//   TrendingDown, Activity, Award, Flame, Crown, Sparkles,
+//   Heart, ThumbsUp, Gauge, Server, RefreshCw, X,
+//   Menu, Grid, LayoutGrid, List, Info, Tag, Layers,
+//   ChevronLeft, ChevronRight, Maximize2, Minimize2, CreditCard,
+//   Gift, BadgePercent
 // } from "lucide-react";
-// import { FaSpinner } from "react-icons/fa";
-// import { EnhancedSelect, getThemeClasses } from "../Shared/components"
-// import { formatNumber, formatBandwidth, calculateRating } from "../Shared/utils"
-// import { categories } from "../Shared/constant"
+// import { getThemeClasses } from "../Shared/components";
+// import { formatCurrency, formatNumber } from "../Shared/formatters";
 
-// // Star component
-// const Star = ({ className }) => (
-//   <svg className={className} fill="currentColor" viewBox="0 0 20 20">
-//     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-//   </svg>
-// );
-
-// const PlanList = ({ 
-//   plans, 
-//   isLoading, 
-//   onEditPlan, 
-//   onViewDetails, 
-//   onDeletePlan, 
-//   onNewPlan,
-//   onViewAnalytics,
-//   onViewTemplates,
-//   theme 
-// }) => {
-//   const themeClasses = getThemeClasses(theme);
-//   const [filterCategory, setFilterCategory] = useState("All");
-//   const [searchTerm, setSearchTerm] = useState("");
-//   const [viewMode, setViewMode] = useState("all"); // "all", "hotspot", "pppoe"
-//   const [expandedSections, setExpandedSections] = useState({
-//     hotspot: true,
-//     pppoe: true
-//   });
-
-//   // Separate plans by type
-//   const { hotspotPlans, pppoePlans } = useMemo(() => {
-//     const hotspot = plans.filter(plan => plan.accessType === 'hotspot');
-//     const pppoe = plans.filter(plan => plan.accessType === 'pppoe');
-//     return { hotspotPlans: hotspot, pppoePlans: pppoe };
-//   }, [plans]);
-
-//   // Filter plans based on view mode and search
-//   const filteredHotspotPlans = useMemo(() => {
-//     return hotspotPlans.filter(plan => 
-//       (filterCategory === "All" || plan.category === filterCategory) &&
-//       (plan.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//        plan.description?.toLowerCase().includes(searchTerm.toLowerCase()))
-//     );
-//   }, [hotspotPlans, filterCategory, searchTerm]);
-
-//   const filteredPppoePlans = useMemo(() => {
-//     return pppoePlans.filter(plan => 
-//       (filterCategory === "All" || plan.category === filterCategory) &&
-//       (plan.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//        plan.description?.toLowerCase().includes(searchTerm.toLowerCase()))
-//     );
-//   }, [pppoePlans, filterCategory, searchTerm]);
-
-//   const getCategoryIcon = (category) => {
-//     const icons = {
-//       Residential: <Wifi className="w-4 h-4 text-teal-600" />,
-//       Business: <Cable className="w-4 h-4 text-emerald-600" />,
-//       Promotional: <Package className="w-4 h-4 text-purple-600" />,
-//       Enterprise: <BarChart3 className="w-4 h-4 text-indigo-600" />,
-//     };
-//     return icons[category] || null;
+// // ============================================================================
+// // Plan Type Badge – FIXED: Correctly displays based on plan_type from constants
+// // ============================================================================
+// const PlanTypeBadge = ({ type, theme, size = 'sm' }) => {
+//   // Match exact values from constant.js: "Free_trial", "Paid", "Promotional"
+//   const config = {
+//     Paid: {
+//       label: 'Paid',
+//       bg: 'bg-green-100 dark:bg-green-900/30',
+//       text: 'text-green-700 dark:text-green-400',
+//       border: 'border-green-200 dark:border-green-800',
+//       icon: DollarSign
+//     },
+//     Free_trial: {
+//       label: 'Free Trial',
+//       bg: 'bg-blue-100 dark:bg-blue-900/30',
+//       text: 'text-blue-700 dark:text-blue-400',
+//       border: 'border-blue-200 dark:border-blue-800',
+//       icon: Clock
+//     },
+//     Promotional: {
+//       label: 'Promotional',
+//       bg: 'bg-purple-100 dark:bg-purple-900/30',
+//       text: 'text-purple-700 dark:text-purple-400',
+//       border: 'border-purple-200 dark:border-purple-800',
+//       icon: Sparkles
+//     }
 //   };
 
-//   const renderStars = (purchases) => {
-//     const rating = calculateRating(purchases);
-//     return (
-//       <div className="flex items-center">
-//         {[...Array(5)].map((_, i) => (
-//           <Star 
-//             key={i} 
-//             className={`w-3 h-3 lg:w-4 lg:h-4 ${i < Math.round(rating) 
-//               ? "text-amber-400 fill-current" 
-//               : theme === 'dark' ? "text-gray-600" : "text-gray-300"}`} 
-//           />
-//         ))}
-//         <span className={`ml-1 text-xs ${themeClasses.text.secondary}`}>
-//           {rating.toFixed(1)}
-//         </span>
-//       </div>
-//     );
-//   };
+//   // Use the type directly - no normalization needed if it matches constants
+//   const configKey = type || 'Paid';
+//   const { label, bg, text, border, icon: Icon } = config[configKey] || config.Paid;
 
-//   // Get active access method for a plan
-//   const getActiveAccessMethod = (plan) => {
-//     const accessMethods = plan.accessMethods || {};
-//     if (accessMethods.hotspot?.enabled) return { type: 'hotspot', config: accessMethods.hotspot };
-//     if (accessMethods.pppoe?.enabled) return { type: 'pppoe', config: accessMethods.pppoe };
-//     return { type: 'none', config: null };
-//   };
-
-//   const toggleSection = (section) => {
-//     setExpandedSections(prev => ({
-//       ...prev,
-//       [section]: !prev[section]
-//     }));
-//   };
-
-//   const renderPlanSection = (type, plans, title, icon, color) => {
-//     if (viewMode !== "all" && viewMode !== type) return null;
-//     if (plans.length === 0 && viewMode === "all") return null;
-
-//     const isExpanded = expandedSections[type];
-//     const IconComponent = icon;
-
-//     return (
-//       <div className={`mb-6 rounded-2xl overflow-hidden border ${themeClasses.border.light} ${themeClasses.bg.card}`}>
-//         {/* Section Header */}
-//         <div 
-//           className={`p-6 cursor-pointer transition-colors duration-200 ${
-//             color === 'blue' 
-//               ? 'bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-800' 
-//               : 'bg-emerald-50 dark:bg-emerald-900/20 border-b border-emerald-100 dark:border-emerald-800'
-//           }`}
-//           onClick={() => toggleSection(type)}
-//         >
-//           <div className="flex items-center justify-between">
-//             <div className="flex items-center space-x-4">
-//               <div className={`p-3 rounded-xl ${
-//                 color === 'blue' 
-//                   ? 'bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-400' 
-//                   : 'bg-emerald-100 dark:bg-emerald-800 text-emerald-600 dark:text-emerald-400'
-//               }`}>
-//                 <IconComponent className="w-6 h-6" />
-//               </div>
-//               <div>
-//                 <h3 className={`text-xl font-bold ${
-//                   color === 'blue' ? 'text-blue-900 dark:text-blue-100' : 'text-emerald-900 dark:text-emerald-100'
-//                 }`}>
-//                   {title} Plans
-//                 </h3>
-//                 <p className={`text-sm ${
-//                   color === 'blue' ? 'text-blue-700 dark:text-blue-300' : 'text-emerald-700 dark:text-emerald-300'
-//                 }`}>
-//                   {plans.length} plan{plans.length !== 1 ? 's' : ''} • {
-//                     plans.reduce((sum, plan) => sum + (plan.purchases || 0), 0)
-//                   } total subscribers
-//                 </p>
-//               </div>
-//             </div>
-//             <div className="flex items-center space-x-4">
-//               <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-//                 color === 'blue' 
-//                   ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200' 
-//                   : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200'
-//               }`}>
-//                 {type.toUpperCase()}
-//               </span>
-//               {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-//             </div>
-//           </div>
-//         </div>
-
-//         {/* Plans Table */}
-//         <AnimatePresence>
-//           {isExpanded && (
-//             <motion.div
-//               initial={{ opacity: 0, height: 0 }}
-//               animate={{ opacity: 1, height: "auto" }}
-//               exit={{ opacity: 0, height: 0 }}
-//               transition={{ duration: 0.3 }}
-//             >
-//               {plans.length === 0 ? (
-//                 <div className="p-8 text-center">
-//                   <Package className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-//                   <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
-//                     No {title} Plans Found
-//                   </h4>
-//                   <p className="text-gray-500 dark:text-gray-500 mb-4">
-//                     {searchTerm || filterCategory !== "All" 
-//                       ? "Try adjusting your search or filters" 
-//                       : `Get started by creating your first ${title} plan`
-//                     }
-//                   </p>
-//                   {!searchTerm && filterCategory === "All" && (
-//                     <motion.button
-//                       onClick={() => onNewPlan(type)}
-//                       className={`px-4 py-2 rounded-lg text-sm ${
-//                         color === 'blue' 
-//                           ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-//                           : 'bg-emerald-600 hover:bg-emerald-700 text-white'
-//                       }`}
-//                       whileHover={{ scale: 1.05 }}
-//                       whileTap={{ scale: 0.95 }}
-//                     >
-//                       <Plus className="w-4 h-4 mr-2 inline" />
-//                       Create {title} Plan
-//                     </motion.button>
-//                   )}
-//                 </div>
-//               ) : (
-//                 <div className="overflow-x-auto">
-//                   <table className="min-w-full divide-y text-sm">
-//                     <thead className={theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-100'}>
-//                       <tr>
-//                         {["Plan Name", "Category", "Price", "Configuration", "Subscribers", "Status", "Actions"].map((header) => (
-//                           <th key={header} className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${themeClasses.text.secondary}`}>
-//                             {header}
-//                           </th>
-//                         ))}
-//                       </tr>
-//                     </thead>
-//                     <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-200'}`}>
-//                       {plans.map((plan) => {
-//                         const activeMethod = getActiveAccessMethod(plan);
-                        
-//                         return (
-//                           <tr key={plan.id} className={`hover:${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-//                             <td className="px-4 py-4 whitespace-nowrap">
-//                               <div className="flex items-center">
-//                                 {getCategoryIcon(plan.category)}
-//                                 <div className="ml-3">
-//                                   <div className="flex items-center">
-//                                     <span className={`text-sm font-medium truncate max-w-[120px] lg:max-w-none ${themeClasses.text.primary}`}>
-//                                       {plan.name || 'Unnamed Plan'}
-//                                     </span>
-//                                     {plan.template && (
-//                                       <Box className="w-3 h-3 text-blue-600 ml-2" title="Created from template" />
-//                                     )}
-//                                   </div>
-//                                   {plan.template && (
-//                                     <span className="text-xs text-blue-600 dark:text-blue-400">
-//                                       From: {plan.template.name}
-//                                     </span>
-//                                   )}
-//                                 </div>
-//                               </div>
-//                             </td>
-//                             <td className={`px-4 py-4 whitespace-nowrap text-sm ${themeClasses.text.secondary}`}>
-//                               {plan.category || 'N/A'}
-//                             </td>
-//                             <td className={`px-4 py-4 whitespace-nowrap text-sm ${themeClasses.text.secondary}`}>
-//                               {plan.planType === "Paid" ? `Ksh ${formatNumber(plan.price || 0)}` : "Free"}
-//                             </td>
-//                             <td className={`px-4 py-4 whitespace-nowrap text-sm ${themeClasses.text.secondary}`}>
-//                               {activeMethod.config && (
-//                                 <div className="space-y-1">
-//                                   <div className="text-xs">
-//                                     {activeMethod.config.downloadSpeed?.value} {activeMethod.config.downloadSpeed?.unit} ↓ / {activeMethod.config.uploadSpeed?.value} {activeMethod.config.uploadSpeed?.unit} ↑
-//                                   </div>
-//                                   <div className="text-xs text-gray-500">
-//                                     {activeMethod.config.dataLimit?.value} {activeMethod.config.dataLimit?.unit} • {activeMethod.config.maxDevices === 0 ? 'Unlimited' : activeMethod.config.maxDevices} devices
-//                                   </div>
-//                                 </div>
-//                               )}
-//                             </td>
-//                             <td className="px-4 py-4 whitespace-nowrap">
-//                               <div className="flex items-center">
-//                                 <Users className={`w-3 h-3 lg:w-4 lg:h-4 mr-2 ${themeClasses.text.tertiary}`} />
-//                                 <span className={`text-sm mr-3 ${themeClasses.text.secondary}`}>
-//                                   {plan.purchases || 0}
-//                                 </span>
-//                                 {renderStars(plan.purchases || 0)}
-//                               </div>
-//                             </td>
-//                             <td className="px-4 py-4 whitespace-nowrap">
-//                               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-//                                 plan.active 
-//                                   ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
-//                                   : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
-//                               }`}>
-//                                 {plan.active ? 'Active' : 'Inactive'}
-//                               </span>
-//                             </td>
-//                             <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
-//                               <div className="flex space-x-2">
-//                                 <motion.button 
-//                                   onClick={() => onViewDetails(plan)} 
-//                                   className="focus:outline-none p-1" 
-//                                   whileHover={{ scale: 1.2 }} 
-//                                   transition={{ type: "spring", stiffness: 300 }}
-//                                   title="View Details"
-//                                 >
-//                                   <Eye className="w-4 h-4 text-indigo-600 hover:text-indigo-800" />
-//                                 </motion.button>
-//                                 <motion.button 
-//                                   onClick={() => onEditPlan(plan)} 
-//                                   className="focus:outline-none p-1" 
-//                                   whileHover={{ rotate: 90 }} 
-//                                   transition={{ type: "spring", stiffness: 300 }}
-//                                   title="Edit Plan"
-//                                 >
-//                                   <Pencil className="w-4 h-4 text-emerald-600 hover:text-emerald-800" />
-//                                 </motion.button>
-//                                 <motion.button 
-//                                   onClick={() => onDeletePlan(plan)} 
-//                                   className="focus:outline-none p-1" 
-//                                   whileHover={{ x: [0, -2, 2, -2, 0] }} 
-//                                   transition={{ duration: 0.3 }}
-//                                   title="Delete Plan"
-//                                 >
-//                                   <Trash2 className="w-4 h-4 text-red-600 hover:text-red-800" />
-//                                 </motion.button>
-//                               </div>
-//                             </td>
-//                           </tr>
-//                         );
-//                       })}
-//                     </tbody>
-//                   </table>
-//                 </div>
-//               )}
-//             </motion.div>
-//           )}
-//         </AnimatePresence>
-//       </div>
-//     );
+//   const sizeClasses = {
+//     xs: 'px-1.5 py-0.5 text-[10px]',
+//     sm: 'px-2 py-1 text-xs',
+//     md: 'px-2.5 py-1.5 text-sm'
 //   };
 
 //   return (
-//     <div className={`min-h-screen p-3 sm:p-6 lg:p-8 transition-colors duration-300 ${themeClasses.bg.primary}`}>
-//       <main className="max-w-7xl mx-auto space-y-6 lg:space-y-8">
-//         {/* Header Section */}
-//         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 lg:gap-6">
-//           <div className="flex-1 min-w-0">
-//             <h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500 truncate">
-//               Internet Plans Management
-//             </h1>
-//             <p className={`mt-1 lg:mt-2 text-sm lg:text-lg ${themeClasses.text.secondary}`}>
-//               Create and manage your internet service plans
-//             </p>
-//           </div>
-          
-//           {/* Action Buttons */}
-//           <div className="flex flex-wrap gap-2 lg:gap-3 w-full md:w-auto justify-start md:justify-end">
-//             <motion.button
-//               onClick={onViewAnalytics}
-//               className={`px-3 py-2 lg:px-4 lg:py-2 rounded-lg shadow-md flex items-center justify-center text-xs lg:text-sm ${themeClasses.button.primary}`}
-//               whileHover={{ scale: 1.05 }}
-//               whileTap={{ scale: 0.95 }}
-//             >
-//               <BarChart3 className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
-//               <span>Analytics</span>
-//             </motion.button>
-            
-//             <motion.button
-//               onClick={onViewTemplates}
-//               className={`px-3 py-2 lg:px-4 lg:py-2 rounded-lg shadow-md flex items-center justify-center text-xs lg:text-sm ${themeClasses.button.primary}`}
-//               whileHover={{ scale: 1.05 }}
-//               whileTap={{ scale: 0.95 }}
-//             >
-//               <Box className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
-//               <span>Templates</span>
-//             </motion.button>
-            
-//             {/* Unified Create New Plan Button */}
-//             <motion.button
-//               onClick={onNewPlan}
-//               className={`px-4 py-2 lg:px-6 lg:py-3 rounded-lg shadow-md flex items-center justify-center text-sm lg:text-base ${themeClasses.button.success}`}
-//               whileHover={{ scale: 1.05 }}
-//               whileTap={{ scale: 0.95 }}
-//             >
-//               <Plus className="w-4 h-4 lg:w-5 lg:h-5 mr-2" />
-//               <span>Create New Plan</span>
-//             </motion.button>
-//           </div>
+//     <span className={`
+//       inline-flex items-center gap-1 rounded-full border font-medium
+//       ${bg} ${text} ${border}
+//       ${sizeClasses[size]}
+//     `}>
+//       <Icon className={size === 'xs' ? 'w-2.5 h-2.5' : 'w-3 h-3'} />
+//       {label}
+//     </span>
+//   );
+// };
+
+// // ============================================================================
+// // Access Type Badge – FIXED: Reads from access_methods object with fallbacks
+// // ============================================================================
+// const AccessTypeBadge = ({ accessMethods = {}, size = 'sm', showLabel = true }) => {
+//   // Ensure accessMethods has the expected structure with fallbacks
+//   const hotspot = accessMethods?.hotspot || { enabled: false };
+//   const pppoe = accessMethods?.pppoe || { enabled: false };
+  
+//   // Check if methods are enabled
+//   const hasHotspot = hotspot.enabled === true;
+//   const hasPPPoE = pppoe.enabled === true;
+
+//   let config;
+
+//   if (hasHotspot && hasPPPoE) {
+//     config = {
+//       icon: () => (
+//         <div className="flex items-center">
+//           <Wifi className="w-3 h-3 mr-0.5" />
+//           <Cable className="w-3 h-3" />
 //         </div>
+//       ),
+//       label: "Dual Access",
+//       color: "text-purple-600",
+//       bg: "bg-purple-100 dark:bg-purple-900/30",
+//       border: "border-purple-200 dark:border-purple-800"
+//     };
+//   } else if (hasHotspot) {
+//     config = {
+//       icon: Wifi,
+//       label: "Hotspot Only",
+//       color: "text-blue-600",
+//       bg: "bg-blue-100 dark:bg-blue-900/30",
+//       border: "border-blue-200 dark:border-blue-800"
+//     };
+//   } else if (hasPPPoE) {
+//     config = {
+//       icon: Cable,
+//       label: "PPPoE Only",
+//       color: "text-green-600",
+//       bg: "bg-green-100 dark:bg-green-900/30",
+//       border: "border-green-200 dark:border-green-800"
+//     };
+//   } else {
+//     config = {
+//       icon: Wifi,
+//       label: "No Access",
+//       color: "text-gray-600",
+//       bg: "bg-gray-100 dark:bg-gray-800",
+//       border: "border-gray-200 dark:border-gray-700"
+//     };
+//   }
 
-//         {/* View Mode Toggle */}
-//         <div className={`p-4 lg:p-6 rounded-xl shadow-lg ${themeClasses.bg.card}`}>
-//           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-//             <div className="flex flex-wrap gap-2">
-//               <button
-//                 onClick={() => setViewMode("all")}
-//                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-//                   viewMode === "all" 
-//                     ? "bg-indigo-600 text-white" 
-//                     : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-//                 }`}
-//               >
-//                 All Plans ({plans.length})
-//               </button>
-//               <button
-//                 onClick={() => setViewMode("hotspot")}
-//                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-//                   viewMode === "hotspot" 
-//                     ? "bg-blue-600 text-white" 
-//                     : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800/40"
-//                 }`}
-//               >
-//                 <Wifi className="w-4 h-4 inline mr-2" />
-//                 Hotspot ({hotspotPlans.length})
-//               </button>
-//               <button
-//                 onClick={() => setViewMode("pppoe")}
-//                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-//                   viewMode === "pppoe" 
-//                     ? "bg-emerald-600 text-white" 
-//                     : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/40"
-//                 }`}
-//               >
-//                 <Cable className="w-4 h-4 inline mr-2" />
-//                 PPPoE ({pppoePlans.length})
-//               </button>
+//   const { icon: Icon, label, color, bg, border } = config;
+
+//   const sizeClasses = {
+//     xs: "px-1.5 py-0.5 text-xs",
+//     sm: "px-2 py-1 text-xs",
+//     md: "px-2.5 py-1.5 text-sm"
+//   };
+
+//   return (
+//     <span className={`
+//       inline-flex items-center gap-1.5 rounded-full font-medium
+//       ${bg} ${color} ${border} border
+//       ${sizeClasses[size]}
+//     `}>
+//       <Icon className={size === 'xs' ? 'w-3 h-3' : 'w-3.5 h-3.5'} />
+//       {showLabel && label}
+//     </span>
+//   );
+// };
+
+// // ============================================================================
+// // Availability Badge
+// // ============================================================================
+// const AvailabilityBadge = ({ isAvailable, theme, size = 'sm' }) => {
+//   const sizeClasses = {
+//     xs: 'px-1.5 py-0.5 text-[10px]',
+//     sm: 'px-2 py-1 text-xs',
+//     md: 'px-2.5 py-1.5 text-sm'
+//   };
+
+//   return (
+//     <span className={`
+//       inline-flex items-center gap-1 rounded-full font-medium
+//       ${isAvailable
+//         ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400 border border-green-200 dark:border-green-800'
+//         : 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400 border border-red-200 dark:border-red-800'
+//       }
+//       ${sizeClasses[size]}
+//     `}>
+//       {isAvailable ? (
+//         <CheckCircle className={size === 'xs' ? 'w-2.5 h-2.5' : 'w-3 h-3'} />
+//       ) : (
+//         <XCircle className={size === 'xs' ? 'w-2.5 h-2.5' : 'w-3 h-3'} />
+//       )}
+//       {isAvailable ? 'Available' : 'Unavailable'}
+//     </span>
+//   );
+// };
+
+// // ============================================================================
+// // Star Rating Component
+// // ============================================================================
+// const StarRating = ({ rating, size = 'sm' }) => {
+//   const fullStars = Math.floor(rating);
+//   const hasHalfStar = rating % 1 >= 0.5;
+//   const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+//   const sizeClasses = {
+//     xs: "w-3 h-3",
+//     sm: "w-4 h-4",
+//     md: "w-5 h-5"
+//   };
+
+//   return (
+//     <div className="flex items-center gap-1">
+//       <div className="flex items-center">
+//         {[...Array(fullStars)].map((_, i) => (
+//           <Star
+//             key={`full-${i}`}
+//             className={`${sizeClasses[size]} fill-current text-amber-400`}
+//           />
+//         ))}
+//         {hasHalfStar && (
+//           <div className="relative">
+//             <Star className={`${sizeClasses[size]} text-gray-300`} />
+//             <div className="absolute inset-0 overflow-hidden w-1/2">
+//               <Star className={`${sizeClasses[size]} fill-current text-amber-400`} />
 //             </div>
-
-//             {/* Filters - FIXED CATEGORY FILTER */}
-//             <div className="flex flex-col sm:flex-row gap-3 flex-1 sm:justify-end">
-//               <div className="w-full sm:w-40 lg:w-48">
-//                 <EnhancedSelect
-//                   value={filterCategory}
-//                   onChange={setFilterCategory}
-//                   options={[
-//                     { value: "All", label: "All Categories" },
-//                     ...categories.map(cat => ({ value: cat, label: cat }))
-//                   ]}
-//                   className="w-full"
-//                   theme={theme} // FIX: Added theme prop
-//                 />
-//               </div>
-              
-//               <div className="relative w-full sm:w-64">
-//                 <div className="relative">
-//                   <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${themeClasses.text.tertiary}`} />
-//                   <input
-//                     type="text" 
-//                     placeholder="Search plans..." 
-//                     value={searchTerm} 
-//                     onChange={(e) => setSearchTerm(e.target.value)}
-//                     className={`w-full pl-10 pr-4 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-//                   />
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-
-//         {/* Loading State */}
-//         {isLoading ? (
-//           <div className={`flex justify-center items-center py-12 rounded-xl ${themeClasses.bg.card}`}>
-//             <FaSpinner className="w-8 h-8 text-indigo-600 animate-spin" />
-//           </div>
-//         ) : plans.length === 0 ? (
-//           <div className={`rounded-xl shadow-lg p-6 lg:p-8 text-center ${themeClasses.bg.card}`}>
-//             <Package className="w-12 h-12 lg:w-16 lg:h-16 text-gray-400 mx-auto mb-3 lg:mb-4" />
-//             <h3 className="text-lg lg:text-xl font-semibold mb-2">No Plans Available</h3>
-//             <p className={`mb-4 lg:mb-6 text-sm lg:text-base ${themeClasses.text.secondary}`}>
-//               Create your first internet plan to get started!
-//             </p>
-//             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-//               <motion.button
-//                 onClick={onNewPlan}
-//                 className={`px-4 py-2 lg:px-6 lg:py-3 rounded-lg shadow-md text-sm lg:text-base ${themeClasses.button.primary}`}
-//                 whileHover={{ scale: 1.05 }}
-//                 whileTap={{ scale: 0.95 }}
-//               >
-//                 <Plus className="w-4 h-4 lg:w-5 lg:h-5 mr-1 lg:mr-2" />
-//                 Create Your First Plan
-//               </motion.button>
-//               <motion.button
-//                 onClick={onViewTemplates}
-//                 className={`px-4 py-2 lg:px-6 lg:py-3 rounded-lg shadow-md text-sm lg:text-base ${themeClasses.button.secondary}`}
-//                 whileHover={{ scale: 1.05 }}
-//                 whileTap={{ scale: 0.95 }}
-//               >
-//                 <Box className="w-4 h-4 lg:w-5 lg:h-5 mr-1 lg:mr-2" />
-//                 Browse Templates
-//               </motion.button>
-//             </div>
-//           </div>
-//         ) : (
-//           <div className="space-y-6">
-//             {/* Hotspot Plans Section */}
-//             {renderPlanSection("hotspot", filteredHotspotPlans, "Hotspot", Wifi, "blue")}
-            
-//             {/* PPPoE Plans Section */}
-//             {renderPlanSection("pppoe", filteredPppoePlans, "PPPoE", Cable, "emerald")}
-
-//             {/* Empty State for Filtered Results */}
-//             {viewMode === "all" && filteredHotspotPlans.length === 0 && filteredPppoePlans.length === 0 && (
-//               <div className={`rounded-xl shadow-lg p-8 text-center ${themeClasses.bg.card}`}>
-//                 <Filter className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-//                 <h3 className="text-lg font-semibold mb-2">No Plans Match Your Criteria</h3>
-//                 <p className="text-gray-500 dark:text-gray-400 mb-4">
-//                   Try adjusting your search terms or filters
-//                 </p>
-//                 <button
-//                   onClick={() => {
-//                     setSearchTerm("");
-//                     setFilterCategory("All");
-//                   }}
-//                   className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-//                 >
-//                   Clear Filters
-//                 </button>
-//               </div>
-//             )}
 //           </div>
 //         )}
-//       </main>
+//         {[...Array(emptyStars)].map((_, i) => (
+//           <Star
+//             key={`empty-${i}`}
+//             className={`${sizeClasses[size]} text-gray-300 dark:text-gray-600`}
+//           />
+//         ))}
+//       </div>
+//       <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+//         {rating.toFixed(1)}
+//       </span>
 //     </div>
 //   );
 // };
 
-// export default PlanList;
+// // ============================================================================
+// // Calculate Rating (based on purchases)
+// // ============================================================================
+// const calculateRating = (purchases) => {
+//   if (purchases >= 1000) return 4.9;
+//   if (purchases >= 500) return 4.7;
+//   if (purchases >= 250) return 4.5;
+//   if (purchases >= 100) return 4.2;
+//   if (purchases >= 50) return 4.0;
+//   if (purchases >= 25) return 3.8;
+//   if (purchases >= 10) return 3.5;
+//   if (purchases >= 5) return 3.2;
+//   if (purchases >= 1) return 3.0;
+//   return 0;
+// };
 
+// // ============================================================================
+// // Price Display Helper – FIXED: Handles all plan types correctly
+// // ============================================================================
+// const getPriceDisplay = (plan) => {
+//   const price = parseFloat(plan.price) || 0;
+  
+//   switch (plan.plan_type) {
+//     case 'Free_trial':
+//       return {
+//         main: 'Free Trial',
+//         badge: null,
+//         className: 'text-blue-600 dark:text-blue-400 font-medium'
+//       };
+    
+//     case 'Promotional':
+//       if (price === 0) {
+//         return {
+//           main: 'Free',
+//           badge: 'Promotional',
+//           className: 'text-purple-600 dark:text-purple-400'
+//         };
+//       }
+//       return {
+//         main: `KES ${price.toFixed(2)}`,
+//         badge: 'Promotional',
+//         className: 'text-purple-600 dark:text-purple-400 font-bold'
+//       };
+    
+//     case 'Paid':
+//     default:
+//       if (price === 0) {
+//         return {
+//           main: 'Free',
+//           badge: null,
+//           className: 'text-gray-600 dark:text-gray-400'
+//         };
+//       }
+//       return {
+//         main: `KES ${price.toFixed(2)}`,
+//         badge: null,
+//         className: 'text-gray-900 dark:text-white font-bold'
+//       };
+//   }
+// };
 
+// // ============================================================================
+// // Plan Table Row – FIXED: All display issues resolved
+// // ============================================================================
+// const PlanTableRow = ({
+//   plan,
+//   theme,
+//   onViewDetails,
+//   onEditPlan,
+//   onDeletePlan,
+//   onDuplicatePlan,
+//   onToggleStatus,
+//   isSelected,
+//   onSelect
+// }) => {
+//   const rating = calculateRating(plan.purchases);
+//   const themeClasses = getThemeClasses(theme);
+//   const priceDisplay = getPriceDisplay(plan);
+  
+//   // Use access_methods object from the plan with fallback
+//   const accessMethods = plan.access_methods || { 
+//     hotspot: { enabled: false }, 
+//     pppoe: { enabled: false } 
+//   };
 
+//   return (
+//     <tr className={`
+//       group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors
+//       ${isSelected ? 'bg-indigo-50/50 dark:bg-indigo-900/20' : ''}
+//     `}>
+//       {/* Checkbox */}
+//       <td className="px-4 py-4 whitespace-nowrap">
+//         <input
+//           type="checkbox"
+//           checked={isSelected}
+//           onChange={() => onSelect(plan.id)}
+//           className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
+//         />
+//       </td>
 
+//       {/* Plan Info - FIXED: Shows correct plan type from plan.plan_type */}
+//       <td className="px-4 py-4">
+//         <div className="flex items-start gap-3">
+//           <div className={`
+//             p-2 rounded-lg flex-shrink-0
+//             ${accessMethods?.hotspot?.enabled && accessMethods?.pppoe?.enabled
+//               ? 'bg-purple-100 dark:bg-purple-900/30'
+//               : accessMethods?.hotspot?.enabled
+//                 ? 'bg-blue-100 dark:bg-blue-900/30'
+//                 : accessMethods?.pppoe?.enabled
+//                   ? 'bg-green-100 dark:bg-green-900/30'
+//                   : 'bg-gray-100 dark:bg-gray-800'
+//             }
+//           `}>
+//             {accessMethods?.hotspot?.enabled && accessMethods?.pppoe?.enabled ? (
+//               <div className="flex items-center gap-0.5">
+//                 <Wifi className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+//                 <Cable className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+//               </div>
+//             ) : accessMethods?.hotspot?.enabled ? (
+//               <Wifi className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+//             ) : accessMethods?.pppoe?.enabled ? (
+//               <Cable className="w-4 h-4 text-green-600 dark:text-green-400" />
+//             ) : (
+//               <AlertTriangle className="w-4 h-4 text-gray-400" />
+//             )}
+//           </div>
+//           <div>
+//             <div className="flex items-center gap-2">
+//               <span className="font-semibold text-gray-900 dark:text-white">
+//                 {plan.name}
+//               </span>
+//               <PlanTypeBadge type={plan.plan_type} theme={theme} size="xs" />
+//             </div>
+//             <div className="flex items-center gap-2 mt-1">
+//               <span className="text-xs text-gray-500 dark:text-gray-400">
+//                 {plan.category || 'Uncategorized'}
+//               </span>
+//               <span className="text-gray-300 dark:text-gray-600">•</span>
+//               <span className="text-xs text-gray-500 dark:text-gray-400">
+//                 ID: {plan.id?.slice(0, 8)}...
+//               </span>
+//             </div>
+//           </div>
+//         </div>
+//       </td>
 
+//       {/* Price - FIXED: Shows correct price based on plan type */}
+//       <td className="px-4 py-4 whitespace-nowrap">
+//         <div className={priceDisplay.className}>
+//           {priceDisplay.main}
+//         </div>
+//         {priceDisplay.badge && (
+//           <div className="text-xs mt-1 text-purple-600 dark:text-purple-400 flex items-center gap-1">
+//             <BadgePercent className="w-3 h-3" />
+//             {priceDisplay.badge}
+//           </div>
+//         )}
+//       </td>
 
+//       {/* Access Type - FIXED: Passes accessMethods object with fallback */}
+//       <td className="px-4 py-4 whitespace-nowrap">
+//         <AccessTypeBadge
+//           accessMethods={accessMethods}
+//           size="xs"
+//           showLabel={true}
+//         />
+//       </td>
 
+//       {/* Subscribers & Rating */}
+//       <td className="px-4 py-4 whitespace-nowrap">
+//         <div className="flex items-center gap-2 mb-1">
+//           <Users className="w-3.5 h-3.5 text-gray-500" />
+//           <span className="text-sm font-medium text-gray-900 dark:text-white">
+//             {formatNumber(plan.purchases || 0)}
+//           </span>
+//         </div>
+//         <StarRating rating={rating} size="xs" />
+//       </td>
 
-// import React, { useState, useMemo } from "react";
-// import { motion, AnimatePresence } from "framer-motion";
-// import { 
-//   Plus, Pencil, Trash2, Eye, Users, Search, 
-//   Wifi, Cable, BarChart3, Package, Box, Filter,
-//   ChevronDown, ChevronUp, Clock, DollarSign, Calendar,
-//   CheckCircle, XCircle, AlertTriangle
-// } from "lucide-react";
-// import { FaSpinner } from "react-icons/fa";
-// import { EnhancedSelect, getThemeClasses, AvailabilityBadge, PriceBadge, PlanTypeBadge } from "../Shared/components"
-// import {  calculateRating, isPlanAvailableNow, formatNumber } from "../Shared/utils"
-// import {  formatBytes, formatDuration } from "../Shared/formatters"
-// import { categories, planTypes } from "../Shared/constant"
+//       {/* Status */}
+//       <td className="px-4 py-4 whitespace-nowrap">
+//         <div className="space-y-1">
+//           <AvailabilityBadge
+//             isAvailable={plan.is_available_now || false}
+//             theme={theme}
+//             size="xs"
+//           />
+//           <span className={`
+//             inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+//             ${plan.active
+//               ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400'
+//               : 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400'
+//             }
+//           `}>
+//             {plan.active ? 'Active' : 'Inactive'}
+//           </span>
+//           {plan.has_time_variant && (
+//             <span className="flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400">
+//               <Clock className="w-3 h-3" />
+//               Time Restricted
+//             </span>
+//           )}
+//         </div>
+//       </td>
 
-// // Star component
-// const Star = ({ className }) => (
-//   <svg className={className} fill="currentColor" viewBox="0 0 20 20">
-//     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-//   </svg>
-// );
+//       {/* Actions */}
+//       <td className="px-4 py-4 whitespace-nowrap">
+//         <div className="flex items-center gap-1">
+//           <button
+//             onClick={() => onViewDetails(plan)}
+//             className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+//             title="View Details"
+//           >
+//             <Eye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+//           </button>
+//           <button
+//             onClick={() => onEditPlan(plan)}
+//             className="p-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+//             title="Edit Plan"
+//           >
+//             <Pencil className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+//           </button>
+//           <button
+//             onClick={() => onDuplicatePlan(plan)}
+//             className="p-1.5 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+//             title="Duplicate Plan"
+//           >
+//             <Plus className="w-4 h-4 text-green-600 dark:text-green-400" />
+//           </button>
+//           <button
+//             onClick={() => onToggleStatus(plan)}
+//             className={`
+//               p-1.5 rounded-lg transition-colors
+//               ${plan.active
+//                 ? 'hover:bg-amber-100 dark:hover:bg-amber-900/30'
+//                 : 'hover:bg-green-100 dark:hover:bg-green-900/30'
+//               }
+//             `}
+//             title={plan.active ? "Deactivate" : "Activate"}
+//           >
+//             {plan.active ? (
+//               <XCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+//             ) : (
+//               <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+//             )}
+//           </button>
+//           <button
+//             onClick={() => onDeletePlan(plan)}
+//             className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+//             title="Delete Plan"
+//           >
+//             <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+//           </button>
+//         </div>
+//       </td>
+//     </tr>
+//   );
+// };
 
-// const PlanList = ({ 
-//   plans, 
-//   isLoading, 
-//   onEditPlan, 
-//   onViewDetails, 
-//   onDeletePlan, 
+// // ============================================================================
+// // Filter Button Component
+// // ============================================================================
+// const FilterButton = ({ label, icon: Icon, active, onClick, color = 'indigo' }) => {
+//   const colorClasses = {
+//     indigo: {
+//       active: 'bg-indigo-600 text-white border-indigo-600',
+//       inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-indigo-400'
+//     },
+//     blue: {
+//       active: 'bg-blue-600 text-white border-blue-600',
+//       inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-blue-400'
+//     },
+//     green: {
+//       active: 'bg-green-600 text-white border-green-600',
+//       inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-green-400'
+//     },
+//     purple: {
+//       active: 'bg-purple-600 text-white border-purple-600',
+//       inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-purple-400'
+//     },
+//     amber: {
+//       active: 'bg-amber-600 text-white border-amber-600',
+//       inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-amber-400'
+//     },
+//     red: {
+//       active: 'bg-red-600 text-white border-red-600',
+//       inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-red-400'
+//     }
+//   };
+
+//   return (
+//     <button
+//       onClick={onClick}
+//       className={`
+//         px-3 py-1.5 rounded-lg text-xs font-medium transition-all
+//         flex items-center gap-1.5 border-2
+//         ${active ? colorClasses[color].active : colorClasses[color].inactive}
+//       `}
+//     >
+//       {Icon && <Icon className="w-3.5 h-3.5" />}
+//       {label}
+//     </button>
+//   );
+// };
+
+// // ============================================================================
+// // MAIN PLANLIST COMPONENT – All issues fixed
+// // ============================================================================
+// const PlanList = ({
+//   plans = [],
+//   allPlans = [],
+//   isLoading = false,
+//   onEditPlan,
+//   onViewDetails,
+//   onDeletePlan,
 //   onDuplicatePlan,
 //   onToggleStatus,
 //   onNewPlan,
 //   onViewAnalytics,
 //   onViewTemplates,
-//   theme,
-//   isMobile,
-//   isTablet,
-//   isDesktop,
-//   searchQuery,
+//   theme = 'light',
+//   isMobile = false,
+//   searchQuery = '',
 //   onSearchChange,
-//   activeFilters,
-//   onApplyFilter,
+//   filters = {
+//     search: '',
+//     category: 'all',
+//     planType: 'all',
+//     accessType: 'all',
+//     availability: 'all',
+//     active: 'all',
+//     hasTimeVariant: 'all',
+//     routerSpecific: 'all',
+//     priceRange: null
+//   },
+//   onFilterChange,
 //   onClearFilters,
-//   sortConfig,
+//   sortConfig = { field: 'name', direction: 'asc' },
 //   onSort
 // }) => {
 //   const themeClasses = getThemeClasses(theme);
-//   const [expandedSections, setExpandedSections] = useState({
-//     hotspot: true,
-//     pppoe: true,
-//     dual: true
-//   });
+//   const [selectedPlans, setSelectedPlans] = useState([]);
+//   const [showBulkActions, setShowBulkActions] = useState(false);
+//   const [showMobileFilters, setShowMobileFilters] = useState(false);
+//   const scrollPositionRef = useRef(0);
 
-//   // Filter and sort plans
-//   const filteredPlans = useMemo(() => {
-//     let filtered = [...plans];
-    
-//     // Apply category filter
-//     if (activeFilters.category) {
-//       filtered = filtered.filter(plan => plan.category === activeFilters.category);
+//   // ==========================================================================
+//   // STATISTICS – FIXED: Uses plan.plan_type directly
+//   // ==========================================================================
+//   const stats = useMemo(() => {
+//     const active = plans.filter(p => p.active).length;
+//     const inactive = plans.filter(p => !p.active).length;
+//     const available = plans.filter(p => p.is_available_now).length;
+//     const totalSubscribers = plans.reduce((sum, p) => sum + (p.purchases || 0), 0);
+
+//     const mostPopular = [...plans].sort((a, b) => (b.purchases || 0) - (a.purchases || 0))[0];
+
+//     // Count by plan type – FIXED: Use plan.plan_type directly
+//     const byPlanType = plans.reduce((acc, p) => {
+//       const type = p.plan_type || 'Paid';
+//       acc[type] = (acc[type] || 0) + 1;
+//       return acc;
+//     }, {});
+
+//     return {
+//       total: plans.length,
+//       active,
+//       inactive,
+//       available,
+//       totalSubscribers,
+//       mostPopular,
+//       byPlanType
+//     };
+//   }, [plans]);
+
+//   // ==========================================================================
+//   // FILTER HANDLERS – FIXED: Uses correct values from constants
+//   // ==========================================================================
+//   const handleQuickFilter = useCallback((type, value) => {
+//     const newValue = filters[type] === value ? 'all' : value;
+//     onFilterChange(type, newValue);
+//   }, [filters, onFilterChange]);
+
+//   const handleClearAllFilters = useCallback(() => {
+//     onSearchChange('');
+//     onClearFilters();
+//   }, [onSearchChange, onClearFilters]);
+
+//   // ==========================================================================
+//   // BULK ACTIONS
+//   // ==========================================================================
+//   const togglePlanSelection = useCallback((id) => {
+//     setSelectedPlans(prev =>
+//       prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+//     );
+//   }, []);
+
+//   const toggleAllPlans = useCallback(() => {
+//     setSelectedPlans(prev =>
+//       prev.length === plans.length ? [] : plans.map(p => p.id)
+//     );
+//   }, [plans]);
+
+//   const handleBulkAction = useCallback(async (action) => {
+//     setShowBulkActions(false);
+
+//     if (action === 'delete') {
+//       if (!window.confirm(`Delete ${selectedPlans.length} selected plans? This cannot be undone.`)) {
+//         return;
+//       }
 //     }
-    
-//     // Apply plan type filter
-//     if (activeFilters.planType) {
-//       filtered = filtered.filter(plan => plan.planType === activeFilters.planType);
-//     }
-    
-//     // Apply access type filter
-//     if (activeFilters.accessType) {
-//       filtered = filtered.filter(plan => {
-//         const enabledMethods = plan.enabled_access_methods || plan.get_enabled_access_methods?.() || [];
-//         if (activeFilters.accessType === 'both') {
-//           return enabledMethods.includes('hotspot') && enabledMethods.includes('pppoe');
-//         }
-//         return enabledMethods.includes(activeFilters.accessType);
-//       });
-//     }
-    
-//     // Apply availability filter
-//     if (activeFilters.availability !== null) {
-//       filtered = filtered.filter(plan => {
-//         const isAvailable = plan.isAvailableNow !== undefined 
-//           ? plan.isAvailableNow 
-//           : isPlanAvailableNow(plan);
-//         return isAvailable === activeFilters.availability;
-//       });
-//     }
-    
-//     // Apply price range filter
-//     if (activeFilters.priceRange) {
-//       filtered = filtered.filter(plan => {
-//         const price = parseFloat(plan.price) || 0;
-//         return price >= activeFilters.priceRange.min && price <= activeFilters.priceRange.max;
-//       });
-//     }
-    
-//     // Apply time variant filter
-//     if (activeFilters.hasTimeVariant !== null) {
-//       filtered = filtered.filter(plan => {
-//         const hasVariant = plan.time_variant?.is_active || plan.has_time_variant;
-//         return hasVariant === activeFilters.hasTimeVariant;
-//       });
-//     }
-    
-//     // Apply search
-//     if (searchQuery) {
-//       const query = searchQuery.toLowerCase();
-//       filtered = filtered.filter(plan => 
-//         plan.name?.toLowerCase().includes(query) ||
-//         plan.description?.toLowerCase().includes(query) ||
-//         plan.category?.toLowerCase().includes(query)
+
+//     const batchSize = 5;
+//     for (let i = 0; i < selectedPlans.length; i += batchSize) {
+//       const batch = selectedPlans.slice(i, i + batchSize);
+//       await Promise.allSettled(
+//         batch.map(async (id) => {
+//           const plan = plans.find(p => p.id === id);
+//           if (!plan) return;
+
+//           switch (action) {
+//             case 'activate':
+//               if (!plan.active) await onToggleStatus(plan);
+//               break;
+//             case 'deactivate':
+//               if (plan.active) await onToggleStatus(plan);
+//               break;
+//             case 'duplicate':
+//               await onDuplicatePlan(plan);
+//               break;
+//             case 'delete':
+//               await onDeletePlan(plan);
+//               break;
+//             default:
+//               break;
+//           }
+//         })
 //       );
 //     }
-    
-//     // Apply sorting
-//     filtered.sort((a, b) => {
-//       let aValue = a[sortConfig.field];
-//       let bValue = b[sortConfig.field];
-      
-//       switch (sortConfig.field) {
-//         case 'price':
-//           aValue = parseFloat(aValue) || 0;
-//           bValue = parseFloat(bValue) || 0;
-//           break;
-//         case 'created_at':
-//         case 'updated_at':
-//           aValue = new Date(aValue).getTime();
-//           bValue = new Date(bValue).getTime();
-//           break;
-//         case 'name':
-//         case 'description':
-//           aValue = (aValue || '').toLowerCase();
-//           bValue = (bValue || '').toLowerCase();
-//           break;
-//         case 'purchases':
-//           aValue = aValue || 0;
-//           bValue = bValue || 0;
-//           break;
-//       }
-      
-//       if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-//       if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-//       return 0;
-//     });
-    
-//     return filtered;
-//   }, [plans, activeFilters, searchQuery, sortConfig]);
 
-//   // Separate plans by access type
-//   const { hotspotPlans, pppoePlans, dualPlans } = useMemo(() => {
-//     const hotspot = filteredPlans.filter(plan => {
-//       const methods = plan.enabled_access_methods || plan.get_enabled_access_methods?.() || [];
-//       return methods.includes('hotspot') && !methods.includes('pppoe');
-//     });
-//     const pppoe = filteredPlans.filter(plan => {
-//       const methods = plan.enabled_access_methods || plan.get_enabled_access_methods?.() || [];
-//       return methods.includes('pppoe') && !methods.includes('hotspot');
-//     });
-//     const dual = filteredPlans.filter(plan => {
-//       const methods = plan.enabled_access_methods || plan.get_enabled_access_methods?.() || [];
-//       return methods.includes('hotspot') && methods.includes('pppoe');
-//     });
-    
-//     return { hotspotPlans: hotspot, pppoePlans: pppoe, dualPlans: dual };
-//   }, [filteredPlans]);
+//     setSelectedPlans([]);
+//   }, [selectedPlans, plans, onToggleStatus, onDuplicatePlan, onDeletePlan]);
 
-//   const getCategoryIcon = (category) => {
-//     const icons = {
-//       Residential: <Wifi className="w-4 h-4 text-teal-600" />,
-//       Business: <Cable className="w-4 h-4 text-emerald-600" />,
-//       Promotional: <Package className="w-4 h-4 text-purple-600" />,
-//       Enterprise: <BarChart3 className="w-4 h-4 text-indigo-600" />,
-//       Hotspot: <Wifi className="w-4 h-4 text-blue-600" />,
-//       PPPoE: <Cable className="w-4 h-4 text-green-600" />,
-//       Dual: <><Wifi className="w-3 h-3 text-blue-600 mr-1" /><Cable className="w-3 h-3 text-green-600" /></>
-//     };
-//     return icons[category] || null;
-//   };
-
-//   const renderStars = (purchases) => {
-//     const rating = calculateRating(purchases);
-//     return (
-//       <div className="flex items-center">
-//         {[...Array(5)].map((_, i) => (
-//           <Star 
-//             key={i} 
-//             className={`w-3 h-3 ${i < Math.round(rating) 
-//               ? "text-amber-400 fill-current" 
-//               : theme === 'dark' ? "text-gray-600" : "text-gray-300"}`} 
-//           />
-//         ))}
-//         <span className={`ml-1 text-xs ${themeClasses.text.secondary}`}>
-//           {rating.toFixed(1)}
-//         </span>
-//       </div>
-//     );
-//   };
-
-//   // Get active access method for a plan
-//   const getActiveAccessMethod = (plan) => {
-//     const enabledMethods = plan.enabled_access_methods || plan.get_enabled_access_methods?.() || [];
-//     const accessMethods = plan.accessMethods || plan.access_methods || {};
-    
-//     if (enabledMethods.includes('hotspot') && enabledMethods.includes('pppoe')) {
-//       return { type: 'dual', config: accessMethods };
-//     }
-//     if (enabledMethods.includes('hotspot')) {
-//       return { type: 'hotspot', config: accessMethods.hotspot };
-//     }
-//     if (enabledMethods.includes('pppoe')) {
-//       return { type: 'pppoe', config: accessMethods.pppoe };
-//     }
-//     return { type: 'none', config: null };
-//   };
-
-//   const toggleSection = (section) => {
-//     setExpandedSections(prev => ({
-//       ...prev,
-//       [section]: !prev[section]
-//     }));
-//   };
-
-//   const renderPlanSection = (type, plans, title, icon, color) => {
-//     if (plans.length === 0) return null;
-
-//     const isExpanded = expandedSections[type];
-//     const IconComponent = icon;
-
-//     return (
-//       <div className={`mb-6 rounded-2xl overflow-hidden border ${themeClasses.border.light} ${themeClasses.bg.card}`}>
-//         {/* Section Header */}
-//         <div 
-//           className={`p-4 sm:p-6 cursor-pointer transition-colors duration-200 ${
-//             color === 'blue' 
-//               ? 'bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-800' 
-//               : color === 'green'
-//               ? 'bg-emerald-50 dark:bg-emerald-900/20 border-b border-emerald-100 dark:border-emerald-800'
-//               : 'bg-purple-50 dark:bg-purple-900/20 border-b border-purple-100 dark:border-purple-800'
-//           }`}
-//           onClick={() => toggleSection(type)}
-//         >
-//           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-//             <div className="flex items-center space-x-3 sm:space-x-4">
-//               <div className={`p-2 sm:p-3 rounded-xl ${
-//                 color === 'blue' 
-//                   ? 'bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-400' 
-//                   : color === 'green'
-//                   ? 'bg-emerald-100 dark:bg-emerald-800 text-emerald-600 dark:text-emerald-400'
-//                   : 'bg-purple-100 dark:bg-purple-800 text-purple-600 dark:text-purple-400'
-//               }`}>
-//                 <IconComponent className="w-5 h-5 sm:w-6 sm:h-6" />
-//               </div>
-//               <div>
-//                 <h3 className={`text-lg sm:text-xl font-bold ${
-//                   color === 'blue' ? 'text-blue-900 dark:text-blue-100' 
-//                   : color === 'green' ? 'text-emerald-900 dark:text-emerald-100'
-//                   : 'text-purple-900 dark:text-purple-100'
-//                 }`}>
-//                   {title} Plans
-//                 </h3>
-//                 <p className={`text-sm ${
-//                   color === 'blue' ? 'text-blue-700 dark:text-blue-300' 
-//                   : color === 'green' ? 'text-emerald-700 dark:text-emerald-300'
-//                   : 'text-purple-700 dark:text-purple-300'
-//                 }`}>
-//                   {plans.length} plan{plans.length !== 1 ? 's' : ''} • {
-//                     plans.reduce((sum, plan) => sum + (plan.purchases || 0), 0)
-//                   } total purchases
-//                 </p>
-//               </div>
-//             </div>
-//             <div className="flex items-center space-x-2 sm:space-x-4 self-end sm:self-auto">
-//               <span className={`px-2 py-1 text-xs sm:text-sm font-medium ${
-//                 color === 'blue' 
-//                   ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200' 
-//                   : color === 'green'
-//                   ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200'
-//                   : 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200'
-//               }`}>
-//                 {type.toUpperCase()}
-//               </span>
-//               {isExpanded ? <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" /> : <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />}
-//             </div>
+//   // ==========================================================================
+//   // RENDER STATS CARDS
+//   // ==========================================================================
+//   const renderStats = () => (
+//     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+//       <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+//         <div className="flex items-center gap-2 mb-2">
+//           <div className="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-900/50">
+//             <Package className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
 //           </div>
+//           <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Plans</span>
 //         </div>
-
-//         {/* Plans Table */}
-//         <AnimatePresence>
-//           {isExpanded && (
-//             <motion.div
-//               initial={{ opacity: 0, height: 0 }}
-//               animate={{ opacity: 1, height: "auto" }}
-//               exit={{ opacity: 0, height: 0 }}
-//               transition={{ duration: 0.3 }}
-//             >
-//               <div className="overflow-x-auto">
-//                 <table className="min-w-full divide-y text-xs sm:text-sm">
-//                   <thead className={theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-100'}>
-//                     <tr>
-//                       {["Plan Name", "Category", "Price", "Configuration", "Status", "Actions"].map((header) => (
-//                         <th key={header} className={`px-3 py-2 sm:px-4 sm:py-3 text-left font-medium uppercase tracking-wider ${themeClasses.text.secondary}`}>
-//                           {header}
-//                         </th>
-//                       ))}
-//                     </tr>
-//                   </thead>
-//                   <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-200'}`}>
-//                     {plans.map((plan) => {
-//                       const activeMethod = getActiveAccessMethod(plan);
-//                       const isAvailable = plan.isAvailableNow !== undefined 
-//                         ? plan.isAvailableNow 
-//                         : isPlanAvailableNow(plan);
-                      
-//                       return (
-//                         <tr key={plan.id} className={`hover:${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-//                           <td className="px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap">
-//                             <div className="flex items-center">
-//                               {getCategoryIcon(plan.category)}
-//                               <div className="ml-2 sm:ml-3">
-//                                 <div className="flex items-center">
-//                                   <span className={`font-medium truncate max-w-[100px] sm:max-w-[150px] lg:max-w-none ${themeClasses.text.primary}`}>
-//                                     {plan.name || 'Unnamed Plan'}
-//                                   </span>
-//                                   {plan.template && (
-//                                     <Box className="w-3 h-3 text-blue-600 ml-1 sm:ml-2" title="Created from template" />
-//                                   )}
-//                                 </div>
-//                                 {plan.template && (
-//                                   <span className="text-xs text-blue-600 dark:text-blue-400">
-//                                     From: {plan.template.name}
-//                                   </span>
-//                                 )}
-//                               </div>
-//                             </div>
-//                           </td>
-//                           <td className={`px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap ${themeClasses.text.secondary}`}>
-//                             {plan.category || 'N/A'}
-//                           </td>
-//                           <td className={`px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap ${themeClasses.text.secondary}`}>
-//                             <PriceBadge 
-//                               price={plan.price} 
-//                               currency="KES"
-//                               theme={theme}
-//                               size="sm"
-//                             />
-//                           </td>
-//                           <td className={`px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap ${themeClasses.text.secondary}`}>
-//                             {activeMethod.config && (
-//                               <div className="space-y-1">
-//                                 <div className="text-xs">
-//                                   {activeMethod.type === 'dual' ? (
-//                                     <span className="flex items-center gap-1">
-//                                       <Wifi className="w-3 h-3 text-blue-500" />
-//                                       <Cable className="w-3 h-3 text-green-500" />
-//                                     </span>
-//                                   ) : activeMethod.type === 'hotspot' ? (
-//                                     <span className="flex items-center gap-1">
-//                                       <Wifi className="w-3 h-3 text-blue-500" />
-//                                       <span>Hotspot</span>
-//                                     </span>
-//                                   ) : (
-//                                     <span className="flex items-center gap-1">
-//                                       <Cable className="w-3 h-3 text-green-500" />
-//                                       <span>PPPoE</span>
-//                                     </span>
-//                                   )}
-//                                 </div>
-//                                 {activeMethod.config.hotspot && (
-//                                   <div className="text-xs text-gray-500">
-//                                     {activeMethod.config.hotspot.downloadSpeed?.value || '10'} Mbps
-//                                   </div>
-//                                 )}
-//                                 {activeMethod.config.pppoe && (
-//                                   <div className="text-xs text-gray-500">
-//                                     {activeMethod.config.pppoe.downloadSpeed?.value || '10'} Mbps
-//                                   </div>
-//                                 )}
-//                               </div>
-//                             )}
-//                           </td>
-//                           <td className="px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap">
-//                             <div className="flex flex-col gap-1">
-//                               <AvailabilityBadge
-//                                 status={isAvailable ? "available" : "unavailable"}
-//                                 theme={theme}
-//                                 size="xs"
-//                               />
-//                               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-//                                 plan.active 
-//                                   ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
-//                                   : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
-//                               }`}>
-//                                 {plan.active ? 'Active' : 'Inactive'}
-//                               </span>
-//                             </div>
-//                           </td>
-//                           <td className="px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap text-sm font-medium">
-//                             <div className="flex flex-wrap gap-1 sm:gap-2">
-//                               <motion.button 
-//                                 onClick={() => onViewDetails(plan)} 
-//                                 className="focus:outline-none p-1" 
-//                                 whileHover={{ scale: 1.2 }} 
-//                                 transition={{ type: "spring", stiffness: 300 }}
-//                                 title="View Details"
-//                               >
-//                                 <Eye className="w-3 h-3 sm:w-4 sm:h-4 text-indigo-600 hover:text-indigo-800" />
-//                               </motion.button>
-//                               <motion.button 
-//                                 onClick={() => onEditPlan(plan)} 
-//                                 className="focus:outline-none p-1" 
-//                                 whileHover={{ rotate: 90 }} 
-//                                 transition={{ type: "spring", stiffness: 300 }}
-//                                 title="Edit Plan"
-//                               >
-//                                 <Pencil className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-600 hover:text-emerald-800" />
-//                               </motion.button>
-//                               <motion.button 
-//                                 onClick={() => onDeletePlan(plan)} 
-//                                 className="focus:outline-none p-1" 
-//                                 whileHover={{ x: [0, -2, 2, -2, 0] }} 
-//                                 transition={{ duration: 0.3 }}
-//                                 title="Delete Plan"
-//                               >
-//                                 <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-red-600 hover:text-red-800" />
-//                               </motion.button>
-//                             </div>
-//                           </td>
-//                         </tr>
-//                       );
-//                     })}
-//                   </tbody>
-//                 </table>
-//               </div>
-//             </motion.div>
-//           )}
-//         </AnimatePresence>
-//       </div>
-//     );
-//   };
-
-//   // Filter UI Component
-//   const FilterSection = () => (
-//     <div className={`p-4 sm:p-6 rounded-xl shadow-lg ${themeClasses.bg.card}`}>
-//       <div className="flex flex-col gap-4">
-//         <div className="flex flex-col sm:flex-row gap-3 justify-between">
-//           <div className="flex flex-wrap gap-2">
-//             {/* Category Filter */}
-//             <div className="w-full sm:w-40">
-//               <EnhancedSelect
-//                 value={activeFilters.category || ''}
-//                 onChange={(value) => onApplyFilter('category', value || null)}
-//                 options={[
-//                   { value: '', label: "All Categories" },
-//                   ...categories.map(cat => ({ value: cat, label: cat }))
-//                 ]}
-//                 theme={theme}
-//               />
-//             </div>
-            
-//             {/* Plan Type Filter */}
-//             <div className="w-full sm:w-40">
-//               <EnhancedSelect
-//                 value={activeFilters.planType || ''}
-//                 onChange={(value) => onApplyFilter('planType', value || null)}
-//                 options={[
-//                   { value: '', label: "All Plan Types" },
-//                   ...planTypes.map(type => ({ value: type, label: type }))
-//                 ]}
-//                 theme={theme}
-//               />
-//             </div>
-            
-//             {/* Access Type Filter */}
-//             <div className="w-full sm:w-40">
-//               <EnhancedSelect
-//                 value={activeFilters.accessType || ''}
-//                 onChange={(value) => onApplyFilter('accessType', value || null)}
-//                 options={[
-//                   { value: '', label: "All Access Types" },
-//                   { value: 'hotspot', label: "Hotspot Only" },
-//                   { value: 'pppoe', label: "PPPoE Only" },
-//                   { value: 'both', label: "Dual Access" }
-//                 ]}
-//                 theme={theme}
-//               />
-//             </div>
-//           </div>
-
-//           {/* Search */}
-//           <div className="relative w-full sm:w-64">
-//             <div className="relative">
-//               <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${themeClasses.text.tertiary}`} />
-//               <input
-//                 type="text" 
-//                 placeholder="Search plans..." 
-//                 value={searchQuery} 
-//                 onChange={(e) => onSearchChange(e.target.value)}
-//                 className={`w-full pl-10 pr-4 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-//               />
-//             </div>
-//           </div>
+//         <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+//           {stats.total}
 //         </div>
-        
-//         {/* Advanced Filters Row */}
-//         <div className="flex flex-wrap gap-2 items-center">
-//           <span className="text-sm text-gray-500 dark:text-gray-400">Filters:</span>
-          
-//           {/* Availability Filter */}
-//           <div className="flex gap-1">
-//             <button
-//               onClick={() => onApplyFilter('availability', true)}
-//               className={`px-3 py-1 rounded text-xs ${
-//                 activeFilters.availability === true
-//                   ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-//                   : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-//               }`}
-//             >
-//               <CheckCircle className="w-3 h-3 inline mr-1" />
-//               Available
-//             </button>
-//             <button
-//               onClick={() => onApplyFilter('availability', false)}
-//               className={`px-3 py-1 rounded text-xs ${
-//                 activeFilters.availability === false
-//                   ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-//                   : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-//               }`}
-//             >
-//               <XCircle className="w-3 h-3 inline mr-1" />
-//               Unavailable
-//             </button>
+//         <div className="flex items-center gap-2 mt-1 text-xs">
+//           <span className="text-green-600 dark:text-green-400">{stats.active} active</span>
+//           <span className="text-gray-300 dark:text-gray-600">•</span>
+//           <span className="text-red-600 dark:text-red-400">{stats.inactive} inactive</span>
+//         </div>
+//       </div>
+
+//       <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+//         <div className="flex items-center gap-2 mb-2">
+//           <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/50">
+//             <Users className="w-4 h-4 text-green-600 dark:text-green-400" />
 //           </div>
-          
-//           {/* Time Variant Filter */}
-//           <div className="flex gap-1">
-//             <button
-//               onClick={() => onApplyFilter('hasTimeVariant', true)}
-//               className={`px-3 py-1 rounded text-xs ${
-//                 activeFilters.hasTimeVariant === true
-//                   ? "bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100"
-//                   : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-//               }`}
-//             >
-//               <Clock className="w-3 h-3 inline mr-1" />
-//               Time Restricted
-//             </button>
-//             <button
-//               onClick={() => onApplyFilter('hasTimeVariant', false)}
-//               className={`px-3 py-1 rounded text-xs ${
-//                 activeFilters.hasTimeVariant === false
-//                   ? "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
-//                   : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-//               }`}
-//             >
-//               Always Available
-//             </button>
+//           <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Subscribers</span>
+//         </div>
+//         <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+//           {formatNumber(stats.totalSubscribers)}
+//         </div>
+//         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+//           Across {stats.total} plans
+//         </div>
+//       </div>
+
+//       <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+//         <div className="flex items-center gap-2 mb-2">
+//           <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/50">
+//             <CheckCircle className="w-4 h-4 text-blue-600 dark:text-blue-400" />
 //           </div>
-          
-//           {/* Clear Filters */}
-//           {(activeFilters.category || activeFilters.planType || activeFilters.accessType || 
-//             activeFilters.availability !== null || activeFilters.hasTimeVariant !== null) && (
-//             <button
-//               onClick={onClearFilters}
-//               className="px-3 py-1 text-xs bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-800 dark:text-red-200 dark:hover:bg-red-700 rounded"
-//             >
-//               Clear Filters
-//             </button>
-//           )}
+//           <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Available Now</span>
+//         </div>
+//         <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+//           {stats.available}
+//         </div>
+//         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+//           {stats.total > 0 ? ((stats.available / stats.total) * 100).toFixed(0) : 0}% of plans
+//         </div>
+//       </div>
+
+//       <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+//         <div className="flex items-center gap-2 mb-2">
+//           <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/50">
+//             <Crown className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+//           </div>
+//           <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Most Popular</span>
+//         </div>
+//         <div className="text-lg font-bold text-purple-600 dark:text-purple-400 truncate">
+//           {stats.mostPopular?.name || 'N/A'}
+//         </div>
+//         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+//           {formatNumber(stats.mostPopular?.purchases || 0)} subscribers
 //         </div>
 //       </div>
 //     </div>
 //   );
 
+//   // ==========================================================================
+//   // RENDER FILTERS – FIXED: Uses correct plan type values
+//   // ==========================================================================
+//   const renderFilters = () => (
+//     <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+//       {/* Search Bar */}
+//       <div className="relative mb-4">
+//         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+//         <input
+//           type="text"
+//           placeholder="Search plans by name, category, or description..."
+//           value={searchQuery}
+//           onChange={(e) => onSearchChange(e.target.value)}
+//           className="w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800"
+//         />
+//         {searchQuery && (
+//           <button
+//             onClick={() => onSearchChange('')}
+//             className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+//           >
+//             <X className="w-5 h-5 text-gray-400" />
+//           </button>
+//         )}
+//       </div>
+
+//       {/* Quick Filters */}
+//       <div className="flex flex-wrap items-center gap-2">
+//         <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 mr-1">
+//           Quick Filters:
+//         </span>
+
+//         {/* All Plans – clears all filters */}
+//         <FilterButton
+//           label="All Plans"
+//           icon={Package}
+//           active={!searchQuery &&
+//             filters.accessType === 'all' &&
+//             filters.planType === 'all' &&
+//             filters.availability === 'all' &&
+//             filters.active === 'all' &&
+//             filters.hasTimeVariant === 'all'}
+//           onClick={handleClearAllFilters}
+//           color="indigo"
+//         />
+
+//         {/* Hotspot Only */}
+//         <FilterButton
+//           label="Hotspot Only"
+//           icon={Wifi}
+//           active={filters.accessType === 'hotspot'}
+//           onClick={() => handleQuickFilter('accessType', 'hotspot')}
+//           color="blue"
+//         />
+
+//         {/* PPPoE Only */}
+//         <FilterButton
+//           label="PPPoE Only"
+//           icon={Cable}
+//           active={filters.accessType === 'pppoe'}
+//           onClick={() => handleQuickFilter('accessType', 'pppoe')}
+//           color="green"
+//         />
+
+//         {/* Dual Access */}
+//         <FilterButton
+//           label="Dual Access"
+//           icon={() => (
+//             <div className="flex">
+//               <Wifi className="w-3.5 h-3.5 mr-0.5" />
+//               <Cable className="w-3.5 h-3.5" />
+//             </div>
+//           )}
+//           active={filters.accessType === 'both'}
+//           onClick={() => handleQuickFilter('accessType', 'both')}
+//           color="purple"
+//         />
+
+//         {/* Available */}
+//         <FilterButton
+//           label="Available"
+//           icon={CheckCircle}
+//           active={filters.availability === 'available'}
+//           onClick={() => handleQuickFilter('availability', 'available')}
+//           color="green"
+//         />
+
+//         {/* Unavailable */}
+//         <FilterButton
+//           label="Unavailable"
+//           icon={XCircle}
+//           active={filters.availability === 'unavailable'}
+//           onClick={() => handleQuickFilter('availability', 'unavailable')}
+//           color="red"
+//         />
+
+//         {/* Free Trials – FIXED: Uses correct value "Free_trial" */}
+//         <FilterButton
+//           label="Free Trials"
+//           icon={Clock}
+//           active={filters.planType === 'Free_trial'}
+//           onClick={() => handleQuickFilter('planType', 'Free_trial')}
+//           color="blue"
+//         />
+
+//         {/* Promotional – FIXED: Uses correct value "Promotional" */}
+//         <FilterButton
+//           label="Promotional"
+//           icon={Sparkles}
+//           active={filters.planType === 'Promotional'}
+//           onClick={() => handleQuickFilter('planType', 'Promotional')}
+//           color="purple"
+//         />
+
+//         {/* Paid – FIXED: Uses correct value "Paid" */}
+//         <FilterButton
+//           label="Paid"
+//           icon={DollarSign}
+//           active={filters.planType === 'Paid'}
+//           onClick={() => handleQuickFilter('planType', 'Paid')}
+//           color="green"
+//         />
+
+//         {/* Time Restricted */}
+//         <FilterButton
+//           label="Time Restricted"
+//           icon={Clock}
+//           active={filters.hasTimeVariant === 'yes'}
+//           onClick={() => handleQuickFilter('hasTimeVariant', 'yes')}
+//           color="amber"
+//         />
+
+//         {/* Active Only */}
+//         <FilterButton
+//           label="Active"
+//           icon={CheckCircle}
+//           active={filters.active === 'active'}
+//           onClick={() => handleQuickFilter('active', 'active')}
+//           color="green"
+//         />
+
+//         {/* Clear All Button – shown when any filter is active */}
+//         {(searchQuery ||
+//           filters.accessType !== 'all' ||
+//           filters.planType !== 'all' ||
+//           filters.availability !== 'all' ||
+//           filters.active !== 'all' ||
+//           filters.hasTimeVariant !== 'all') && (
+//           <button
+//             onClick={handleClearAllFilters}
+//             className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 flex items-center gap-1.5 ml-auto"
+//           >
+//             <X className="w-3.5 h-3.5" />
+//             Clear All
+//           </button>
+//         )}
+//       </div>
+
+//       {/* Filter Summary */}
+//       {(searchQuery ||
+//         filters.accessType !== 'all' ||
+//         filters.planType !== 'all' ||
+//         filters.availability !== 'all' ||
+//         filters.active !== 'all' ||
+//         filters.hasTimeVariant !== 'all') && (
+//         <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+//           <p className="text-xs text-gray-500 dark:text-gray-400">
+//             Showing {plans.length} of {allPlans.length} plans
+//           </p>
+//         </div>
+//       )}
+//     </div>
+//   );
+
+//   // ==========================================================================
+//   // MAIN RENDER
+//   // ==========================================================================
+//   if (isLoading) {
+//     return (
+//       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+//         <div className="max-w-7xl mx-auto px-4 py-8">
+//           <div className="flex flex-col items-center justify-center py-20">
+//             <div className="relative">
+//               <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+//               <div className="absolute inset-0 flex items-center justify-center">
+//                 <div className="w-4 h-4 bg-indigo-600 rounded-full animate-pulse" />
+//               </div>
+//             </div>
+//             <p className="mt-4 text-gray-600 dark:text-gray-400">Loading your plans...</p>
+//           </div>
+//         </div>
+//       </div>
+//     );
+//   }
+
 //   return (
-//     <div className={`min-h-screen p-3 sm:p-6 lg:p-8 transition-colors duration-300 ${themeClasses.bg.primary}`}>
-//       <main className="max-w-7xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
-//         {/* Header Section */}
-//         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 sm:gap-4">
-//           <div className="flex-1 min-w-0">
-//             <h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500">
-//               Internet Plans Management
+//     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+//       <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+//         {/* Header */}
+//         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+//           <div>
+//             <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+//               Internet Plans
 //             </h1>
-//             <p className={`mt-1 text-sm sm:text-base ${themeClasses.text.secondary}`}>
-//               Create and manage your internet service plans
+//             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+//               Create, manage, and analyze your internet service plans
 //             </p>
 //           </div>
-          
-//           {/* Action Buttons */}
-//           <div className="flex flex-wrap gap-2 sm:gap-3 w-full md:w-auto justify-start md:justify-end">
-//             <motion.button
+
+//           <div className="flex items-center gap-3">
+//             <button
 //               onClick={onViewAnalytics}
-//               className={`px-3 py-2 rounded-lg shadow-md flex items-center justify-center text-xs sm:text-sm ${themeClasses.button.primary}`}
-//               whileHover={{ scale: 1.05 }}
-//               whileTap={{ scale: 0.95 }}
+//               className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-indigo-600 text-white hover:from-indigo-600 hover:to-indigo-700 flex items-center gap-2 text-sm"
 //             >
-//               <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-//               <span>Analytics</span>
-//             </motion.button>
-            
-//             <motion.button
+//               <BarChart3 className="w-4 h-4" />
+//               Analytics
+//             </button>
+
+//             <button
 //               onClick={onViewTemplates}
-//               className={`px-3 py-2 rounded-lg shadow-md flex items-center justify-center text-xs sm:text-sm ${themeClasses.button.primary}`}
-//               whileHover={{ scale: 1.05 }}
-//               whileTap={{ scale: 0.95 }}
+//               className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 flex items-center gap-2 text-sm"
 //             >
-//               <Box className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-//               <span>Templates</span>
-//             </motion.button>
-            
-//             <motion.button
+//               <Box className="w-4 h-4" />
+//               Templates
+//             </button>
+
+//             <button
 //               onClick={onNewPlan}
-//               className={`px-4 py-2 rounded-lg shadow-md flex items-center justify-center text-sm ${themeClasses.button.success}`}
-//               whileHover={{ scale: 1.05 }}
-//               whileTap={{ scale: 0.95 }}
+//               className="px-4 py-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 flex items-center gap-2 text-sm"
 //             >
-//               <Plus className="w-4 h-4 mr-2" />
-//               <span>Create New Plan</span>
-//             </motion.button>
+//               <Plus className="w-4 h-4" />
+//               New Plan
+//             </button>
 //           </div>
 //         </div>
 
-//         {/* Filters Section */}
-//         <FilterSection />
+//         {/* Filters */}
+//         {renderFilters()}
 
-//         {/* Loading State */}
-//         {isLoading ? (
-//           <div className={`flex justify-center items-center py-12 rounded-xl ${themeClasses.bg.card}`}>
-//             <FaSpinner className="w-8 h-8 text-indigo-600 animate-spin" />
-//           </div>
-//         ) : filteredPlans.length === 0 ? (
-//           <div className={`rounded-xl shadow-lg p-6 text-center ${themeClasses.bg.card}`}>
-//             <Package className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-//             <h3 className="text-lg font-semibold mb-2">No Plans Found</h3>
-//             <p className={`mb-4 ${themeClasses.text.secondary}`}>
-//               {searchQuery || Object.values(activeFilters).some(v => v !== null && v !== '') 
-//                 ? "Try adjusting your search or filters" 
-//                 : "Create your first internet plan to get started!"
-//               }
-//             </p>
-//             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-//               <motion.button
-//                 onClick={onNewPlan}
-//                 className={`px-4 py-2 rounded-lg shadow-md ${themeClasses.button.primary}`}
-//                 whileHover={{ scale: 1.05 }}
-//                 whileTap={{ scale: 0.95 }}
-//               >
-//                 <Plus className="w-4 h-4 mr-1" />
-//                 Create Your First Plan
-//               </motion.button>
-//               {(searchQuery || Object.values(activeFilters).some(v => v !== null && v !== '')) && (
-//                 <motion.button
-//                   onClick={onClearFilters}
-//                   className={`px-4 py-2 rounded-lg shadow-md ${themeClasses.button.secondary}`}
-//                   whileHover={{ scale: 1.05 }}
-//                   whileTap={{ scale: 0.95 }}
+//         {/* Statistics – only shown when plans exist */}
+//         {plans.length > 0 && renderStats()}
+
+//         {/* Plans Table */}
+//         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+//           {plans.length === 0 ? (
+//             <div className="py-20 px-4 text-center">
+//               <div className="p-4 rounded-full bg-gray-100 dark:bg-gray-700 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+//                 <Package className="w-10 h-10 text-gray-400" />
+//               </div>
+//               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+//                 No plans found
+//               </h3>
+//               <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
+//                 {searchQuery || Object.values(filters).some(v => v !== 'all' && v !== null)
+//                   ? "Try adjusting your filters or search query"
+//                   : "Get started by creating your first internet plan"
+//                 }
+//               </p>
+//               {!searchQuery && Object.values(filters).every(v => v === 'all' || v === null) && (
+//                 <button
+//                   onClick={onNewPlan}
+//                   className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 inline-flex items-center gap-2"
 //                 >
-//                   Clear All Filters
-//                 </motion.button>
+//                   <Plus className="w-4 h-4" />
+//                   Create Your First Plan
+//                 </button>
 //               )}
 //             </div>
-//           </div>
-//         ) : (
-//           <div className="space-y-4 sm:space-y-6">
-//             {/* Hotspot Plans Section */}
-//             {renderPlanSection("hotspot", hotspotPlans, "Hotspot", Wifi, "blue")}
-            
-//             {/* PPPoE Plans Section */}
-//             {renderPlanSection("pppoe", pppoePlans, "PPPoE", Cable, "green")}
-            
-//             {/* Dual Access Plans Section */}
-//             {renderPlanSection("dual", dualPlans, "Dual Access", (props) => (
-//               <div className="flex">
-//                 <Wifi className="w-3 h-3" {...props} />
-//                 <Cable className="w-3 h-3" {...props} />
-//               </div>
-//             ), "purple")}
+//           ) : (
+//             <>
+//               {/* Bulk Actions Bar */}
+//               {selectedPlans.length > 0 && (
+//                 <div className="px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-800 flex items-center justify-between">
+//                   <div className="flex items-center gap-2">
+//                     <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
+//                       {selectedPlans.length} {selectedPlans.length === 1 ? 'plan' : 'plans'} selected
+//                     </span>
+//                     <button
+//                       onClick={() => setSelectedPlans([])}
+//                       className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800"
+//                     >
+//                       Clear selection
+//                     </button>
+//                   </div>
+//                   <div className="flex items-center gap-2">
+//                     <button
+//                       onClick={() => handleBulkAction('activate')}
+//                       className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs hover:bg-green-700"
+//                     >
+//                       Activate
+//                     </button>
+//                     <button
+//                       onClick={() => handleBulkAction('deactivate')}
+//                       className="px-3 py-1.5 rounded-lg bg-amber-600 text-white text-xs hover:bg-amber-700"
+//                     >
+//                       Deactivate
+//                     </button>
+//                     <button
+//                       onClick={() => handleBulkAction('duplicate')}
+//                       className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs hover:bg-blue-700"
+//                     >
+//                       Duplicate
+//                     </button>
+//                     <button
+//                       onClick={() => handleBulkAction('delete')}
+//                       className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs hover:bg-red-700"
+//                     >
+//                       Delete
+//                     </button>
+//                   </div>
+//                 </div>
+//               )}
 
-//             {/* Summary Stats */}
-//             <div className={`p-4 sm:p-6 rounded-xl ${themeClasses.bg.card}`}>
-//               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-//                 <div className="text-center">
-//                   <div className="text-xl sm:text-2xl font-bold text-blue-600">{filteredPlans.length}</div>
-//                   <div className="text-xs sm:text-sm text-gray-500">Total Plans</div>
+//               {/* Table */}
+//               <div className="overflow-x-auto">
+//                 <table className="w-full min-w-[1000px]">
+//                   <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+//                     <tr>
+//                       <th className="px-4 py-3 w-10">
+//                         <input
+//                           type="checkbox"
+//                           checked={selectedPlans.length === plans.length && plans.length > 0}
+//                           onChange={toggleAllPlans}
+//                           className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
+//                         />
+//                       </th>
+//                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+//                         Plan Details
+//                       </th>
+//                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+//                         Price
+//                       </th>
+//                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+//                         Access Type
+//                       </th>
+//                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+//                         Subscribers
+//                       </th>
+//                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+//                         Status
+//                       </th>
+//                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+//                         Actions
+//                       </th>
+//                     </tr>
+//                   </thead>
+//                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+//                     {plans.map(plan => (
+//                       <PlanTableRow
+//                         key={plan.id}
+//                         plan={plan}
+//                         theme={theme}
+//                         onViewDetails={onViewDetails}
+//                         onEditPlan={onEditPlan}
+//                         onDeletePlan={onDeletePlan}
+//                         onDuplicatePlan={onDuplicatePlan}
+//                         onToggleStatus={onToggleStatus}
+//                         isSelected={selectedPlans.includes(plan.id)}
+//                         onSelect={togglePlanSelection}
+//                       />
+//                     ))}
+//                   </tbody>
+//                 </table>
+//               </div>
+
+//               {/* Footer */}
+//               <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+//                 <div className="flex items-center gap-2">
+//                   <Activity className="w-3.5 h-3.5" />
+//                   <span>
+//                     Showing <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+//                       {plans.length}
+//                     </span> of <span className="font-semibold">{allPlans.length}</span> plans
+//                   </span>
 //                 </div>
-//                 <div className="text-center">
-//                   <div className="text-xl sm:text-2xl font-bold text-green-600">
-//                     {filteredPlans.filter(p => p.active).length}
-//                   </div>
-//                   <div className="text-xs sm:text-sm text-gray-500">Active</div>
-//                 </div>
-//                 <div className="text-center">
-//                   <div className="text-xl sm:text-2xl font-bold text-purple-600">
-//                     {filteredPlans.filter(p => p.time_variant?.is_active).length}
-//                   </div>
-//                   <div className="text-xs sm:text-sm text-gray-500">Time Restricted</div>
-//                 </div>
-//                 <div className="text-center">
-//                   <div className="text-xl sm:text-2xl font-bold text-orange-600">
-//                     {filteredPlans.reduce((sum, p) => sum + (p.purchases || 0), 0)}
-//                   </div>
-//                   <div className="text-xs sm:text-sm text-gray-500">Total Purchases</div>
+//                 <div className="flex items-center gap-2">
+//                   <Sparkles className="w-3.5 h-3.5" />
+//                   <span>Sorted by {sortConfig.field} ({sortConfig.direction})</span>
 //                 </div>
 //               </div>
-//             </div>
-//           </div>
-//         )}
-//       </main>
+//             </>
+//           )}
+//         </div>
+//       </div>
 //     </div>
 //   );
 // };
@@ -1233,1579 +1125,4412 @@
 
 
 
-import React, { useState, useMemo } from "react";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // ============================================================================
+// // PlanList.js - COMPLETELY REWRITTEN
+// // ============================================================================
+
+// import React, { useState, useMemo, useCallback, useEffect } from "react";
+// import { motion, AnimatePresence } from "framer-motion";
+// import {
+//   Plus, Pencil, Trash2, Eye, Users, Search,
+//   Wifi, Cable, BarChart3, Package, Box, Filter,
+//   ChevronDown, ChevronUp, Clock, DollarSign, Calendar,
+//   CheckCircle, XCircle, AlertTriangle, Settings,
+//   Star, Target, TrendingUp, Zap, Shield, Download,
+//   TrendingDown, Activity, Award, Flame, Crown, Sparkles,
+//   Heart, ThumbsUp, Gauge, Server, RefreshCw, X,
+//   Menu, Grid, LayoutGrid, List, Info, Tag, Layers,
+//   ChevronLeft, ChevronRight, Maximize2, Minimize2, CreditCard,
+//   Gift, BadgePercent, Infinity, AlertCircle, Check
+// } from "lucide-react";
+// import { getThemeClasses } from "../Shared/components";
+// import { formatCurrency, formatNumber, formatDate } from "../Shared/formatters";
+
+// // ============================================================================
+// // CONSTANTS - Match backend exactly
+// // ============================================================================
+// const PLAN_TYPE_LABELS = {
+//   paid: "Paid",
+//   free_trial: "Free Trial",
+//   promotional: "Promotional"
+// };
+
+// const ACCESS_TYPE_ICONS = {
+//   hotspot: Wifi,
+//   pppoe: Cable,
+//   both: () => (
+//     <div className="flex items-center">
+//       <Wifi className="w-3 h-3 mr-0.5" />
+//       <Cable className="w-3 h-3" />
+//     </div>
+//   )
+// };
+
+// const ACCESS_TYPE_COLORS = {
+//   hotspot: {
+//     light: { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-200" },
+//     dark: { bg: "bg-blue-900/30", text: "text-blue-400", border: "border-blue-800" }
+//   },
+//   pppoe: {
+//     light: { bg: "bg-green-100", text: "text-green-700", border: "border-green-200" },
+//     dark: { bg: "bg-green-900/30", text: "text-green-400", border: "border-green-800" }
+//   },
+//   both: {
+//     light: { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-200" },
+//     dark: { bg: "bg-purple-900/30", text: "text-purple-400", border: "border-purple-800" }
+//   }
+// };
+
+// // ============================================================================
+// // PLAN TYPE BADGE COMPONENT
+// // ============================================================================
+// const PlanTypeBadge = ({ type, theme, size = 'sm' }) => {
+//   const config = {
+//     paid: {
+//       label: 'Paid',
+//       bg: 'bg-green-100 dark:bg-green-900/30',
+//       text: 'text-green-700 dark:text-green-400',
+//       border: 'border-green-200 dark:border-green-800',
+//       icon: DollarSign
+//     },
+//     free_trial: {
+//       label: 'Free Trial',
+//       bg: 'bg-blue-100 dark:bg-blue-900/30',
+//       text: 'text-blue-700 dark:text-blue-400',
+//       border: 'border-blue-200 dark:border-blue-800',
+//       icon: Clock
+//     },
+//     promotional: {
+//       label: 'Promotional',
+//       bg: 'bg-purple-100 dark:bg-purple-900/30',
+//       text: 'text-purple-700 dark:text-purple-400',
+//       border: 'border-purple-200 dark:border-purple-800',
+//       icon: Sparkles
+//     }
+//   };
+
+//   const { label, bg, text, border, icon: Icon } = config[type] || config.paid;
+
+//   const sizeClasses = {
+//     xs: 'px-1.5 py-0.5 text-[10px]',
+//     sm: 'px-2 py-1 text-xs',
+//     md: 'px-2.5 py-1.5 text-sm'
+//   };
+
+//   return (
+//     <span className={`
+//       inline-flex items-center gap-1 rounded-full border font-medium
+//       ${bg} ${text} ${border}
+//       ${sizeClasses[size]}
+//     `}>
+//       <Icon className={size === 'xs' ? 'w-2.5 h-2.5' : 'w-3 h-3'} />
+//       {label}
+//     </span>
+//   );
+// };
+
+// // ============================================================================
+// // ACCESS TYPE BADGE COMPONENT
+// // ============================================================================
+// const AccessTypeBadge = ({ accessMethods = {}, size = 'sm', showLabel = true }) => {
+//   const hotspot = accessMethods?.hotspot || { enabled: false };
+//   const pppoe = accessMethods?.pppoe || { enabled: false };
+  
+//   const hasHotspot = hotspot.enabled === true;
+//   const hasPPPoE = pppoe.enabled === true;
+
+//   let type = 'none';
+//   if (hasHotspot && hasPPPoE) type = 'both';
+//   else if (hasHotspot) type = 'hotspot';
+//   else if (hasPPPoE) type = 'pppoe';
+
+//   const colors = ACCESS_TYPE_COLORS[type] || ACCESS_TYPE_COLORS.hotspot;
+//   const Icon = ACCESS_TYPE_ICONS[type] || Wifi;
+
+//   const sizeClasses = {
+//     xs: "px-1.5 py-0.5 text-xs",
+//     sm: "px-2 py-1 text-xs",
+//     md: "px-2.5 py-1.5 text-sm"
+//   };
+
+//   const labels = {
+//     hotspot: "Hotspot",
+//     pppoe: "PPPoE",
+//     both: "Dual Access",
+//     none: "No Access"
+//   };
+
+//   return (
+//     <span className={`
+//       inline-flex items-center gap-1.5 rounded-full font-medium border
+//       ${colors.light.bg} ${colors.light.text} ${colors.light.border}
+//       dark:${colors.dark.bg} dark:${colors.dark.text} dark:${colors.dark.border}
+//       ${sizeClasses[size]}
+//     `}>
+//       <Icon className={size === 'xs' ? 'w-3 h-3' : 'w-3.5 h-3.5'} />
+//       {showLabel && labels[type]}
+//     </span>
+//   );
+// };
+
+// // ============================================================================
+// // AVAILABILITY BADGE COMPONENT
+// // ============================================================================
+// const AvailabilityBadge = ({ isAvailable, theme, size = 'sm' }) => {
+//   const sizeClasses = {
+//     xs: 'px-1.5 py-0.5 text-[10px]',
+//     sm: 'px-2 py-1 text-xs',
+//     md: 'px-2.5 py-1.5 text-sm'
+//   };
+
+//   return (
+//     <span className={`
+//       inline-flex items-center gap-1 rounded-full font-medium border
+//       ${isAvailable
+//         ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400 border-green-200 dark:border-green-800'
+//         : 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400 border-red-200 dark:border-red-800'
+//       }
+//       ${sizeClasses[size]}
+//     `}>
+//       {isAvailable ? (
+//         <CheckCircle className={size === 'xs' ? 'w-2.5 h-2.5' : 'w-3 h-3'} />
+//       ) : (
+//         <XCircle className={size === 'xs' ? 'w-2.5 h-2.5' : 'w-3 h-3'} />
+//       )}
+//       {isAvailable ? 'Available' : 'Unavailable'}
+//     </span>
+//   );
+// };
+
+// // ============================================================================
+// // STAR RATING COMPONENT
+// // ============================================================================
+// const StarRating = ({ rating, size = 'sm' }) => {
+//   const fullStars = Math.floor(rating);
+//   const hasHalfStar = rating % 1 >= 0.5;
+//   const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+//   const sizeClasses = {
+//     xs: "w-3 h-3",
+//     sm: "w-4 h-4",
+//     md: "w-5 h-5"
+//   };
+
+//   return (
+//     <div className="flex items-center gap-1">
+//       <div className="flex items-center">
+//         {[...Array(fullStars)].map((_, i) => (
+//           <Star
+//             key={`full-${i}`}
+//             className={`${sizeClasses[size]} fill-current text-amber-400`}
+//           />
+//         ))}
+//         {hasHalfStar && (
+//           <div className="relative">
+//             <Star className={`${sizeClasses[size]} text-gray-300 dark:text-gray-600`} />
+//             <div className="absolute inset-0 overflow-hidden w-1/2">
+//               <Star className={`${sizeClasses[size]} fill-current text-amber-400`} />
+//             </div>
+//           </div>
+//         )}
+//         {[...Array(emptyStars)].map((_, i) => (
+//           <Star
+//             key={`empty-${i}`}
+//             className={`${sizeClasses[size]} text-gray-300 dark:text-gray-600`}
+//           />
+//         ))}
+//       </div>
+//       <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+//         {rating.toFixed(1)}
+//       </span>
+//     </div>
+//   );
+// };
+
+// // ============================================================================
+// // PRICE DISPLAY HELPER
+// // ============================================================================
+// const getPriceDisplay = (plan) => {
+//   const price = parseFloat(plan.price) || 0;
+  
+//   switch (plan.plan_type) {
+//     case 'free_trial':
+//       return {
+//         main: 'Free Trial',
+//         value: '0.00',
+//         badge: null,
+//         className: 'text-blue-600 dark:text-blue-400 font-medium'
+//       };
+    
+//     case 'promotional':
+//       if (price === 0) {
+//         return {
+//           main: 'Free',
+//           value: '0.00',
+//           badge: 'Promo',
+//           className: 'text-purple-600 dark:text-purple-400'
+//         };
+//       }
+//       return {
+//         main: `KES ${price.toFixed(2)}`,
+//         value: price.toFixed(2),
+//         badge: 'Promo',
+//         className: 'text-purple-600 dark:text-purple-400 font-bold'
+//       };
+    
+//     case 'paid':
+//     default:
+//       if (price === 0) {
+//         return {
+//           main: 'Free',
+//           value: '0.00',
+//           badge: null,
+//           className: 'text-gray-600 dark:text-gray-400'
+//         };
+//       }
+//       return {
+//         main: `KES ${price.toFixed(2)}`,
+//         value: price.toFixed(2),
+//         badge: null,
+//         className: 'text-gray-900 dark:text-white font-bold'
+//       };
+//   }
+// };
+
+// // ============================================================================
+// // CALCULATE RATING FROM PURCHASES
+// // ============================================================================
+// const calculateRating = (purchases) => {
+//   if (purchases >= 1000) return 4.9;
+//   if (purchases >= 500) return 4.7;
+//   if (purchases >= 250) return 4.5;
+//   if (purchases >= 100) return 4.2;
+//   if (purchases >= 50) return 4.0;
+//   if (purchases >= 25) return 3.8;
+//   if (purchases >= 10) return 3.5;
+//   if (purchases >= 5) return 3.2;
+//   if (purchases >= 1) return 3.0;
+//   return 0;
+// };
+
+// // ============================================================================
+// // FILTER BUTTON COMPONENT
+// // ============================================================================
+// const FilterButton = ({ label, icon: Icon, active, onClick, color = 'indigo' }) => {
+//   const colorClasses = {
+//     indigo: {
+//       active: 'bg-indigo-600 text-white border-indigo-600',
+//       inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-indigo-400'
+//     },
+//     blue: {
+//       active: 'bg-blue-600 text-white border-blue-600',
+//       inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-blue-400'
+//     },
+//     green: {
+//       active: 'bg-green-600 text-white border-green-600',
+//       inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-green-400'
+//     },
+//     purple: {
+//       active: 'bg-purple-600 text-white border-purple-600',
+//       inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-purple-400'
+//     },
+//     amber: {
+//       active: 'bg-amber-600 text-white border-amber-600',
+//       inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-amber-400'
+//     },
+//     red: {
+//       active: 'bg-red-600 text-white border-red-600',
+//       inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-red-400'
+//     }
+//   };
+
+//   return (
+//     <button
+//       onClick={onClick}
+//       className={`
+//         px-3 py-1.5 rounded-lg text-xs font-medium transition-all
+//         flex items-center gap-1.5 border-2
+//         ${active ? colorClasses[color].active : colorClasses[color].inactive}
+//       `}
+//     >
+//       {Icon && <Icon className="w-3.5 h-3.5" />}
+//       {label}
+//     </button>
+//   );
+// };
+
+// // ============================================================================
+// // PLAN TABLE ROW COMPONENT
+// // ============================================================================
+// const PlanTableRow = ({
+//   plan,
+//   theme,
+//   onViewDetails,
+//   onEditPlan,
+//   onDeletePlan,
+//   onDuplicatePlan,
+//   onToggleStatus,
+//   isSelected,
+//   onSelect
+// }) => {
+//   const themeClasses = getThemeClasses(theme);
+//   const rating = calculateRating(plan.purchases);
+//   const priceDisplay = getPriceDisplay(plan);
+  
+//   const accessMethods = plan.access_methods || { 
+//     hotspot: { enabled: false }, 
+//     pppoe: { enabled: false } 
+//   };
+
+//   return (
+//     <tr className={`
+//       group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors
+//       ${isSelected ? 'bg-indigo-50/50 dark:bg-indigo-900/20' : ''}
+//     `}>
+//       {/* Checkbox */}
+//       <td className="px-4 py-4 whitespace-nowrap">
+//         <input
+//           type="checkbox"
+//           checked={isSelected}
+//           onChange={() => onSelect(plan.id)}
+//           className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
+//         />
+//       </td>
+
+//       {/* Plan Info */}
+//       <td className="px-4 py-4">
+//         <div className="flex items-start gap-3">
+//           <div className={`
+//             p-2 rounded-lg flex-shrink-0
+//             ${accessMethods?.hotspot?.enabled && accessMethods?.pppoe?.enabled
+//               ? 'bg-purple-100 dark:bg-purple-900/30'
+//               : accessMethods?.hotspot?.enabled
+//                 ? 'bg-blue-100 dark:bg-blue-900/30'
+//                 : accessMethods?.pppoe?.enabled
+//                   ? 'bg-green-100 dark:bg-green-900/30'
+//                   : 'bg-gray-100 dark:bg-gray-800'
+//             }
+//           `}>
+//             {accessMethods?.hotspot?.enabled && accessMethods?.pppoe?.enabled ? (
+//               <div className="flex items-center gap-0.5">
+//                 <Wifi className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+//                 <Cable className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+//               </div>
+//             ) : accessMethods?.hotspot?.enabled ? (
+//               <Wifi className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+//             ) : accessMethods?.pppoe?.enabled ? (
+//               <Cable className="w-4 h-4 text-green-600 dark:text-green-400" />
+//             ) : (
+//               <AlertTriangle className="w-4 h-4 text-gray-400" />
+//             )}
+//           </div>
+//           <div>
+//             <div className="flex items-center gap-2">
+//               <span className="font-semibold text-gray-900 dark:text-white">
+//                 {plan.name}
+//               </span>
+//               <PlanTypeBadge type={plan.plan_type} theme={theme} size="xs" />
+//             </div>
+//             <div className="flex items-center gap-2 mt-1">
+//               <span className="text-xs text-gray-500 dark:text-gray-400">
+//                 {plan.category || 'Uncategorized'}
+//               </span>
+//               <span className="text-gray-300 dark:text-gray-600">•</span>
+//               <span className="text-xs text-gray-500 dark:text-gray-400">
+//                 ID: {plan.id?.slice(0, 8)}...
+//               </span>
+//             </div>
+//           </div>
+//         </div>
+//       </td>
+
+//       {/* Price */}
+//       <td className="px-4 py-4 whitespace-nowrap">
+//         <div className={priceDisplay.className}>
+//           {priceDisplay.main}
+//         </div>
+//         {priceDisplay.badge && (
+//           <div className="text-xs mt-1 text-purple-600 dark:text-purple-400 flex items-center gap-1">
+//             <BadgePercent className="w-3 h-3" />
+//             {priceDisplay.badge}
+//           </div>
+//         )}
+//       </td>
+
+//       {/* Access Type */}
+//       <td className="px-4 py-4 whitespace-nowrap">
+//         <AccessTypeBadge
+//           accessMethods={accessMethods}
+//           size="xs"
+//           showLabel={true}
+//         />
+//       </td>
+
+//       {/* Subscribers & Rating */}
+//       <td className="px-4 py-4 whitespace-nowrap">
+//         <div className="flex items-center gap-2 mb-1">
+//           <Users className="w-3.5 h-3.5 text-gray-500" />
+//           <span className="text-sm font-medium text-gray-900 dark:text-white">
+//             {formatNumber(plan.purchases || 0)}
+//           </span>
+//         </div>
+//         <StarRating rating={rating} size="xs" />
+//       </td>
+
+//       {/* Status */}
+//       <td className="px-4 py-4 whitespace-nowrap">
+//         <div className="space-y-1">
+//           <AvailabilityBadge
+//             isAvailable={plan.is_available_now || false}
+//             theme={theme}
+//             size="xs"
+//           />
+//           <span className={`
+//             inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+//             ${plan.active
+//               ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400'
+//               : 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400'
+//             }
+//           `}>
+//             {plan.active ? 'Active' : 'Inactive'}
+//           </span>
+//           {plan.has_time_variant && (
+//             <span className="flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400">
+//               <Clock className="w-3 h-3" />
+//               Time Restricted
+//             </span>
+//           )}
+//         </div>
+//       </td>
+
+//       {/* Actions */}
+//       <td className="px-4 py-4 whitespace-nowrap">
+//         <div className="flex items-center gap-1">
+//           <button
+//             onClick={() => onViewDetails(plan)}
+//             className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+//             title="View Details"
+//           >
+//             <Eye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+//           </button>
+//           <button
+//             onClick={() => onEditPlan(plan)}
+//             className="p-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+//             title="Edit Plan"
+//           >
+//             <Pencil className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+//           </button>
+//           <button
+//             onClick={() => onDuplicatePlan(plan)}
+//             className="p-1.5 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+//             title="Duplicate Plan"
+//           >
+//             <Plus className="w-4 h-4 text-green-600 dark:text-green-400" />
+//           </button>
+//           <button
+//             onClick={() => onToggleStatus(plan)}
+//             className={`
+//               p-1.5 rounded-lg transition-colors
+//               ${plan.active
+//                 ? 'hover:bg-amber-100 dark:hover:bg-amber-900/30'
+//                 : 'hover:bg-green-100 dark:hover:bg-green-900/30'
+//               }
+//             `}
+//             title={plan.active ? "Deactivate" : "Activate"}
+//           >
+//             {plan.active ? (
+//               <XCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+//             ) : (
+//               <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+//             )}
+//           </button>
+//           <button
+//             onClick={() => onDeletePlan(plan)}
+//             className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+//             title="Delete Plan"
+//           >
+//             <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+//           </button>
+//         </div>
+//       </td>
+//     </tr>
+//   );
+// };
+
+// // ============================================================================
+// // MAIN PLANLIST COMPONENT
+// // ============================================================================
+// const PlanList = ({
+//   plans = [],
+//   allPlans = [],
+//   isLoading = false,
+//   onEditPlan,
+//   onViewDetails,
+//   onDeletePlan,
+//   onDuplicatePlan,
+//   onToggleStatus,
+//   onNewPlan,
+//   onViewAnalytics,
+//   onViewTemplates,
+//   theme = 'light',
+//   isMobile = false,
+//   searchQuery = '',
+//   onSearchChange,
+//   filters = {
+//     category: 'all',
+//     planType: 'all',
+//     accessType: 'all',
+//     availability: 'all',
+//     active: 'all',
+//     hasTimeVariant: 'all',
+//     routerSpecific: 'all',
+//     priceRange: null
+//   },
+//   onFilterChange,
+//   onClearFilters,
+//   sortConfig = { field: 'name', direction: 'asc' },
+//   onSort
+// }) => {
+//   const themeClasses = getThemeClasses(theme);
+//   const [selectedPlans, setSelectedPlans] = useState([]);
+//   const [showBulkActions, setShowBulkActions] = useState(false);
+//   const [showMobileFilters, setShowMobileFilters] = useState(false);
+//   const [viewMode, setViewMode] = useState('table'); // 'table' or 'grid'
+
+//   // ==========================================================================
+//   // STATISTICS
+//   // ==========================================================================
+//   const stats = useMemo(() => {
+//     const active = plans.filter(p => p.active).length;
+//     const inactive = plans.filter(p => !p.active).length;
+//     const available = plans.filter(p => p.is_available_now).length;
+//     const totalSubscribers = plans.reduce((sum, p) => sum + (p.purchases || 0), 0);
+//     const totalRevenue = plans.reduce((sum, p) => sum + ((p.purchases || 0) * (parseFloat(p.price) || 0)), 0);
+
+//     const mostPopular = [...plans].sort((a, b) => (b.purchases || 0) - (a.purchases || 0))[0];
+//     const mostExpensive = [...plans].sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0))[0];
+
+//     const byPlanType = plans.reduce((acc, p) => {
+//       const type = p.plan_type || 'paid';
+//       acc[type] = (acc[type] || 0) + 1;
+//       return acc;
+//     }, {});
+
+//     const byAccessType = plans.reduce((acc, p) => {
+//       const hotspot = p.access_methods?.hotspot?.enabled;
+//       const pppoe = p.access_methods?.pppoe?.enabled;
+//       let type = 'none';
+//       if (hotspot && pppoe) type = 'both';
+//       else if (hotspot) type = 'hotspot';
+//       else if (pppoe) type = 'pppoe';
+      
+//       acc[type] = (acc[type] || 0) + 1;
+//       return acc;
+//     }, {});
+
+//     return {
+//       total: plans.length,
+//       active,
+//       inactive,
+//       available,
+//       totalSubscribers,
+//       totalRevenue,
+//       mostPopular,
+//       mostExpensive,
+//       byPlanType,
+//       byAccessType
+//     };
+//   }, [plans]);
+
+//   // ==========================================================================
+//   // FILTER HANDLERS
+//   // ==========================================================================
+//   const handleQuickFilter = useCallback((type, value) => {
+//     const newValue = filters[type] === value ? 'all' : value;
+//     onFilterChange(type, newValue);
+//   }, [filters, onFilterChange]);
+
+//   const handleClearAllFilters = useCallback(() => {
+//     onSearchChange('');
+//     onClearFilters();
+//   }, [onSearchChange, onClearFilters]);
+
+//   // ==========================================================================
+//   // BULK ACTIONS
+//   // ==========================================================================
+//   const togglePlanSelection = useCallback((id) => {
+//     setSelectedPlans(prev =>
+//       prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+//     );
+//   }, []);
+
+//   const toggleAllPlans = useCallback(() => {
+//     setSelectedPlans(prev =>
+//       prev.length === plans.length ? [] : plans.map(p => p.id)
+//     );
+//   }, [plans]);
+
+//   const handleBulkAction = useCallback(async (action) => {
+//     setShowBulkActions(false);
+
+//     if (action === 'delete') {
+//       if (!window.confirm(`Delete ${selectedPlans.length} selected plans? This cannot be undone.`)) {
+//         return;
+//       }
+//     }
+
+//     const batchSize = 5;
+//     for (let i = 0; i < selectedPlans.length; i += batchSize) {
+//       const batch = selectedPlans.slice(i, i + batchSize);
+//       await Promise.allSettled(
+//         batch.map(async (id) => {
+//           const plan = plans.find(p => p.id === id);
+//           if (!plan) return;
+
+//           switch (action) {
+//             case 'activate':
+//               if (!plan.active) await onToggleStatus(plan);
+//               break;
+//             case 'deactivate':
+//               if (plan.active) await onToggleStatus(plan);
+//               break;
+//             case 'duplicate':
+//               await onDuplicatePlan(plan);
+//               break;
+//             case 'delete':
+//               await onDeletePlan(plan);
+//               break;
+//             default:
+//               break;
+//           }
+//         })
+//       );
+//     }
+
+//     setSelectedPlans([]);
+//   }, [selectedPlans, plans, onToggleStatus, onDuplicatePlan, onDeletePlan]);
+
+//   // ==========================================================================
+//   // GRID VIEW RENDERER
+//   // ==========================================================================
+//   const renderGridView = useCallback(() => {
+//     return (
+//       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+//         {plans.map(plan => {
+//           const priceDisplay = getPriceDisplay(plan);
+//           const accessMethods = plan.access_methods || {};
+//           const rating = calculateRating(plan.purchases);
+//           const isSelected = selectedPlans.includes(plan.id);
+
+//           return (
+//             <motion.div
+//               key={plan.id}
+//               initial={{ opacity: 0, scale: 0.95 }}
+//               animate={{ opacity: 1, scale: 1 }}
+//               exit={{ opacity: 0, scale: 0.95 }}
+//               className={`
+//                 rounded-xl border overflow-hidden cursor-pointer transition-all
+//                 ${isSelected
+//                   ? 'ring-2 ring-indigo-500 border-indigo-500'
+//                   : theme === 'dark'
+//                     ? 'bg-gray-800 border-gray-700 hover:border-gray-600'
+//                     : 'bg-white border-gray-200 hover:border-gray-300'
+//                 }
+//               `}
+//               onClick={() => togglePlanSelection(plan.id)}
+//             >
+//               <div className="p-4">
+//                 {/* Header */}
+//                 <div className="flex items-start justify-between mb-3">
+//                   <div className="flex items-center gap-2">
+//                     <input
+//                       type="checkbox"
+//                       checked={isSelected}
+//                       onChange={() => togglePlanSelection(plan.id)}
+//                       onClick={(e) => e.stopPropagation()}
+//                       className="w-4 h-4 rounded border-gray-300 text-indigo-600"
+//                     />
+//                     <PlanTypeBadge type={plan.plan_type} theme={theme} size="xs" />
+//                   </div>
+//                   <div className="flex items-center gap-1">
+//                     <AvailabilityBadge
+//                       isAvailable={plan.is_available_now || false}
+//                       theme={theme}
+//                       size="xs"
+//                     />
+//                   </div>
+//                 </div>
+
+//                 {/* Plan Info */}
+//                 <h3 className="font-semibold text-lg mb-1">{plan.name}</h3>
+//                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">
+//                   {plan.description || 'No description'}
+//                 </p>
+
+//                 {/* Price */}
+//                 <div className={`text-2xl font-bold mb-3 ${priceDisplay.className}`}>
+//                   {priceDisplay.main}
+//                 </div>
+
+//                 {/* Access Type */}
+//                 <div className="mb-3">
+//                   <AccessTypeBadge accessMethods={accessMethods} size="sm" />
+//                 </div>
+
+//                 {/* Stats */}
+//                 <div className="grid grid-cols-2 gap-2 mb-4">
+//                   <div className="text-center p-2 bg-gray-50 dark:bg-gray-700/50 rounded">
+//                     <Users className="w-4 h-4 mx-auto mb-1 text-gray-500" />
+//                     <div className="text-sm font-medium">
+//                       {formatNumber(plan.purchases || 0)}
+//                     </div>
+//                     <div className="text-xs text-gray-500">Subscribers</div>
+//                   </div>
+//                   <div className="text-center p-2 bg-gray-50 dark:bg-gray-700/50 rounded">
+//                     <Star className="w-4 h-4 mx-auto mb-1 text-amber-500" />
+//                     <div className="text-sm font-medium">
+//                       {rating.toFixed(1)}
+//                     </div>
+//                     <div className="text-xs text-gray-500">Rating</div>
+//                   </div>
+//                 </div>
+
+//                 {/* Actions */}
+//                 <div className="flex justify-end gap-1 pt-3 border-t border-gray-200 dark:border-gray-700">
+//                   <button
+//                     onClick={(e) => {
+//                       e.stopPropagation();
+//                       onViewDetails(plan);
+//                     }}
+//                     className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+//                   >
+//                     <Eye className="w-4 h-4" />
+//                   </button>
+//                   <button
+//                     onClick={(e) => {
+//                       e.stopPropagation();
+//                       onEditPlan(plan);
+//                     }}
+//                     className="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30"
+//                   >
+//                     <Pencil className="w-4 h-4 text-blue-600" />
+//                   </button>
+//                   <button
+//                     onClick={(e) => {
+//                       e.stopPropagation();
+//                       onDuplicatePlan(plan);
+//                     }}
+//                     className="p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30"
+//                   >
+//                     <Plus className="w-4 h-4 text-green-600" />
+//                   </button>
+//                   <button
+//                     onClick={(e) => {
+//                       e.stopPropagation();
+//                       onDeletePlan(plan);
+//                     }}
+//                     className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30"
+//                   >
+//                     <Trash2 className="w-4 h-4 text-red-600" />
+//                   </button>
+//                 </div>
+//               </div>
+//             </motion.div>
+//           );
+//         })}
+//       </div>
+//     );
+//   }, [plans, theme, selectedPlans, togglePlanSelection, onViewDetails, onEditPlan, onDuplicatePlan, onDeletePlan]);
+
+//   // ==========================================================================
+//   // TABLE VIEW RENDERER
+//   // ==========================================================================
+//   const renderTableView = useCallback(() => {
+//     return (
+//       <div className="overflow-x-auto">
+//         <table className="w-full min-w-[1000px]">
+//           <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+//             <tr>
+//               <th className="px-4 py-3 w-10">
+//                 <input
+//                   type="checkbox"
+//                   checked={selectedPlans.length === plans.length && plans.length > 0}
+//                   onChange={toggleAllPlans}
+//                   className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
+//                 />
+//               </th>
+//               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+//                 Plan Details
+//               </th>
+//               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+//                 Price
+//               </th>
+//               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+//                 Access Type
+//               </th>
+//               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+//                 Subscribers
+//               </th>
+//               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+//                 Status
+//               </th>
+//               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+//                 Actions
+//               </th>
+//             </tr>
+//           </thead>
+//           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+//             {plans.map(plan => (
+//               <PlanTableRow
+//                 key={plan.id}
+//                 plan={plan}
+//                 theme={theme}
+//                 onViewDetails={onViewDetails}
+//                 onEditPlan={onEditPlan}
+//                 onDeletePlan={onDeletePlan}
+//                 onDuplicatePlan={onDuplicatePlan}
+//                 onToggleStatus={onToggleStatus}
+//                 isSelected={selectedPlans.includes(plan.id)}
+//                 onSelect={togglePlanSelection}
+//               />
+//             ))}
+//           </tbody>
+//         </table>
+//       </div>
+//     );
+//   }, [plans, theme, selectedPlans, toggleAllPlans, togglePlanSelection, onViewDetails, onEditPlan, onDeletePlan, onDuplicatePlan, onToggleStatus]);
+
+//   // ==========================================================================
+//   // RENDER STATS CARDS
+//   // ==========================================================================
+//   const renderStats = () => (
+//     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+//       <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+//         <div className="flex items-center gap-2 mb-2">
+//           <div className="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-900/50">
+//             <Package className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+//           </div>
+//           <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Plans</span>
+//         </div>
+//         <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+//           {stats.total}
+//         </div>
+//         <div className="flex items-center gap-2 mt-1 text-xs">
+//           <span className="text-green-600 dark:text-green-400">{stats.active} active</span>
+//           <span className="text-gray-300 dark:text-gray-600">•</span>
+//           <span className="text-red-600 dark:text-red-400">{stats.inactive} inactive</span>
+//         </div>
+//       </div>
+
+//       <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+//         <div className="flex items-center gap-2 mb-2">
+//           <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/50">
+//             <Users className="w-4 h-4 text-green-600 dark:text-green-400" />
+//           </div>
+//           <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Subscribers</span>
+//         </div>
+//         <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+//           {formatNumber(stats.totalSubscribers)}
+//         </div>
+//         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+//           Revenue: KES {formatNumber(stats.totalRevenue.toFixed(2))}
+//         </div>
+//       </div>
+
+//       <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+//         <div className="flex items-center gap-2 mb-2">
+//           <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/50">
+//             <CheckCircle className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+//           </div>
+//           <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Available Now</span>
+//         </div>
+//         <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+//           {stats.available}
+//         </div>
+//         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+//           {stats.total > 0 ? ((stats.available / stats.total) * 100).toFixed(0) : 0}% of plans
+//         </div>
+//       </div>
+
+//       <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+//         <div className="flex items-center gap-2 mb-2">
+//           <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/50">
+//             <Crown className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+//           </div>
+//           <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Most Popular</span>
+//         </div>
+//         <div className="text-lg font-bold text-purple-600 dark:text-purple-400 truncate">
+//           {stats.mostPopular?.name || 'N/A'}
+//         </div>
+//         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+//           {formatNumber(stats.mostPopular?.purchases || 0)} subscribers
+//         </div>
+//       </div>
+//     </div>
+//   );
+
+//   // ==========================================================================
+//   // RENDER FILTERS
+//   // ==========================================================================
+//   const renderFilters = () => (
+//     <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+//       {/* Search Bar */}
+//       <div className="relative mb-4">
+//         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+//         <input
+//           type="text"
+//           placeholder="Search plans by name, category, or description..."
+//           value={searchQuery}
+//           onChange={(e) => onSearchChange(e.target.value)}
+//           className="w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800"
+//         />
+//         {searchQuery && (
+//           <button
+//             onClick={() => onSearchChange('')}
+//             className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+//           >
+//             <X className="w-5 h-5 text-gray-400" />
+//           </button>
+//         )}
+//       </div>
+
+//       {/* Quick Filters */}
+//       <div className="flex flex-wrap items-center gap-2">
+//         <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 mr-1">
+//           Quick Filters:
+//         </span>
+
+//         <FilterButton
+//           label="All Plans"
+//           icon={Package}
+//           active={!searchQuery &&
+//             filters.accessType === 'all' &&
+//             filters.planType === 'all' &&
+//             filters.availability === 'all' &&
+//             filters.active === 'all' &&
+//             filters.hasTimeVariant === 'all'}
+//           onClick={handleClearAllFilters}
+//           color="indigo"
+//         />
+
+//         <FilterButton
+//           label="Hotspot"
+//           icon={Wifi}
+//           active={filters.accessType === 'hotspot'}
+//           onClick={() => handleQuickFilter('accessType', 'hotspot')}
+//           color="blue"
+//         />
+
+//         <FilterButton
+//           label="PPPoE"
+//           icon={Cable}
+//           active={filters.accessType === 'pppoe'}
+//           onClick={() => handleQuickFilter('accessType', 'pppoe')}
+//           color="green"
+//         />
+
+//         <FilterButton
+//           label="Dual"
+//           icon={() => (
+//             <div className="flex">
+//               <Wifi className="w-3.5 h-3.5 mr-0.5" />
+//               <Cable className="w-3.5 h-3.5" />
+//             </div>
+//           )}
+//           active={filters.accessType === 'both'}
+//           onClick={() => handleQuickFilter('accessType', 'both')}
+//           color="purple"
+//         />
+
+//         <FilterButton
+//           label="Available"
+//           icon={CheckCircle}
+//           active={filters.availability === 'available'}
+//           onClick={() => handleQuickFilter('availability', 'available')}
+//           color="green"
+//         />
+
+//         <FilterButton
+//           label="Free Trial"
+//           icon={Clock}
+//           active={filters.planType === 'free_trial'}
+//           onClick={() => handleQuickFilter('planType', 'free_trial')}
+//           color="blue"
+//         />
+
+//         <FilterButton
+//           label="Promotional"
+//           icon={Sparkles}
+//           active={filters.planType === 'promotional'}
+//           onClick={() => handleQuickFilter('planType', 'promotional')}
+//           color="purple"
+//         />
+
+//         <FilterButton
+//           label="Paid"
+//           icon={DollarSign}
+//           active={filters.planType === 'paid'}
+//           onClick={() => handleQuickFilter('planType', 'paid')}
+//           color="green"
+//         />
+
+//         <FilterButton
+//           label="Time Restricted"
+//           icon={Clock}
+//           active={filters.hasTimeVariant === 'yes'}
+//           onClick={() => handleQuickFilter('hasTimeVariant', 'yes')}
+//           color="amber"
+//         />
+
+//         <FilterButton
+//           label="Active"
+//           icon={CheckCircle}
+//           active={filters.active === 'active'}
+//           onClick={() => handleQuickFilter('active', 'active')}
+//           color="green"
+//         />
+
+//         {(searchQuery ||
+//           filters.accessType !== 'all' ||
+//           filters.planType !== 'all' ||
+//           filters.availability !== 'all' ||
+//           filters.active !== 'all' ||
+//           filters.hasTimeVariant !== 'all') && (
+//           <button
+//             onClick={handleClearAllFilters}
+//             className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 flex items-center gap-1.5 ml-auto"
+//           >
+//             <X className="w-3.5 h-3.5" />
+//             Clear All
+//           </button>
+//         )}
+//       </div>
+
+//       {/* Filter Summary */}
+//       {(searchQuery ||
+//         filters.accessType !== 'all' ||
+//         filters.planType !== 'all' ||
+//         filters.availability !== 'all' ||
+//         filters.active !== 'all' ||
+//         filters.hasTimeVariant !== 'all') && (
+//         <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+//           <p className="text-xs text-gray-500 dark:text-gray-400">
+//             Showing {plans.length} of {allPlans.length} plans
+//           </p>
+//         </div>
+//       )}
+//     </div>
+//   );
+
+//   // ==========================================================================
+//   // MAIN RENDER
+//   // ==========================================================================
+//   if (isLoading) {
+//     return (
+//       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+//         <div className="max-w-7xl mx-auto px-4 py-8">
+//           <div className="flex flex-col items-center justify-center py-20">
+//             <div className="relative">
+//               <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+//               <div className="absolute inset-0 flex items-center justify-center">
+//                 <div className="w-4 h-4 bg-indigo-600 rounded-full animate-pulse" />
+//               </div>
+//             </div>
+//             <p className="mt-4 text-gray-600 dark:text-gray-400">Loading your plans...</p>
+//           </div>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+//       <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+//         {/* Header */}
+//         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+//           <div>
+//             <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+//               Internet Plans
+//             </h1>
+//             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+//               Create, manage, and analyze your internet service plans
+//             </p>
+//           </div>
+
+//           <div className="flex items-center gap-3">
+//             {/* View Toggle */}
+//             <div className="flex items-center bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-1">
+//               <button
+//                 onClick={() => setViewMode('table')}
+//                 className={`p-2 rounded-md transition-colors ${
+//                   viewMode === 'table'
+//                     ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
+//                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+//                 }`}
+//                 title="Table View"
+//               >
+//                 <List className="w-4 h-4" />
+//               </button>
+//               <button
+//                 onClick={() => setViewMode('grid')}
+//                 className={`p-2 rounded-md transition-colors ${
+//                   viewMode === 'grid'
+//                     ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
+//                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+//                 }`}
+//                 title="Grid View"
+//               >
+//                 <Grid className="w-4 h-4" />
+//               </button>
+//             </div>
+
+//             <button
+//               onClick={onViewAnalytics}
+//               className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-indigo-600 text-white hover:from-indigo-600 hover:to-indigo-700 flex items-center gap-2 text-sm"
+//             >
+//               <BarChart3 className="w-4 h-4" />
+//               Analytics
+//             </button>
+
+//             <button
+//               onClick={onViewTemplates}
+//               className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 flex items-center gap-2 text-sm"
+//             >
+//               <Box className="w-4 h-4" />
+//               Templates
+//             </button>
+
+//             <button
+//               onClick={onNewPlan}
+//               className="px-4 py-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 flex items-center gap-2 text-sm"
+//             >
+//               <Plus className="w-4 h-4" />
+//               New Plan
+//             </button>
+//           </div>
+//         </div>
+
+//         {/* Filters */}
+//         {renderFilters()}
+
+//         {/* Statistics */}
+//         {plans.length > 0 && renderStats()}
+
+//         {/* Bulk Actions Bar */}
+//         {selectedPlans.length > 0 && (
+//           <div className="px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg flex items-center justify-between">
+//             <div className="flex items-center gap-2">
+//               <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
+//                 {selectedPlans.length} {selectedPlans.length === 1 ? 'plan' : 'plans'} selected
+//               </span>
+//               <button
+//                 onClick={() => setSelectedPlans([])}
+//                 className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800"
+//               >
+//                 Clear selection
+//               </button>
+//             </div>
+//             <div className="flex items-center gap-2">
+//               <button
+//                 onClick={() => handleBulkAction('activate')}
+//                 className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs hover:bg-green-700"
+//               >
+//                 Activate
+//               </button>
+//               <button
+//                 onClick={() => handleBulkAction('deactivate')}
+//                 className="px-3 py-1.5 rounded-lg bg-amber-600 text-white text-xs hover:bg-amber-700"
+//               >
+//                 Deactivate
+//               </button>
+//               <button
+//                 onClick={() => handleBulkAction('duplicate')}
+//                 className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs hover:bg-blue-700"
+//               >
+//                 Duplicate
+//               </button>
+//               <button
+//                 onClick={() => handleBulkAction('delete')}
+//                 className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs hover:bg-red-700"
+//               >
+//                 Delete
+//               </button>
+//             </div>
+//           </div>
+//         )}
+
+//         {/* Plans Display */}
+//         {plans.length === 0 ? (
+//           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 py-20 px-4 text-center">
+//             <div className="p-4 rounded-full bg-gray-100 dark:bg-gray-700 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+//               <Package className="w-10 h-10 text-gray-400" />
+//             </div>
+//             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+//               No plans found
+//             </h3>
+//             <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
+//               {searchQuery || Object.values(filters).some(v => v !== 'all' && v !== null)
+//                 ? "Try adjusting your filters or search query"
+//                 : "Get started by creating your first internet plan"
+//               }
+//             </p>
+//             {!searchQuery && Object.values(filters).every(v => v === 'all' || v === null) && (
+//               <button
+//                 onClick={onNewPlan}
+//                 className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 inline-flex items-center gap-2"
+//               >
+//                 <Plus className="w-4 h-4" />
+//                 Create Your First Plan
+//               </button>
+//             )}
+//           </div>
+//         ) : (
+//           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+//             {viewMode === 'table' ? renderTableView() : renderGridView()}
+
+//             {/* Footer */}
+//             <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+//               <div className="flex items-center gap-2">
+//                 <Activity className="w-3.5 h-3.5" />
+//                 <span>
+//                   Showing <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+//                     {plans.length}
+//                   </span> of <span className="font-semibold">{allPlans.length}</span> plans
+//                 </span>
+//               </div>
+//               <div className="flex items-center gap-2">
+//                 <Sparkles className="w-3.5 h-3.5" />
+//                 <span>Sorted by {sortConfig.field} ({sortConfig.direction})</span>
+//               </div>
+//             </div>
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default PlanList;
+
+
+
+
+
+
+
+
+
+
+
+
+// // PlanList.js - COMPLETE PRODUCTION READY VERSION
+
+// import React, { useState, useMemo, useCallback, useEffect } from "react";
+// import { motion, AnimatePresence } from "framer-motion";
+// import {
+//   Plus, Pencil, Trash2, Eye, Users, Search,
+//   Wifi, Cable, BarChart3, Package, Box, Filter,
+//   ChevronDown, ChevronUp, Clock, DollarSign, Calendar,
+//   CheckCircle, XCircle, AlertTriangle, Settings,
+//   Star, Target, TrendingUp, Zap, Shield, Download,
+//   TrendingDown, Activity, Award, Flame, Crown, Sparkles,
+//   Heart, ThumbsUp, Gauge, Server, RefreshCw, X,
+//   Menu, Grid, LayoutGrid, List, Info, Tag, Layers,
+//   ChevronLeft, ChevronRight, Maximize2, Minimize2, CreditCard,
+//   Gift, BadgePercent, Infinity, AlertCircle, Check
+// } from "lucide-react";
+
+// // ============================================================================
+// // CONSTANTS
+// // ============================================================================
+
+// const PLAN_TYPE_LABELS = {
+//   paid: "Paid",
+//   free_trial: "Free Trial",
+//   promotional: "Promotional"
+// };
+
+// const PLAN_TYPE_COLORS = {
+//   paid: {
+//     light: { bg: "bg-green-100", text: "text-green-700", border: "border-green-200" },
+//     dark: { bg: "dark:bg-green-900/30", text: "dark:text-green-400", border: "dark:border-green-800" }
+//   },
+//   free_trial: {
+//     light: { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-200" },
+//     dark: { bg: "dark:bg-blue-900/30", text: "dark:text-blue-400", border: "dark:border-blue-800" }
+//   },
+//   promotional: {
+//     light: { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-200" },
+//     dark: { bg: "dark:bg-purple-900/30", text: "dark:text-purple-400", border: "dark:border-purple-800" }
+//   }
+// };
+
+// const ACCESS_TYPE_ICONS = {
+//   hotspot: Wifi,
+//   pppoe: Cable,
+//   both: () => (
+//     <div className="flex items-center">
+//       <Wifi className="w-3 h-3 mr-0.5" />
+//       <Cable className="w-3 h-3" />
+//     </div>
+//   ),
+//   none: AlertTriangle
+// };
+
+// const ACCESS_TYPE_COLORS = {
+//   hotspot: {
+//     light: { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-200" },
+//     dark: { bg: "dark:bg-blue-900/30", text: "dark:text-blue-400", border: "dark:border-blue-800" }
+//   },
+//   pppoe: {
+//     light: { bg: "bg-green-100", text: "text-green-700", border: "border-green-200" },
+//     dark: { bg: "dark:bg-green-900/30", text: "dark:text-green-400", border: "dark:border-green-800" }
+//   },
+//   both: {
+//     light: { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-200" },
+//     dark: { bg: "dark:bg-purple-900/30", text: "dark:text-purple-400", border: "dark:border-purple-800" }
+//   },
+//   none: {
+//     light: { bg: "bg-gray-100", text: "text-gray-700", border: "border-gray-200" },
+//     dark: { bg: "dark:bg-gray-800", text: "dark:text-gray-400", border: "dark:border-gray-700" }
+//   }
+// };
+
+// // ============================================================================
+// // UTILITY FUNCTIONS
+// // ============================================================================
+
+// const getThemeClasses = (theme) => ({
+//   bg: {
+//     primary: theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50',
+//     card: theme === 'dark' ? 'bg-gray-800' : 'bg-white',
+//     hover: theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-50',
+//     success: theme === 'dark' ? 'bg-green-900/30' : 'bg-green-100',
+//     warning: theme === 'dark' ? 'bg-amber-900/30' : 'bg-amber-100',
+//     danger: theme === 'dark' ? 'bg-red-900/30' : 'bg-red-100',
+//     info: theme === 'dark' ? 'bg-blue-900/30' : 'bg-blue-100'
+//   },
+//   text: {
+//     primary: theme === 'dark' ? 'text-white' : 'text-gray-900',
+//     secondary: theme === 'dark' ? 'text-gray-400' : 'text-gray-600',
+//     success: theme === 'dark' ? 'text-green-400' : 'text-green-700',
+//     warning: theme === 'dark' ? 'text-amber-400' : 'text-amber-700',
+//     danger: theme === 'dark' ? 'text-red-400' : 'text-red-700',
+//     info: theme === 'dark' ? 'text-blue-400' : 'text-blue-700'
+//   },
+//   border: {
+//     light: theme === 'dark' ? 'border-gray-700' : 'border-gray-200',
+//     success: theme === 'dark' ? 'border-green-800' : 'border-green-200',
+//     warning: theme === 'dark' ? 'border-amber-800' : 'border-amber-200',
+//     danger: theme === 'dark' ? 'border-red-800' : 'border-red-200',
+//     info: theme === 'dark' ? 'border-blue-800' : 'border-blue-200'
+//   }
+// });
+
+// const formatCurrency = (value) => {
+//   return new Intl.NumberFormat('en-KE', {
+//     style: 'currency',
+//     currency: 'KES',
+//     minimumFractionDigits: 2,
+//     maximumFractionDigits: 2
+//   }).format(value);
+// };
+
+// const formatNumber = (value) => {
+//   return new Intl.NumberFormat('en-KE').format(value || 0);
+// };
+
+// const formatDate = (dateString, includeTime = false) => {
+//   if (!dateString) return 'N/A';
+//   try {
+//     const date = new Date(dateString);
+//     if (includeTime) {
+//       return date.toLocaleString('en-KE', {
+//         year: 'numeric',
+//         month: 'short',
+//         day: 'numeric',
+//         hour: '2-digit',
+//         minute: '2-digit'
+//       });
+//     }
+//     return date.toLocaleDateString('en-KE', {
+//       year: 'numeric',
+//       month: 'short',
+//       day: 'numeric'
+//     });
+//   } catch {
+//     return 'Invalid Date';
+//   }
+// };
+
+// const calculateRating = (purchases) => {
+//   if (purchases >= 1000) return 4.9;
+//   if (purchases >= 500) return 4.7;
+//   if (purchases >= 250) return 4.5;
+//   if (purchases >= 100) return 4.2;
+//   if (purchases >= 50) return 4.0;
+//   if (purchases >= 25) return 3.8;
+//   if (purchases >= 10) return 3.5;
+//   if (purchases >= 5) return 3.2;
+//   if (purchases >= 1) return 3.0;
+//   return 0;
+// };
+
+// const calculatePopularity = (purchases) => {
+//   if (purchases >= 1000) return { label: 'Very High', color: 'text-purple-600', icon: Crown };
+//   if (purchases >= 500) return { label: 'High', color: 'text-green-600', icon: TrendingUp };
+//   if (purchases >= 100) return { label: 'Medium', color: 'text-blue-600', icon: Activity };
+//   if (purchases >= 10) return { label: 'Low', color: 'text-amber-600', icon: TrendingDown };
+//   return { label: 'New', color: 'text-gray-600', icon: Star };
+// };
+
+// // ============================================================================
+// // PLAN TYPE BADGE COMPONENT
+// // ============================================================================
+
+// const PlanTypeBadge = ({ type, theme = 'light', size = 'sm' }) => {
+//   const config = {
+//     paid: {
+//       label: 'Paid',
+//       icon: DollarSign,
+//       colors: PLAN_TYPE_COLORS.paid
+//     },
+//     free_trial: {
+//       label: 'Free Trial',
+//       icon: Clock,
+//       colors: PLAN_TYPE_COLORS.free_trial
+//     },
+//     promotional: {
+//       label: 'Promotional',
+//       icon: Sparkles,
+//       colors: PLAN_TYPE_COLORS.promotional
+//     }
+//   };
+
+//   const { label, icon: Icon, colors } = config[type] || config.paid;
+
+//   const sizeClasses = {
+//     xs: 'px-1.5 py-0.5 text-[10px]',
+//     sm: 'px-2 py-1 text-xs',
+//     md: 'px-2.5 py-1.5 text-sm'
+//   };
+
+//   const iconSizes = {
+//     xs: 'w-2.5 h-2.5',
+//     sm: 'w-3 h-3',
+//     md: 'w-3.5 h-3.5'
+//   };
+
+//   return (
+//     <span className={`
+//       inline-flex items-center gap-1 rounded-full border font-medium
+//       ${colors.light.bg} ${colors.light.text} ${colors.light.border}
+//       ${colors.dark.bg} ${colors.dark.text} ${colors.dark.border}
+//       ${sizeClasses[size]}
+//     `}>
+//       <Icon className={iconSizes[size]} />
+//       {label}
+//     </span>
+//   );
+// };
+
+// // ============================================================================
+// // ACCESS TYPE BADGE COMPONENT
+// // ============================================================================
+
+// const AccessTypeBadge = ({ accessMethods = {}, size = 'sm', showLabel = true, theme = 'light' }) => {
+//   const hotspot = accessMethods?.hotspot || { enabled: false };
+//   const pppoe = accessMethods?.pppoe || { enabled: false };
+  
+//   const hasHotspot = hotspot.enabled === true;
+//   const hasPPPoE = pppoe.enabled === true;
+
+//   let type = 'none';
+//   if (hasHotspot && hasPPPoE) type = 'both';
+//   else if (hasHotspot) type = 'hotspot';
+//   else if (hasPPPoE) type = 'pppoe';
+
+//   const colors = ACCESS_TYPE_COLORS[type] || ACCESS_TYPE_COLORS.none;
+//   const Icon = ACCESS_TYPE_ICONS[type] || ACCESS_TYPE_ICONS.none;
+
+//   const sizeClasses = {
+//     xs: "px-1.5 py-0.5 text-xs",
+//     sm: "px-2 py-1 text-xs",
+//     md: "px-2.5 py-1.5 text-sm"
+//   };
+
+//   const iconSizes = {
+//     xs: "w-3 h-3",
+//     sm: "w-3.5 h-3.5",
+//     md: "w-4 h-4"
+//   };
+
+//   const labels = {
+//     hotspot: "Hotspot",
+//     pppoe: "PPPoE",
+//     both: "Dual Access",
+//     none: "No Access"
+//   };
+
+//   return (
+//     <span className={`
+//       inline-flex items-center gap-1.5 rounded-full font-medium border
+//       ${colors.light.bg} ${colors.light.text} ${colors.light.border}
+//       ${colors.dark.bg} ${colors.dark.text} ${colors.dark.border}
+//       ${sizeClasses[size]}
+//     `}>
+//       <Icon className={iconSizes[size]} />
+//       {showLabel && labels[type]}
+//     </span>
+//   );
+// };
+
+// // ============================================================================
+// // AVAILABILITY BADGE COMPONENT
+// // ============================================================================
+
+// const AvailabilityBadge = ({ isAvailable, theme = 'light', size = 'sm' }) => {
+//   const sizeClasses = {
+//     xs: 'px-1.5 py-0.5 text-[10px]',
+//     sm: 'px-2 py-1 text-xs',
+//     md: 'px-2.5 py-1.5 text-sm'
+//   };
+
+//   const iconSizes = {
+//     xs: 'w-2.5 h-2.5',
+//     sm: 'w-3 h-3',
+//     md: 'w-3.5 h-3.5'
+//   };
+
+//   const colors = isAvailable
+//     ? {
+//         bg: 'bg-green-100 dark:bg-green-900/50',
+//         text: 'text-green-700 dark:text-green-400',
+//         border: 'border-green-200 dark:border-green-800'
+//       }
+//     : {
+//         bg: 'bg-red-100 dark:bg-red-900/50',
+//         text: 'text-red-700 dark:text-red-400',
+//         border: 'border-red-200 dark:border-red-800'
+//       };
+
+//   return (
+//     <span className={`
+//       inline-flex items-center gap-1 rounded-full font-medium border
+//       ${colors.bg} ${colors.text} ${colors.border}
+//       ${sizeClasses[size]}
+//     `}>
+//       {isAvailable ? (
+//         <CheckCircle className={iconSizes[size]} />
+//       ) : (
+//         <XCircle className={iconSizes[size]} />
+//       )}
+//       {isAvailable ? 'Available' : 'Unavailable'}
+//     </span>
+//   );
+// };
+
+// // ============================================================================
+// // STAR RATING COMPONENT
+// // ============================================================================
+
+// const StarRating = ({ rating, size = 'sm' }) => {
+//   const fullStars = Math.floor(rating);
+//   const hasHalfStar = rating % 1 >= 0.5;
+//   const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+//   const sizeClasses = {
+//     xs: "w-3 h-3",
+//     sm: "w-4 h-4",
+//     md: "w-5 h-5"
+//   };
+
+//   return (
+//     <div className="flex items-center gap-1">
+//       <div className="flex items-center">
+//         {[...Array(fullStars)].map((_, i) => (
+//           <Star
+//             key={`full-${i}`}
+//             className={`${sizeClasses[size]} fill-current text-amber-400`}
+//           />
+//         ))}
+//         {hasHalfStar && (
+//           <div className="relative">
+//             <Star className={`${sizeClasses[size]} text-gray-300 dark:text-gray-600`} />
+//             <div className="absolute inset-0 overflow-hidden w-1/2">
+//               <Star className={`${sizeClasses[size]} fill-current text-amber-400`} />
+//             </div>
+//           </div>
+//         )}
+//         {[...Array(emptyStars)].map((_, i) => (
+//           <Star
+//             key={`empty-${i}`}
+//             className={`${sizeClasses[size]} text-gray-300 dark:text-gray-600`}
+//           />
+//         ))}
+//       </div>
+//       <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+//         {rating.toFixed(1)}
+//       </span>
+//     </div>
+//   );
+// };
+
+// // ============================================================================
+// // PRICE DISPLAY HELPER
+// // ============================================================================
+
+// const getPriceDisplay = (plan) => {
+//   const price = parseFloat(plan.price) || 0;
+  
+//   switch (plan.plan_type) {
+//     case 'free_trial':
+//       return {
+//         main: 'Free Trial',
+//         value: '0.00',
+//         badge: null,
+//         className: 'text-blue-600 dark:text-blue-400 font-medium'
+//       };
+    
+//     case 'promotional':
+//       if (price === 0) {
+//         return {
+//           main: 'Free',
+//           value: '0.00',
+//           badge: 'Promo',
+//           className: 'text-purple-600 dark:text-purple-400'
+//         };
+//       }
+//       return {
+//         main: formatCurrency(price),
+//         value: price.toFixed(2),
+//         badge: 'Promo',
+//         className: 'text-purple-600 dark:text-purple-400 font-bold'
+//       };
+    
+//     case 'paid':
+//     default:
+//       if (price === 0) {
+//         return {
+//           main: 'Free',
+//           value: '0.00',
+//           badge: null,
+//           className: 'text-gray-600 dark:text-gray-400'
+//         };
+//       }
+//       return {
+//         main: formatCurrency(price),
+//         value: price.toFixed(2),
+//         badge: null,
+//         className: 'text-gray-900 dark:text-white font-bold'
+//       };
+//   }
+// };
+
+// // ============================================================================
+// // FILTER BUTTON COMPONENT
+// // ============================================================================
+
+// const FilterButton = ({ label, icon: Icon, active, onClick, color = 'indigo' }) => {
+//   const colorClasses = {
+//     indigo: {
+//       active: 'bg-indigo-600 text-white border-indigo-600',
+//       inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-indigo-400'
+//     },
+//     blue: {
+//       active: 'bg-blue-600 text-white border-blue-600',
+//       inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-blue-400'
+//     },
+//     green: {
+//       active: 'bg-green-600 text-white border-green-600',
+//       inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-green-400'
+//     },
+//     purple: {
+//       active: 'bg-purple-600 text-white border-purple-600',
+//       inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-purple-400'
+//     },
+//     amber: {
+//       active: 'bg-amber-600 text-white border-amber-600',
+//       inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-amber-400'
+//     },
+//     red: {
+//       active: 'bg-red-600 text-white border-red-600',
+//       inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-red-400'
+//     }
+//   };
+
+//   return (
+//     <button
+//       onClick={onClick}
+//       className={`
+//         px-3 py-1.5 rounded-lg text-xs font-medium transition-all
+//         flex items-center gap-1.5 border-2 whitespace-nowrap
+//         ${active ? colorClasses[color].active : colorClasses[color].inactive}
+//       `}
+//     >
+//       {Icon && <Icon className="w-3.5 h-3.5" />}
+//       {label}
+//     </button>
+//   );
+// };
+
+// // ============================================================================
+// // PLAN TABLE ROW COMPONENT
+// // ============================================================================
+
+// const PlanTableRow = ({
+//   plan,
+//   theme = 'light',
+//   onViewDetails,
+//   onEditPlan,
+//   onDeletePlan,
+//   onDuplicatePlan,
+//   onToggleStatus,
+//   isSelected,
+//   onSelect
+// }) => {
+//   const themeClasses = getThemeClasses(theme);
+//   const rating = calculateRating(plan.purchases);
+//   const priceDisplay = getPriceDisplay(plan);
+//   const popularity = calculatePopularity(plan.purchases);
+//   const PopularityIcon = popularity.icon;
+  
+//   const accessMethods = plan.access_methods || { 
+//     hotspot: { enabled: false }, 
+//     pppoe: { enabled: false } 
+//   };
+
+//   return (
+//     <tr className={`
+//       group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors
+//       ${isSelected ? 'bg-indigo-50/50 dark:bg-indigo-900/20' : ''}
+//     `}>
+//       {/* Checkbox */}
+//       <td className="px-4 py-4 whitespace-nowrap w-10">
+//         <input
+//           type="checkbox"
+//           checked={isSelected}
+//           onChange={() => onSelect(plan.id)}
+//           className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
+//         />
+//       </td>
+
+//       {/* Plan Info */}
+//       <td className="px-4 py-4">
+//         <div className="flex items-start gap-3">
+//           <div className={`
+//             p-2 rounded-lg flex-shrink-0
+//             ${accessMethods?.hotspot?.enabled && accessMethods?.pppoe?.enabled
+//               ? 'bg-purple-100 dark:bg-purple-900/30'
+//               : accessMethods?.hotspot?.enabled
+//                 ? 'bg-blue-100 dark:bg-blue-900/30'
+//                 : accessMethods?.pppoe?.enabled
+//                   ? 'bg-green-100 dark:bg-green-900/30'
+//                   : 'bg-gray-100 dark:bg-gray-800'
+//             }
+//           `}>
+//             {accessMethods?.hotspot?.enabled && accessMethods?.pppoe?.enabled ? (
+//               <div className="flex items-center gap-0.5">
+//                 <Wifi className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+//                 <Cable className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+//               </div>
+//             ) : accessMethods?.hotspot?.enabled ? (
+//               <Wifi className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+//             ) : accessMethods?.pppoe?.enabled ? (
+//               <Cable className="w-4 h-4 text-green-600 dark:text-green-400" />
+//             ) : (
+//               <AlertTriangle className="w-4 h-4 text-gray-400" />
+//             )}
+//           </div>
+//           <div>
+//             <div className="flex items-center gap-2">
+//               <span className="font-semibold text-gray-900 dark:text-white">
+//                 {plan.name}
+//               </span>
+//               <PlanTypeBadge type={plan.plan_type} theme={theme} size="xs" />
+//             </div>
+//             <div className="flex items-center gap-2 mt-1">
+//               <span className="text-xs text-gray-500 dark:text-gray-400">
+//                 {plan.category || 'Uncategorized'}
+//               </span>
+//               <span className="text-gray-300 dark:text-gray-600">•</span>
+//               <span className="text-xs text-gray-500 dark:text-gray-400">
+//                 ID: {plan.id?.slice(0, 8)}...
+//               </span>
+//             </div>
+//             {plan.description && (
+//               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
+//                 {plan.description}
+//               </p>
+//             )}
+//           </div>
+//         </div>
+//       </td>
+
+//       {/* Price */}
+//       <td className="px-4 py-4 whitespace-nowrap">
+//         <div className={priceDisplay.className}>
+//           {priceDisplay.main}
+//         </div>
+//         {priceDisplay.badge && (
+//           <div className="text-xs mt-1 text-purple-600 dark:text-purple-400 flex items-center gap-1">
+//             <BadgePercent className="w-3 h-3" />
+//             {priceDisplay.badge}
+//           </div>
+//         )}
+//       </td>
+
+//       {/* Access Type */}
+//       <td className="px-4 py-4 whitespace-nowrap">
+//         <AccessTypeBadge
+//           accessMethods={accessMethods}
+//           size="xs"
+//           showLabel={true}
+//           theme={theme}
+//         />
+//       </td>
+
+//       {/* Subscribers & Rating */}
+//       <td className="px-4 py-4 whitespace-nowrap">
+//         <div className="flex items-center gap-2 mb-1">
+//           <Users className="w-3.5 h-3.5 text-gray-500" />
+//           <span className="text-sm font-medium text-gray-900 dark:text-white">
+//             {formatNumber(plan.purchases || 0)}
+//           </span>
+//         </div>
+//         <StarRating rating={rating} size="xs" />
+//         <div className="flex items-center gap-1 mt-1">
+//           <PopularityIcon className={`w-3 h-3 ${popularity.color}`} />
+//           <span className={`text-xs ${popularity.color}`}>
+//             {popularity.label}
+//           </span>
+//         </div>
+//       </td>
+
+//       {/* Status */}
+//       <td className="px-4 py-4 whitespace-nowrap">
+//         <div className="space-y-1">
+//           <AvailabilityBadge
+//             isAvailable={plan.is_available_now || false}
+//             theme={theme}
+//             size="xs"
+//           />
+//           <span className={`
+//             inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+//             ${plan.active
+//               ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400'
+//               : 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400'
+//             }
+//           `}>
+//             {plan.active ? 'Active' : 'Inactive'}
+//           </span>
+//           {plan.has_time_variant && (
+//             <span className="flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400">
+//               <Clock className="w-3 h-3" />
+//               Time Restricted
+//             </span>
+//           )}
+//         </div>
+//       </td>
+
+//       {/* Actions */}
+//       <td className="px-4 py-4 whitespace-nowrap">
+//         <div className="flex items-center gap-1">
+//           <button
+//             onClick={() => onViewDetails(plan)}
+//             className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+//             title="View Details"
+//           >
+//             <Eye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+//           </button>
+//           <button
+//             onClick={() => onEditPlan(plan)}
+//             className="p-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+//             title="Edit Plan"
+//           >
+//             <Pencil className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+//           </button>
+//           <button
+//             onClick={() => onDuplicatePlan(plan)}
+//             className="p-1.5 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+//             title="Duplicate Plan"
+//           >
+//             <Plus className="w-4 h-4 text-green-600 dark:text-green-400" />
+//           </button>
+//           <button
+//             onClick={() => onToggleStatus(plan)}
+//             className={`
+//               p-1.5 rounded-lg transition-colors
+//               ${plan.active
+//                 ? 'hover:bg-amber-100 dark:hover:bg-amber-900/30'
+//                 : 'hover:bg-green-100 dark:hover:bg-green-900/30'
+//               }
+//             `}
+//             title={plan.active ? "Deactivate" : "Activate"}
+//           >
+//             {plan.active ? (
+//               <XCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+//             ) : (
+//               <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+//             )}
+//           </button>
+//           <button
+//             onClick={() => onDeletePlan(plan)}
+//             className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+//             title="Delete Plan"
+//           >
+//             <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+//           </button>
+//         </div>
+//       </td>
+//     </tr>
+//   );
+// };
+
+// // ============================================================================
+// // MAIN PLANLIST COMPONENT
+// // ============================================================================
+
+// const PlanList = ({
+//   plans = [],
+//   allPlans = [],
+//   isLoading = false,
+//   onEditPlan,
+//   onViewDetails,
+//   onDeletePlan,
+//   onDuplicatePlan,
+//   onToggleStatus,
+//   onNewPlan,
+//   onViewAnalytics,
+//   onViewTemplates,
+//   onRefresh,
+//   theme = 'light',
+//   isMobile = false,
+//   searchQuery = '',
+//   onSearchChange,
+//   filters = {
+//     category: 'all',
+//     planType: 'all',
+//     accessType: 'all',
+//     availability: 'all',
+//     active: 'all',
+//     hasTimeVariant: 'all',
+//     routerSpecific: 'all',
+//     priceRange: null
+//   },
+//   onFilterChange,
+//   onClearFilters,
+//   sortConfig = { field: 'name', direction: 'asc' },
+//   onSort
+// }) => {
+//   const themeClasses = getThemeClasses(theme);
+//   const [selectedPlans, setSelectedPlans] = useState([]);
+//   const [showBulkActions, setShowBulkActions] = useState(false);
+//   const [viewMode, setViewMode] = useState('table'); // 'table' or 'grid'
+//   const [showFilters, setShowFilters] = useState(!isMobile);
+
+//   // Update showFilters when isMobile changes
+//   useEffect(() => {
+//     setShowFilters(!isMobile);
+//   }, [isMobile]);
+
+//   // ==========================================================================
+//   // STATISTICS
+//   // ==========================================================================
+
+//   const stats = useMemo(() => {
+//     const active = plans.filter(p => p.active).length;
+//     const inactive = plans.filter(p => !p.active).length;
+//     const available = plans.filter(p => p.is_available_now).length;
+//     const totalSubscribers = plans.reduce((sum, p) => sum + (p.purchases || 0), 0);
+//     const totalRevenue = plans.reduce((sum, p) => sum + ((p.purchases || 0) * (parseFloat(p.price) || 0)), 0);
+
+//     const mostPopular = [...plans].sort((a, b) => (b.purchases || 0) - (a.purchases || 0))[0];
+//     const mostExpensive = [...plans].sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0))[0];
+
+//     const byPlanType = plans.reduce((acc, p) => {
+//       const type = p.plan_type || 'paid';
+//       acc[type] = (acc[type] || 0) + 1;
+//       return acc;
+//     }, {});
+
+//     const byAccessType = plans.reduce((acc, p) => {
+//       const hotspot = p.access_methods?.hotspot?.enabled;
+//       const pppoe = p.access_methods?.pppoe?.enabled;
+//       let type = 'none';
+//       if (hotspot && pppoe) type = 'both';
+//       else if (hotspot) type = 'hotspot';
+//       else if (pppoe) type = 'pppoe';
+      
+//       acc[type] = (acc[type] || 0) + 1;
+//       return acc;
+//     }, {});
+
+//     return {
+//       total: plans.length,
+//       active,
+//       inactive,
+//       available,
+//       totalSubscribers,
+//       totalRevenue,
+//       mostPopular,
+//       mostExpensive,
+//       byPlanType,
+//       byAccessType
+//     };
+//   }, [plans]);
+
+//   // ==========================================================================
+//   // FILTER HANDLERS
+//   // ==========================================================================
+
+//   const handleQuickFilter = useCallback((type, value) => {
+//     const newValue = filters[type] === value ? 'all' : value;
+//     onFilterChange(type, newValue);
+//   }, [filters, onFilterChange]);
+
+//   const handleClearAllFilters = useCallback(() => {
+//     onSearchChange('');
+//     onClearFilters();
+//   }, [onSearchChange, onClearFilters]);
+
+//   // ==========================================================================
+//   // BULK ACTIONS
+//   // ==========================================================================
+
+//   const togglePlanSelection = useCallback((id) => {
+//     setSelectedPlans(prev => {
+//       const newSelection = prev.includes(id) 
+//         ? prev.filter(p => p !== id) 
+//         : [...prev, id];
+//       setShowBulkActions(newSelection.length > 0);
+//       return newSelection;
+//     });
+//   }, []);
+
+//   const toggleAllPlans = useCallback(() => {
+//     setSelectedPlans(prev => {
+//       const newSelection = prev.length === plans.length ? [] : plans.map(p => p.id);
+//       setShowBulkActions(newSelection.length > 0);
+//       return newSelection;
+//     });
+//   }, [plans]);
+
+//   const clearSelection = useCallback(() => {
+//     setSelectedPlans([]);
+//     setShowBulkActions(false);
+//   }, []);
+
+//   const handleBulkAction = useCallback(async (action) => {
+//     if (selectedPlans.length === 0) return;
+
+//     if (action === 'delete') {
+//       if (!window.confirm(`Delete ${selectedPlans.length} selected plans? This cannot be undone.`)) {
+//         return;
+//       }
+//     }
+
+//     setShowBulkActions(false);
+
+//     // Process in batches to avoid overwhelming the API
+//     const batchSize = 5;
+//     for (let i = 0; i < selectedPlans.length; i += batchSize) {
+//       const batch = selectedPlans.slice(i, i + batchSize);
+//       await Promise.allSettled(
+//         batch.map(async (id) => {
+//           const plan = plans.find(p => p.id === id);
+//           if (!plan) return;
+
+//           switch (action) {
+//             case 'activate':
+//               if (!plan.active) await onToggleStatus(plan);
+//               break;
+//             case 'deactivate':
+//               if (plan.active) await onToggleStatus(plan);
+//               break;
+//             case 'duplicate':
+//               await onDuplicatePlan(plan);
+//               break;
+//             case 'delete':
+//               await onDeletePlan(plan);
+//               break;
+//             default:
+//               break;
+//           }
+//         })
+//       );
+//     }
+
+//     clearSelection();
+//   }, [selectedPlans, plans, onToggleStatus, onDuplicatePlan, onDeletePlan, clearSelection]);
+
+//   // ==========================================================================
+//   // GRID VIEW RENDERER
+//   // ==========================================================================
+
+//   const renderGridView = useCallback(() => {
+//     if (plans.length === 0) return null;
+
+//     return (
+//       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+//         {plans.map(plan => {
+//           const priceDisplay = getPriceDisplay(plan);
+//           const accessMethods = plan.access_methods || {};
+//           const rating = calculateRating(plan.purchases);
+//           const popularity = calculatePopularity(plan.purchases);
+//           const PopularityIcon = popularity.icon;
+//           const isSelected = selectedPlans.includes(plan.id);
+
+//           return (
+//             <motion.div
+//               key={plan.id}
+//               initial={{ opacity: 0, scale: 0.95 }}
+//               animate={{ opacity: 1, scale: 1 }}
+//               exit={{ opacity: 0, scale: 0.95 }}
+//               whileHover={{ y: -2 }}
+//               className={`
+//                 rounded-xl border overflow-hidden cursor-pointer transition-all
+//                 ${isSelected
+//                   ? 'ring-2 ring-indigo-500 border-indigo-500'
+//                   : theme === 'dark'
+//                     ? 'bg-gray-800 border-gray-700 hover:border-gray-600'
+//                     : 'bg-white border-gray-200 hover:border-gray-300'
+//                 }
+//               `}
+//               onClick={() => togglePlanSelection(plan.id)}
+//             >
+//               <div className="p-4">
+//                 {/* Header */}
+//                 <div className="flex items-start justify-between mb-3">
+//                   <div className="flex items-center gap-2">
+//                     <input
+//                       type="checkbox"
+//                       checked={isSelected}
+//                       onChange={() => togglePlanSelection(plan.id)}
+//                       onClick={(e) => e.stopPropagation()}
+//                       className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+//                     />
+//                     <PlanTypeBadge type={plan.plan_type} theme={theme} size="xs" />
+//                   </div>
+//                   <AvailabilityBadge
+//                     isAvailable={plan.is_available_now || false}
+//                     theme={theme}
+//                     size="xs"
+//                   />
+//                 </div>
+
+//                 {/* Plan Info */}
+//                 <h3 className="font-semibold text-lg mb-1 line-clamp-1">{plan.name}</h3>
+//                 {plan.description && (
+//                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">
+//                     {plan.description}
+//                   </p>
+//                 )}
+
+//                 {/* Price */}
+//                 <div className={`text-2xl font-bold mb-3 ${priceDisplay.className}`}>
+//                   {priceDisplay.main}
+//                 </div>
+
+//                 {/* Access Type */}
+//                 <div className="mb-3">
+//                   <AccessTypeBadge 
+//                     accessMethods={accessMethods} 
+//                     size="sm" 
+//                     theme={theme} 
+//                   />
+//                 </div>
+
+//                 {/* Stats */}
+//                 <div className="grid grid-cols-2 gap-2 mb-4">
+//                   <div className="text-center p-2 bg-gray-50 dark:bg-gray-700/50 rounded">
+//                     <Users className="w-4 h-4 mx-auto mb-1 text-gray-500" />
+//                     <div className="text-sm font-medium">
+//                       {formatNumber(plan.purchases || 0)}
+//                     </div>
+//                     <div className="text-xs text-gray-500">Subscribers</div>
+//                   </div>
+//                   <div className="text-center p-2 bg-gray-50 dark:bg-gray-700/50 rounded">
+//                     <div className="flex justify-center mb-1">
+//                       <PopularityIcon className={`w-4 h-4 ${popularity.color}`} />
+//                     </div>
+//                     <div className="text-sm font-medium">
+//                       {rating.toFixed(1)}
+//                     </div>
+//                     <div className="text-xs text-gray-500">Rating</div>
+//                   </div>
+//                 </div>
+
+//                 {/* Status Indicators */}
+//                 <div className="flex flex-wrap gap-1 mb-3">
+//                   <span className={`
+//                     inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+//                     ${plan.active
+//                       ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400'
+//                       : 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400'
+//                     }
+//                   `}>
+//                     {plan.active ? 'Active' : 'Inactive'}
+//                   </span>
+//                   {plan.has_time_variant && (
+//                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-400">
+//                       <Clock className="w-3 h-3" />
+//                       Time Restricted
+//                     </span>
+//                   )}
+//                 </div>
+
+//                 {/* Actions */}
+//                 <div className="flex justify-end gap-1 pt-3 border-t border-gray-200 dark:border-gray-700">
+//                   <button
+//                     onClick={(e) => {
+//                       e.stopPropagation();
+//                       onViewDetails(plan);
+//                     }}
+//                     className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+//                     title="View Details"
+//                   >
+//                     <Eye className="w-4 h-4" />
+//                   </button>
+//                   <button
+//                     onClick={(e) => {
+//                       e.stopPropagation();
+//                       onEditPlan(plan);
+//                     }}
+//                     className="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+//                     title="Edit Plan"
+//                   >
+//                     <Pencil className="w-4 h-4 text-blue-600" />
+//                   </button>
+//                   <button
+//                     onClick={(e) => {
+//                       e.stopPropagation();
+//                       onDuplicatePlan(plan);
+//                     }}
+//                     className="p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+//                     title="Duplicate Plan"
+//                   >
+//                     <Plus className="w-4 h-4 text-green-600" />
+//                   </button>
+//                   <button
+//                     onClick={(e) => {
+//                       e.stopPropagation();
+//                       onToggleStatus(plan);
+//                     }}
+//                     className={`
+//                       p-2 rounded-lg transition-colors
+//                       ${plan.active
+//                         ? 'hover:bg-amber-100 dark:hover:bg-amber-900/30'
+//                         : 'hover:bg-green-100 dark:hover:bg-green-900/30'
+//                       }
+//                     `}
+//                     title={plan.active ? "Deactivate" : "Activate"}
+//                   >
+//                     {plan.active ? (
+//                       <XCircle className="w-4 h-4 text-amber-600" />
+//                     ) : (
+//                       <CheckCircle className="w-4 h-4 text-green-600" />
+//                     )}
+//                   </button>
+//                   <button
+//                     onClick={(e) => {
+//                       e.stopPropagation();
+//                       onDeletePlan(plan);
+//                     }}
+//                     className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+//                     title="Delete Plan"
+//                   >
+//                     <Trash2 className="w-4 h-4 text-red-600" />
+//                   </button>
+//                 </div>
+//               </div>
+//             </motion.div>
+//           );
+//         })}
+//       </div>
+//     );
+//   }, [plans, theme, selectedPlans, togglePlanSelection, onViewDetails, onEditPlan, onDuplicatePlan, onToggleStatus, onDeletePlan]);
+
+//   // ==========================================================================
+//   // TABLE VIEW RENDERER
+//   // ==========================================================================
+
+//   const renderTableView = useCallback(() => {
+//     if (plans.length === 0) return null;
+
+//     return (
+//       <div className="overflow-x-auto">
+//         <table className="w-full min-w-[1200px]">
+//           <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+//             <tr>
+//               <th className="px-4 py-3 w-10">
+//                 <input
+//                   type="checkbox"
+//                   checked={selectedPlans.length === plans.length && plans.length > 0}
+//                   onChange={toggleAllPlans}
+//                   className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
+//                 />
+//               </th>
+//               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+//                 Plan Details
+//               </th>
+//               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+//                 Price
+//               </th>
+//               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+//                 Access Type
+//               </th>
+//               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+//                 Subscribers
+//               </th>
+//               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+//                 Status
+//               </th>
+//               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+//                 Actions
+//               </th>
+//             </tr>
+//           </thead>
+//           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+//             {plans.map(plan => (
+//               <PlanTableRow
+//                 key={plan.id}
+//                 plan={plan}
+//                 theme={theme}
+//                 onViewDetails={onViewDetails}
+//                 onEditPlan={onEditPlan}
+//                 onDeletePlan={onDeletePlan}
+//                 onDuplicatePlan={onDuplicatePlan}
+//                 onToggleStatus={onToggleStatus}
+//                 isSelected={selectedPlans.includes(plan.id)}
+//                 onSelect={togglePlanSelection}
+//               />
+//             ))}
+//           </tbody>
+//         </table>
+//       </div>
+//     );
+//   }, [plans, theme, selectedPlans, toggleAllPlans, togglePlanSelection, onViewDetails, onEditPlan, onDeletePlan, onDuplicatePlan, onToggleStatus]);
+
+//   // ==========================================================================
+//   // RENDER STATS CARDS
+//   // ==========================================================================
+
+//   const renderStats = () => {
+//     if (plans.length === 0) return null;
+
+//     return (
+//       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+//         <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+//           <div className="flex items-center gap-2 mb-2">
+//             <div className="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-900/50">
+//               <Package className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+//             </div>
+//             <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Plans</span>
+//           </div>
+//           <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+//             {stats.total}
+//           </div>
+//           <div className="flex items-center gap-2 mt-1 text-xs">
+//             <span className="text-green-600 dark:text-green-400">{stats.active} active</span>
+//             <span className="text-gray-300 dark:text-gray-600">•</span>
+//             <span className="text-red-600 dark:text-red-400">{stats.inactive} inactive</span>
+//           </div>
+//         </div>
+
+//         <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+//           <div className="flex items-center gap-2 mb-2">
+//             <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/50">
+//               <Users className="w-4 h-4 text-green-600 dark:text-green-400" />
+//             </div>
+//             <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Subscribers</span>
+//           </div>
+//           <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+//             {formatNumber(stats.totalSubscribers)}
+//           </div>
+//           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+//             Revenue: {formatCurrency(stats.totalRevenue)}
+//           </div>
+//         </div>
+
+//         <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+//           <div className="flex items-center gap-2 mb-2">
+//             <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/50">
+//               <CheckCircle className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+//             </div>
+//             <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Available Now</span>
+//           </div>
+//           <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+//             {stats.available}
+//           </div>
+//           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+//             {stats.total > 0 ? ((stats.available / stats.total) * 100).toFixed(0) : 0}% of plans
+//           </div>
+//         </div>
+
+//         <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+//           <div className="flex items-center gap-2 mb-2">
+//             <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/50">
+//               <Crown className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+//             </div>
+//             <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Most Popular</span>
+//           </div>
+//           <div className="text-lg font-bold text-purple-600 dark:text-purple-400 truncate" title={stats.mostPopular?.name}>
+//             {stats.mostPopular?.name || 'N/A'}
+//           </div>
+//           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+//             {formatNumber(stats.mostPopular?.purchases || 0)} subscribers
+//           </div>
+//         </div>
+//       </div>
+//     );
+//   };
+
+//   // ==========================================================================
+//   // RENDER FILTERS
+//   // ==========================================================================
+
+//   const renderFilters = () => {
+//     const hasActiveFilters = searchQuery || 
+//       filters.accessType !== 'all' ||
+//       filters.planType !== 'all' ||
+//       filters.availability !== 'all' ||
+//       filters.active !== 'all' ||
+//       filters.hasTimeVariant !== 'all';
+
+//     return (
+//       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+//         {/* Search Bar */}
+//         <div className="relative mb-4">
+//           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+//           <input
+//             type="text"
+//             placeholder="Search plans by name, category, or description..."
+//             value={searchQuery}
+//             onChange={(e) => onSearchChange(e.target.value)}
+//             className="w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800"
+//           />
+//           {searchQuery && (
+//             <button
+//               onClick={() => onSearchChange('')}
+//               className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+//             >
+//               <X className="w-5 h-5 text-gray-400" />
+//             </button>
+//           )}
+//         </div>
+
+//         {/* Filter Toggle for Mobile */}
+//         {isMobile && (
+//           <button
+//             onClick={() => setShowFilters(!showFilters)}
+//             className="w-full mb-4 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-between"
+//           >
+//             <span className="flex items-center gap-2">
+//               <Filter className="w-4 h-4" />
+//               Filters
+//             </span>
+//             <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+//           </button>
+//         )}
+
+//         {/* Filters */}
+//         {(showFilters || !isMobile) && (
+//           <>
+//             <div className="flex flex-wrap items-center gap-2">
+//               <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 mr-1">
+//                 Quick Filters:
+//               </span>
+
+//               <FilterButton
+//                 label="All Plans"
+//                 icon={Package}
+//                 active={!hasActiveFilters}
+//                 onClick={handleClearAllFilters}
+//                 color="indigo"
+//               />
+
+//               <FilterButton
+//                 label="Hotspot"
+//                 icon={Wifi}
+//                 active={filters.accessType === 'hotspot'}
+//                 onClick={() => handleQuickFilter('accessType', 'hotspot')}
+//                 color="blue"
+//               />
+
+//               <FilterButton
+//                 label="PPPoE"
+//                 icon={Cable}
+//                 active={filters.accessType === 'pppoe'}
+//                 onClick={() => handleQuickFilter('accessType', 'pppoe')}
+//                 color="green"
+//               />
+
+//               <FilterButton
+//                 label="Dual"
+//                 icon={() => (
+//                   <div className="flex">
+//                     <Wifi className="w-3.5 h-3.5 -mr-1" />
+//                     <Cable className="w-3.5 h-3.5" />
+//                   </div>
+//                 )}
+//                 active={filters.accessType === 'both'}
+//                 onClick={() => handleQuickFilter('accessType', 'both')}
+//                 color="purple"
+//               />
+
+//               <FilterButton
+//                 label="Available"
+//                 icon={CheckCircle}
+//                 active={filters.availability === 'available'}
+//                 onClick={() => handleQuickFilter('availability', 'available')}
+//                 color="green"
+//               />
+
+//               <FilterButton
+//                 label="Free Trial"
+//                 icon={Clock}
+//                 active={filters.planType === 'free_trial'}
+//                 onClick={() => handleQuickFilter('planType', 'free_trial')}
+//                 color="blue"
+//               />
+
+//               <FilterButton
+//                 label="Promotional"
+//                 icon={Sparkles}
+//                 active={filters.planType === 'promotional'}
+//                 onClick={() => handleQuickFilter('planType', 'promotional')}
+//                 color="purple"
+//               />
+
+//               <FilterButton
+//                 label="Paid"
+//                 icon={DollarSign}
+//                 active={filters.planType === 'paid'}
+//                 onClick={() => handleQuickFilter('planType', 'paid')}
+//                 color="green"
+//               />
+
+//               <FilterButton
+//                 label="Time Restricted"
+//                 icon={Clock}
+//                 active={filters.hasTimeVariant === 'yes'}
+//                 onClick={() => handleQuickFilter('hasTimeVariant', 'yes')}
+//                 color="amber"
+//               />
+
+//               <FilterButton
+//                 label="Active"
+//                 icon={CheckCircle}
+//                 active={filters.active === 'active'}
+//                 onClick={() => handleQuickFilter('active', 'active')}
+//                 color="green"
+//               />
+//             </div>
+
+//             {/* Filter Summary */}
+//             {hasActiveFilters && (
+//               <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+//                 <p className="text-xs text-gray-500 dark:text-gray-400">
+//                   Showing {plans.length} of {allPlans.length} plans
+//                   {searchQuery && ` matching "${searchQuery}"`}
+//                 </p>
+//               </div>
+//             )}
+//           </>
+//         )}
+//       </div>
+//     );
+//   };
+
+//   // ==========================================================================
+//   // MAIN RENDER
+//   // ==========================================================================
+
+//   if (isLoading && plans.length === 0) {
+//     return (
+//       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+//         <div className="max-w-7xl mx-auto px-4 py-8">
+//           <div className="flex flex-col items-center justify-center py-20">
+//             <div className="relative">
+//               <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+//               <div className="absolute inset-0 flex items-center justify-center">
+//                 <div className="w-4 h-4 bg-indigo-600 rounded-full animate-pulse" />
+//               </div>
+//             </div>
+//             <p className="mt-4 text-gray-600 dark:text-gray-400">Loading your plans...</p>
+//           </div>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+//       <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+//         {/* Header */}
+//         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+//           <div>
+//             <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+//               Internet Plans
+//             </h1>
+//             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+//               Create, manage, and analyze your internet service plans
+//             </p>
+//           </div>
+
+//           <div className="flex items-center gap-3">
+//             {/* Refresh Button */}
+//             <button
+//               onClick={onRefresh}
+//               disabled={isLoading}
+//               className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+//               title="Refresh Plans"
+//             >
+//               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+//             </button>
+
+//             {/* View Toggle */}
+//             <div className="flex items-center bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-1">
+//               <button
+//                 onClick={() => setViewMode('table')}
+//                 className={`p-2 rounded-md transition-colors ${
+//                   viewMode === 'table'
+//                     ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
+//                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+//                 }`}
+//                 title="Table View"
+//               >
+//                 <List className="w-4 h-4" />
+//               </button>
+//               <button
+//                 onClick={() => setViewMode('grid')}
+//                 className={`p-2 rounded-md transition-colors ${
+//                   viewMode === 'grid'
+//                     ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
+//                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+//                 }`}
+//                 title="Grid View"
+//               >
+//                 <Grid className="w-4 h-4" />
+//               </button>
+//             </div>
+
+//             <button
+//               onClick={onViewAnalytics}
+//               className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-indigo-600 text-white hover:from-indigo-600 hover:to-indigo-700 flex items-center gap-2 text-sm"
+//             >
+//               <BarChart3 className="w-4 h-4" />
+//               Analytics
+//             </button>
+
+//             <button
+//               onClick={onViewTemplates}
+//               className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 flex items-center gap-2 text-sm"
+//             >
+//               <Box className="w-4 h-4" />
+//               Templates
+//             </button>
+
+//             <button
+//               onClick={onNewPlan}
+//               className="px-4 py-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 flex items-center gap-2 text-sm"
+//             >
+//               <Plus className="w-4 h-4" />
+//               New Plan
+//             </button>
+//           </div>
+//         </div>
+
+//         {/* Filters */}
+//         {renderFilters()}
+
+//         {/* Statistics */}
+//         {plans.length > 0 && renderStats()}
+
+//         {/* Bulk Actions Bar */}
+//         <AnimatePresence>
+//           {showBulkActions && selectedPlans.length > 0 && (
+//             <motion.div
+//               initial={{ opacity: 0, y: -20 }}
+//               animate={{ opacity: 1, y: 0 }}
+//               exit={{ opacity: 0, y: -20 }}
+//               className="px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg flex items-center justify-between"
+//             >
+//               <div className="flex items-center gap-2">
+//                 <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
+//                   {selectedPlans.length} {selectedPlans.length === 1 ? 'plan' : 'plans'} selected
+//                 </span>
+//                 <button
+//                   onClick={clearSelection}
+//                   className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800"
+//                 >
+//                   Clear selection
+//                 </button>
+//               </div>
+//               <div className="flex items-center gap-2">
+//                 <button
+//                   onClick={() => handleBulkAction('activate')}
+//                   className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs hover:bg-green-700"
+//                 >
+//                   Activate
+//                 </button>
+//                 <button
+//                   onClick={() => handleBulkAction('deactivate')}
+//                   className="px-3 py-1.5 rounded-lg bg-amber-600 text-white text-xs hover:bg-amber-700"
+//                 >
+//                   Deactivate
+//                 </button>
+//                 <button
+//                   onClick={() => handleBulkAction('duplicate')}
+//                   className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs hover:bg-blue-700"
+//                 >
+//                   Duplicate
+//                 </button>
+//                 <button
+//                   onClick={() => handleBulkAction('delete')}
+//                   className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs hover:bg-red-700"
+//                 >
+//                   Delete
+//                 </button>
+//               </div>
+//             </motion.div>
+//           )}
+//         </AnimatePresence>
+
+//         {/* Plans Display */}
+//         {plans.length === 0 ? (
+//           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 py-20 px-4 text-center">
+//             <div className="p-4 rounded-full bg-gray-100 dark:bg-gray-700 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+//               <Package className="w-10 h-10 text-gray-400" />
+//             </div>
+//             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+//               No plans found
+//             </h3>
+//             <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
+//               {searchQuery || Object.values(filters).some(v => v !== 'all' && v !== null)
+//                 ? "Try adjusting your filters or search query"
+//                 : "Get started by creating your first internet plan"
+//               }
+//             </p>
+//             {!searchQuery && Object.values(filters).every(v => v === 'all' || v === null) && (
+//               <button
+//                 onClick={onNewPlan}
+//                 className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 inline-flex items-center gap-2"
+//               >
+//                 <Plus className="w-4 h-4" />
+//                 Create Your First Plan
+//               </button>
+//             )}
+//           </div>
+//         ) : (
+//           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+//             {viewMode === 'table' ? renderTableView() : renderGridView()}
+
+//             {/* Footer */}
+//             <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+//               <div className="flex items-center gap-2">
+//                 <Activity className="w-3.5 h-3.5" />
+//                 <span>
+//                   Showing <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+//                     {plans.length}
+//                   </span> of <span className="font-semibold">{allPlans.length}</span> plans
+//                 </span>
+//               </div>
+//               <div className="flex items-center gap-2">
+//                 <Sparkles className="w-3.5 h-3.5" />
+//                 <span>Sorted by {sortConfig.field} ({sortConfig.direction})</span>
+//               </div>
+//             </div>
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default PlanList;
+
+
+
+
+
+
+
+
+// PlanList.js - COMPLETE PRODUCTION READY VERSION WITH FIXED ACCESS TYPE
+
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Plus, Pencil, Trash2, Eye, Users, Search, 
+import {
+  Plus, Pencil, Trash2, Eye, Users, Search,
   Wifi, Cable, BarChart3, Package, Box, Filter,
   ChevronDown, ChevronUp, Clock, DollarSign, Calendar,
   CheckCircle, XCircle, AlertTriangle, Settings,
-  Star, Target, TrendingUp, Zap, Shield, Download
+  Star, Target, TrendingUp, Zap, Shield, Download,
+  TrendingDown, Activity, Award, Flame, Crown, Sparkles,
+  Heart, ThumbsUp, Gauge, Server, RefreshCw, X,
+  Menu, Grid, LayoutGrid, List, Info, Tag, Layers,
+  ChevronLeft, ChevronRight, Maximize2, Minimize2, CreditCard,
+  Gift, BadgePercent, Infinity, AlertCircle, Check
 } from "lucide-react";
-import { FaSpinner } from "react-icons/fa";
-import { EnhancedSelect, getThemeClasses, AvailabilityBadge, PriceBadge, PlanTypeBadge } from "../Shared/components"
-import { calculateRating, isPlanAvailableNow } from "../Shared/utils"
-import { formatNumber } from "../Shared/formatters"
-import { categories, planTypes } from "../Shared/constant"
 
-// Star component for ratings
-const StarIcon = ({ filled, className = "" }) => (
-  <svg className={`w-3 h-3 ${className} ${filled ? "text-amber-400 fill-current" : "text-gray-300"}`} 
-       fill={filled ? "currentColor" : "none"} viewBox="0 0 20 20">
-    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-  </svg>
-);
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
-// Plan Card Component for mobile view
-const PlanCard = ({ plan, theme, onViewDetails, onEditPlan, onDeletePlan, onDuplicatePlan, onToggleStatus }) => {
-  const themeClasses = getThemeClasses(theme);
-  const isAvailable = isPlanAvailableNow(plan);
-  const rating = calculateRating(plan.purchases || 0);
+const PLAN_TYPE_LABELS = {
+  paid: "Paid",
+  free_trial: "Free Trial",
+  promotional: "Promotional"
+};
+
+const PLAN_TYPE_COLORS = {
+  paid: {
+    light: { bg: "bg-green-100", text: "text-green-700", border: "border-green-200" },
+    dark: { bg: "dark:bg-green-900/30", text: "dark:text-green-400", border: "dark:border-green-800" }
+  },
+  free_trial: {
+    light: { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-200" },
+    dark: { bg: "dark:bg-blue-900/30", text: "dark:text-blue-400", border: "dark:border-blue-800" }
+  },
+  promotional: {
+    light: { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-200" },
+    dark: { bg: "dark:bg-purple-900/30", text: "dark:text-purple-400", border: "dark:border-purple-800" }
+  }
+};
+
+// ============================================================================
+// ACCESS TYPE CONFIGURATION - FIXED
+// ============================================================================
+
+const ACCESS_TYPE_CONFIG = {
+  hotspot: {
+    label: 'Hotspot',
+    icon: Wifi,
+    colors: {
+      light: { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-200" },
+      dark: { bg: "dark:bg-blue-900/30", text: "dark:text-blue-400", border: "dark:border-blue-800" }
+    }
+  },
+  pppoe: {
+    label: 'PPPoE',
+    icon: Cable,
+    colors: {
+      light: { bg: "bg-green-100", text: "text-green-700", border: "border-green-200" },
+      dark: { bg: "dark:bg-green-900/30", text: "dark:text-green-400", border: "dark:border-green-800" }
+    }
+  },
+  both: {
+    label: 'Dual Access',
+    icon: () => (
+      <div className="flex items-center">
+        <Wifi className="w-3 h-3 mr-0.5" />
+        <Cable className="w-3 h-3" />
+      </div>
+    ),
+    colors: {
+      light: { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-200" },
+      dark: { bg: "dark:bg-purple-900/30", text: "dark:text-purple-400", border: "dark:border-purple-800" }
+    }
+  },
+  none: {
+    label: 'No Access',
+    icon: AlertTriangle,
+    colors: {
+      light: { bg: "bg-gray-100", text: "text-gray-700", border: "border-gray-200" },
+      dark: { bg: "dark:bg-gray-800", text: "dark:text-gray-400", border: "dark:border-gray-700" }
+    }
+  }
+};
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+const getThemeClasses = (theme) => ({
+  bg: {
+    primary: theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50',
+    card: theme === 'dark' ? 'bg-gray-800' : 'bg-white',
+    hover: theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-50',
+    success: theme === 'dark' ? 'bg-green-900/30' : 'bg-green-100',
+    warning: theme === 'dark' ? 'bg-amber-900/30' : 'bg-amber-100',
+    danger: theme === 'dark' ? 'bg-red-900/30' : 'bg-red-100',
+    info: theme === 'dark' ? 'bg-blue-900/30' : 'bg-blue-100'
+  },
+  text: {
+    primary: theme === 'dark' ? 'text-white' : 'text-gray-900',
+    secondary: theme === 'dark' ? 'text-gray-400' : 'text-gray-600',
+    success: theme === 'dark' ? 'text-green-400' : 'text-green-700',
+    warning: theme === 'dark' ? 'text-amber-400' : 'text-amber-700',
+    danger: theme === 'dark' ? 'text-red-400' : 'text-red-700',
+    info: theme === 'dark' ? 'text-blue-400' : 'text-blue-700'
+  },
+  border: {
+    light: theme === 'dark' ? 'border-gray-700' : 'border-gray-200',
+    success: theme === 'dark' ? 'border-green-800' : 'border-green-200',
+    warning: theme === 'dark' ? 'border-amber-800' : 'border-amber-200',
+    danger: theme === 'dark' ? 'border-red-800' : 'border-red-200',
+    info: theme === 'dark' ? 'border-blue-800' : 'border-blue-200'
+  }
+});
+
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('en-KE', {
+    style: 'currency',
+    currency: 'KES',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value);
+};
+
+const formatNumber = (value) => {
+  return new Intl.NumberFormat('en-KE').format(value || 0);
+};
+
+const formatDate = (dateString, includeTime = false) => {
+  if (!dateString) return 'N/A';
+  try {
+    const date = new Date(dateString);
+    if (includeTime) {
+      return date.toLocaleString('en-KE', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    return date.toLocaleDateString('en-KE', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  } catch {
+    return 'Invalid Date';
+  }
+};
+
+const calculateRating = (purchases) => {
+  if (purchases >= 1000) return 4.9;
+  if (purchases >= 500) return 4.7;
+  if (purchases >= 250) return 4.5;
+  if (purchases >= 100) return 4.2;
+  if (purchases >= 50) return 4.0;
+  if (purchases >= 25) return 3.8;
+  if (purchases >= 10) return 3.5;
+  if (purchases >= 5) return 3.2;
+  if (purchases >= 1) return 3.0;
+  return 0;
+};
+
+const calculatePopularity = (purchases) => {
+  if (purchases >= 1000) return { label: 'Very High', color: 'text-purple-600', icon: Crown };
+  if (purchases >= 500) return { label: 'High', color: 'text-green-600', icon: TrendingUp };
+  if (purchases >= 100) return { label: 'Medium', color: 'text-blue-600', icon: Activity };
+  if (purchases >= 10) return { label: 'Low', color: 'text-amber-600', icon: TrendingDown };
+  return { label: 'New', color: 'text-gray-600', icon: Star };
+};
+
+// ============================================================================
+// HELPER FUNCTION TO DETERMINE ACCESS TYPE - FIXED
+// ============================================================================
+
+const getAccessTypeFromPlan = (plan) => {
+  const accessMethods = plan.access_methods || {};
+  const hotspot = accessMethods.hotspot || { enabled: false };
+  const pppoe = accessMethods.pppoe || { enabled: false };
   
-  const accessType = plan.enabled_access_methods?.includes('hotspot') && plan.enabled_access_methods?.includes('pppoe') 
-    ? 'dual' 
-    : plan.enabled_access_methods?.includes('hotspot') 
-    ? 'hotspot' 
-    : 'pppoe';
+  const hotspotEnabled = hotspot.enabled === true;
+  const pppoeEnabled = pppoe.enabled === true;
   
-  const accessTypeColors = {
-    hotspot: 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100',
-    pppoe: 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100',
-    dual: 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100'
+  if (hotspotEnabled && pppoeEnabled) return 'both';
+  if (hotspotEnabled) return 'hotspot';
+  if (pppoeEnabled) return 'pppoe';
+  return 'none';
+};
+
+// ============================================================================
+// PLAN TYPE BADGE COMPONENT
+// ============================================================================
+
+const PlanTypeBadge = ({ type, theme = 'light', size = 'sm' }) => {
+  const config = {
+    paid: {
+      label: 'Paid',
+      icon: DollarSign,
+      colors: PLAN_TYPE_COLORS.paid
+    },
+    free_trial: {
+      label: 'Free Trial',
+      icon: Clock,
+      colors: PLAN_TYPE_COLORS.free_trial
+    },
+    promotional: {
+      label: 'Promotional',
+      icon: Sparkles,
+      colors: PLAN_TYPE_COLORS.promotional
+    }
+  };
+
+  const { label, icon: Icon, colors } = config[type] || config.paid;
+
+  const sizeClasses = {
+    xs: 'px-1.5 py-0.5 text-[10px]',
+    sm: 'px-2 py-1 text-xs',
+    md: 'px-2.5 py-1.5 text-sm'
+  };
+
+  const iconSizes = {
+    xs: 'w-2.5 h-2.5',
+    sm: 'w-3 h-3',
+    md: 'w-3.5 h-3.5'
   };
 
   return (
-    <div className={`p-4 rounded-lg border ${themeClasses.border.light} ${themeClasses.bg.card}`}>
-      {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center mb-1">
-            <h3 className="font-semibold text-gray-900 dark:text-white truncate mr-2">
-              {plan.name || 'Unnamed Plan'}
-            </h3>
-            {plan.template && (
-              <Box className="w-3 h-3 text-blue-600" title="Created from template" />
-            )}
-          </div>
-          <div className="flex flex-wrap gap-1 mb-2">
-            <span className={`text-xs px-2 py-1 rounded-full ${accessTypeColors[accessType]}`}>
-              {accessType.toUpperCase()}
-            </span>
-            <span className={`text-xs px-2 py-1 rounded-full ${
-              plan.active 
-                ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
-                : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
-            }`}>
-              {plan.active ? 'Active' : 'Inactive'}
-            </span>
-          </div>
-        </div>
-        <div className="flex flex-col items-end">
-          <PriceBadge 
-            price={plan.price} 
-            currency="KES"
-            theme={theme}
-            size="sm"
-          />
-          <AvailabilityBadge
-            status={isAvailable ? "available" : "unavailable"}
-            theme={theme}
-            size="xs"
-            className="mt-1"
-          />
-        </div>
-      </div>
+    <span className={`
+      inline-flex items-center gap-1 rounded-full border font-medium
+      ${colors.light.bg} ${colors.light.text} ${colors.light.border}
+      ${colors.dark.bg} ${colors.dark.text} ${colors.dark.border}
+      ${sizeClasses[size]}
+    `}>
+      <Icon className={iconSizes[size]} />
+      {label}
+    </span>
+  );
+};
 
-      {/* Details */}
-      <div className="space-y-2 text-sm">
-        <div className="flex justify-between">
-          <span className="text-gray-500 dark:text-gray-400">Category:</span>
-          <span className="font-medium">{plan.category || 'N/A'}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-500 dark:text-gray-400">Type:</span>
-          <PlanTypeBadge type={plan.plan_type} theme={theme} size="xs" />
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-500 dark:text-gray-400">Purchases:</span>
-          <span className="font-medium">{plan.purchases || 0}</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-gray-500 dark:text-gray-400">Rating:</span>
-          <div className="flex items-center">
-            {[...Array(5)].map((_, i) => (
-              <StarIcon 
-                key={i} 
-                filled={i < Math.floor(rating)}
-                className="w-3 h-3"
-              />
-            ))}
-            <span className="ml-1 text-xs text-gray-500">
-              {rating.toFixed(1)}
-            </span>
-          </div>
-        </div>
-      </div>
+// ============================================================================
+// ACCESS TYPE BADGE COMPONENT - FIXED
+// ============================================================================
 
-      {/* Actions */}
-      <div className="flex justify-between mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex gap-2">
-          <motion.button 
-            onClick={() => onViewDetails(plan)} 
-            className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            title="View Details"
-          >
-            <Eye className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-          </motion.button>
-          <motion.button 
-            onClick={() => onEditPlan(plan)} 
-            className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            title="Edit Plan"
-          >
-            <Pencil className="w-4 h-4 text-blue-600 dark:text-blue-300" />
-          </motion.button>
-        </div>
-        <div className="flex gap-2">
-          <motion.button 
-            onClick={() => onDuplicatePlan(plan)} 
-            className="p-1.5 rounded-lg bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            title="Duplicate Plan"
-          >
-            <Plus className="w-4 h-4 text-green-600 dark:text-green-300" />
-          </motion.button>
-          <motion.button 
-            onClick={() => onDeletePlan(plan)} 
-            className="p-1.5 rounded-lg bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            title="Delete Plan"
-          >
-            <Trash2 className="w-4 h-4 text-red-600 dark:text-red-300" />
-          </motion.button>
-        </div>
+const AccessTypeBadge = ({ plan, size = 'sm', showLabel = true, theme = 'light' }) => {
+  // Get access type directly from plan
+  const accessType = getAccessTypeFromPlan(plan);
+  const config = ACCESS_TYPE_CONFIG[accessType] || ACCESS_TYPE_CONFIG.none;
+  
+  const Icon = config.icon;
+  const colors = config.colors;
+
+  const sizeClasses = {
+    xs: "px-1.5 py-0.5 text-xs",
+    sm: "px-2 py-1 text-xs",
+    md: "px-2.5 py-1.5 text-sm"
+  };
+
+  const iconSizes = {
+    xs: "w-3 h-3",
+    sm: "w-3.5 h-3.5",
+    md: "w-4 h-4"
+  };
+
+  return (
+    <span className={`
+      inline-flex items-center gap-1.5 rounded-full font-medium border
+      ${colors.light.bg} ${colors.light.text} ${colors.light.border}
+      ${colors.dark.bg} ${colors.dark.text} ${colors.dark.border}
+      ${sizeClasses[size]}
+    `}>
+      <Icon className={iconSizes[size]} />
+      {showLabel && config.label}
+    </span>
+  );
+};
+
+// ============================================================================
+// AVAILABILITY BADGE COMPONENT
+// ============================================================================
+
+const AvailabilityBadge = ({ isAvailable, theme = 'light', size = 'sm' }) => {
+  const sizeClasses = {
+    xs: 'px-1.5 py-0.5 text-[10px]',
+    sm: 'px-2 py-1 text-xs',
+    md: 'px-2.5 py-1.5 text-sm'
+  };
+
+  const iconSizes = {
+    xs: 'w-2.5 h-2.5',
+    sm: 'w-3 h-3',
+    md: 'w-3.5 h-3.5'
+  };
+
+  const colors = isAvailable
+    ? {
+        bg: 'bg-green-100 dark:bg-green-900/50',
+        text: 'text-green-700 dark:text-green-400',
+        border: 'border-green-200 dark:border-green-800'
+      }
+    : {
+        bg: 'bg-red-100 dark:bg-red-900/50',
+        text: 'text-red-700 dark:text-red-400',
+        border: 'border-red-200 dark:border-red-800'
+      };
+
+  return (
+    <span className={`
+      inline-flex items-center gap-1 rounded-full font-medium border
+      ${colors.bg} ${colors.text} ${colors.border}
+      ${sizeClasses[size]}
+    `}>
+      {isAvailable ? (
+        <CheckCircle className={iconSizes[size]} />
+      ) : (
+        <XCircle className={iconSizes[size]} />
+      )}
+      {isAvailable ? 'Available' : 'Unavailable'}
+    </span>
+  );
+};
+
+// ============================================================================
+// STAR RATING COMPONENT
+// ============================================================================
+
+const StarRating = ({ rating, size = 'sm' }) => {
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+  const sizeClasses = {
+    xs: "w-3 h-3",
+    sm: "w-4 h-4",
+    md: "w-5 h-5"
+  };
+
+  return (
+    <div className="flex items-center gap-1">
+      <div className="flex items-center">
+        {[...Array(fullStars)].map((_, i) => (
+          <Star
+            key={`full-${i}`}
+            className={`${sizeClasses[size]} fill-current text-amber-400`}
+          />
+        ))}
+        {hasHalfStar && (
+          <div className="relative">
+            <Star className={`${sizeClasses[size]} text-gray-300 dark:text-gray-600`} />
+            <div className="absolute inset-0 overflow-hidden w-1/2">
+              <Star className={`${sizeClasses[size]} fill-current text-amber-400`} />
+            </div>
+          </div>
+        )}
+        {[...Array(emptyStars)].map((_, i) => (
+          <Star
+            key={`empty-${i}`}
+            className={`${sizeClasses[size]} text-gray-300 dark:text-gray-600`}
+          />
+        ))}
       </div>
+      <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+        {rating.toFixed(1)}
+      </span>
     </div>
   );
 };
 
-// Plan Table Row Component for desktop view
-const PlanTableRow = ({ plan, theme, onViewDetails, onEditPlan, onDeletePlan, onDuplicatePlan, onToggleStatus }) => {
-  const themeClasses = getThemeClasses(theme);
-  const isAvailable = isPlanAvailableNow(plan);
-  const rating = calculateRating(plan.purchases || 0);
+// ============================================================================
+// PRICE DISPLAY HELPER
+// ============================================================================
+
+const getPriceDisplay = (plan) => {
+  const price = parseFloat(plan.price) || 0;
   
-  const accessType = plan.enabled_access_methods?.includes('hotspot') && plan.enabled_access_methods?.includes('pppoe') 
-    ? 'dual' 
-    : plan.enabled_access_methods?.includes('hotspot') 
-    ? 'hotspot' 
-    : 'pppoe';
-  
-  const accessTypeColors = {
-    hotspot: 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100',
-    pppoe: 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100',
-    dual: 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100'
+  switch (plan.plan_type) {
+    case 'free_trial':
+      return {
+        main: 'Free Trial',
+        value: '0.00',
+        badge: null,
+        className: 'text-blue-600 dark:text-blue-400 font-medium'
+      };
+    
+    case 'promotional':
+      if (price === 0) {
+        return {
+          main: 'Free',
+          value: '0.00',
+          badge: 'Promo',
+          className: 'text-purple-600 dark:text-purple-400'
+        };
+      }
+      return {
+        main: formatCurrency(price),
+        value: price.toFixed(2),
+        badge: 'Promo',
+        className: 'text-purple-600 dark:text-purple-400 font-bold'
+      };
+    
+    case 'paid':
+    default:
+      if (price === 0) {
+        return {
+          main: 'Free',
+          value: '0.00',
+          badge: null,
+          className: 'text-gray-600 dark:text-gray-400'
+        };
+      }
+      return {
+        main: formatCurrency(price),
+        value: price.toFixed(2),
+        badge: null,
+        className: 'text-gray-900 dark:text-white font-bold'
+      };
+  }
+};
+
+// ============================================================================
+// FILTER BUTTON COMPONENT
+// ============================================================================
+
+const FilterButton = ({ label, icon: Icon, active, onClick, color = 'indigo' }) => {
+  const colorClasses = {
+    indigo: {
+      active: 'bg-indigo-600 text-white border-indigo-600',
+      inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-indigo-400'
+    },
+    blue: {
+      active: 'bg-blue-600 text-white border-blue-600',
+      inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-blue-400'
+    },
+    green: {
+      active: 'bg-green-600 text-white border-green-600',
+      inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-green-400'
+    },
+    purple: {
+      active: 'bg-purple-600 text-white border-purple-600',
+      inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-purple-400'
+    },
+    amber: {
+      active: 'bg-amber-600 text-white border-amber-600',
+      inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-amber-400'
+    },
+    red: {
+      active: 'bg-red-600 text-white border-red-600',
+      inactive: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-red-400'
+    }
   };
 
   return (
-    <tr className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors`}>
-      {/* Plan Name */}
-      <td className="px-4 py-3 whitespace-nowrap">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            {accessType === 'hotspot' ? (
-              <Wifi className="w-4 h-4 text-blue-600" />
-            ) : accessType === 'pppoe' ? (
-              <Cable className="w-4 h-4 text-green-600" />
-            ) : (
-              <div className="flex">
-                <Wifi className="w-3 h-3 text-blue-600" />
-                <Cable className="w-3 h-3 text-green-600" />
-              </div>
-            )}
-          </div>
-          <div className="ml-3">
-            <div className="font-medium text-gray-900 dark:text-white truncate max-w-[150px] lg:max-w-[200px]">
-              {plan.name || 'Unnamed Plan'}
+    <button
+      onClick={onClick}
+      className={`
+        px-3 py-1.5 rounded-lg text-xs font-medium transition-all
+        flex items-center gap-1.5 border-2 whitespace-nowrap
+        ${active ? colorClasses[color].active : colorClasses[color].inactive}
+      `}
+    >
+      {Icon && <Icon className="w-3.5 h-3.5" />}
+      {label}
+    </button>
+  );
+};
+
+// ============================================================================
+// PLAN TABLE ROW COMPONENT - FIXED ACCESS TYPE
+// ============================================================================
+
+const PlanTableRow = ({
+  plan,
+  theme = 'light',
+  onViewDetails,
+  onEditPlan,
+  onDeletePlan,
+  onDuplicatePlan,
+  onToggleStatus,
+  isSelected,
+  onSelect
+}) => {
+  const themeClasses = getThemeClasses(theme);
+  const rating = calculateRating(plan.purchases);
+  const priceDisplay = getPriceDisplay(plan);
+  const popularity = calculatePopularity(plan.purchases);
+  const PopularityIcon = popularity.icon;
+  
+  // Get access type for icon display
+  const accessType = getAccessTypeFromPlan(plan);
+  
+  const getIconAndColor = () => {
+    switch(accessType) {
+      case 'both':
+        return {
+          icon: (
+            <div className="flex items-center gap-0.5">
+              <Wifi className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <Cable className="w-4 h-4 text-purple-600 dark:text-purple-400" />
             </div>
-            {plan.template && (
-              <div className="text-xs text-blue-600 dark:text-blue-400 truncate">
-                Template: {plan.template.name || plan.template}
-              </div>
+          ),
+          bg: 'bg-purple-100 dark:bg-purple-900/30'
+        };
+      case 'hotspot':
+        return {
+          icon: <Wifi className="w-4 h-4 text-blue-600 dark:text-blue-400" />,
+          bg: 'bg-blue-100 dark:bg-blue-900/30'
+        };
+      case 'pppoe':
+        return {
+          icon: <Cable className="w-4 h-4 text-green-600 dark:text-green-400" />,
+          bg: 'bg-green-100 dark:bg-green-900/30'
+        };
+      default:
+        return {
+          icon: <AlertTriangle className="w-4 h-4 text-gray-400" />,
+          bg: 'bg-gray-100 dark:bg-gray-800'
+        };
+    }
+  };
+
+  const { icon, bg } = getIconAndColor();
+
+  return (
+    <tr className={`
+      group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors
+      ${isSelected ? 'bg-indigo-50/50 dark:bg-indigo-900/20' : ''}
+    `}>
+      {/* Checkbox */}
+      <td className="px-4 py-4 whitespace-nowrap w-10">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onSelect(plan.id)}
+          className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
+        />
+      </td>
+
+      {/* Plan Info */}
+      <td className="px-4 py-4">
+        <div className="flex items-start gap-3">
+          <div className={`p-2 rounded-lg flex-shrink-0 ${bg}`}>
+            {icon}
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-gray-900 dark:text-white">
+                {plan.name}
+              </span>
+              <PlanTypeBadge type={plan.plan_type} theme={theme} size="xs" />
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {plan.category || 'Uncategorized'}
+              </span>
+              <span className="text-gray-300 dark:text-gray-600">•</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                ID: {plan.id?.slice(0, 8)}...
+              </span>
+            </div>
+            {plan.description && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
+                {plan.description}
+              </p>
             )}
           </div>
         </div>
       </td>
-      
-      {/* Category */}
-      <td className="px-4 py-3 whitespace-nowrap">
-        <span className={`text-sm ${themeClasses.text.primary}`}>
-          {plan.category || 'N/A'}
-        </span>
-      </td>
-      
+
       {/* Price */}
-      <td className="px-4 py-3 whitespace-nowrap">
-        <PriceBadge 
-          price={plan.price} 
-          currency="KES"
+      <td className="px-4 py-4 whitespace-nowrap">
+        <div className={priceDisplay.className}>
+          {priceDisplay.main}
+        </div>
+        {priceDisplay.badge && (
+          <div className="text-xs mt-1 text-purple-600 dark:text-purple-400 flex items-center gap-1">
+            <BadgePercent className="w-3 h-3" />
+            {priceDisplay.badge}
+          </div>
+        )}
+      </td>
+
+      {/* Access Type - FIXED */}
+      <td className="px-4 py-4 whitespace-nowrap">
+        <AccessTypeBadge
+          plan={plan}
+          size="xs"
+          showLabel={true}
           theme={theme}
-          size="sm"
         />
       </td>
-      
-      {/* Access Type */}
-      <td className="px-4 py-3 whitespace-nowrap">
-        <span className={`text-xs px-2 py-1 rounded-full ${accessTypeColors[accessType]}`}>
-          {accessType.toUpperCase()}
-        </span>
-      </td>
-      
-      {/* Status */}
-      <td className="px-4 py-3 whitespace-nowrap">
-        <div className="flex flex-col gap-1">
-          <AvailabilityBadge
-            status={isAvailable ? "available" : "unavailable"}
-            theme={theme}
-            size="xs"
-          />
-          <span className={`text-xs px-2 py-0.5 rounded-full ${
-            plan.active 
-              ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
-              : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
-          }`}>
-            {plan.active ? 'Active' : 'Inactive'}
+
+      {/* Subscribers & Rating */}
+      <td className="px-4 py-4 whitespace-nowrap">
+        <div className="flex items-center gap-2 mb-1">
+          <Users className="w-3.5 h-3.5 text-gray-500" />
+          <span className="text-sm font-medium text-gray-900 dark:text-white">
+            {formatNumber(plan.purchases || 0)}
+          </span>
+        </div>
+        <StarRating rating={rating} size="xs" />
+        <div className="flex items-center gap-1 mt-1">
+          <PopularityIcon className={`w-3 h-3 ${popularity.color}`} />
+          <span className={`text-xs ${popularity.color}`}>
+            {popularity.label}
           </span>
         </div>
       </td>
-      
-      {/* Purchases & Rating */}
-      <td className="px-4 py-3 whitespace-nowrap">
-        <div className="flex flex-col">
-          <span className="font-medium">{plan.purchases || 0}</span>
-          <div className="flex items-center">
-            {[...Array(5)].map((_, i) => (
-              <StarIcon 
-                key={i} 
-                filled={i < Math.floor(rating)}
-                className="w-3 h-3"
-              />
-            ))}
-            <span className="ml-1 text-xs text-gray-500">
-              {rating.toFixed(1)}
+
+      {/* Status */}
+      <td className="px-4 py-4 whitespace-nowrap">
+        <div className="space-y-1">
+          <AvailabilityBadge
+            isAvailable={plan.is_available_now || false}
+            theme={theme}
+            size="xs"
+          />
+          <span className={`
+            inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+            ${plan.active
+              ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400'
+              : 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400'
+            }
+          `}>
+            {plan.active ? 'Active' : 'Inactive'}
+          </span>
+          {plan.has_time_variant && (
+            <span className="flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400">
+              <Clock className="w-3 h-3" />
+              Time Restricted
             </span>
-          </div>
+          )}
         </div>
       </td>
-      
+
       {/* Actions */}
-      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
-        <div className="flex gap-1">
-          <motion.button 
-            onClick={() => onViewDetails(plan)} 
-            className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+      <td className="px-4 py-4 whitespace-nowrap">
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => onViewDetails(plan)}
+            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             title="View Details"
           >
-            <Eye className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-          </motion.button>
-          <motion.button 
-            onClick={() => onEditPlan(plan)} 
-            className="p-1.5 rounded hover:bg-blue-100 dark:hover:bg-blue-900"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+            <Eye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+          </button>
+          <button
+            onClick={() => onEditPlan(plan)}
+            className="p-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
             title="Edit Plan"
           >
-            <Pencil className="w-4 h-4 text-blue-600 dark:text-blue-300" />
-          </motion.button>
-          <motion.button 
-            onClick={() => onDuplicatePlan(plan)} 
-            className="p-1.5 rounded hover:bg-green-100 dark:hover:bg-green-900"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+            <Pencil className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          </button>
+          <button
+            onClick={() => onDuplicatePlan(plan)}
+            className="p-1.5 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
             title="Duplicate Plan"
           >
-            <Plus className="w-4 h-4 text-green-600 dark:text-green-300" />
-          </motion.button>
-          <motion.button 
-            onClick={() => onDeletePlan(plan)} 
-            className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+            <Plus className="w-4 h-4 text-green-600 dark:text-green-400" />
+          </button>
+          <button
+            onClick={() => onToggleStatus(plan)}
+            className={`
+              p-1.5 rounded-lg transition-colors
+              ${plan.active
+                ? 'hover:bg-amber-100 dark:hover:bg-amber-900/30'
+                : 'hover:bg-green-100 dark:hover:bg-green-900/30'
+              }
+            `}
+            title={plan.active ? "Deactivate" : "Activate"}
+          >
+            {plan.active ? (
+              <XCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            ) : (
+              <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+            )}
+          </button>
+          <button
+            onClick={() => onDeletePlan(plan)}
+            className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
             title="Delete Plan"
           >
-            <Trash2 className="w-4 h-4 text-red-600 dark:text-red-300" />
-          </motion.button>
+            <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+          </button>
         </div>
       </td>
     </tr>
   );
 };
 
-const PlanList = ({ 
-  plans, 
-  isLoading, 
-  onEditPlan, 
-  onViewDetails, 
-  onDeletePlan, 
+// ============================================================================
+// GRID VIEW CARD COMPONENT - FIXED ACCESS TYPE
+// ============================================================================
+
+const GridViewCard = ({
+  plan,
+  theme,
+  isSelected,
+  onSelect,
+  onViewDetails,
+  onEditPlan,
+  onDeletePlan,
+  onDuplicatePlan,
+  onToggleStatus
+}) => {
+  const priceDisplay = getPriceDisplay(plan);
+  const rating = calculateRating(plan.purchases);
+  const popularity = calculatePopularity(plan.purchases);
+  const PopularityIcon = popularity.icon;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      whileHover={{ y: -2 }}
+      className={`
+        rounded-xl border overflow-hidden cursor-pointer transition-all
+        ${isSelected
+          ? 'ring-2 ring-indigo-500 border-indigo-500'
+          : theme === 'dark'
+            ? 'bg-gray-800 border-gray-700 hover:border-gray-600'
+            : 'bg-white border-gray-200 hover:border-gray-300'
+        }
+      `}
+      onClick={() => onSelect(plan.id)}
+    >
+      <div className="p-4">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => onSelect(plan.id)}
+              onClick={(e) => e.stopPropagation()}
+              className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <PlanTypeBadge type={plan.plan_type} theme={theme} size="xs" />
+          </div>
+          <AvailabilityBadge
+            isAvailable={plan.is_available_now || false}
+            theme={theme}
+            size="xs"
+          />
+        </div>
+
+        {/* Plan Info */}
+        <h3 className="font-semibold text-lg mb-1 line-clamp-1">{plan.name}</h3>
+        {plan.description && (
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">
+            {plan.description}
+          </p>
+        )}
+
+        {/* Price */}
+        <div className={`text-2xl font-bold mb-3 ${priceDisplay.className}`}>
+          {priceDisplay.main}
+        </div>
+
+        {/* Access Type - FIXED */}
+        <div className="mb-3">
+          <AccessTypeBadge 
+            plan={plan}
+            size="sm" 
+            theme={theme} 
+          />
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          <div className="text-center p-2 bg-gray-50 dark:bg-gray-700/50 rounded">
+            <Users className="w-4 h-4 mx-auto mb-1 text-gray-500" />
+            <div className="text-sm font-medium">
+              {formatNumber(plan.purchases || 0)}
+            </div>
+            <div className="text-xs text-gray-500">Subscribers</div>
+          </div>
+          <div className="text-center p-2 bg-gray-50 dark:bg-gray-700/50 rounded">
+            <div className="flex justify-center mb-1">
+              <PopularityIcon className={`w-4 h-4 ${popularity.color}`} />
+            </div>
+            <div className="text-sm font-medium">
+              {rating.toFixed(1)}
+            </div>
+            <div className="text-xs text-gray-500">Rating</div>
+          </div>
+        </div>
+
+        {/* Status Indicators */}
+        <div className="flex flex-wrap gap-1 mb-3">
+          <span className={`
+            inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+            ${plan.active
+              ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400'
+              : 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400'
+            }
+          `}>
+            {plan.active ? 'Active' : 'Inactive'}
+          </span>
+          {plan.has_time_variant && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-400">
+              <Clock className="w-3 h-3" />
+              Time Restricted
+            </span>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-end gap-1 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewDetails(plan);
+            }}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            title="View Details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditPlan(plan);
+            }}
+            className="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+            title="Edit Plan"
+          >
+            <Pencil className="w-4 h-4 text-blue-600" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDuplicatePlan(plan);
+            }}
+            className="p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+            title="Duplicate Plan"
+          >
+            <Plus className="w-4 h-4 text-green-600" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleStatus(plan);
+            }}
+            className={`
+              p-2 rounded-lg transition-colors
+              ${plan.active
+                ? 'hover:bg-amber-100 dark:hover:bg-amber-900/30'
+                : 'hover:bg-green-100 dark:hover:bg-green-900/30'
+              }
+            `}
+            title={plan.active ? "Deactivate" : "Activate"}
+          >
+            {plan.active ? (
+              <XCircle className="w-4 h-4 text-amber-600" />
+            ) : (
+              <CheckCircle className="w-4 h-4 text-green-600" />
+            )}
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDeletePlan(plan);
+            }}
+            className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+            title="Delete Plan"
+          >
+            <Trash2 className="w-4 h-4 text-red-600" />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// ============================================================================
+// MAIN PLANLIST COMPONENT
+// ============================================================================
+
+const PlanList = ({
+  plans = [],
+  allPlans = [],
+  isLoading = false,
+  onEditPlan,
+  onViewDetails,
+  onDeletePlan,
   onDuplicatePlan,
   onToggleStatus,
   onNewPlan,
   onViewAnalytics,
   onViewTemplates,
-  theme,
-  isMobile,
-  isTablet,
-  isDesktop,
-  searchQuery,
+  onRefresh,
+  theme = 'light',
+  isMobile = false,
+  searchQuery = '',
   onSearchChange,
-  activeFilters,
-  onApplyFilter,
+  filters = {
+    category: 'all',
+    planType: 'all',
+    accessType: 'all',
+    availability: 'all',
+    active: 'all',
+    hasTimeVariant: 'all',
+    routerSpecific: 'all',
+    priceRange: null
+  },
+  onFilterChange,
   onClearFilters,
-  sortConfig,
+  sortConfig = { field: 'name', direction: 'asc' },
   onSort
 }) => {
   const themeClasses = getThemeClasses(theme);
-  const [expandedSections, setExpandedSections] = useState({
-    hotspot: true,
-    pppoe: true,
-    dual: true
-  });
   const [selectedPlans, setSelectedPlans] = useState([]);
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(activeFilters.category || '');
-  const [selectedPlanType, setSelectedPlanType] = useState(activeFilters.planType || '');
-  const [selectedAccessType, setSelectedAccessType] = useState(activeFilters.accessType || '');
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [viewMode, setViewMode] = useState('table'); // 'table' or 'grid'
+  const [showFilters, setShowFilters] = useState(!isMobile);
 
-  // Filter and sort plans
-  const filteredPlans = useMemo(() => {
-    let filtered = [...plans];
-    
-    // Apply category filter
-    if (activeFilters.category && activeFilters.category !== 'all') {
-      filtered = filtered.filter(plan => plan.category === activeFilters.category);
+  useEffect(() => {
+    setShowFilters(!isMobile);
+  }, [isMobile]);
+
+  // ==========================================================================
+  // STATISTICS
+  // ==========================================================================
+
+  const stats = useMemo(() => {
+    const active = plans.filter(p => p.active).length;
+    const inactive = plans.filter(p => !p.active).length;
+    const available = plans.filter(p => p.is_available_now).length;
+    const totalSubscribers = plans.reduce((sum, p) => sum + (p.purchases || 0), 0);
+    const totalRevenue = plans.reduce((sum, p) => sum + ((p.purchases || 0) * (parseFloat(p.price) || 0)), 0);
+
+    const mostPopular = [...plans].sort((a, b) => (b.purchases || 0) - (a.purchases || 0))[0];
+    const mostExpensive = [...plans].sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0))[0];
+
+    const byPlanType = plans.reduce((acc, p) => {
+      const type = p.plan_type || 'paid';
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {});
+
+    return {
+      total: plans.length,
+      active,
+      inactive,
+      available,
+      totalSubscribers,
+      totalRevenue,
+      mostPopular,
+      mostExpensive,
+      byPlanType
+    };
+  }, [plans]);
+
+  // ==========================================================================
+  // FILTER HANDLERS
+  // ==========================================================================
+
+  const handleQuickFilter = useCallback((type, value) => {
+    const newValue = filters[type] === value ? 'all' : value;
+    onFilterChange(type, newValue);
+  }, [filters, onFilterChange]);
+
+  const handleClearAllFilters = useCallback(() => {
+    onSearchChange('');
+    onClearFilters();
+  }, [onSearchChange, onClearFilters]);
+
+  // ==========================================================================
+  // BULK ACTIONS
+  // ==========================================================================
+
+  const togglePlanSelection = useCallback((id) => {
+    setSelectedPlans(prev => {
+      const newSelection = prev.includes(id) 
+        ? prev.filter(p => p !== id) 
+        : [...prev, id];
+      setShowBulkActions(newSelection.length > 0);
+      return newSelection;
+    });
+  }, []);
+
+  const toggleAllPlans = useCallback(() => {
+    setSelectedPlans(prev => {
+      const newSelection = prev.length === plans.length ? [] : plans.map(p => p.id);
+      setShowBulkActions(newSelection.length > 0);
+      return newSelection;
+    });
+  }, [plans]);
+
+  const clearSelection = useCallback(() => {
+    setSelectedPlans([]);
+    setShowBulkActions(false);
+  }, []);
+
+  const handleBulkAction = useCallback(async (action) => {
+    if (selectedPlans.length === 0) return;
+
+    if (action === 'delete') {
+      if (!window.confirm(`Delete ${selectedPlans.length} selected plans? This cannot be undone.`)) {
+        return;
+      }
     }
-    
-    // Apply plan type filter
-    if (activeFilters.planType && activeFilters.planType !== 'all') {
-      filtered = filtered.filter(plan => plan.plan_type === activeFilters.planType);
-    }
-    
-    // Apply access type filter
-    if (activeFilters.accessType && activeFilters.accessType !== 'all') {
-      filtered = filtered.filter(plan => {
-        const enabledMethods = plan.enabled_access_methods || plan.get_enabled_access_methods?.() || [];
-        if (activeFilters.accessType === 'both') {
-          return enabledMethods.includes('hotspot') && enabledMethods.includes('pppoe');
-        }
-        return enabledMethods.includes(activeFilters.accessType);
-      });
-    }
-    
-    // Apply availability filter
-    if (activeFilters.availability && activeFilters.availability !== 'all') {
-      filtered = filtered.filter(plan => {
-        const isAvailable = isPlanAvailableNow(plan);
-        return isAvailable === (activeFilters.availability === 'available');
-      });
-    }
-    
-    // Apply price range filter
-    if (activeFilters.priceRange) {
-      filtered = filtered.filter(plan => {
-        const price = parseFloat(plan.price) || 0;
-        return price >= activeFilters.priceRange.min && price <= activeFilters.priceRange.max;
-      });
-    }
-    
-    // Apply time variant filter
-    if (activeFilters.hasTimeVariant && activeFilters.hasTimeVariant !== 'all') {
-      filtered = filtered.filter(plan => {
-        const hasVariant = plan.time_variant?.is_active;
-        return hasVariant === (activeFilters.hasTimeVariant === 'yes');
-      });
-    }
-    
-    // Apply search
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(plan => 
-        plan.name?.toLowerCase().includes(query) ||
-        plan.description?.toLowerCase().includes(query) ||
-        plan.category?.toLowerCase().includes(query)
+
+    setShowBulkActions(false);
+
+    const batchSize = 5;
+    for (let i = 0; i < selectedPlans.length; i += batchSize) {
+      const batch = selectedPlans.slice(i, i + batchSize);
+      await Promise.allSettled(
+        batch.map(async (id) => {
+          const plan = plans.find(p => p.id === id);
+          if (!plan) return;
+
+          switch (action) {
+            case 'activate':
+              if (!plan.active) await onToggleStatus(plan);
+              break;
+            case 'deactivate':
+              if (plan.active) await onToggleStatus(plan);
+              break;
+            case 'duplicate':
+              await onDuplicatePlan(plan);
+              break;
+            case 'delete':
+              await onDeletePlan(plan);
+              break;
+            default:
+              break;
+          }
+        })
       );
     }
-    
-    // Apply sorting
-    filtered.sort((a, b) => {
-      let aValue = a[sortConfig.field];
-      let bValue = b[sortConfig.field];
-      
-      switch (sortConfig.field) {
-        case 'price':
-          aValue = parseFloat(aValue) || 0;
-          bValue = parseFloat(bValue) || 0;
-          break;
-        case 'created_at':
-        case 'updated_at':
-          aValue = new Date(aValue || 0).getTime();
-          bValue = new Date(bValue || 0).getTime();
-          break;
-        case 'name':
-        case 'description':
-          aValue = (aValue || '').toLowerCase();
-          bValue = (bValue || '').toLowerCase();
-          break;
-        case 'purchases':
-          aValue = parseInt(aValue) || 0;
-          bValue = parseInt(bValue) || 0;
-          break;
-      }
-      
-      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-    
-    return filtered;
-  }, [plans, activeFilters, searchQuery, sortConfig]);
 
-  // Separate plans by access type
-  const { hotspotPlans, pppoePlans, dualPlans } = useMemo(() => {
-    const hotspot = filteredPlans.filter(plan => {
-      const methods = plan.enabled_access_methods || plan.get_enabled_access_methods?.() || [];
-      return methods.includes('hotspot') && !methods.includes('pppoe');
-    });
-    const pppoe = filteredPlans.filter(plan => {
-      const methods = plan.enabled_access_methods || plan.get_enabled_access_methods?.() || [];
-      return methods.includes('pppoe') && !methods.includes('hotspot');
-    });
-    const dual = filteredPlans.filter(plan => {
-      const methods = plan.enabled_access_methods || plan.get_enabled_access_methods?.() || [];
-      return methods.includes('hotspot') && methods.includes('pppoe');
-    });
-    
-    return { hotspotPlans: hotspot, pppoePlans: pppoe, dualPlans: dual };
-  }, [filteredPlans]);
+    clearSelection();
+  }, [selectedPlans, plans, onToggleStatus, onDuplicatePlan, onDeletePlan, clearSelection]);
 
-  // Statistics
-  const stats = useMemo(() => {
-    return {
-      total: filteredPlans.length,
-      active: filteredPlans.filter(p => p.active).length,
-      available: filteredPlans.filter(p => isPlanAvailableNow(p)).length,
-    };
-  }, [filteredPlans]);
+  // ==========================================================================
+  // GRID VIEW RENDERER
+  // ==========================================================================
 
-  // Handle filter changes
-  const handleFilterChange = (filterType, value) => {
-    switch (filterType) {
-      case 'category':
-        setSelectedCategory(value);
-        break;
-      case 'planType':
-        setSelectedPlanType(value);
-        break;
-      case 'accessType':
-        setSelectedAccessType(value);
-        break;
-    }
-    
-    if (onApplyFilter) {
-      onApplyFilter(filterType, value || null);
-    }
-  };
-
-  // Clear all filters
-  const handleClearFilters = () => {
-    setSelectedCategory('');
-    setSelectedPlanType('');
-    setSelectedAccessType('');
-    setShowFilters(false);
-    if (onClearFilters) {
-      onClearFilters();
-    }
-  };
-
-  // Toggle section expansion
-  const toggleSection = (section) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
-  };
-
-  // Toggle plan selection
-  const togglePlanSelection = (planId) => {
-    setSelectedPlans(prev => 
-      prev.includes(planId) 
-        ? prev.filter(id => id !== planId)
-        : [...prev, planId]
-    );
-  };
-
-  // Toggle all plans selection
-  const toggleAllPlans = () => {
-    if (selectedPlans.length === filteredPlans.length) {
-      setSelectedPlans([]);
-    } else {
-      setSelectedPlans(filteredPlans.map(plan => plan.id));
-    }
-  };
-
-  // Handle bulk actions
-  const handleBulkAction = (action) => {
-    switch (action) {
-      case 'activate':
-        selectedPlans.forEach(id => {
-          const plan = filteredPlans.find(p => p.id === id);
-          if (plan && !plan.active) {
-            onToggleStatus(plan);
-          }
-        });
-        break;
-      case 'deactivate':
-        selectedPlans.forEach(id => {
-          const plan = filteredPlans.find(p => p.id === id);
-          if (plan && plan.active) {
-            onToggleStatus(plan);
-          }
-        });
-        break;
-      case 'export':
-        // Export selected plans logic here
-        console.log('Exporting plans:', selectedPlans);
-        break;
-      case 'delete':
-        selectedPlans.forEach(id => {
-          const plan = filteredPlans.find(p => p.id === id);
-          if (plan) {
-            onDeletePlan(plan);
-          }
-        });
-        setSelectedPlans([]);
-        break;
-    }
-  };
-
-  // Sort handler
-  const handleSort = (field) => {
-    if (onSort) {
-      onSort(field);
-    }
-  };
-
-  // Get category icon
-  const getCategoryIcon = (category) => {
-    const icons = {
-      Residential: <Wifi className="w-4 h-4 text-blue-600" />,
-      Business: <Shield className="w-4 h-4 text-green-600" />,
-      Promotional: <Package className="w-4 h-4 text-purple-600" />,
-      Enterprise: <Target className="w-4 h-4 text-indigo-600" />,
-      Educational: <Users className="w-4 h-4 text-orange-600" />,
-      Gaming: <Zap className="w-4 h-4 text-red-600" />
-    };
-    return icons[category] || <Box className="w-4 h-4 text-gray-600" />;
-  };
-
-  // Render star rating
-  const renderStars = (purchases) => {
-    const rating = calculateRating(purchases);
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-    
-    return (
-      <div className="flex items-center">
-        {[...Array(5)].map((_, i) => (
-          <StarIcon 
-            key={i} 
-            filled={i < fullStars || (i === fullStars && hasHalfStar)}
-          />
-        ))}
-        <span className={`ml-1 text-xs ${themeClasses.text.secondary}`}>
-          {rating.toFixed(1)}
-        </span>
-      </div>
-    );
-  };
-
-  // Get active access method for a plan
-  const getActiveAccessMethod = (plan) => {
-    const enabledMethods = plan.enabled_access_methods || plan.get_enabled_access_methods?.() || [];
-    const accessMethods = plan.accessMethods || plan.access_methods || {};
-    
-    if (enabledMethods.includes('hotspot') && enabledMethods.includes('pppoe')) {
-      return { type: 'dual', config: accessMethods };
-    }
-    if (enabledMethods.includes('hotspot')) {
-      return { type: 'hotspot', config: accessMethods.hotspot };
-    }
-    if (enabledMethods.includes('pppoe')) {
-      return { type: 'pppoe', config: accessMethods.pppoe };
-    }
-    return { type: 'none', config: null };
-  };
-
-  // Render plan section
-  const renderPlanSection = (type, plans, title, icon, color) => {
+  const renderGridView = useCallback(() => {
     if (plans.length === 0) return null;
 
-    const isExpanded = expandedSections[type];
-    const IconComponent = icon;
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+        {plans.map(plan => (
+          <GridViewCard
+            key={plan.id}
+            plan={plan}
+            theme={theme}
+            isSelected={selectedPlans.includes(plan.id)}
+            onSelect={togglePlanSelection}
+            onViewDetails={onViewDetails}
+            onEditPlan={onEditPlan}
+            onDeletePlan={onDeletePlan}
+            onDuplicatePlan={onDuplicatePlan}
+            onToggleStatus={onToggleStatus}
+          />
+        ))}
+      </div>
+    );
+  }, [plans, theme, selectedPlans, togglePlanSelection, onViewDetails, onEditPlan, onDeletePlan, onDuplicatePlan, onToggleStatus]);
+
+  // ==========================================================================
+  // TABLE VIEW RENDERER
+  // ==========================================================================
+
+  const renderTableView = useCallback(() => {
+    if (plans.length === 0) return null;
 
     return (
-      <div className={`mb-6 rounded-2xl overflow-hidden border ${themeClasses.border.light} ${themeClasses.bg.card}`}>
-        {/* Section Header */}
-        <div 
-          className={`p-4 sm:p-5 cursor-pointer transition-colors duration-200 ${
-            color === 'blue' 
-              ? 'bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-800' 
-              : color === 'green'
-              ? 'bg-green-50 dark:bg-green-900/20 border-b border-green-100 dark:border-green-800'
-              : 'bg-purple-50 dark:bg-purple-900/20 border-b border-purple-100 dark:border-purple-800'
-          }`}
-          onClick={() => toggleSection(type)}
-        >
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className={`p-2 sm:p-3 rounded-xl ${
-                color === 'blue' 
-                  ? 'bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-400' 
-                  : color === 'green'
-                  ? 'bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-400'
-                  : 'bg-purple-100 dark:bg-purple-800 text-purple-600 dark:text-purple-400'
-              }`}>
-                <IconComponent className="w-5 h-5 sm:w-6 sm:h-6" />
-              </div>
-              <div>
-                <h3 className={`text-lg sm:text-xl font-bold ${
-                  color === 'blue' ? 'text-blue-900 dark:text-blue-100' 
-                  : color === 'green' ? 'text-green-900 dark:text-green-100'
-                  : 'text-purple-900 dark:text-purple-100'
-                }`}>
-                  {title} Plans
-                </h3>
-                <p className={`text-sm ${
-                  color === 'blue' ? 'text-blue-700 dark:text-blue-300' 
-                  : color === 'green' ? 'text-green-700 dark:text-green-300'
-                  : 'text-purple-700 dark:text-purple-300'
-                }`}>
-                  {plans.length} plan{plans.length !== 1 ? 's' : ''} • {
-                    plans.reduce((sum, plan) => sum + (plan.purchases || 0), 0)
-                  } total purchases
-                </p>
-              </div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[1200px]">
+          <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+            <tr>
+              <th className="px-4 py-3 w-10">
+                <input
+                  type="checkbox"
+                  checked={selectedPlans.length === plans.length && plans.length > 0}
+                  onChange={toggleAllPlans}
+                  className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
+                />
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Plan Details
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Price
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Access Type
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Subscribers
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            {plans.map(plan => (
+              <PlanTableRow
+                key={plan.id}
+                plan={plan}
+                theme={theme}
+                onViewDetails={onViewDetails}
+                onEditPlan={onEditPlan}
+                onDeletePlan={onDeletePlan}
+                onDuplicatePlan={onDuplicatePlan}
+                onToggleStatus={onToggleStatus}
+                isSelected={selectedPlans.includes(plan.id)}
+                onSelect={togglePlanSelection}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }, [plans, theme, selectedPlans, toggleAllPlans, togglePlanSelection, onViewDetails, onEditPlan, onDeletePlan, onDuplicatePlan, onToggleStatus]);
+
+  // ==========================================================================
+  // RENDER STATS CARDS
+  // ==========================================================================
+
+  const renderStats = () => {
+    if (plans.length === 0) return null;
+
+    return (
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-900/50">
+              <Package className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             </div>
-            <div className="flex items-center space-x-2 sm:space-x-3 self-end sm:self-auto">
-              <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                color === 'blue' 
-                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200' 
-                  : color === 'green'
-                  ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200'
-                  : 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200'
-              }`}>
-                {type.toUpperCase()}
-              </span>
-              {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-            </div>
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Plans</span>
+          </div>
+          <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+            {stats.total}
+          </div>
+          <div className="flex items-center gap-2 mt-1 text-xs">
+            <span className="text-green-600 dark:text-green-400">{stats.active} active</span>
+            <span className="text-gray-300 dark:text-gray-600">•</span>
+            <span className="text-red-600 dark:text-red-400">{stats.inactive} inactive</span>
           </div>
         </div>
 
-        {/* Plans Table */}
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y text-sm">
-                  <thead className={theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-100'}>
-                    <tr>
-                      <th className="px-3 py-3 sm:px-4 sm:py-3 text-left">
-                        <input
-                          type="checkbox"
-                          checked={plans.every(p => selectedPlans.includes(p.id))}
-                          onChange={() => {
-                            const allSelected = plans.every(p => selectedPlans.includes(p.id));
-                            if (allSelected) {
-                              setSelectedPlans(prev => prev.filter(id => !plans.some(p => p.id === id)));
-                            } else {
-                              setSelectedPlans(prev => [...prev, ...plans.map(p => p.id)]);
-                            }
-                          }}
-                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                        />
-                      </th>
-                      <th className={`px-3 py-3 sm:px-4 sm:py-3 text-left font-medium ${themeClasses.text.secondary} cursor-pointer`}
-                          onClick={() => onSort('name')}>
-                        Plan Name {sortConfig.field === 'name' && (
-                          <span className="ml-1">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
-                        )}
-                      </th>
-                      <th className={`px-3 py-3 sm:px-4 sm:py-3 text-left font-medium ${themeClasses.text.secondary}`}>
-                        Category
-                      </th>
-                      <th className={`px-3 py-3 sm:px-4 sm:py-3 text-left font-medium ${themeClasses.text.secondary} cursor-pointer`}
-                          onClick={() => onSort('price')}>
-                        Price {sortConfig.field === 'price' && (
-                          <span className="ml-1">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
-                        )}
-                      </th>
-                      <th className={`px-3 py-3 sm:px-4 sm:py-3 text-left font-medium ${themeClasses.text.secondary}`}>
-                        Configuration
-                      </th>
-                      <th className={`px-3 py-3 sm:px-4 sm:py-3 text-left font-medium ${themeClasses.text.secondary}`}>
-                        Status
-                      </th>
-                      <th className={`px-3 py-3 sm:px-4 sm:py-3 text-left font-medium ${themeClasses.text.secondary}`}>
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-200'}`}>
-                    {plans.map((plan) => {
-                      const activeMethod = getActiveAccessMethod(plan);
-                      const isAvailable = isPlanAvailableNow(plan);
-                      
-                      return (
-                        <tr key={plan.id} className={`hover:${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                          <td className="px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap">
-                            <input
-                              type="checkbox"
-                              checked={selectedPlans.includes(plan.id)}
-                              onChange={() => togglePlanSelection(plan.id)}
-                              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                            />
-                          </td>
-                          <td className="px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              {getCategoryIcon(plan.category)}
-                              <div className="ml-2 sm:ml-3">
-                                <div className="flex items-center">
-                                  <span className={`font-medium truncate max-w-[120px] sm:max-w-[180px] ${themeClasses.text.primary}`}>
-                                    {plan.name || 'Unnamed Plan'}
-                                  </span>
-                                  {plan.template && (
-                                    <Box className="w-3 h-3 text-blue-600 ml-1 sm:ml-2" title="Created from template" />
-                                  )}
-                                </div>
-                                <div className="flex items-center mt-1">
-                                  {renderStars(plan.purchases || 0)}
-                                  <span className="text-xs text-gray-500 ml-2">
-                                    {plan.purchases || 0} purchases
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className={`px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap ${themeClasses.text.secondary}`}>
-                            <span className="px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-700">
-                              {plan.category || 'N/A'}
-                            </span>
-                          </td>
-                          <td className={`px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap ${themeClasses.text.secondary}`}>
-                            <div className="flex flex-col gap-1">
-                              <PriceBadge 
-                                price={plan.price} 
-                                currency="KES"
-                                theme={theme}
-                                size="sm"
-                              />
-                              <PlanTypeBadge 
-                                type={plan.plan_type || 'paid'} 
-                                theme={theme}
-                                size="xs"
-                              />
-                            </div>
-                          </td>
-                          <td className={`px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap ${themeClasses.text.secondary}`}>
-                            {activeMethod.config && (
-                              <div className="space-y-1">
-                                <div className="text-xs flex items-center">
-                                  {activeMethod.type === 'dual' ? (
-                                    <span className="flex items-center gap-1">
-                                      <Wifi className="w-3 h-3 text-blue-500" />
-                                      <Cable className="w-3 h-3 text-green-500" />
-                                    </span>
-                                  ) : activeMethod.type === 'hotspot' ? (
-                                    <span className="flex items-center gap-1">
-                                      <Wifi className="w-3 h-3 text-blue-500" />
-                                      <span>Hotspot</span>
-                                    </span>
-                                  ) : (
-                                    <span className="flex items-center gap-1">
-                                      <Cable className="w-3 h-3 text-green-500" />
-                                      <span>PPPoE</span>
-                                    </span>
-                                  )}
-                                </div>
-                                {activeMethod.type === 'hotspot' && activeMethod.config.downloadSpeed && (
-                                  <div className="text-xs text-gray-500">
-                                    {activeMethod.config.downloadSpeed.value || '10'} Mbps
-                                  </div>
-                                )}
-                                {activeMethod.type === 'pppoe' && activeMethod.config.downloadSpeed && (
-                                  <div className="text-xs text-gray-500">
-                                    {activeMethod.config.downloadSpeed.value || '10'} Mbps
-                                  </div>
-                                )}
-                                {activeMethod.type === 'dual' && (
-                                  <div className="text-xs text-gray-500">
-                                    Both access methods
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </td>
-                          <td className="px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap">
-                            <div className="flex flex-col gap-1">
-                              <AvailabilityBadge
-                                status={isAvailable ? "available" : "unavailable"}
-                                theme={theme}
-                                size="xs"
-                              />
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                plan.active 
-                                  ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
-                                  : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
-                              }`}>
-                                {plan.active ? 'Active' : 'Inactive'}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap">
-                            <div className="flex flex-wrap gap-1 sm:gap-2">
-                              <motion.button 
-                                onClick={() => onViewDetails(plan)} 
-                                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-                                whileHover={{ scale: 1.1 }} 
-                                whileTap={{ scale: 0.9 }}
-                                title="View Details"
-                              >
-                                <Eye className="w-4 h-4 text-indigo-600" />
-                              </motion.button>
-                              <motion.button 
-                                onClick={() => onEditPlan(plan)} 
-                                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-                                whileHover={{ scale: 1.1 }} 
-                                whileTap={{ scale: 0.9 }}
-                                title="Edit Plan"
-                              >
-                                <Pencil className="w-4 h-4 text-green-600" />
-                              </motion.button>
-                              <motion.button 
-                                onClick={() => onDuplicatePlan(plan)} 
-                                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-                                whileHover={{ scale: 1.1 }} 
-                                whileTap={{ scale: 0.9 }}
-                                title="Duplicate Plan"
-                              >
-                                <Plus className="w-4 h-4 text-blue-600" />
-                              </motion.button>
-                              <motion.button 
-                                onClick={() => onToggleStatus(plan)} 
-                                className={`p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                                  plan.active ? 'text-red-600' : 'text-green-600'
-                                }`}
-                                whileHover={{ scale: 1.1 }} 
-                                whileTap={{ scale: 0.9 }}
-                                title={plan.active ? "Deactivate Plan" : "Activate Plan"}
-                              >
-                                {plan.active ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
-                              </motion.button>
-                              <motion.button 
-                                onClick={() => onDeletePlan(plan)} 
-                                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-                                whileHover={{ scale: 1.1 }} 
-                                whileTap={{ scale: 0.9 }}
-                                title="Delete Plan"
-                              >
-                                <Trash2 className="w-4 h-4 text-red-600" />
-                              </motion.button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/50">
+              <Users className="w-4 h-4 text-green-600 dark:text-green-400" />
+            </div>
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Subscribers</span>
+          </div>
+          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+            {formatNumber(stats.totalSubscribers)}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Revenue: {formatCurrency(stats.totalRevenue)}
+          </div>
+        </div>
+
+        <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/50">
+              <CheckCircle className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Available Now</span>
+          </div>
+          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            {stats.available}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            {stats.total > 0 ? ((stats.available / stats.total) * 100).toFixed(0) : 0}% of plans
+          </div>
+        </div>
+
+        <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/50">
+              <Crown className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            </div>
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Most Popular</span>
+          </div>
+          <div className="text-lg font-bold text-purple-600 dark:text-purple-400 truncate" title={stats.mostPopular?.name}>
+            {stats.mostPopular?.name || 'N/A'}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            {formatNumber(stats.mostPopular?.purchases || 0)} subscribers
+          </div>
+        </div>
       </div>
     );
   };
 
-  // Filter UI Component
-  const FilterSectionComponent = () => (
-    <div className={`p-4 sm:p-6 rounded-xl shadow-lg ${themeClasses.bg.card}`}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold flex items-center">
-          <Filter className="w-5 h-5 mr-2 text-indigo-600" />
-          Filters
-        </h3>
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-        >
-          {showFilters ? (
-            <ChevronUp className="w-5 h-5" />
-          ) : (
-            <ChevronDown className="w-5 h-5" />
+  // ==========================================================================
+  // RENDER FILTERS
+  // ==========================================================================
+
+  const renderFilters = () => {
+    const hasActiveFilters = searchQuery || 
+      filters.accessType !== 'all' ||
+      filters.planType !== 'all' ||
+      filters.availability !== 'all' ||
+      filters.active !== 'all' ||
+      filters.hasTimeVariant !== 'all';
+
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+        {/* Search Bar */}
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search plans by name, category, or description..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => onSearchChange('')}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              <X className="w-5 h-5 text-gray-400" />
+            </button>
           )}
-        </button>
-      </div>
+        </div>
 
-      <AnimatePresence>
-        {showFilters && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden"
+        {/* Filter Toggle for Mobile */}
+        {isMobile && (
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="w-full mb-4 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-between"
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
-                  Category
-                </label>
-                <EnhancedSelect
-                  value={selectedCategory}
-                  onChange={(value) => handleFilterChange('category', value)}
-                  options={[
-                    { value: '', label: "All Categories" },
-                    ...categories.map(cat => ({ value: cat, label: cat }))
-                  ]}
-                  theme={theme}
-                />
-              </div>
+            <span className="flex items-center gap-2">
+              <Filter className="w-4 h-4" />
+              Filters
+            </span>
+            <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+          </button>
+        )}
 
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
-                  Plan Type
-                </label>
-                <EnhancedSelect
-                  value={selectedPlanType}
-                  onChange={(value) => handleFilterChange('planType', value)}
-                  options={[
-                    { value: '', label: "All Plan Types" },
-                    ...planTypes.map(type => ({ value: type, label: type }))
-                  ]}
-                  theme={theme}
-                />
-              </div>
+        {/* Filters */}
+        {(showFilters || !isMobile) && (
+          <>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 mr-1">
+                Quick Filters:
+              </span>
 
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
-                  Access Type
-                </label>
-                <EnhancedSelect
-                  value={selectedAccessType}
-                  onChange={(value) => handleFilterChange('accessType', value)}
-                  options={[
-                    { value: '', label: "All Access Types" },
-                    { value: 'hotspot', label: "Hotspot Only" },
-                    { value: 'pppoe', label: "PPPoE Only" },
-                    { value: 'both', label: "Dual Access" }
-                  ]}
-                  theme={theme}
-                />
-              </div>
+              <FilterButton
+                label="All Plans"
+                icon={Package}
+                active={!hasActiveFilters}
+                onClick={handleClearAllFilters}
+                color="indigo"
+              />
 
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
-                  Availability
-                </label>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => onApplyFilter('availability', true)}
-                    className={`px-3 py-2 rounded text-sm flex-1 ${
-                      activeFilters.availability === true
-                        ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                        : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
-                    }`}
-                  >
-                    <CheckCircle className="w-4 h-4 inline mr-1" />
-                    Available
-                  </button>
-                  <button
-                    onClick={() => onApplyFilter('availability', false)}
-                    className={`px-3 py-2 rounded text-sm flex-1 ${
-                      activeFilters.availability === false
-                        ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                        : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
-                    }`}
-                  >
-                    <XCircle className="w-4 h-4 inline mr-1" />
-                    Unavailable
-                  </button>
-                </div>
-              </div>
+              <FilterButton
+                label="Hotspot"
+                icon={Wifi}
+                active={filters.accessType === 'hotspot'}
+                onClick={() => handleQuickFilter('accessType', 'hotspot')}
+                color="blue"
+              />
+
+              <FilterButton
+                label="PPPoE"
+                icon={Cable}
+                active={filters.accessType === 'pppoe'}
+                onClick={() => handleQuickFilter('accessType', 'pppoe')}
+                color="green"
+              />
+
+              <FilterButton
+                label="Dual"
+                icon={() => (
+                  <div className="flex">
+                    <Wifi className="w-3.5 h-3.5 -mr-1" />
+                    <Cable className="w-3.5 h-3.5" />
+                  </div>
+                )}
+                active={filters.accessType === 'both'}
+                onClick={() => handleQuickFilter('accessType', 'both')}
+                color="purple"
+              />
+
+              <FilterButton
+                label="Available"
+                icon={CheckCircle}
+                active={filters.availability === 'available'}
+                onClick={() => handleQuickFilter('availability', 'available')}
+                color="green"
+              />
+
+              <FilterButton
+                label="Free Trial"
+                icon={Clock}
+                active={filters.planType === 'free_trial'}
+                onClick={() => handleQuickFilter('planType', 'free_trial')}
+                color="blue"
+              />
+
+              <FilterButton
+                label="Promotional"
+                icon={Sparkles}
+                active={filters.planType === 'promotional'}
+                onClick={() => handleQuickFilter('planType', 'promotional')}
+                color="purple"
+              />
+
+              <FilterButton
+                label="Paid"
+                icon={DollarSign}
+                active={filters.planType === 'paid'}
+                onClick={() => handleQuickFilter('planType', 'paid')}
+                color="green"
+              />
+
+              <FilterButton
+                label="Time Restricted"
+                icon={Clock}
+                active={filters.hasTimeVariant === 'yes'}
+                onClick={() => handleQuickFilter('hasTimeVariant', 'yes')}
+                color="amber"
+              />
+
+              <FilterButton
+                label="Active"
+                icon={CheckCircle}
+                active={filters.active === 'active'}
+                onClick={() => handleQuickFilter('active', 'active')}
+                color="green"
+              />
             </div>
 
-            {(selectedCategory || selectedPlanType || selectedAccessType || activeFilters.availability !== null) && (
-              <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
-                <span className="text-sm text-gray-500">
-                  {filteredPlans.length} of {plans.length} plans match filters
-                </span>
-                <button
-                  onClick={handleClearFilters}
-                  className="px-4 py-2 text-sm bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-800 dark:text-red-200 dark:hover:bg-red-700 rounded-lg"
-                >
-                  Clear All Filters
-                </button>
+            {/* Filter Summary */}
+            {hasActiveFilters && (
+              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Showing {plans.length} of {allPlans.length} plans
+                  {searchQuery && ` matching "${searchQuery}"`}
+                </p>
               </div>
             )}
-          </motion.div>
+          </>
         )}
-      </AnimatePresence>
-    </div>
-  );
+      </div>
+    );
+  };
 
-  // Main render
-  if (isMobile || isTablet) {
+  // ==========================================================================
+  // MAIN RENDER
+  // ==========================================================================
+
+  if (isLoading && plans.length === 0) {
     return (
-      <div className={`min-h-screen p-3 sm:p-6 lg:p-8 transition-colors duration-300 ${themeClasses.bg.primary}`}>
-        <main className="max-w-7xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500">
-                Internet Plans Management
-              </h1>
-              <p className={`mt-1 text-sm sm:text-base ${themeClasses.text.secondary}`}>
-                Create, manage, and analyze your internet service plans
-              </p>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-4 h-4 bg-indigo-600 rounded-full animate-pulse" />
+              </div>
             </div>
-            
-            <div className="flex flex-wrap gap-2 sm:gap-3 w-full md:w-auto">
-              <motion.button
-                onClick={onViewAnalytics}
-                className={`px-3 py-2 rounded-lg shadow-md flex items-center justify-center text-sm ${themeClasses.button.primary}`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <BarChart3 className="w-4 h-4 mr-2" />
-                Analytics
-              </motion.button>
-              
-              <motion.button
-                onClick={onViewTemplates}
-                className={`px-3 py-2 rounded-lg shadow-md flex items-center justify-center text-sm ${themeClasses.button.primary}`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Box className="w-4 h-4 mr-2" />
-                Templates
-              </motion.button>
-              
-              <motion.button
-                onClick={onNewPlan}
-                className={`px-4 py-2 rounded-lg shadow-md flex items-center justify-center text-sm ${themeClasses.button.success}`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                New Plan
-              </motion.button>
-            </div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading your plans...</p>
           </div>
-
-          {/* Search */}
-          <div className={`p-4 sm:p-6 rounded-xl shadow-lg ${themeClasses.bg.card}`}>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${themeClasses.text.tertiary}`} />
-                  <input
-                    type="text"
-                    placeholder="Search plans by name, category, or description..."
-                    value={searchQuery}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-2.5 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`px-4 py-2.5 rounded-lg text-sm flex items-center ${
-                    showFilters 
-                      ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-800 dark:text-indigo-200'
-                      : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200'
-                  }`}
-                >
-                  <Filter className="w-4 h-4 mr-2" />
-                  Filters
-                </button>
-                <button
-                  onClick={() => handleSort('purchases')}
-                  className={`px-4 py-2.5 rounded-lg text-sm flex items-center ${
-                    sortConfig.field === 'purchases'
-                      ? 'bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-200'
-                      : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200'
-                  }`}
-                >
-                  <TrendingUp className="w-4 h-4 mr-2" />
-                  Top Plans
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Filter Section */}
-          <FilterSectionComponent />
-
-          {/* Statistics */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-            <div className={`p-4 rounded-xl text-center ${themeClasses.bg.card}`}>
-              <div className="text-2xl sm:text-3xl font-bold text-indigo-600">{stats.total}</div>
-              <div className="text-sm text-gray-500 mt-1">Total Plans</div>
-            </div>
-            <div className={`p-4 rounded-xl text-center ${themeClasses.bg.card}`}>
-              <div className="text-2xl sm:text-3xl font-bold text-green-600">{stats.active}</div>
-              <div className="text-sm text-gray-500 mt-1">Active</div>
-            </div>
-            <div className={`p-4 rounded-xl text-center ${themeClasses.bg.card}`}>
-              <div className="text-2xl sm:text-3xl font-bold text-blue-600">{stats.available}</div>
-              <div className="text-sm text-gray-500 mt-1">Available Now</div>
-            </div>
-          </div>
-
-          {/* Loading State */}
-          {isLoading ? (
-            <div className={`flex justify-center items-center py-12 rounded-xl ${themeClasses.bg.card}`}>
-              <FaSpinner className="w-8 h-8 text-indigo-600 animate-spin" />
-            </div>
-          ) : filteredPlans.length === 0 ? (
-            <div className={`rounded-xl shadow-lg p-6 text-center ${themeClasses.bg.card}`}>
-              <Package className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold mb-2">No Plans Found</h3>
-              <p className={`mb-4 ${themeClasses.text.secondary}`}>
-                {searchQuery || Object.values(activeFilters).some(v => v !== null && v !== '') 
-                  ? "Try adjusting your search or filters" 
-                  : "Create your first internet plan to get started!"
-                }
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <motion.button
-                  onClick={onNewPlan}
-                  className={`px-4 py-2 rounded-lg shadow-md ${themeClasses.button.primary}`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Your First Plan
-                </motion.button>
-                {(searchQuery || Object.values(activeFilters).some(v => v !== null && v !== '')) && (
-                  <motion.button
-                    onClick={handleClearFilters}
-                    className={`px-4 py-2 rounded-lg shadow-md ${themeClasses.button.secondary}`}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Clear All Filters
-                  </motion.button>
-                )}
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* Mobile View - Card Layout */}
-              <div className="space-y-3">
-                {filteredPlans.map(plan => (
-                  <PlanCard
-                    key={plan.id}
-                    plan={plan}
-                    theme={theme}
-                    onViewDetails={onViewDetails}
-                    onEditPlan={onEditPlan}
-                    onDeletePlan={onDeletePlan}
-                    onDuplicatePlan={onDuplicatePlan}
-                    onToggleStatus={onToggleStatus}
-                  />
-                ))}
-              </div>
-
-              {/* Pagination/Info */}
-              <div className={`p-4 rounded-xl ${themeClasses.bg.card} flex flex-col sm:flex-row sm:items-center justify-between gap-3`}>
-                <div className="text-sm text-gray-500">
-                  Showing {filteredPlans.length} of {plans.length} plans
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-gray-500">Sorted by:</span>
-                  <span className="font-medium capitalize">
-                    {sortConfig.field === 'name' ? 'Name' : 
-                     sortConfig.field === 'price' ? 'Price' : 
-                     sortConfig.field === 'purchases' ? 'Purchases' : 'Name'}
-                  </span>
-                  <button
-                    onClick={() => handleSort(sortConfig.field)}
-                    className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-                  >
-                    <ChevronUp className={`w-4 h-4 ${sortConfig.direction === 'desc' ? 'rotate-180' : ''}`} />
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
-        </main>
+        </div>
       </div>
     );
   }
 
-  // Desktop view with sections
   return (
-    <div className={`min-h-screen p-3 sm:p-6 lg:p-8 transition-colors duration-300 ${themeClasses.bg.primary}`}>
-      <main className="max-w-7xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500">
-              Internet Plans Management
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl lg:text-2xl font-bold text-teal-600 dark:text-teal-400">
+              Service Packages
             </h1>
-            <p className={`mt-1 text-sm sm:text-base ${themeClasses.text.secondary}`}>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               Create, manage, and analyze your internet service plans
             </p>
           </div>
-          
-          <div className="flex flex-wrap gap-2 sm:gap-3 w-full md:w-auto">
-            <motion.button
+
+          <div className="flex items-center gap-3">
+            {/* Refresh Button */}
+            <button
+              onClick={onRefresh}
+              disabled={isLoading}
+              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Refresh Plans"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            </button>
+
+            {/* View Toggle */}
+            <div className="flex items-center bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-1">
+              <button
+                onClick={() => setViewMode('table')}
+                className={`p-2 rounded-md transition-colors ${
+                  viewMode === 'table'
+                    ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+                title="Table View"
+              >
+                <List className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-md transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+                title="Grid View"
+              >
+                <Grid className="w-4 h-4" />
+              </button>
+            </div>
+
+            <button
               onClick={onViewAnalytics}
-              className={`px-3 py-2 rounded-lg shadow-md flex items-center justify-center text-sm ${themeClasses.button.primary}`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-indigo-600 text-white hover:from-indigo-600 hover:to-indigo-700 flex items-center gap-2 text-sm"
             >
-              <BarChart3 className="w-4 h-4 mr-2" />
+              <BarChart3 className="w-4 h-4" />
               Analytics
-            </motion.button>
-            
-            <motion.button
+            </button>
+
+            <button
               onClick={onViewTemplates}
-              className={`px-3 py-2 rounded-lg shadow-md flex items-center justify-center text-sm ${themeClasses.button.primary}`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 flex items-center gap-2 text-sm"
             >
-              <Box className="w-4 h-4 mr-2" />
+              <Box className="w-4 h-4" />
               Templates
-            </motion.button>
-            
-            <motion.button
+            </button>
+
+            <button
               onClick={onNewPlan}
-              className={`px-4 py-2 rounded-lg shadow-md flex items-center justify-center text-sm ${themeClasses.button.success}`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 flex items-center gap-2 text-sm"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4" />
               New Plan
-            </motion.button>
+            </button>
           </div>
         </div>
 
-        {/* Search and Quick Filters */}
-        <div className={`p-4 sm:p-5 rounded-xl shadow-lg ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              {/* Search */}
-              <div className="w-full lg:w-96">
-                <div className="relative">
-                  <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${themeClasses.text.tertiary}`} />
-                  <input
-                    type="text" 
-                    placeholder="Search plans by name, category, or description..." 
-                    value={searchQuery} 
-                    onChange={(e) => onSearchChange(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-3 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => onSearchChange("")}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-              </div>
-              
-              {/* Filters Row */}
-              <div className="flex flex-wrap gap-3">
-                {/* Category Filter */}
-                <div className="w-full sm:w-48">
-                  <EnhancedSelect
-                    value={activeFilters.category || 'all'}
-                    onChange={(value) => onApplyFilter('category', value === 'all' ? null : value)}
-                    options={[
-                      { value: 'all', label: "All Categories" },
-                      ...categories.map(cat => ({ value: cat, label: cat }))
-                    ]}
-                    theme={theme}
-                    isSearchable={true}
-                  />
-                </div>
-                
-                {/* Plan Type Filter */}
-                <div className="w-full sm:w-48">
-                  <EnhancedSelect
-                    value={activeFilters.planType || 'all'}
-                    onChange={(value) => onApplyFilter('planType', value === 'all' ? null : value)}
-                    options={[
-                      { value: 'all', label: "All Plan Types" },
-                      ...planTypes.map(type => ({ value: type, label: type }))
-                    ]}
-                    theme={theme}
-                    isSearchable={true}
-                  />
-                </div>
-                
-                {/* Access Type Filter */}
-                <div className="w-full sm:w-48">
-                  <EnhancedSelect
-                    value={activeFilters.accessType || 'all'}
-                    onChange={(value) => onApplyFilter('accessType', value === 'all' ? null : value)}
-                    options={[
-                      { value: 'all', label: "All Access Types" },
-                      { value: 'hotspot', label: "Hotspot Only" },
-                      { value: 'pppoe', label: "PPPoE Only" },
-                      { value: 'both', label: "Dual Access" }
-                    ]}
-                    theme={theme}
-                    isSearchable={true}
-                  />
-                </div>
-              </div>
-            </div>
-            
-            {/* Quick Filter Buttons */}
-            <div className="flex flex-wrap gap-2 items-center">
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Quick Filters:</span>
-              
-              <div className="flex flex-wrap gap-2">
-                {/* Availability Filter */}
-                <button
-                  onClick={() => onApplyFilter('availability', activeFilters.availability === 'available' ? null : 'available')}
-                  className={`px-3 py-2 rounded-lg text-xs flex items-center gap-1 ${
-                    activeFilters.availability === 'available'
-                      ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 border border-green-300 dark:border-green-700"
-                      : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600"
-                  }`}
-                >
-                  <CheckCircle className="w-3 h-3" />
-                  Available
-                </button>
-                
-                <button
-                  onClick={() => onApplyFilter('availability', activeFilters.availability === 'unavailable' ? null : 'unavailable')}
-                  className={`px-3 py-2 rounded-lg text-xs flex items-center gap-1 ${
-                    activeFilters.availability === 'unavailable'
-                      ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100 border border-red-300 dark:border-red-700"
-                      : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600"
-                  }`}
-                >
-                  <XCircle className="w-3 h-3" />
-                  Unavailable
-                </button>
-                
-                {/* Time Variant Filter */}
-                <button
-                  onClick={() => onApplyFilter('hasTimeVariant', activeFilters.hasTimeVariant === 'yes' ? null : 'yes')}
-                  className={`px-3 py-2 rounded-lg text-xs flex items-center gap-1 ${
-                    activeFilters.hasTimeVariant === 'yes'
-                      ? "bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100 border border-blue-300 dark:border-blue-700"
-                      : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600"
-                  }`}
-                >
-                  <Clock className="w-3 h-3" />
-                  Time Restricted
-                </button>
-                
-                {/* Active Plans Filter */}
-                <button
-                  onClick={() => onApplyFilter('active', activeFilters.active === true ? null : true)}
-                  className={`px-3 py-2 rounded-lg text-xs flex items-center gap-1 ${
-                    activeFilters.active === true
-                      ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 border border-green-300 dark:border-green-700"
-                      : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600"
-                  }`}
-                >
-                  <CheckCircle className="w-3 h-3" />
-                  Active Only
-                </button>
-                
-                {/* Free Trial Filter */}
-                <button
-                  onClick={() => onApplyFilter('planType', activeFilters.planType === 'free_trial' ? null : 'free_trial')}
-                  className={`px-3 py-2 rounded-lg text-xs flex items-center gap-1 ${
-                    activeFilters.planType === 'free_trial'
-                      ? "bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100 border border-purple-300 dark:border-purple-700"
-                      : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600"
-                  }`}
-                >
-                  <Package className="w-3 h-3" />
-                  Free Trials
-                </button>
-              </div>
-              
-              {/* Clear Filters Button */}
-              {(searchQuery || activeFilters.category || activeFilters.planType || 
-                activeFilters.accessType || activeFilters.availability || 
-                activeFilters.hasTimeVariant || activeFilters.active) && (
-                <button
-                  onClick={onClearFilters}
-                  className="ml-auto px-3 py-2 text-xs bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-800 dark:text-red-200 dark:hover:bg-red-700 rounded-lg flex items-center gap-1"
-                >
-                  <Filter className="w-3 h-3" />
-                  Clear Filters
-                </button>
-              )}
-            </div>
-            
-            {/* Selected Plans Actions */}
-            {selectedPlans.length > 0 && (
-              <div className={`p-3 rounded-lg border ${themeClasses.border.light} ${
-                theme === 'dark' ? 'bg-blue-900/20' : 'bg-blue-50'
-              }`}>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                    <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                      {selectedPlans.length} plan{selectedPlans.length !== 1 ? 's' : ''} selected
-                    </span>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => handleBulkAction('activate')}
-                      className="px-3 py-1 text-xs bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-800 dark:text-green-200 dark:hover:bg-green-700 rounded"
-                    >
-                      Activate
-                    </button>
-                    <button
-                      onClick={() => handleBulkAction('deactivate')}
-                      className="px-3 py-1 text-xs bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-800 dark:text-red-200 dark:hover:bg-red-700 rounded"
-                    >
-                      Deactivate
-                    </button>
-                    <button
-                      onClick={() => handleBulkAction('export')}
-                      className="px-3 py-1 text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 rounded flex items-center gap-1"
-                    >
-                      <Download className="w-3 h-3" />
-                      Export
-                    </button>
-                    <button
-                      onClick={() => handleBulkAction('delete')}
-                      className="px-3 py-1 text-xs bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-800 dark:text-red-200 dark:hover:bg-red-700 rounded flex items-center gap-1"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                      Delete
-                    </button>
-                    <button
-                      onClick={() => setSelectedPlans([])}
-                      className="px-3 py-1 text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 rounded"
-                    >
-                      Clear Selection
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        {/* Filters */}
+        {renderFilters()}
 
         {/* Statistics */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-          <div className={`p-4 rounded-xl text-center ${themeClasses.bg.card}`}>
-            <div className="text-2xl sm:text-3xl font-bold text-indigo-600">{stats.total}</div>
-            <div className="text-sm text-gray-500 mt-1">Total Plans</div>
-          </div>
-          <div className={`p-4 rounded-xl text-center ${themeClasses.bg.card}`}>
-            <div className="text-2xl sm:text-3xl font-bold text-green-600">{stats.active}</div>
-            <div className="text-sm text-gray-500 mt-1">Active</div>
-          </div>
-          <div className={`p-4 rounded-xl text-center ${themeClasses.bg.card}`}>
-            <div className="text-2xl sm:text-3xl font-bold text-blue-600">{stats.available}</div>
-            <div className="text-sm text-gray-500 mt-1">Available Now</div>
-          </div>
-        </div>
+        {plans.length > 0 && renderStats()}
 
-        {/* Loading State */}
-        {isLoading ? (
-          <div className={`flex justify-center items-center py-12 rounded-xl ${themeClasses.bg.card}`}>
-            <FaSpinner className="w-8 h-8 text-indigo-600 animate-spin" />
-          </div>
-        ) : filteredPlans.length === 0 ? (
-          <div className={`rounded-xl shadow-lg p-6 text-center ${themeClasses.bg.card}`}>
-            <Package className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <h3 className="text-lg font-semibold mb-2">No Plans Found</h3>
-            <p className={`mb-4 ${themeClasses.text.secondary}`}>
-              {searchQuery || Object.values(activeFilters).some(v => v !== null && v !== '') 
-                ? "Try adjusting your search or filters" 
-                : "Create your first internet plan to get started!"
-              }
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <motion.button
-                onClick={onNewPlan}
-                className={`px-4 py-2 rounded-lg shadow-md ${themeClasses.button.primary}`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Your First Plan
-              </motion.button>
-              {(searchQuery || Object.values(activeFilters).some(v => v !== null && v !== '')) && (
-                <motion.button
-                  onClick={onClearFilters}
-                  className={`px-4 py-2 rounded-lg shadow-md ${themeClasses.button.secondary}`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Clear All Filters
-                </motion.button>
-              )}
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Desktop View - Section Layout */}
-            {renderPlanSection('hotspot', hotspotPlans, 'Hotspot', Wifi, 'blue')}
-            {renderPlanSection('pppoe', pppoePlans, 'PPPoE', Cable, 'green')}
-            {renderPlanSection('dual', dualPlans, 'Dual Access', Shield, 'purple')}
-
-            {/* Pagination/Info */}
-            <div className={`p-4 rounded-xl ${themeClasses.bg.card} flex flex-col sm:flex-row sm:items-center justify-between gap-3`}>
-              <div className="text-sm text-gray-500">
-                Showing {filteredPlans.length} of {plans.length} plans
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-gray-500">Sorted by:</span>
-                <span className="font-medium capitalize">
-                  {sortConfig.field === 'name' ? 'Name' : 
-                   sortConfig.field === 'price' ? 'Price' : 
-                   sortConfig.field === 'purchases' ? 'Purchases' : 'Name'}
+        {/* Bulk Actions Bar */}
+        <AnimatePresence>
+          {showBulkActions && selectedPlans.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg flex items-center justify-between"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
+                  {selectedPlans.length} {selectedPlans.length === 1 ? 'plan' : 'plans'} selected
                 </span>
                 <button
-                  onClick={() => handleSort(sortConfig.field)}
-                  className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                  onClick={clearSelection}
+                  className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800"
                 >
-                  <ChevronUp className={`w-4 h-4 ${sortConfig.direction === 'desc' ? 'rotate-180' : ''}`} />
+                  Clear selection
                 </button>
               </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleBulkAction('activate')}
+                  className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs hover:bg-green-700"
+                >
+                  Activate
+                </button>
+                <button
+                  onClick={() => handleBulkAction('deactivate')}
+                  className="px-3 py-1.5 rounded-lg bg-amber-600 text-white text-xs hover:bg-amber-700"
+                >
+                  Deactivate
+                </button>
+                <button
+                  onClick={() => handleBulkAction('duplicate')}
+                  className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs hover:bg-blue-700"
+                >
+                  Duplicate
+                </button>
+                <button
+                  onClick={() => handleBulkAction('delete')}
+                  className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs hover:bg-red-700"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Plans Display */}
+        {plans.length === 0 ? (
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 py-20 px-4 text-center">
+            <div className="p-4 rounded-full bg-gray-100 dark:bg-gray-700 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+              <Package className="w-10 h-10 text-gray-400" />
             </div>
-          </>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              No plans found
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
+              {searchQuery || Object.values(filters).some(v => v !== 'all' && v !== null)
+                ? "Try adjusting your filters or search query"
+                : "Get started by creating your first internet plan"
+              }
+            </p>
+            {!searchQuery && Object.values(filters).every(v => v === 'all' || v === null) && (
+              <button
+                onClick={onNewPlan}
+                className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 inline-flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Create Your First Plan
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            {viewMode === 'table' ? renderTableView() : renderGridView()}
+
+            {/* Footer */}
+            <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+              <div className="flex items-center gap-2">
+                <Activity className="w-3.5 h-3.5" />
+                <span>
+                  Showing <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                    {plans.length}
+                  </span> of <span className="font-semibold">{allPlans.length}</span> plans
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Sorted by {sortConfig.field} ({sortConfig.direction})</span>
+              </div>
+            </div>
+          </div>
         )}
-      </main>
+      </div>
     </div>
   );
 };

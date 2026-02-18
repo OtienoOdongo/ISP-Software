@@ -1,792 +1,278 @@
 
 
-// import React from "react";
-// import { motion } from "framer-motion";
-// import { EnhancedSelect, getThemeClasses } from "../Shared/components";
-// import { planTypes, categories } from "../Shared/constant"
-// import { Wifi, Cable } from "lucide-react";
-
-// const PlanBasicDetails = ({ form, errors, touched, onChange, onAccessTypeChange, onBlur, theme }) => {
-//   const themeClasses = getThemeClasses(theme);
-
-//   // Access type options with icons
-//   const accessTypeOptions = [
-//     { value: "hotspot", label: "Hotspot", icon: Wifi, description: "Wireless access for multiple users" },
-//     { value: "pppoe", label: "PPPoE", icon: Cable, description: "Wired connection with authentication" }
-//   ];
-
-//   return (
-//     <div className={`p-4 lg:p-6 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-//       <h3 className="text-lg lg:text-xl font-semibold mb-3 lg:mb-4">Basic Details</h3>
-//       <div className="space-y-4 lg:space-y-6">
-//         {/* Access Type Selection - NEW: Clear separation */}
-//         <div>
-//           <label className={`block text-sm font-medium mb-3 ${themeClasses.text.primary}`}>
-//             Access Type <span className="text-red-500">*</span>
-//           </label>
-//           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//             {accessTypeOptions.map((option) => {
-//               const IconComponent = option.icon;
-//               const isSelected = form.accessType === option.value;
-              
-//               return (
-//                 <motion.div
-//                   key={option.value}
-//                   whileHover={{ scale: 1.02 }}
-//                   whileTap={{ scale: 0.98 }}
-//                   onClick={() => onAccessTypeChange(option.value)}
-//                   className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-//                     isSelected
-//                       ? option.value === 'hotspot'
-//                         ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-//                         : 'border-green-500 bg-green-50 dark:bg-green-900/20'
-//                       : `${themeClasses.border.light} ${themeClasses.bg.card} hover:bg-gray-50 dark:hover:bg-gray-700/50`
-//                   }`}
-//                 >
-//                   <div className="flex items-center space-x-3">
-//                     <div className={`p-2 rounded-full ${
-//                       isSelected
-//                         ? option.value === 'hotspot'
-//                           ? 'bg-blue-100 text-blue-600 dark:bg-blue-800 dark:text-blue-300'
-//                           : 'bg-green-100 text-green-600 dark:bg-green-800 dark:text-green-300'
-//                         : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
-//                     }`}>
-//                       <IconComponent className="w-5 h-5" />
-//                     </div>
-//                     <div className="flex-1">
-//                       <h4 className={`font-semibold ${
-//                         isSelected ? themeClasses.text.primary : themeClasses.text.secondary
-//                       }`}>
-//                         {option.label}
-//                       </h4>
-//                       <p className={`text-xs mt-1 ${
-//                         isSelected ? themeClasses.text.secondary : themeClasses.text.tertiary
-//                       }`}>
-//                         {option.description}
-//                       </p>
-//                     </div>
-//                     {isSelected && (
-//                       <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-//                         option.value === 'hotspot'
-//                           ? 'bg-blue-500 text-white'
-//                           : 'bg-green-500 text-white'
-//                       }`}>
-//                         ✓
-//                       </div>
-//                     )}
-//                   </div>
-//                 </motion.div>
-//               );
-//             })}
-//           </div>
-//         </div>
-
-//         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
-//           <div>
-//             <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//               Plan Type <span className="text-red-500">*</span>
-//             </label>
-//             <EnhancedSelect
-//               value={form.planType}
-//               onChange={(value) => onChange({ target: { name: 'planType', value } })}
-//               options={planTypes.map(type => ({ value: type, label: type }))}
-//               placeholder="Select Plan Type"
-//               theme={theme}
-//             />
-//             {errors.planType && <p className="text-red-500 text-xs mt-1">{errors.planType}</p>}
-//           </div>
-//           <div>
-//             <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//               Name <span className="text-red-500">*</span>
-//             </label>
-//             <input 
-//               name="name" 
-//               value={form.name || ""} 
-//               onChange={onChange}
-//               onBlur={() => onBlur('name')}
-//               className={`w-full px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-//               placeholder="e.g., Rural Wi-Fi Pro" 
-//               required 
-//             />
-//             {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-//           </div>
-//         </div>
-//         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
-//           <div>
-//             <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//               Category <span className="text-red-500">*</span>
-//             </label>
-//             <EnhancedSelect
-//               value={form.category}
-//               onChange={(value) => onChange({ target: { name: 'category', value } })}
-//               options={categories.map(cat => ({ value: cat, label: cat }))}
-//               placeholder="Select Category"
-//               theme={theme}
-//             />
-//             {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
-//           </div>
-//           <div>
-//             <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//               Price (Ksh) {form.planType === "Paid" && <span className="text-red-500">*</span>}
-//             </label>
-//             <input
-//               type="number" 
-//               name="price" 
-//               value={form.price || ""} 
-//               onChange={onChange}
-//               onBlur={() => onBlur('price')}
-//               disabled={form.planType !== "Paid"}
-//               className={`w-full px-3 py-2 rounded-lg shadow-sm text-sm ${
-//                 form.planType !== "Paid" 
-//                   ? "bg-gray-100 cursor-not-allowed border-gray-300" 
-//                   : themeClasses.input
-//               }`}
-//               placeholder="e.g., 29.99" 
-//               step="0.01" 
-//               min="0" 
-//               required={form.planType === "Paid"}
-//             />
-//             {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
-//           </div>
-//         </div>
-//         <div>
-//           <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//             Description
-//           </label>
-//           <textarea 
-//             name="description" 
-//             value={form.description || ""} 
-//             onChange={onChange}
-//             rows={3}
-//             className={`w-full px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-//             placeholder="Describe the plan features and benefits..."
-//           />
-//         </div>
-//         <div className="flex items-center">
-//           <label className={`block text-sm font-medium mr-4 ${themeClasses.text.primary}`}>
-//             Active
-//           </label>
-//           <div 
-//             onClick={() => onChange({ target: { name: 'active', type: 'checkbox', checked: !form.active } })} 
-//             className={`relative inline-flex items-center h-6 w-11 rounded-full cursor-pointer transition-colors duration-200 ease-in-out ${
-//               form.active 
-//                 ? 'bg-indigo-600'
-//                 : theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'
-//             }`}
-//           >
-//             <span className={`inline-block h-4 w-4 transform bg-white rounded-full shadow-md transition-transform duration-200 ease-in-out ${
-//               form.active ? "translate-x-6" : "translate-x-1"
-//             }`} />
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default PlanBasicDetails;
 
 
 
 
+// ============================================================================
+// PlanBasicDetails.js - COMPLETELY REWRITTEN
+// ============================================================================
 
-
-
-
-
-// import React from "react";
-// import { motion } from "framer-motion";
-// import { EnhancedSelect, getThemeClasses } from "../Shared/components";
-// import { planTypes, categories } from "../Shared/constant"
-// import { Wifi, Cable } from "lucide-react";
-
-// const PlanBasicDetails = ({ form, errors, touched, onChange, onAccessTypeChange, onBlur, theme }) => {
-//   const themeClasses = getThemeClasses(theme);
-
-//   // Access type options with icons
-//   const accessTypeOptions = [
-//     { value: "hotspot", label: "Hotspot", icon: Wifi, description: "Wireless access for multiple users" },
-//     { value: "pppoe", label: "PPPoE", icon: Cable, description: "Wired connection with authentication" },
-//     { value: "dual", label: "Dual Access", icon: (props) => (
-//       <div className="flex">
-//         <Wifi className="w-3 h-3 mr-1" {...props} />
-//         <Cable className="w-3 h-3" {...props} />
-//       </div>
-//     ), description: "Both wireless and wired access" }
-//   ];
-
-//   // Priority level options
-//   const priorityOptions = [
-//     { value: 1, label: "Lowest (1)", description: "Lowest priority" },
-//     { value: 2, label: "Low (2)", description: "Low priority" },
-//     { value: 3, label: "Medium (3)", description: "Standard priority" },
-//     { value: 4, label: "High (4)", description: "High priority" },
-//     { value: 5, label: "Highest (5)", description: "Highest priority" },
-//     { value: 6, label: "Critical (6)", description: "Critical priority" },
-//     { value: 7, label: "Premium (7)", description: "Premium priority" },
-//     { value: 8, label: "VIP (8)", description: "VIP priority" }
-//   ];
-
-//   return (
-//     <div className={`p-4 lg:p-6 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-//       <h3 className="text-lg lg:text-xl font-semibold mb-3 lg:mb-4">Basic Details</h3>
-//       <div className="space-y-4 lg:space-y-6">
-//         {/* Access Type Selection */}
-//         <div>
-//           <label className={`block text-sm font-medium mb-3 ${themeClasses.text.primary}`}>
-//             Access Type <span className="text-red-500">*</span>
-//           </label>
-//           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-//             {accessTypeOptions.map((option) => {
-//               const IconComponent = option.icon;
-//               const isSelected = form.accessType === option.value;
-//               const isDisabled = false; // Add any logic for disabled states
-              
-//               return (
-//                 <motion.div
-//                   key={option.value}
-//                   whileHover={{ scale: isDisabled ? 1 : 1.02 }}
-//                   whileTap={{ scale: isDisabled ? 1 : 0.98 }}
-//                   onClick={() => !isDisabled && onAccessTypeChange(option.value)}
-//                   className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-//                     isSelected
-//                       ? option.value === 'hotspot'
-//                         ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-//                         : option.value === 'pppoe'
-//                         ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-//                         : 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
-//                       : `${themeClasses.border.light} ${themeClasses.bg.card} hover:bg-gray-50 dark:hover:bg-gray-700/50`
-//                   } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-//                 >
-//                   <div className="flex items-center space-x-3">
-//                     <div className={`p-2 rounded-full ${
-//                       isSelected
-//                         ? option.value === 'hotspot'
-//                           ? 'bg-blue-100 text-blue-600 dark:bg-blue-800 dark:text-blue-300'
-//                           : option.value === 'pppoe'
-//                           ? 'bg-green-100 text-green-600 dark:bg-green-800 dark:text-green-300'
-//                           : 'bg-purple-100 text-purple-600 dark:bg-purple-800 dark:text-purple-300'
-//                         : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
-//                     }`}>
-//                       <IconComponent className="w-5 h-5" />
-//                     </div>
-//                     <div className="flex-1">
-//                       <h4 className={`font-semibold ${
-//                         isSelected ? themeClasses.text.primary : themeClasses.text.secondary
-//                       }`}>
-//                         {option.label}
-//                       </h4>
-//                       <p className={`text-xs mt-1 ${
-//                         isSelected ? themeClasses.text.secondary : themeClasses.text.tertiary
-//                       }`}>
-//                         {option.description}
-//                       </p>
-//                     </div>
-//                     {isSelected && (
-//                       <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-//                         option.value === 'hotspot'
-//                           ? 'bg-blue-500 text-white'
-//                           : option.value === 'pppoe'
-//                           ? 'bg-green-500 text-white'
-//                           : 'bg-purple-500 text-white'
-//                       }`}>
-//                         ✓
-//                       </div>
-//                     )}
-//                   </div>
-//                 </motion.div>
-//               );
-//             })}
-//           </div>
-//         </div>
-
-//         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
-//           <div>
-//             <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//               Plan Type <span className="text-red-500">*</span>
-//             </label>
-//             <EnhancedSelect
-//               value={form.planType}
-//               onChange={(value) => onChange({ target: { name: 'planType', value } })}
-//               options={planTypes.map(type => ({ value: type, label: type }))}
-//               placeholder="Select Plan Type"
-//               theme={theme}
-//             />
-//             <p className="text-xs text-gray-500 mt-1">
-//               {form.planType === 'free_trial' ? 'Free Trial plans cannot have premium priority levels' : ''}
-//             </p>
-//             {errors.planType && <p className="text-red-500 text-xs mt-1">{errors.planType}</p>}
-//           </div>
-//           <div>
-//             <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//               Name <span className="text-red-500">*</span>
-//             </label>
-//             <input 
-//               name="name" 
-//               value={form.name || ""} 
-//               onChange={onChange}
-//               onBlur={() => onBlur('name')}
-//               className={`w-full px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-//               placeholder="e.g., Rural Wi-Fi Pro" 
-//               required 
-//             />
-//             {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-//           </div>
-//         </div>
-        
-//         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
-//           <div>
-//             <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//               Category <span className="text-red-500">*</span>
-//             </label>
-//             <EnhancedSelect
-//               value={form.category}
-//               onChange={(value) => onChange({ target: { name: 'category', value } })}
-//               options={categories.map(cat => ({ value: cat, label: cat }))}
-//               placeholder="Select Category"
-//               theme={theme}
-//             />
-//             {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
-//           </div>
-//           <div>
-//             <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//               Price (KES) {form.planType === "paid" && <span className="text-red-500">*</span>}
-//             </label>
-//             <div className="flex items-center">
-//               <span className="mr-2 text-gray-500">KES</span>
-//               <input
-//                 type="number" 
-//                 name="price" 
-//                 value={form.price || ""} 
-//                 onChange={onChange}
-//                 onBlur={() => onBlur('price')}
-//                 disabled={form.planType === "free_trial"}
-//                 className={`w-full px-3 py-2 rounded-lg shadow-sm text-sm ${
-//                   form.planType === "free_trial" 
-//                     ? "bg-gray-100 cursor-not-allowed border-gray-300" 
-//                     : themeClasses.input
-//                 }`}
-//                 placeholder="e.g., 2999" 
-//                 step="1" 
-//                 min="0" 
-//                 required={form.planType === "paid"}
-//               />
-//             </div>
-//             {form.planType === "free_trial" && (
-//               <p className="text-xs text-gray-500 mt-1">Free Trial plans must have price set to 0</p>
-//             )}
-//             {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
-//           </div>
-//         </div>
-        
-//         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
-//           <div>
-//             <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//               Priority Level <span className="text-red-500">*</span>
-//             </label>
-//             <EnhancedSelect
-//               value={form.priority_level || 4}
-//               onChange={(value) => onChange({ target: { name: 'priority_level', value: parseInt(value) } })}
-//               options={priorityOptions}
-//               placeholder="Select Priority Level"
-//               theme={theme}
-//               disabled={form.planType === "free_trial"}
-//             />
-//             <p className="text-xs text-gray-500 mt-1">
-//               {form.planType === "free_trial" 
-//                 ? "Free Trial plans cannot have premium priority levels" 
-//                 : "Higher priority plans appear first"}
-//             </p>
-//           </div>
-//           <div>
-//             <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//               Template
-//             </label>
-//             <EnhancedSelect
-//               value={form.template || ""}
-//               onChange={(value) => onChange({ target: { name: 'template', value } })}
-//               options={[
-//                 { value: "", label: "No Template (Custom Plan)" },
-//                 // Template options would be populated from API
-//                 { value: "template_1", label: "Basic Residential" },
-//                 { value: "template_2", label: "Business Premium" },
-//                 { value: "template_3", label: "Promotional Offer" }
-//               ]}
-//               placeholder="Select Template (Optional)"
-//               theme={theme}
-//             />
-//             <p className="text-xs text-gray-500 mt-1">Use a template for faster plan creation</p>
-//           </div>
-//         </div>
-        
-//         <div>
-//           <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//             Description
-//           </label>
-//           <textarea 
-//             name="description" 
-//             value={form.description || ""} 
-//             onChange={onChange}
-//             rows={3}
-//             className={`w-full px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-//             placeholder="Describe the plan features and benefits..."
-//           />
-//           <p className="text-xs text-gray-500 mt-1">Markdown is supported in the description</p>
-//         </div>
-        
-//         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
-//           <div className="flex items-center">
-//             <div className="flex items-center mr-6">
-//               <label className={`block text-sm font-medium mr-4 ${themeClasses.text.primary}`}>
-//                 Active
-//               </label>
-//               <div 
-//                 onClick={() => onChange({ target: { name: 'active', type: 'checkbox', checked: !form.active } })} 
-//                 className={`relative inline-flex items-center h-6 w-11 rounded-full cursor-pointer transition-colors duration-200 ease-in-out ${
-//                   form.active 
-//                     ? 'bg-green-600'
-//                     : theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'
-//                 }`}
-//               >
-//                 <span className={`inline-block h-4 w-4 transform bg-white rounded-full shadow-md transition-transform duration-200 ease-in-out ${
-//                   form.active ? "translate-x-6" : "translate-x-1"
-//                 }`} />
-//               </div>
-//             </div>
-//             <div className="flex items-center">
-//               <label className={`block text-sm font-medium mr-4 ${themeClasses.text.primary}`}>
-//                 Router Specific
-//               </label>
-//               <div 
-//                 onClick={() => onChange({ target: { name: 'router_specific', type: 'checkbox', checked: !form.router_specific } })} 
-//                 className={`relative inline-flex items-center h-6 w-11 rounded-full cursor-pointer transition-colors duration-200 ease-in-out ${
-//                   form.router_specific 
-//                     ? 'bg-blue-600'
-//                     : theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'
-//                 }`}
-//               >
-//                 <span className={`inline-block h-4 w-4 transform bg-white rounded-full shadow-md transition-transform duration-200 ease-in-out ${
-//                   form.router_specific ? "translate-x-6" : "translate-x-1"
-//                 }`} />
-//               </div>
-//             </div>
-//           </div>
-          
-//           {form.planType === "paid" && (
-//             <div className="flex items-center">
-//               <label className={`block text-sm font-medium mr-4 ${themeClasses.text.primary}`}>
-//                 Apply Discounts
-//               </label>
-//               <div 
-//                 onClick={() => onChange({ target: { name: 'allow_discounts', type: 'checkbox', checked: !form.allow_discounts } })} 
-//                 className={`relative inline-flex items-center h-6 w-11 rounded-full cursor-pointer transition-colors duration-200 ease-in-out ${
-//                   form.allow_discounts 
-//                     ? 'bg-purple-600'
-//                     : theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'
-//                 }`}
-//               >
-//                 <span className={`inline-block h-4 w-4 transform bg-white rounded-full shadow-md transition-transform duration-200 ease-in-out ${
-//                   form.allow_discounts ? "translate-x-6" : "translate-x-1"
-//                 }`} />
-//               </div>
-//             </div>
-//           )}
-//         </div>
-        
-//         {/* FUP Settings */}
-//         <div className={`p-4 rounded-lg border ${themeClasses.border.light} ${theme === 'dark' ? 'bg-yellow-900/10' : 'bg-yellow-50'}`}>
-//           <h4 className="text-md font-semibold mb-3 text-yellow-700 dark:text-yellow-300">
-//             Fair Usage Policy (FUP)
-//           </h4>
-//           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
-//             <div>
-//               <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//                 FUP Threshold (%)
-//               </label>
-//               <input
-//                 type="number"
-//                 name="FUP_threshold"
-//                 value={form.FUP_threshold || 80}
-//                 onChange={onChange}
-//                 min="1"
-//                 max="100"
-//                 className={`w-full px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-//               />
-//               <p className="text-xs text-gray-500 mt-1">
-//                 Usage threshold percentage for FUP (1-100%)
-//               </p>
-//             </div>
-//             <div>
-//               <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//                 FUP Policy Description
-//               </label>
-//               <textarea
-//                 name="FUP_policy"
-//                 value={form.FUP_policy || ""}
-//                 onChange={onChange}
-//                 rows={2}
-//                 className={`w-full px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-//                 placeholder="Describe the fair usage policy..."
-//               />
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default PlanBasicDetails;
-
-
-
-
-
-
-
-
-
-
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { EnhancedSelect, getThemeClasses } from "../Shared/components";
 import { planTypes, categories, priorityOptions } from "../Shared/constant";
-import { Wifi, Cable, Info, HelpCircle, X, Check } from "lucide-react";
+import { 
+  Wifi, Cable, Info, HelpCircle, X, Check, Lock, AlertCircle,
+  AlertTriangle, CheckCircle, XCircle, DollarSign, Tag, FileText,
+  Calendar, Users, Star, Activity
+} from "lucide-react";
 
-const PlanBasicDetails = ({ form, errors, touched, onChange, onAccessTypeChange, onBlur, theme }) => {
+// ============================================================================
+// CONSTANTS - Match backend exactly
+// ============================================================================
+const PLAN_TYPES = [
+  { value: "paid", label: "Paid" },
+  { value: "free_trial", label: "Free Trial" },
+  { value: "promotional", label: "Promotional" }
+];
+
+const CATEGORIES = [
+  { value: "residential", label: "Residential" },
+  { value: "business", label: "Business" },
+  { value: "promotional", label: "Promotional" },
+  { value: "enterprise", label: "Enterprise" }
+];
+
+const ACCESS_TYPES = [
+  { value: "hotspot", label: "Hotspot", icon: Wifi },
+  { value: "pppoe", label: "PPPoE", icon: Cable },
+  { value: "both", label: "Dual Access", icon: () => (
+    <div className="flex">
+      <Wifi className="w-3 h-3 mr-1" />
+      <Cable className="w-3 h-3" />
+    </div>
+  )}
+];
+
+// ============================================================================
+// VALIDATION FUNCTIONS
+// ============================================================================
+
+const validateBasicDetails = (form) => {
+  const errors = {};
+  
+  // Plan name validation
+  if (!form.name?.trim()) {
+    errors.name = 'Plan name is required';
+  } else if (form.name.length > 100) {
+    errors.name = 'Plan name must be less than 100 characters';
+  }
+  
+  // Plan type validation
+  if (!form.plan_type) {
+    errors.plan_type = 'Plan type is required';
+  }
+  
+  // Category validation
+  if (!form.category && form.plan_type !== 'free_trial') {
+    errors.category = 'Category is required';
+  }
+  
+  // Price validation
+  if (form.plan_type === 'paid') {
+    if (!form.price || parseFloat(form.price) < 0) {
+      errors.price = 'Valid price is required for paid plans';
+    }
+  } else if (form.plan_type === 'free_trial') {
+    if (parseFloat(form.price || 0) !== 0) {
+      errors.price = 'Free trial plans must have price 0';
+    }
+  }
+  
+  // Access type validation
+  if (!form.access_method) {
+    errors.access_method = 'Access type is required';
+  }
+  
+  // Priority validation
+  const priority = parseInt(form.priority_level);
+  if (isNaN(priority) || priority < 1 || priority > 8) {
+    errors.priority_level = 'Priority level must be between 1 and 8';
+  }
+  
+  // Free trial specific validation
+  if (form.plan_type === 'free_trial') {
+    if (form.router_specific) {
+      errors.router_specific = 'Free trial plans cannot be router-specific';
+    }
+    if (priority > 4) {
+      errors.priority_level = 'Free trial plans cannot have priority > 4';
+    }
+  }
+  
+  return errors;
+};
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+const PlanBasicDetails = ({ 
+  form, 
+  errors: externalErrors, 
+  touched, 
+  onChange, 
+  onAccessTypeChange, 
+  onBlur, 
+  theme,
+  onValidationChange
+}) => {
   const themeClasses = getThemeClasses(theme);
-  const [priceValue, setPriceValue] = useState(form.price || "");
+  const [localErrors, setLocalErrors] = useState({});
   const [localTouched, setLocalTouched] = useState({});
-  
-  // Use refs to prevent infinite loops with unstable dependencies
-  const onChangeRef = useRef(onChange);
-  const onAccessTypeChangeRef = useRef(onAccessTypeChange);
-  
-  // Update refs when props change
-  useEffect(() => {
-    onChangeRef.current = onChange;
+
+  // Combine errors
+  const errors = { ...localErrors, ...externalErrors };
+
+  // ==========================================================================
+  // FIELD HANDLERS
+  // ==========================================================================
+
+  const handleFieldChange = useCallback((field, value) => {
+    onChange(field, value);
+    
+    // Clear error for this field
+    setLocalErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[field];
+      return newErrors;
+    });
   }, [onChange]);
-  
-  useEffect(() => {
-    onAccessTypeChangeRef.current = onAccessTypeChange;
-  }, [onAccessTypeChange]);
 
-  // Access type options with icons
-  const accessTypeOptions = [
-    { 
-      value: "hotspot", 
-      label: "Hotspot", 
-      icon: Wifi, 
-      description: "Wireless access for multiple users",
-      help: "Users connect via Wi-Fi to a shared access point"
-    },
-    { 
-      value: "pppoe", 
-      label: "PPPoE", 
-      icon: Cable, 
-      description: "Wired connection with authentication",
-      help: "Users connect directly with username/password authentication"
-    },
-    { 
-      value: "both", 
-      label: "Dual Access", 
-      icon: (props) => (
-        <div className="flex">
-          <Wifi className="w-3 h-3 mr-1" {...props} />
-          <Cable className="w-3 h-3" {...props} />
-        </div>
-      ), 
-      description: "Both wireless and wired access",
-      help: "Users can choose either Hotspot or PPPoE connection"
+  const handleBlur = useCallback((field) => {
+    setLocalTouched(prev => ({ ...prev, [field]: true }));
+    if (onBlur) onBlur(field);
+  }, [onBlur]);
+
+  // ==========================================================================
+  // ACCESS TYPE HANDLER
+  // ==========================================================================
+
+  const handleAccessType = useCallback((value) => {
+    handleFieldChange('access_method', value);
+    if (onAccessTypeChange) {
+      onAccessTypeChange(value);
     }
-  ];
+  }, [handleFieldChange, onAccessTypeChange]);
 
-  // Access method enforcement
-  useEffect(() => {
-    if (form.plan_type === 'free_trial' && form.access_method === 'pppoe') {
-      onChange('access_method', 'hotspot');
-      onAccessTypeChangeRef.current?.('hotspot');
-    }
-  }, [form.plan_type, form.access_method]);
+  // ==========================================================================
+  // PRICE HANDLING
+  // ==========================================================================
 
-  // Price enforcement for free_trial, and clear for paid
+  const handlePriceChange = useCallback((value) => {
+    // Remove non-numeric characters except decimal point
+    const sanitized = value.replace(/[^\d.]/g, '');
+    
+    // Ensure only one decimal point
+    const parts = sanitized.split('.');
+    const formatted = parts[0] + (parts.length > 1 ? '.' + parts[1].slice(0, 2) : '');
+    
+    handleFieldChange('price', formatted);
+  }, [handleFieldChange]);
+
+  // ==========================================================================
+  // PLAN TYPE EFFECTS - Auto-set fields based on plan type
+  // ==========================================================================
+
   useEffect(() => {
     if (form.plan_type === 'free_trial') {
-      if (parseFloat(form.price) !== 0 && form.price !== '') {
-        onChange('price', '0');
-        setPriceValue("0");
+      // Auto-set price to 0 for free trial
+      if (form.price !== '0' && form.price !== '0.00') {
+        handleFieldChange('price', '0.00');
       }
-    } else if (form.plan_type === 'paid') {
-      if (form.price === '0' || form.price === '0.00') {
-        onChange('price', '');
-        setPriceValue("");
+      
+      // Auto-set category to promotional for free trial
+      if (form.category !== 'promotional') {
+        handleFieldChange('category', 'promotional');
+      }
+      
+      // Auto-set access method to hotspot for free trial
+      if (form.access_method && form.access_method !== 'hotspot') {
+        handleFieldChange('access_method', 'hotspot');
+        if (onAccessTypeChange) onAccessTypeChange('hotspot');
+      }
+      
+      // Auto-set priority to 4 or less
+      const priority = parseInt(form.priority_level);
+      if (priority > 4) {
+        handleFieldChange('priority_level', '4');
+      }
+      
+      // Disable router-specific
+      if (form.router_specific) {
+        handleFieldChange('router_specific', false);
+      }
+    } else if (form.plan_type === 'promotional') {
+      // Auto-set category to promotional for promotional plans
+      if (form.category !== 'promotional') {
+        handleFieldChange('category', 'promotional');
       }
     }
-  }, [form.plan_type, form.price]);
+  }, [form.plan_type, form.price, form.category, form.access_method, form.priority_level, form.router_specific, handleFieldChange, onAccessTypeChange]);
 
-  // Priority enforcement
+  // ==========================================================================
+  // VALIDATION ON CHANGE
+  // ==========================================================================
+
   useEffect(() => {
-    if (form.plan_type === 'free_trial' && form.priority_level > 4) {
-      onChange('priority_level', 4);
-    }
-  }, [form.plan_type, form.priority_level]);
-
-  // Handle price change - lenient for editing
-  const handlePriceChange = useCallback((e) => {
-    let value = e.target.value;
+    const validationErrors = validateBasicDetails(form);
+    setLocalErrors(validationErrors);
     
-    // Allow numbers, one dot, and temporary states (e.g., leading dot)
-    // Trim leading zeros except for '0.' 
-    value = value.replace(/^0+(?=\d)/, '');
-    if (value === "" || /^(\d+)?(\.\d*)?$/.test(value)) {
-      setPriceValue(value);
-      onChange('price', value);
+    if (onValidationChange) {
+      onValidationChange(Object.keys(validationErrors).length === 0);
     }
-  }, []);
+  }, [form, onValidationChange]);
 
-  // Handle plan type change - clear price if switching to paid
-  const handlePlanTypeChange = useCallback((value) => {
-    onChange('plan_type', value);
-    if (value === 'paid' && (form.price === '0' || form.price === '0.00' || form.price === '')) {
-      onChange('price', '');
-      setPriceValue('');
-    }
-  }, [form.price]);
+  // ==========================================================================
+  // HELPER FUNCTIONS
+  // ==========================================================================
 
-  // Handle access type change
-  const handleAccessChange = useCallback((value) => {
-    onChange('access_method', value);
-    if (onAccessTypeChange) onAccessTypeChange(value);
-    
-    // Mark as touched for validation
-    if (onBlur) onBlur('access_method');
-    setLocalTouched(prev => ({ ...prev, access_method: true }));
-  }, [onAccessTypeChange, onBlur]);
-
-  // Handle keyboard navigation for access type cards
-  const handleAccessKeyDown = useCallback((e, value) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      handleAccessChange(value);
-    }
-  }, [handleAccessChange]);
-
-  // Handle name change
-  const handleNameChange = useCallback((e) => {
-    onChange('name', e.target.value);
-  }, []);
-
-  // Handle category change
-  const handleCategoryChange = useCallback((value) => {
-    onChange('category', value);
-  }, []);
-
-  // Handle priority change
-  const handlePriorityChange = useCallback((value) => {
-    onChange('priority_level', parseInt(value, 10));
-  }, []);
-
-  // Handle template change
-  const handleTemplateChange = useCallback((value) => {
-    onChange('template', value);
-  }, []);
-
-  // Handle description change
-  const handleDescriptionChange = useCallback((e) => {
-    onChange('description', e.target.value);
-  }, []);
-
-  // Handle active toggle
-  const handleActiveToggle = useCallback(() => {
-    onChange('active', !form.active);
-  }, [form.active]);
-
-  // Handle router specific toggle
-  const handleRouterSpecificToggle = useCallback(() => {
-    onChange('router_specific', !form.router_specific);
-  }, [form.router_specific]);
-
-  // Handle FUP threshold change
-  const handleFUPThresholdChange = useCallback((e) => {
-    let value = e.target.value;
-    if (value === "") value = "80";
-    let numValue = parseInt(value, 10);
-    if (isNaN(numValue)) numValue = 80;
-    if (numValue > 100) numValue = 100;
-    if (numValue < 1) numValue = 1;
-    
-    onChange('FUP_threshold', numValue);
-  }, []);
-
-  // Handle FUP policy change
-  const handleFUPPolicyChange = useCallback((e) => {
-    onChange('FUP_policy', e.target.value);
-  }, []);
-
-  // Price formatting - industry standard: format to 2 decimals on blur if valid, allow empty
-  const formatPrice = useCallback((value) => {
-    if (value === "" || value == null) return "";
-    
-    const numValue = parseFloat(value);
-    if (!isNaN(numValue)) {
-      return numValue.toFixed(2);
-    }
-    return value;
-  }, []);
-
-  // Effect to sync price value with form
-  useEffect(() => {
-    setPriceValue(form.price || "");
-  }, [form.price]);
-
-  // Better default handling for access type
-  const currentAccessType = form.access_method ?? 
-    (form.plan_type === 'free_trial' && !form.id ? 'hotspot' : form.access_method);
-
-  // Check if option should be disabled for free trial
-  const isOptionDisabled = useCallback((optionValue) => {
-    if (form.plan_type === 'free_trial' && optionValue === 'pppoe') {
-      return true;
-    }
-    return false;
-  }, [form.plan_type]);
-
-  // Convert planTypes from constants to options
-  const planTypeOptions = React.useMemo(() => 
-    planTypes.map(type => ({ 
-      value: type.value || type, 
-      label: (type.value || type) === 'free_trial' ? 'Free Trial (0 KES)' : 
-             (type.value || type) === 'paid' ? 'Paid Plan' : 
-             type.label || type,
-      description: (type.value || type) === 'free_trial' ? 'Free plan for trial period' : 'Standard paid plan'
-    })), []
-  );
-
-  // Convert categories from constants to options
-  const categoryOptions = React.useMemo(() => 
-    categories.map(cat => ({ 
-      value: cat.value || cat, 
-      label: cat.label || cat,
-      description: (cat.value || cat) === 'Residential' ? 'Home internet plans' : 
-                 (cat.value || cat) === 'Business' ? 'Business and enterprise plans' :
-                 (cat.value || cat) === 'Promotional' ? 'Limited time offers' :
-                 'General purpose plans'
-    })), []
-  );
-
-  // Determine if field should show error
   const shouldShowError = useCallback((fieldName) => {
     return errors[fieldName] && (touched[fieldName] || localTouched[fieldName]);
   }, [errors, touched, localTouched]);
 
-  // Scroll to field when error is clicked
-  const scrollToField = useCallback((fieldName) => {
-    const element = document.querySelector(`[name="${fieldName}"]`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      element.focus();
-    }
+  const getPriorityDescription = useCallback((level) => {
+    const descriptions = {
+      1: "Lowest - Background tasks",
+      2: "Low - Basic browsing",
+      3: "Medium - Standard usage",
+      4: "High - Streaming",
+      5: "Highest - Gaming",
+      6: "Critical - VoIP",
+      7: "Premium - VIP",
+      8: "VIP - Reserved"
+    };
+    return descriptions[level] || "Standard priority";
   }, []);
+
+  // ==========================================================================
+  // OPTIONS WITH EMPTY PLACEHOLDERS
+  // ==========================================================================
+
+  const planTypeOptions = useMemo(() => [
+    { value: "", label: "Select plan type", disabled: true },
+    ...PLAN_TYPES
+  ], []);
+
+  const categoryOptions = useMemo(() => [
+    { value: "", label: "Select category", disabled: true },
+    ...CATEGORIES
+  ], []);
+
+  const priorityOptionsWithEmpty = useMemo(() => [
+    { value: "", label: "Select priority level", disabled: true },
+    ...priorityOptions.map(opt => ({
+      value: opt.value,
+      label: `${opt.label} (${opt.value})`,
+      description: opt.description,
+      disabled: form.plan_type === "free_trial" && opt.value > 4
+    }))
+  ], [form.plan_type]);
+
+  // ==========================================================================
+  // RENDER
+  // ==========================================================================
 
   return (
     <div className={`p-4 lg:p-6 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
@@ -806,37 +292,44 @@ const PlanBasicDetails = ({ form, errors, touched, onChange, onAccessTypeChange,
             <div className="ml-2 group relative">
               <HelpCircle className="w-4 h-4 text-gray-400 cursor-help" />
               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg z-50">
-                <p>Select how users will connect to this plan:</p>
-                <ul className="mt-1 space-y-1">
-                  <li>• <strong>Hotspot</strong>: Wireless Wi-Fi connection</li>
-                  <li>• <strong>PPPoE</strong>: Wired username/password connection</li>
-                  <li>• <strong>Dual</strong>: Both methods available</li>
+                <p className="font-medium mb-1">Select how users will connect:</p>
+                <ul className="space-y-1 text-gray-300">
+                  <li>• <span className="text-white">Hotspot</span>: Wireless Wi-Fi connection</li>
+                  <li>• <span className="text-white">PPPoE</span>: Wired username/password</li>
+                  <li>• <span className="text-white">Dual</span>: Both methods available</li>
                 </ul>
+                {form.plan_type === 'free_trial' && (
+                  <p className="mt-2 text-yellow-300 font-medium">
+                    Free trial plans are limited to Hotspot only
+                  </p>
+                )}
               </div>
             </div>
+            {!form.access_method && (
+              <span className="ml-2 text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 px-2 py-1 rounded-full flex items-center">
+                <AlertCircle className="w-3 h-3 mr-1" />
+                Required
+              </span>
+            )}
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3" role="radiogroup" aria-label="Access Type Selection">
-            {accessTypeOptions.map((option) => {
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {ACCESS_TYPES.map((option) => {
               const IconComponent = option.icon;
-              const isSelected = currentAccessType === option.value;
-              const isDisabled = isOptionDisabled(option.value);
+              const isSelected = form.access_method === option.value;
+              const isDisabled = form.plan_type === 'free_trial' && option.value !== 'hotspot';
               
               return (
                 <motion.button
                   key={option.value}
                   type="button"
-                  role="radio"
-                  aria-checked={isSelected}
-                  aria-label={`${option.label}: ${option.description}`}
                   disabled={isDisabled}
                   whileHover={!isDisabled ? { scale: 1.02 } : {}}
                   whileTap={!isDisabled ? { scale: 0.98 } : {}}
-                  onClick={() => !isDisabled && handleAccessChange(option.value)}
-                  onKeyDown={(e) => !isDisabled && handleAccessKeyDown(e, option.value)}
-                  tabIndex={isDisabled ? -1 : 0}
+                  onClick={() => !isDisabled && handleAccessType(option.value)}
+                  onBlur={() => handleBlur('access_method')}
                   className={`p-4 border-2 rounded-lg transition-all duration-200 relative text-left focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                    isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                    isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-md'
                   } ${
                     isSelected
                       ? option.value === 'hotspot'
@@ -848,7 +341,7 @@ const PlanBasicDetails = ({ form, errors, touched, onChange, onAccessTypeChange,
                   }`}
                 >
                   {isDisabled && (
-                    <div className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs px-2 py-1 rounded-full">
+                    <div className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs px-2 py-1 rounded-full shadow-lg">
                       Restricted
                     </div>
                   )}
@@ -871,11 +364,6 @@ const PlanBasicDetails = ({ form, errors, touched, onChange, onAccessTypeChange,
                       }`}>
                         {option.label}
                       </h4>
-                      <p className={`text-xs mt-1 ${
-                        isSelected ? themeClasses.text.secondary : themeClasses.text.tertiary
-                      }`}>
-                        {option.description}
-                      </p>
                     </div>
                     {isSelected && (
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
@@ -889,12 +377,6 @@ const PlanBasicDetails = ({ form, errors, touched, onChange, onAccessTypeChange,
                       </div>
                     )}
                   </div>
-                  
-                  {isDisabled && (
-                    <p className="text-xs text-red-500 mt-2">
-                      Not available for Free Trial plans
-                    </p>
-                  )}
                 </motion.button>
               );
             })}
@@ -902,7 +384,7 @@ const PlanBasicDetails = ({ form, errors, touched, onChange, onAccessTypeChange,
           
           {shouldShowError('access_method') && (
             <p className="text-red-500 text-xs mt-2 flex items-center">
-              <Info className="w-3 h-3 mr-1" />
+              <AlertCircle className="w-3 h-3 mr-1" />
               {errors.access_method}
             </p>
           )}
@@ -915,18 +397,22 @@ const PlanBasicDetails = ({ form, errors, touched, onChange, onAccessTypeChange,
               Plan Type <span className="text-red-500">*</span>
             </label>
             <EnhancedSelect
-              value={form.plan_type || "paid"}
-              onChange={handlePlanTypeChange}
+              value={form.plan_type || ""}
+              onChange={(value) => handleFieldChange('plan_type', value)}
+              onBlur={() => handleBlur('plan_type')}
               options={planTypeOptions}
               placeholder="Select Plan Type"
               theme={theme}
               isSearchable={true}
             />
-            <p className="text-xs text-gray-500 mt-2">
-              {form.plan_type === 'free_trial' 
-                ? 'Free Trial plans cannot have premium priority levels' 
-                : 'Paid plans can be priced according to your needs'}
-            </p>
+            {form.plan_type === 'free_trial' && (
+              <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p className="text-xs text-blue-600 dark:text-blue-400 flex items-center">
+                  <Info className="w-3 h-3 mr-1" />
+                  Free Trial: Price = 0, Category = Promotional, Access = Hotspot only
+                </p>
+              </div>
+            )}
             {shouldShowError('plan_type') && (
               <p className="text-red-500 text-xs mt-1">{errors.plan_type}</p>
             )}
@@ -941,16 +427,14 @@ const PlanBasicDetails = ({ form, errors, touched, onChange, onAccessTypeChange,
                 type="text"
                 name="name"
                 value={form.name || ""}
-                onChange={handleNameChange}
-                onBlur={(e) => {
-                  if (onBlur) onBlur('name');
-                  setLocalTouched(prev => ({ ...prev, name: true }));
-                }}
-                className={`w-full px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input} ${
-                  shouldShowError('name') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+                onChange={(e) => handleFieldChange('name', e.target.value)}
+                onBlur={() => handleBlur('name')}
+                className={`w-full px-3 py-2 rounded-lg shadow-sm text-sm ${
+                  shouldShowError('name') 
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                    : themeClasses.input
                 }`}
-                placeholder="e.g., Rural Wi-Fi Pro, Business Broadband Premium"
-                required 
+                placeholder="e.g., Business Broadband Pro"
                 maxLength={100}
               />
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-400">
@@ -961,7 +445,7 @@ const PlanBasicDetails = ({ form, errors, touched, onChange, onAccessTypeChange,
               <p className="text-red-500 text-xs mt-1">{errors.name}</p>
             ) : (
               <p className="text-xs text-gray-500 mt-1">
-                Use a descriptive name that customers will recognize
+                Use a descriptive name customers will recognize
               </p>
             )}
           </div>
@@ -973,15 +457,30 @@ const PlanBasicDetails = ({ form, errors, touched, onChange, onAccessTypeChange,
             <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
               Category <span className="text-red-500">*</span>
             </label>
-            <EnhancedSelect
-              value={form.category || "Residential"}
-              onChange={handleCategoryChange}
-              options={categoryOptions}
-              placeholder="Select Category"
-              theme={theme}
-              isSearchable={true}
-            />
-            {shouldShowError('category') && (
+            <div className="relative">
+              <EnhancedSelect
+                value={form.category || ""}
+                onChange={(value) => handleFieldChange('category', value)}
+                onBlur={() => handleBlur('category')}
+                options={categoryOptions}
+                placeholder="Select category"
+                theme={theme}
+                isSearchable={true}
+                disabled={form.plan_type === 'free_trial'}
+              />
+              {form.plan_type === 'free_trial' && (
+                <div className="absolute inset-y-0 right-0 flex items-center pr-10 pointer-events-none">
+                  <Lock className="w-4 h-4 text-gray-400" />
+                </div>
+              )}
+            </div>
+            {form.plan_type === 'free_trial' && (
+              <p className="text-xs text-blue-500 mt-1 flex items-center">
+                <Lock className="w-3 h-3 mr-1" />
+                Automatically set to "Promotional" for free trials
+              </p>
+            )}
+            {shouldShowError('category') && form.plan_type !== 'free_trial' && (
               <p className="text-red-500 text-xs mt-1">{errors.category}</p>
             )}
           </div>
@@ -995,47 +494,26 @@ const PlanBasicDetails = ({ form, errors, touched, onChange, onAccessTypeChange,
                 KES
               </div>
               <input
-                type="text"  // Changed to text for better control; number has spinners
+                type="text"
                 name="price"
-                value={priceValue}
-                onChange={handlePriceChange}
-                onBlur={(e) => {
-                  const rawValue = e.target.value.trim();
-                  let formatted = rawValue;
-                  if (rawValue !== "" && form.plan_type !== 'free_trial') {
-                    const numValue = parseFloat(rawValue);
-                    if (!isNaN(numValue)) {
-                      formatted = numValue.toFixed(2);
-                    } else {
-                      formatted = ""; // Invalid -> clear
-                    }
-                  }
-                  setPriceValue(formatted);
-                  onChange('price', formatted);
-                  
-                  if (onBlur) onBlur('price');
-                  setLocalTouched(prev => ({ ...prev, price: true }));
-                }}
+                value={form.price || ""}
+                onChange={(e) => handlePriceChange(e.target.value)}
+                onBlur={() => handleBlur('price')}
                 disabled={form.plan_type === "free_trial"}
                 className={`w-full pl-12 pr-3 py-2 rounded-lg shadow-sm text-sm ${
                   form.plan_type === "free_trial" 
-                    ? "bg-gray-100 cursor-not-allowed border-gray-300 text-gray-500" 
-                    : themeClasses.input
-                } ${shouldShowError('price') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
-                placeholder="Enter price"
-                required={form.plan_type === "paid"}
-                pattern="^\d*(\.\d{0,2})?$"  // HTML5 validation for 2 decimals
+                    ? "bg-gray-100 cursor-not-allowed border-gray-300 text-gray-500 dark:bg-gray-800 dark:border-gray-700" 
+                    : shouldShowError('price')
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                      : themeClasses.input
+                }`}
+                placeholder={form.plan_type === "free_trial" ? "0.00" : "Enter price"}
               />
-              {form.plan_type === "paid" && priceValue && parseFloat(priceValue) > 0 && (
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">
-                  ≈ ${(parseFloat(priceValue) * 0.0067).toFixed(2)} USD
-                </div>
-              )}
             </div>
             {form.plan_type === "free_trial" ? (
               <p className="text-xs text-blue-500 mt-1 flex items-center">
-                <Info className="w-3 h-3 mr-1" />
-                Free Trial plans must have price set to 0
+                <Lock className="w-3 h-3 mr-1" />
+                Free Trial: Price automatically set to 0
               </p>
             ) : shouldShowError('price') ? (
               <p className="text-red-500 text-xs mt-1">{errors.price}</p>
@@ -1047,57 +525,29 @@ const PlanBasicDetails = ({ form, errors, touched, onChange, onAccessTypeChange,
           </div>
         </div>
         
-        {/* Priority and Template */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
-              Priority Level <span className="text-red-500">*</span>
-            </label>
-            <EnhancedSelect
-              value={form.priority_level || 4}
-              onChange={handlePriorityChange}
-              options={priorityOptions.map(opt => ({ 
-                value: opt.value,
-                label: `${opt.label} (${opt.value})`,
-                description: opt.description,
-                disabled: form.plan_type === "free_trial" && opt.value > 4
-              }))}
-              placeholder="Select Priority Level"
-              theme={theme}
-              isSearchable={true}
-            />
-            <p className="text-xs text-gray-500 mt-2">
-              {form.plan_type === "free_trial" 
-                ? "Free Trial plans cannot have premium priority levels (5-8)" 
-                : "Higher priority plans get better network performance"}
-            </p>
-            {shouldShowError('priority_level') && (
-              <p className="text-red-500 text-xs mt-1">{errors.priority_level}</p>
-            )}
-          </div>
-          
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
-              Template (Optional)
-            </label>
-            <EnhancedSelect
-              value={form.template || ""}
-              onChange={handleTemplateChange}
-              options={[
-                { value: "", label: "No Template (Start from scratch)" },
-                { value: "template_1", label: "📱 Basic Residential", description: "10 Mbps, 30 days, 100GB" },
-                { value: "template_2", label: "💼 Business Premium", description: "50 Mbps, 30 days, Unlimited" },
-                { value: "template_3", label: "🎯 Promotional Offer", description: "5 Mbps, 7 days, 10GB" },
-                { value: "template_4", label: "🏠 Family Bundle", description: "20 Mbps, 30 days, 200GB" }
-              ]}
-              placeholder="Select Template (Optional)"
-              theme={theme}
-              isSearchable={true}
-            />
-            <p className="text-xs text-gray-500 mt-2">
-              Use a template for faster plan creation
+        {/* Priority */}
+        <div>
+          <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
+            Priority Level <span className="text-red-500">*</span>
+          </label>
+          <EnhancedSelect
+            value={form.priority_level || ""}
+            onChange={(value) => handleFieldChange('priority_level', value)}
+            onBlur={() => handleBlur('priority_level')}
+            options={priorityOptionsWithEmpty}
+            placeholder="Select Priority Level"
+            theme={theme}
+            isSearchable={true}
+          />
+          <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <p className="text-sm">
+              <span className="font-medium">Level {form.priority_level || 4}:</span>{' '}
+              {getPriorityDescription(form.priority_level || 4)}
             </p>
           </div>
+          {shouldShowError('priority_level') && (
+            <p className="text-red-500 text-xs mt-1">{errors.priority_level}</p>
+          )}
         </div>
         
         {/* Description */}
@@ -1113,16 +563,13 @@ const PlanBasicDetails = ({ form, errors, touched, onChange, onAccessTypeChange,
           <textarea 
             name="description" 
             value={form.description || ""} 
-            onChange={handleDescriptionChange}
-            onBlur={(e) => {
-              if (onBlur) onBlur('description');
-              setLocalTouched(prev => ({ ...prev, description: true }));
-            }}
+            onChange={(e) => handleFieldChange('description', e.target.value)}
+            onBlur={() => handleBlur('description')}
             rows={3}
-            className={`w-full px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input} ${
-              form.description?.length > 500 ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+            className={`w-full px-3 py-2 rounded-lg shadow-sm text-sm ${
+              form.description?.length > 500 ? 'border-red-500 focus:border-red-500' : themeClasses.input
             }`}
-            placeholder="Describe the plan features and benefits... (e.g., Perfect for streaming, gaming, and remote work. Includes 24/7 support and unlimited bandwidth during off-peak hours.)"
+            placeholder="Describe the plan features and benefits..."
             maxLength={500}
           />
           {form.description?.length > 500 ? (
@@ -1131,7 +578,7 @@ const PlanBasicDetails = ({ form, errors, touched, onChange, onAccessTypeChange,
             </p>
           ) : (
             <p className="text-xs text-gray-500 mt-2">
-              Markdown is supported in the description. Be descriptive to help customers understand your plan.
+              Be descriptive to help customers understand your plan
             </p>
           )}
         </div>
@@ -1145,13 +592,14 @@ const PlanBasicDetails = ({ form, errors, touched, onChange, onAccessTypeChange,
               </label>
               <button
                 type="button"
-                onClick={handleActiveToggle}
+                onClick={() => handleFieldChange('active', !form.active)}
                 className={`relative inline-flex items-center h-6 w-11 rounded-full cursor-pointer transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                   form.active 
                     ? 'bg-green-600'
                     : theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'
                 }`}
-                aria-label={`Toggle active status. Currently ${form.active ? 'active' : 'inactive'}`}
+                role="switch"
+                aria-checked={form.active}
               >
                 <span className={`inline-block h-4 w-4 transform bg-white rounded-full shadow-md transition-transform duration-200 ease-in-out ${
                   form.active ? "translate-x-6" : "translate-x-1"
@@ -1170,13 +618,18 @@ const PlanBasicDetails = ({ form, errors, touched, onChange, onAccessTypeChange,
               </label>
               <button
                 type="button"
-                onClick={handleRouterSpecificToggle}
+                onClick={() => !form.plan_type === 'free_trial' && 
+                  handleFieldChange('router_specific', !form.router_specific)}
+                disabled={form.plan_type === 'free_trial'}
                 className={`relative inline-flex items-center h-6 w-11 rounded-full cursor-pointer transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                  form.router_specific 
-                    ? 'bg-blue-600'
-                    : theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'
+                  form.plan_type === 'free_trial'
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : form.router_specific 
+                      ? 'bg-blue-600'
+                      : theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'
                 }`}
-                aria-label={`Toggle router specific. Currently ${form.router_specific ? 'router specific' : 'all routers'}`}
+                role="switch"
+                aria-checked={form.router_specific}
               >
                 <span className={`inline-block h-4 w-4 transform bg-white rounded-full shadow-md transition-transform duration-200 ease-in-out ${
                   form.router_specific ? "translate-x-6" : "translate-x-1"
@@ -1188,88 +641,22 @@ const PlanBasicDetails = ({ form, errors, touched, onChange, onAccessTypeChange,
             </div>
           </div>
         </div>
-        
-        {/* FUP Settings */}
-        <div className={`p-4 rounded-lg border ${themeClasses.border.light} ${theme === 'dark' ? 'bg-yellow-900/10' : 'bg-yellow-50'}`}>
-          <h4 className="text-md font-semibold mb-4 text-yellow-700 dark:text-yellow-300 flex items-center">
-            <Info className="w-4 h-4 mr-2" />
-            Fair Usage Policy (FUP) Settings
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
-                FUP Threshold (%)
-              </label>
-              <div className="relative">
-                <input
-                  type="range"
-                  name="FUP_threshold"
-                  value={form.FUP_threshold || 80}
-                  onChange={handleFUPThresholdChange}
-                  onBlur={(e) => {
-                    if (onBlur) onBlur('FUP_threshold');
-                    setLocalTouched(prev => ({ ...prev, FUP_threshold: true }));
-                  }}
-                  min="1"
-                  max="100"
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>1%</span>
-                  <span className="font-medium">{form.FUP_threshold || 80}%</span>
-                  <span>100%</span>
-                </div>
-              </div>
-              <p className="text-xs text-gray-500 mt-2">
-                Speed reduction starts at {form.FUP_threshold || 80}% of data limit
-              </p>
-            </div>
-            
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
-                FUP Policy Description
-              </label>
-              <textarea
-                name="FUP_policy"
-                value={form.FUP_policy || ""}
-                onChange={handleFUPPolicyChange}
-                onBlur={(e) => {
-                  if (onBlur) onBlur('FUP_policy');
-                  setLocalTouched(prev => ({ ...prev, FUP_policy: true }));
-                }}
-                rows={2}
-                className={`w-full px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-                placeholder="Describe what happens when FUP threshold is reached... (e.g., Speed reduced to 1 Mbps after exceeding data limit to ensure fair usage for all customers.)"
-              />
-              <p className="text-xs text-gray-500 mt-2">
-                This will be shown to customers when they reach the limit
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        {/* Validation Summary - FIXED ISSUE 4: Clickable errors */}
+
+        {/* Validation Summary */}
         {Object.keys(errors).length > 0 && (
           <div className={`p-4 rounded-lg border border-red-300 ${theme === 'dark' ? 'bg-red-900/20' : 'bg-red-50'}`}>
             <h4 className="text-md font-semibold mb-2 text-red-700 dark:text-red-300 flex items-center">
-              <Info className="w-4 h-4 mr-2" />
+              <AlertTriangle className="w-4 h-4 mr-2" />
               Please fix the following errors:
             </h4>
             <ul className="text-sm text-red-600 dark:text-red-400 space-y-1">
-              {Object.entries(errors)
-                .filter(([field]) => shouldShowError(field))
-                .map(([field, error]) => (
-                  <li 
-                    key={field} 
-                    onClick={() => scrollToField(field)}
-                    className="flex items-start cursor-pointer hover:underline"
-                    title={`Click to focus on ${field.replace(/_/g, ' ')} field`}
-                  >
-                    <span className="mr-2">•</span>
-                    <span>
-                      <strong className="capitalize">{field.replace(/_/g, ' ')}:</strong> {error}
-                    </span>
-                  </li>
+              {Object.entries(errors).map(([field, error]) => (
+                <li key={field} className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>
+                    <strong className="capitalize">{field.replace(/_/g, ' ')}:</strong> {error}
+                  </span>
+                </li>
               ))}
             </ul>
           </div>

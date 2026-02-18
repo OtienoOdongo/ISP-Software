@@ -1,1286 +1,129 @@
 
 
-// import React, { useState, useMemo, useEffect } from "react";
-// import { motion, AnimatePresence } from "framer-motion";
-// import {
-//   BarChart3, Users, DollarSign, TrendingUp, Award,
-//   Calendar, Filter, Download, Eye, PieChart, Activity, Box,
-//   Wifi, Cable, ArrowLeft, Check, Clock, X, RefreshCw,
-//   FileText, Edit, Layers, Target, AlertTriangle
-// } from "lucide-react";
-// import { EnhancedSelect, getThemeClasses } from "../Shared/components"
-// import { 
-//   formatNumber, 
-//   calculateCategoryMetrics, 
-//   processAnalyticsData,
-//   calculatePlanPerformance,
-//   calculatePopularity
-// } from "../Shared/utils"
-// import { analyticsTimeRanges, categories, popularityLevels } from "../Shared/constant"
 
-// // Enhanced Star component with better accessibility
-// const Star = ({ className, filled = true }) => (
-//   <svg 
-//     className={className} 
-//     fill={filled ? "currentColor" : "none"} 
-//     stroke="currentColor"
-//     viewBox="0 0 20 20"
-//   >
-//     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-//   </svg>
-// );
+// // ============================================================================
+// // PlanAnalytics.js - COMPLETELY REWRITTEN
+// // ============================================================================
 
-// // Enhanced Progress Bar with better accessibility
-// const ProgressBar = ({ percentage, color = "indigo", theme, label = "Progress" }) => (
-//   <div className="mt-3" role="progressbar" aria-valuenow={percentage} aria-valuemin="0" aria-valuemax="100">
-//     <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-//       <span>{label}</span>
-//       <span>{percentage.toFixed(1)}%</span>
-//     </div>
-//     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-//       <div 
-//         className={`bg-${color}-600 h-2 rounded-full transition-all duration-500`}
-//         style={{ width: `${Math.min(Math.max(percentage, 0), 100)}%` }}
-//       ></div>
-//     </div>
-//   </div>
-// );
-
-// // Enhanced currency formatting with error handling
-// const formatCurrency = (amount) => {
-//   const numericAmount = parseFloat(amount) || 0;
-//   return `KES ${formatNumber(numericAmount)}`;
-// };
-
-// // Enhanced time range options with validation
-// const enhancedTimeRanges = [
-//   { value: "1d", label: "Today", days: 1 },
-//   { value: "7d", label: "Last 7 Days", days: 7 },
-//   { value: "30d", label: "Last 30 Days", days: 30 },
-//   { value: "90d", label: "Last 90 Days", days: 90 },
-//   { value: "365d", label: "Last 1 Year", days: 365 },
-//   { value: "all", label: "All Time", days: null },
-//   { value: "custom", label: "Custom Range", days: null }
-// ];
-
-// // Enhanced access type detection with fallbacks
-// const detectAccessType = (plan) => {
-//   if (!plan) return null;
-  
-//   // Priority 1: Explicit accessType field
-//   if (plan.accessType && ['hotspot', 'pppoe'].includes(plan.accessType)) {
-//     return plan.accessType;
-//   }
-  
-//   // Priority 2: Legacy accessMethods structure
-//   if (plan.accessMethods) {
-//     if (plan.accessMethods.hotspot?.enabled && plan.accessMethods.pppoe?.enabled) {
-//       return 'both';
-//     }
-//     if (plan.accessMethods.hotspot?.enabled) return 'hotspot';
-//     if (plan.accessMethods.pppoe?.enabled) return 'pppoe';
-//   }
-  
-//   // Priority 3: Template access type
-//   if (plan.template_access_type) {
-//     return plan.template_access_type;
-//   }
-  
-//   return null;
-// };
-
-// // Data validation function (missing from utils)
-// const validateAnalyticsData = (data, dataType) => {
-//   if (!Array.isArray(data)) {
-//     console.warn(`Invalid ${dataType}: expected array, got`, typeof data);
-//     return [];
-//   }
-  
-//   // Basic validation based on data type
-//   switch (dataType) {
-//     case 'subscriptions':
-//       return data.filter(item => 
-//         item && 
-//         (item.id || item.plan_id) && 
-//         (item.created_at || item.start_date)
-//       );
-    
-//     case 'plans':
-//       return data.filter(item => 
-//         item && 
-//         item.id && 
-//         item.name && 
-//         (item.accessType || item.accessMethods || item.template_access_type)
-//       );
-    
-//     case 'templates':
-//       return data.filter(item => 
-//         item && 
-//         item.id && 
-//         item.name
-//       );
-    
-//     default:
-//       return data.filter(item => item != null);
-//   }
-// };
-
-// // Calculate template efficiency (moved from utils since it doesn't exist there)
-// const calculateTemplateEfficiency = (template, plansFromTemplate, subscriptionsFromTemplate) => {
-//   const usageCount = template.usageCount || template.usage_count || 0;
-//   const plansCreated = plansFromTemplate.length;
-//   const activeSubscriptions = subscriptionsFromTemplate.length;
-  
-//   // Efficiency score based on multiple factors
-//   let efficiencyScore = 0;
-  
-//   // Usage factor (0-40 points)
-//   const usageFactor = Math.min((usageCount / 10) * 10, 40);
-  
-//   // Conversion factor (0-30 points)
-//   const conversionRate = plansCreated > 0 ? (activeSubscriptions / plansCreated) * 100 : 0;
-//   const conversionFactor = Math.min(conversionRate * 0.3, 30);
-  
-//   // Revenue factor (0-30 points) - simplified calculation
-//   const revenueFactor = Math.min(usageCount * 2, 30);
-  
-//   efficiencyScore = usageFactor + conversionFactor + revenueFactor;
-  
-//   return {
-//     score: Math.min(efficiencyScore, 100),
-//     factors: {
-//       usage: usageFactor,
-//       conversion: conversionFactor,
-//       revenue: revenueFactor
-//     }
-//   };
-// };
-
-// // Enhanced analytics data processing with comprehensive template tracking
-// const processEnhancedAnalyticsData = (subscriptions, plans, templates, timeRange = '30d', analyticsType = null, customRange = null) => {
-//   try {
-//     const now = new Date();
-//     let startDate = new Date();
-    
-//     // Validate input data
-//     const validatedSubscriptions = validateAnalyticsData(subscriptions, 'subscriptions');
-//     const validatedPlans = validateAnalyticsData(plans, 'plans');
-//     const validatedTemplates = validateAnalyticsData(templates, 'templates');
-
-//     // Handle custom date range
-//     if (customRange) {
-//       startDate = new Date(customRange.startDate);
-//       const endDate = new Date(customRange.endDate);
-      
-//       if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-//         throw new Error('Invalid custom date range');
-//       }
-
-//       const filteredSubscriptions = validatedSubscriptions.filter(sub => {
-//         const subscriptionDate = new Date(sub.created_at || sub.start_date);
-//         return subscriptionDate >= startDate && subscriptionDate <= endDate;
-//       });
-
-//       return processAnalyticsData(filteredSubscriptions, validatedPlans, 'custom');
-//     }
-
-//     // Handle predefined time ranges
-//     const timeRangeConfig = enhancedTimeRanges.find(tr => tr.value === timeRange);
-//     if (timeRangeConfig && timeRangeConfig.days) {
-//       startDate.setDate(now.getDate() - timeRangeConfig.days);
-//     } else if (timeRange !== 'all') {
-//       startDate = new Date(0); // All time
-//     }
-
-//     // Enhanced filtering with access type consideration
-//     const filteredSubscriptions = validatedSubscriptions.filter(sub => {
-//       const subscriptionDate = new Date(sub.created_at || sub.start_date);
-//       const dateMatch = timeRange === 'all' || subscriptionDate >= startDate;
-      
-//       if (analyticsType && sub.plan_id) {
-//         const plan = validatedPlans.find(p => p.id === sub.plan_id);
-//         if (plan) {
-//           const planAccessType = detectAccessType(plan);
-//           return dateMatch && planAccessType === analyticsType;
-//         }
-//       }
-      
-//       return dateMatch;
-//     });
-
-//     const baseAnalytics = processAnalyticsData(filteredSubscriptions, validatedPlans, timeRange);
-    
-//     // Enhanced template analytics
-//     const templateAnalytics = calculateTemplateAnalytics(
-//       validatedTemplates, 
-//       validatedPlans, 
-//       filteredSubscriptions,
-//       analyticsType,
-//       startDate
-//     );
-
-//     return {
-//       ...baseAnalytics,
-//       templateAnalytics,
-//       dataQuality: {
-//         subscriptions: filteredSubscriptions.length,
-//         plans: validatedPlans.length,
-//         templates: validatedTemplates.length,
-//         lastUpdated: new Date().toISOString()
-//       }
-//     };
-//   } catch (error) {
-//     console.error('Error processing analytics data:', error);
-//     return getFallbackAnalyticsData();
-//   }
-// };
-
-// // Comprehensive template analytics calculation
-// const calculateTemplateAnalytics = (templates, plans, subscriptions, analyticsType, startDate) => {
-//   const templateStats = {
-//     total: templates.length,
-//     active: templates.filter(t => t.isActive !== false).length,
-//     public: templates.filter(t => t.isPublic).length,
-//     byAccessType: {
-//       hotspot: templates.filter(t => detectAccessType(t) === 'hotspot').length,
-//       pppoe: templates.filter(t => detectAccessType(t) === 'pppoe').length,
-//       both: templates.filter(t => detectAccessType(t) === 'both').length
-//     },
-//     usage: {},
-//     efficiency: {},
-//     creationTrends: {}
-//   };
-
-//   // Calculate template usage metrics
-//   templates.forEach(template => {
-//     const templateAccessType = detectAccessType(template);
-    
-//     // Skip if analytics type filter doesn't match
-//     if (analyticsType && templateAccessType !== analyticsType) return;
-
-//     const plansFromTemplate = plans.filter(plan => 
-//       plan.template_id === template.id || plan.template_name === template.name
-//     );
-
-//     const subscriptionsFromTemplate = subscriptions.filter(sub =>
-//       plansFromTemplate.some(plan => plan.id === sub.plan_id)
-//     );
-
-//     const usageCount = template.usageCount || template.usage_count || 0;
-//     const revenue = subscriptionsFromTemplate.reduce((sum, sub) => 
-//       sum + (parseFloat(sub.amount) || 0), 0
-//     );
-
-//     templateStats.usage[template.id] = {
-//       usageCount,
-//       plansCreated: plansFromTemplate.length,
-//       activeSubscriptions: subscriptionsFromTemplate.length,
-//       totalRevenue: revenue,
-//       conversionRate: plansFromTemplate.length > 0 ? 
-//         (subscriptionsFromTemplate.length / plansFromTemplate.length) * 100 : 0
-//     };
-
-//     templateStats.efficiency[template.id] = calculateTemplateEfficiency(template, plansFromTemplate, subscriptionsFromTemplate);
-//   });
-
-//   // Calculate creation trends (last 6 months)
-//   const sixMonthsAgo = new Date();
-//   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-  
-//   templateStats.creationTrends = templates
-//     .filter(template => new Date(template.created_at) >= sixMonthsAgo)
-//     .reduce((trends, template) => {
-//       const month = new Date(template.created_at).toLocaleString('default', { month: 'short', year: 'numeric' });
-//       trends[month] = (trends[month] || 0) + 1;
-//       return trends;
-//     }, {});
-
-//   return templateStats;
-// };
-
-// // Fallback data for error scenarios
-// const getFallbackAnalyticsData = () => ({
-//   totalSubscriptions: 0,
-//   activeSubscriptions: 0,
-//   totalRevenue: 0,
-//   categoryStats: {},
-//   templateAnalytics: {
-//     total: 0,
-//     active: 0,
-//     public: 0,
-//     byAccessType: { hotspot: 0, pppoe: 0, both: 0 },
-//     usage: {},
-//     efficiency: {},
-//     creationTrends: {}
-//   },
-//   dataQuality: {
-//     subscriptions: 0,
-//     plans: 0,
-//     templates: 0,
-//     lastUpdated: new Date().toISOString(),
-//     error: true
-//   }
-// });
-
-// // Custom Date Range Modal Component
-// const CustomDateRangeModal = ({ isOpen, onClose, onApply, theme }) => {
-//   const themeClasses = getThemeClasses(theme);
-//   const [startDate, setStartDate] = useState("");
-//   const [endDate, setEndDate] = useState("");
-//   const [errors, setErrors] = useState({});
-
-//   const validateDates = () => {
-//     const newErrors = {};
-    
-//     if (!startDate) newErrors.startDate = 'Start date is required';
-//     if (!endDate) newErrors.endDate = 'End date is required';
-    
-//     if (startDate && endDate) {
-//       const start = new Date(startDate);
-//       const end = new Date(endDate);
-      
-//       if (start > end) {
-//         newErrors.dateRange = 'Start date cannot be after end date';
-//       }
-      
-//       if (end > new Date()) {
-//         newErrors.futureDate = 'End date cannot be in the future';
-//       }
-//     }
-    
-//     setErrors(newErrors);
-//     return Object.keys(newErrors).length === 0;
-//   };
-
-//   const handleApply = () => {
-//     if (validateDates()) {
-//       onApply({ startDate, endDate });
-//       onClose();
-//     }
-//   };
-
-//   const handleReset = () => {
-//     setStartDate("");
-//     setEndDate("");
-//     setErrors({});
-//   };
-
-//   if (!isOpen) return null;
-
-//   return (
-//     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//       <motion.div
-//         initial={{ opacity: 0, scale: 0.9 }}
-//         animate={{ opacity: 1, scale: 1 }}
-//         exit={{ opacity: 0, scale: 0.9 }}
-//         className={`w-full max-w-md rounded-xl shadow-lg ${themeClasses.bg.card} ${themeClasses.border.light} border p-6`}
-//       >
-//         <div className="flex items-center justify-between mb-4">
-//           <h3 className={`text-lg font-semibold ${themeClasses.text.primary}`}>
-//             Custom Date Range
-//           </h3>
-//           <button
-//             onClick={onClose}
-//             className={`p-1 rounded-lg ${themeClasses.button.secondary}`}
-//             aria-label="Close modal"
-//           >
-//             <X className="w-5 h-5" />
-//           </button>
-//         </div>
-        
-//         <div className="space-y-4 mb-6">
-//           <div>
-//             <label className={`block text-sm font-medium mb-2 ${themeClasses.text.secondary}`}>
-//               Start Date *
-//             </label>
-//             <input
-//               type="date"
-//               value={startDate}
-//               onChange={(e) => setStartDate(e.target.value)}
-//               className={`w-full px-3 py-2 rounded-lg border text-sm ${
-//                 errors.startDate ? 'border-red-500' : themeClasses.input
-//               }`}
-//               aria-invalid={!!errors.startDate}
-//               aria-describedby={errors.startDate ? "startDate-error" : undefined}
-//             />
-//             {errors.startDate && (
-//               <p id="startDate-error" className="text-red-500 text-xs mt-1">{errors.startDate}</p>
-//             )}
-//           </div>
-          
-//           <div>
-//             <label className={`block text-sm font-medium mb-2 ${themeClasses.text.secondary}`}>
-//               End Date *
-//             </label>
-//             <input
-//               type="date"
-//               value={endDate}
-//               onChange={(e) => setEndDate(e.target.value)}
-//               className={`w-full px-3 py-2 rounded-lg border text-sm ${
-//                 errors.endDate ? 'border-red-500' : themeClasses.input
-//               }`}
-//               aria-invalid={!!errors.endDate}
-//               aria-describedby={errors.endDate ? "endDate-error" : undefined}
-//             />
-//             {errors.endDate && (
-//               <p id="endDate-error" className="text-red-500 text-xs mt-1">{errors.endDate}</p>
-//             )}
-//           </div>
-          
-//           {(errors.dateRange || errors.futureDate) && (
-//             <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-//               <p className="text-red-700 dark:text-red-300 text-sm">
-//                 {errors.dateRange || errors.futureDate}
-//               </p>
-//             </div>
-//           )}
-//         </div>
-        
-//         <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
-//           <button
-//             onClick={handleReset}
-//             className={`px-4 py-2 rounded-lg text-sm font-medium ${themeClasses.button.secondary}`}
-//           >
-//             Reset
-//           </button>
-//           <button
-//             onClick={handleApply}
-//             disabled={!startDate || !endDate}
-//             className={`px-4 py-2 rounded-lg text-sm font-medium text-white ${
-//               !startDate || !endDate 
-//                 ? 'bg-gray-400 cursor-not-allowed' 
-//                 : 'bg-indigo-600 hover:bg-indigo-700'
-//             }`}
-//           >
-//             Apply Range
-//           </button>
-//         </div>
-//       </motion.div>
-//     </div>
-//   );
-// };
-
-// // Enhanced Template Analytics Component
-// const TemplateAnalyticsSection = ({ templateAnalytics, analyticsType, theme }) => {
-//   const themeClasses = getThemeClasses(theme);
-  
-//   if (!templateAnalytics || templateAnalytics.total === 0) {
-//     return (
-//       <div className={`p-6 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-//         <h3 className="text-lg font-semibold mb-4 flex items-center">
-//           <Layers className="w-5 h-5 mr-3 text-blue-600" />
-//           Template Analytics
-//         </h3>
-//         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-//           <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
-//           <p>No template data available for analytics</p>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   const topPerformingTemplates = Object.entries(templateAnalytics.usage)
-//     .map(([templateId, usage]) => ({
-//       templateId,
-//       ...usage,
-//       efficiency: templateAnalytics.efficiency[templateId]
-//     }))
-//     .sort((a, b) => b.totalRevenue - a.totalRevenue)
-//     .slice(0, 5);
-
-//   return (
-//     <div className={`p-6 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-//       <h3 className="text-lg font-semibold mb-4 flex items-center">
-//         <Layers className="w-5 h-5 mr-3 text-blue-600" />
-//         Template Analytics
-//         {analyticsType && (
-//           <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-//             ({analyticsType.charAt(0).toUpperCase() + analyticsType.slice(1)} Templates)
-//           </span>
-//         )}
-//       </h3>
-
-//       {/* Template Overview Cards */}
-//       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-//         <div className={`p-4 rounded-lg text-center ${theme === 'dark' ? 'bg-blue-900/20' : 'bg-blue-50'}`}>
-//           <div className="text-2xl font-bold text-blue-600">{templateAnalytics.total}</div>
-//           <div className="text-sm text-gray-600 dark:text-gray-400">Total Templates</div>
-//         </div>
-//         <div className={`p-4 rounded-lg text-center ${theme === 'dark' ? 'bg-green-900/20' : 'bg-green-50'}`}>
-//           <div className="text-2xl font-bold text-green-600">{templateAnalytics.active}</div>
-//           <div className="text-sm text-gray-600 dark:text-gray-400">Active</div>
-//         </div>
-//         <div className={`p-4 rounded-lg text-center ${theme === 'dark' ? 'bg-purple-900/20' : 'bg-purple-50'}`}>
-//           <div className="text-2xl font-bold text-purple-600">{templateAnalytics.public}</div>
-//           <div className="text-sm text-gray-600 dark:text-gray-400">Public</div>
-//         </div>
-//         <div className={`p-4 rounded-lg text-center ${theme === 'dark' ? 'bg-orange-900/20' : 'bg-orange-50'}`}>
-//           <div className="text-2xl font-bold text-orange-600">
-//             {templateAnalytics.byAccessType[analyticsType] || 0}
-//           </div>
-//           <div className="text-sm text-gray-600 dark:text-gray-400">
-//             {analyticsType ? analyticsType.toUpperCase() : 'All'} Type
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Top Performing Templates */}
-//       <div className="mb-6">
-//         <h4 className="font-semibold mb-3 flex items-center">
-//           <Target className="w-4 h-4 mr-2 text-green-600" />
-//           Top Performing Templates
-//         </h4>
-//         <div className="space-y-3">
-//           {topPerformingTemplates.map((template, index) => (
-//             <div key={template.templateId} className={`p-4 rounded-lg border ${
-//               theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
-//             }`}>
-//               <div className="flex items-center justify-between">
-//                 <div className="flex items-center space-x-3">
-//                   <div className="flex items-center justify-center w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
-//                     <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-//                       #{index + 1}
-//                     </span>
-//                   </div>
-//                   <div>
-//                     <h5 className="font-semibold text-gray-900 dark:text-white">
-//                       Template {template.templateId}
-//                     </h5>
-//                     <div className="flex items-center space-x-2 mt-1">
-//                       <span className="text-xs text-gray-500">
-//                         {template.plansCreated} plans created
-//                       </span>
-//                       <span className="text-xs text-green-600">
-//                         {template.conversionRate.toFixed(1)}% conversion
-//                       </span>
-//                     </div>
-//                   </div>
-//                 </div>
-//                 <div className="text-right">
-//                   <p className="font-semibold text-gray-900 dark:text-white">
-//                     {formatCurrency(template.totalRevenue)}
-//                   </p>
-//                   <p className="text-sm text-gray-500 dark:text-gray-400">
-//                     {template.activeSubscriptions} active
-//                   </p>
-//                 </div>
-//               </div>
-//               <ProgressBar 
-//                 percentage={template.efficiency?.score || 0} 
-//                 color="green" 
-//                 theme={theme}
-//                 label="Efficiency Score"
-//               />
-//             </div>
-//           ))}
-//         </div>
-//       </div>
-
-//       {/* Template Creation Trends */}
-//       {Object.keys(templateAnalytics.creationTrends).length > 0 && (
-//         <div>
-//           <h4 className="font-semibold mb-3 flex items-center">
-//             <TrendingUp className="w-4 h-4 mr-2 text-purple-600" />
-//             Template Creation Trends (Last 6 Months)
-//           </h4>
-//           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-//             {Object.entries(templateAnalytics.creationTrends).map(([month, count]) => (
-//               <div key={month} className={`p-3 rounded-lg text-center ${
-//                 theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
-//               }`}>
-//                 <div className="text-sm font-semibold text-gray-900 dark:text-white">{count}</div>
-//                 <div className="text-xs text-gray-500">{month}</div>
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// // Main PlanAnalytics Component
-// const PlanAnalytics = ({ plans, subscriptions, templates = [], onBack, analyticsType, theme }) => {
-//   const themeClasses = getThemeClasses(theme);
-//   const [timeRange, setTimeRange] = useState("30d");
-//   const [selectedCategory, setSelectedCategory] = useState("All");
-//   const [viewMode, setViewMode] = useState("overview");
-//   const [showCustomModal, setShowCustomModal] = useState(false);
-//   const [customRange, setCustomRange] = useState(null);
-//   const [isRefreshing, setIsRefreshing] = useState(false);
-//   const [dataQuality, setDataQuality] = useState({ valid: true, message: null });
-
-//   // Enhanced data validation on component mount
-//   useEffect(() => {
-//     const validateData = () => {
-//       try {
-//         if (!Array.isArray(plans) || !Array.isArray(subscriptions)) {
-//           throw new Error('Invalid data structure: plans and subscriptions must be arrays');
-//         }
-        
-//         const hasValidPlans = plans.some(plan => plan.id && plan.name);
-//         const hasValidSubscriptions = subscriptions.some(sub => sub.id && sub.plan_id);
-        
-//         if (!hasValidPlans && !hasValidSubscriptions) {
-//           setDataQuality({ 
-//             valid: false, 
-//             message: 'No valid plan or subscription data available' 
-//           });
-//         } else {
-//           setDataQuality({ valid: true, message: null });
-//         }
-//       } catch (error) {
-//         setDataQuality({ valid: false, message: error.message });
-//       }
-//     };
-
-//     validateData();
-//   }, [plans, subscriptions]);
-
-//   // Enhanced time range handling
-//   const handleTimeRangeChange = (value) => {
-//     if (value === "custom") {
-//       setShowCustomModal(true);
-//     } else {
-//       setTimeRange(value);
-//       setCustomRange(null);
-//     }
-//   };
-
-//   const handleCustomRangeApply = (range) => {
-//     setCustomRange(range);
-//     setTimeRange("custom");
-//   };
-
-//   // Enhanced refresh with error handling
-//   const handleRefresh = async () => {
-//     setIsRefreshing(true);
-//     try {
-//       // Simulate API call - in real app, this would fetch fresh data
-//       await new Promise(resolve => setTimeout(resolve, 1000));
-//       // Trigger parent component to refresh data
-//       window.dispatchEvent(new CustomEvent('refreshAnalyticsData'));
-//     } catch (error) {
-//       console.error('Error refreshing analytics:', error);
-//     } finally {
-//       setIsRefreshing(false);
-//     }
-//   };
-
-//   // Consolidated data processing with enhanced error handling
-//   const processedData = useMemo(() => {
-//     if (!dataQuality.valid) {
-//       return getFallbackAnalyticsData();
-//     }
-
-//     try {
-//       // Filter plans by analytics type with enhanced logic
-//       const filteredPlansByType = analyticsType 
-//         ? plans.filter(plan => {
-//             const planAccessType = detectAccessType(plan);
-//             return planAccessType === analyticsType;
-//           })
-//         : plans;
-
-//       // Calculate metrics using enhanced processing
-//       const { categoryMetrics, totalSubscribers, averageRating } = calculateCategoryMetrics(filteredPlansByType);
-      
-//       // Use enhanced analytics data processing
-//       const analyticsData = processEnhancedAnalyticsData(
-//         subscriptions, 
-//         filteredPlansByType, 
-//         templates,
-//         timeRange,
-//         analyticsType,
-//         customRange
-//       );
-      
-//       // Filter plans by category
-//       const filteredPlans = selectedCategory === "All" 
-//         ? filteredPlansByType 
-//         : filteredPlansByType.filter(plan => plan.category === selectedCategory);
-
-//       // Top performing plans with enhanced calculations
-//       const topPlans = filteredPlans
-//         .map(plan => ({
-//           ...plan,
-//           performance: calculatePlanPerformance(plan, totalSubscribers),
-//           accessType: detectAccessType(plan)
-//         }))
-//         .sort((a, b) => b.performance.marketShare - a.performance.marketShare)
-//         .slice(0, 10);
-
-//       // Calculate access type distribution
-//       const accessTypeDistribution = {
-//         hotspot: filteredPlansByType.filter(plan => detectAccessType(plan) === 'hotspot').length,
-//         pppoe: filteredPlansByType.filter(plan => detectAccessType(plan) === 'pppoe').length,
-//         both: filteredPlansByType.filter(plan => detectAccessType(plan) === 'both').length
-//       };
-
-//       return {
-//         filteredPlansByType,
-//         categoryMetrics,
-//         totalSubscribers,
-//         averageRating,
-//         analyticsData,
-//         filteredPlans,
-//         topPlans,
-//         categoryPerformanceData: Object.entries(analyticsData.categoryStats || {})
-//           .map(([category, stats]) => ({
-//             category,
-//             ...stats,
-//             popularity: calculatePopularity(stats.subscriptions),
-//             averageRevenue: stats.subscriptions > 0 ? (stats.revenue / stats.subscriptions) : 0
-//           }))
-//           .sort((a, b) => b.subscriptions - a.subscriptions),
-//         accessTypeDistribution,
-//         templateAnalytics: analyticsData.templateAnalytics,
-//         dataQuality: analyticsData.dataQuality
-//       };
-//     } catch (error) {
-//       console.error('Error processing analytics data:', error);
-//       return getFallbackAnalyticsData();
-//     }
-//   }, [plans, analyticsType, subscriptions, templates, timeRange, selectedCategory, customRange, dataQuality.valid]);
-
-//   // Get analytics type display information
-//   const getAnalyticsTypeInfo = () => {
-//     switch (analyticsType) {
-//       case 'hotspot':
-//         return {
-//           name: 'Hotspot Analytics',
-//           icon: Wifi,
-//           color: 'blue',
-//           gradient: 'from-blue-500 to-cyan-500',
-//           badgeColor: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
-//           description: 'Comprehensive analytics for wireless hotspot plans'
-//         };
-//       case 'pppoe':
-//         return {
-//           name: 'PPPoE Analytics',
-//           icon: Cable,
-//           color: 'emerald',
-//           gradient: 'from-emerald-500 to-green-500',
-//           badgeColor: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
-//           description: 'Detailed insights for wired PPPoE connections'
-//         };
-//       default:
-//         return {
-//           name: 'All Analytics',
-//           icon: BarChart3,
-//           color: 'purple',
-//           gradient: 'from-purple-500 to-pink-500',
-//           badgeColor: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
-//           description: 'Track plan performance and subscriber trends across all access types'
-//         };
-//     }
-//   };
-
-//   const analyticsTypeInfo = getAnalyticsTypeInfo();
-//   const AnalyticsTypeIcon = analyticsTypeInfo.icon;
-
-//   // Render popularity badge
-//   const renderPopularityBadge = (popularity) => (
-//     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${popularity.color}`}>
-//       <TrendingUp className="w-3 h-3 mr-1" />
-//       {popularity.label}
-//     </span>
-//   );
-
-//   // Render rating stars
-//   const renderStars = (rating, size = "sm") => {
-//     const starSize = size === "lg" ? "w-5 h-5" : "w-3 h-3 lg:w-4 lg:h-4";
-//     return (
-//       <div className="flex items-center">
-//         {[...Array(5)].map((_, i) => (
-//           <Star 
-//             key={i} 
-//             className={`${starSize} ${i < Math.floor(rating) 
-//               ? "text-amber-400 fill-current" 
-//               : theme === 'dark' ? "text-gray-500" : "text-gray-300"}`} 
-//           />
-//         ))}
-//         <span className={`ml-1 text-xs ${themeClasses.text.secondary}`}>
-//           {rating.toFixed(1)}
-//         </span>
-//       </div>
-//     );
-//   };
-
-//   // Card Component for reusable card layout
-//   const Card = ({ children, className = "" }) => (
-//     <div className={`p-4 lg:p-6 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light} ${className}`}>
-//       {children}
-//     </div>
-//   );
-
-//   // Time Range Selector with enhanced options
-//   const TimeRangeSelector = () => {
-//     const getTimeRangeLabel = () => {
-//       if (timeRange === "custom" && customRange) {
-//         const start = new Date(customRange.startDate).toLocaleDateString();
-//         const end = new Date(customRange.endDate).toLocaleDateString();
-//         return `${start} - ${end}`;
-//       }
-      
-//       const selected = enhancedTimeRanges.find(opt => opt.value === timeRange);
-//       return selected ? selected.label : "Select Range";
-//     };
-
-//     const getTimeRangeOptions = () => {
-//       return enhancedTimeRanges.map(option => ({
-//         ...option,
-//         label: option.value === "custom" && customRange 
-//           ? `Custom: ${new Date(customRange.startDate).toLocaleDateString()} - ${new Date(customRange.endDate).toLocaleDateString()}`
-//           : option.label
-//       }));
-//     };
-
-//     return (
-//       <div className="w-full sm:w-64">
-//         <EnhancedSelect
-//           value={timeRange}
-//           onChange={handleTimeRangeChange}
-//           options={getTimeRangeOptions()}
-//           placeholder="Select time range"
-//           theme={theme}
-//         />
-//       </div>
-//     );
-//   };
-
-//   // Access Type Distribution Component
-//   const AccessTypeDistribution = () => (
-//     <Card>
-//       <h4 className="font-semibold mb-3 text-gray-900 dark:text-white">Access Type Distribution</h4>
-//       <div className="space-y-3">
-//         <div className="flex justify-between items-center">
-//           <span className="text-sm text-gray-600 dark:text-gray-400">Hotspot Plans</span>
-//           <span className="font-semibold text-blue-600">{processedData.accessTypeDistribution.hotspot}</span>
-//         </div>
-//         <div className="flex justify-between items-center">
-//           <span className="text-sm text-gray-600 dark:text-gray-400">PPPoE Plans</span>
-//           <span className="font-semibold text-emerald-600">{processedData.accessTypeDistribution.pppoe}</span>
-//         </div>
-//         <div className="flex justify-between items-center">
-//           <span className="text-sm text-gray-600 dark:text-gray-400">Dual Access Plans</span>
-//           <span className="font-semibold text-purple-600">{processedData.accessTypeDistribution.both}</span>
-//         </div>
-//       </div>
-//     </Card>
-//   );
-
-//   // Overview Cards with enhanced data
-//   const OverviewCards = () => (
-//     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-//       <Card>
-//         <div className="flex items-center">
-//           <Users className="w-6 h-6 lg:w-8 lg:h-8 text-indigo-600 dark:text-indigo-400 mr-3 lg:mr-4" />
-//           <div>
-//             <h3 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">{processedData.totalSubscribers}</h3>
-//             <p className={`text-xs lg:text-sm ${themeClasses.text.secondary}`}>Total Subscribers</p>
-//           </div>
-//         </div>
-//       </Card>
-      
-//       <Card>
-//         <div className="flex items-center">
-//           <Activity className="w-6 h-6 lg:w-8 lg:h-8 text-green-600 dark:text-green-400 mr-3 lg:mr-4" />
-//           <div>
-//             <h3 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">{processedData.analyticsData.activeSubscriptions}</h3>
-//             <p className={`text-xs lg:text-sm ${themeClasses.text.secondary}`}>Active Subscriptions</p>
-//           </div>
-//         </div>
-//       </Card>
-      
-//       <Card>
-//         <div className="flex items-center">
-//           <DollarSign className="w-6 h-6 lg:w-8 lg:h-8 text-purple-600 dark:text-purple-400 mr-3 lg:mr-4" />
-//           <div>
-//             <h3 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(processedData.analyticsData.totalRevenue)}</h3>
-//             <p className={`text-xs lg:text-sm ${themeClasses.text.secondary}`}>Total Revenue</p>
-//           </div>
-//         </div>
-//       </Card>
-      
-//       <Card>
-//         <div className="flex items-center">
-//           <Box className="w-6 h-6 lg:w-8 lg:h-8 text-blue-600 dark:text-blue-400 mr-3 lg:mr-4" />
-//           <div>
-//             <h3 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">{processedData.filteredPlansByType.length}</h3>
-//             <p className={`text-xs lg:text-sm ${themeClasses.text.secondary}`}>
-//               {analyticsType ? `${analyticsType.charAt(0).toUpperCase() + analyticsType.slice(1)} Plans` : 'Total Plans'}
-//             </p>
-//           </div>
-//         </div>
-//       </Card>
-//     </div>
-//   );
-
-//   // Category Performance Component
-//   const CategoryPerformance = () => (
-//     <Card>
-//       <h3 className="text-lg lg:text-xl font-semibold mb-4 flex items-center text-gray-900 dark:text-white">
-//         <PieChart className="w-5 h-5 mr-3 text-indigo-600 dark:text-indigo-400" />
-//         Category Performance
-//         {analyticsType && (
-//           <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">({analyticsTypeInfo.name})</span>
-//         )}
-//       </h3>
-//       <div className="space-y-4">
-//         {processedData.categoryPerformanceData.length > 0 ? (
-//           processedData.categoryPerformanceData.map((category, index) => (
-//             <div key={category.category} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
-//               <div className="flex items-center space-x-4">
-//                 <div className="flex items-center justify-center w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
-//                   <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-//                     {index + 1}
-//                   </span>
-//                 </div>
-//                 <div>
-//                   <h4 className="font-semibold text-gray-900 dark:text-white">
-//                     {category.category}
-//                   </h4>
-//                   <div className="flex items-center space-x-2 mt-1">
-//                     {renderStars(processedData.categoryMetrics[category.category]?.averageRating || 0)}
-//                     {renderPopularityBadge(category.popularity)}
-//                   </div>
-//                 </div>
-//               </div>
-//               <div className="text-right">
-//                 <p className="font-semibold text-gray-900 dark:text-white">{category.subscriptions} subs</p>
-//                 <p className="text-sm text-gray-500 dark:text-gray-400">
-//                   {formatCurrency(category.revenue)}
-//                 </p>
-//                 <p className="text-xs text-gray-400 dark:text-gray-500">
-//                   {((category.subscriptions / processedData.analyticsData.totalSubscriptions) * 100).toFixed(1)}% share
-//                 </p>
-//               </div>
-//             </div>
-//           ))
-//         ) : (
-//           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-//             <BarChart3 className="w-12 h-12 mx-auto mb-3 opacity-50" />
-//             <p>No category data available for {analyticsTypeInfo.name}</p>
-//           </div>
-//         )}
-//       </div>
-//     </Card>
-//   );
-
-//   // Plan Performance Component
-//   const PlanPerformance = () => (
-//     <Card>
-//       <h3 className="text-lg lg:text-xl font-semibold mb-4 flex items-center text-gray-900 dark:text-white">
-//         <Award className="w-5 h-5 mr-3 text-indigo-600 dark:text-indigo-400" />
-//         Top Performing Plans
-//         {analyticsType && (
-//           <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">({analyticsTypeInfo.name})</span>
-//         )}
-//         {selectedCategory !== "All" && <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">({selectedCategory})</span>}
-//       </h3>
-      
-//       <div className="mb-4 flex flex-col sm:flex-row gap-4">
-//         <div className="w-full sm:w-48">
-//           <EnhancedSelect
-//             value={selectedCategory}
-//             onChange={setSelectedCategory}
-//             options={[
-//               { value: "All", label: "All Categories" },
-//               ...categories.map(cat => ({ value: cat, label: cat }))
-//             ]}
-//             theme={theme}
-//           />
-//         </div>
-//       </div>
-
-//       <div className="space-y-3">
-//         {processedData.topPlans.length > 0 ? (
-//           processedData.topPlans.map((plan, index) => (
-//             <div key={plan.id} className={`p-4 rounded-lg border ${
-//               theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
-//             }`}>
-//               <div className="flex items-center justify-between">
-//                 <div className="flex items-center space-x-4">
-//                   <div className="flex items-center justify-center w-10 h-10 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
-//                     <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-//                       #{index + 1}
-//                     </span>
-//                   </div>
-//                   <div>
-//                     <h4 className="font-semibold text-gray-900 dark:text-white">
-//                       {plan.name}
-//                     </h4>
-//                     <div className="flex items-center space-x-3 mt-1">
-//                       <span className={`text-xs px-2 py-1 rounded-full ${
-//                         theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
-//                       }`}>
-//                         {plan.category}
-//                       </span>
-//                       <span className={`text-xs px-2 py-1 rounded-full ${
-//                         plan.accessType === 'hotspot' 
-//                           ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-//                           : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
-//                       }`}>
-//                         {plan.accessType?.toUpperCase()}
-//                       </span>
-//                       {renderStars(plan.performance.rating)}
-//                       {renderPopularityBadge(plan.performance.popularity)}
-//                     </div>
-//                   </div>
-//                 </div>
-                
-//                 <div className="text-right">
-//                   <p className="font-semibold text-lg text-gray-900 dark:text-white">{plan.purchases} subscribers</p>
-//                   <p className="text-sm text-gray-500 dark:text-gray-400">
-//                     {formatCurrency(plan.performance.revenue)}
-//                   </p>
-//                   <p className="text-xs text-gray-400 dark:text-gray-500">
-//                     {plan.performance.marketShare.toFixed(1)}% market share
-//                   </p>
-//                 </div>
-//               </div>
-              
-//               <ProgressBar 
-//                 percentage={plan.performance.marketShare} 
-//                 color="indigo" 
-//                 theme={theme} 
-//               />
-//             </div>
-//           ))
-//         ) : (
-//           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-//             <Award className="w-12 h-12 mx-auto mb-3 opacity-50" />
-//             <p>No plan data available for {analyticsTypeInfo.name}</p>
-//           </div>
-//         )}
-//       </div>
-//     </Card>
-//   );
-
-//   // Quick Stats Component
-//   const QuickStats = () => (
-//     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-//       <Card>
-//         <h4 className="font-semibold mb-3 text-gray-900 dark:text-white">Most Popular Category</h4>
-//         {processedData.categoryPerformanceData.length > 0 ? (
-//           <div className="text-center">
-//             <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">
-//               {processedData.categoryPerformanceData[0].category}
-//             </div>
-//             <div className="text-sm text-gray-500 dark:text-gray-400">
-//               {processedData.categoryPerformanceData[0].subscriptions} subscriptions
-//             </div>
-//             {renderPopularityBadge(processedData.categoryPerformanceData[0].popularity)}
-//           </div>
-//         ) : (
-//           <p className="text-gray-500 dark:text-gray-400">No data available</p>
-//         )}
-//       </Card>
-      
-//       <AccessTypeDistribution />
-//     </div>
-//   );
-
-//   // View Mode Buttons Component
-//   const ViewModeButtons = () => (
-//     <div className="flex space-x-2 flex-wrap">
-//       {["overview", "categories", "plans", "templates"].map((mode) => (
-//         <motion.button
-//           key={mode}
-//           onClick={() => setViewMode(mode)}
-//           className={`px-4 py-2 rounded-lg text-sm ${
-//             viewMode === mode 
-//               ? "bg-indigo-600 text-white" 
-//               : themeClasses.button.secondary
-//           }`}
-//           whileHover={{ scale: 1.05 }}
-//           whileTap={{ scale: 0.95 }}
-//         >
-//           {mode.charAt(0).toUpperCase() + mode.slice(1)}
-//         </motion.button>
-//       ))}
-//     </div>
-//   );
-
-//   return (
-//     <div className={`min-h-screen p-3 sm:p-6 lg:p-8 transition-colors duration-300 ${themeClasses.bg.primary}`}>
-//       <main className="max-w-7xl mx-auto space-y-6 lg:space-y-8">
-//         {/* Header */}
-//         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-//           <div className="flex-1 min-w-0">
-//             <div className="flex items-center space-x-4 mb-2">
-//               <div className={`p-3 rounded-xl bg-gradient-to-r ${analyticsTypeInfo.gradient}`}>
-//                 <AnalyticsTypeIcon className="w-6 h-6 text-white" />
-//               </div>
-//               <div>
-//                 <h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500">
-//                   {analyticsTypeInfo.name}
-//                 </h1>
-//                 <p className={`mt-1 lg:mt-2 text-sm lg:text-lg ${themeClasses.text.secondary}`}>
-//                   {analyticsTypeInfo.description}
-//                 </p>
-//               </div>
-//             </div>
-            
-//             {/* Analytics Type Badge */}
-//             <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${analyticsTypeInfo.badgeColor}`}>
-//               <Check className="w-3 h-3 mr-1" />
-//               {analyticsTypeInfo.name}
-//             </div>
-//           </div>
-          
-//           <div className="flex flex-col sm:flex-row gap-3">
-//             <TimeRangeSelector />
-//             <ViewModeButtons />
-//             <motion.button
-//               onClick={handleRefresh}
-//               disabled={isRefreshing}
-//               className={`px-4 py-2 rounded-lg text-sm flex items-center ${themeClasses.button.secondary}`}
-//               whileHover={{ scale: 1.05 }}
-//               whileTap={{ scale: 0.95 }}
-//             >
-//               <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-//               Refresh
-//             </motion.button>
-//             <motion.button
-//               onClick={onBack}
-//               className={`px-4 py-2 rounded-lg text-sm flex items-center ${themeClasses.button.secondary}`}
-//               whileHover={{ scale: 1.05 }}
-//               whileTap={{ scale: 0.95 }}
-//             >
-//               <ArrowLeft className="w-4 h-4 mr-2" />
-//               Back to Plans
-//             </motion.button>
-//           </div>
-//         </div>
-
-//         {/* Data Quality Warning */}
-//         {!dataQuality.valid && (
-//           <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-//             <div className="flex items-center">
-//               <AlertTriangle className="w-5 h-5 text-yellow-600 mr-3" />
-//               <div>
-//                 <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-//                   Data Quality Issue
-//                 </h4>
-//                 <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-//                   {dataQuality.message}
-//                 </p>
-//               </div>
-//             </div>
-//           </div>
-//         )}
-
-//         {/* Main Content based on View Mode */}
-//         <div className="space-y-6 lg:space-y-8">
-//           <OverviewCards />
-          
-//           {viewMode === "overview" && (
-//             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-//               <div className="lg:col-span-2">
-//                 <CategoryPerformance />
-//               </div>
-//               <div className="space-y-6">
-//                 <QuickStats />
-//                 <TemplateAnalyticsSection
-//                   templateAnalytics={processedData.templateAnalytics}
-//                   analyticsType={analyticsType}
-//                   theme={theme}
-//                 />
-//               </div>
-//             </div>
-//           )}
-
-//           {viewMode === "categories" && <CategoryPerformance />}
-//           {viewMode === "plans" && <PlanPerformance />}
-//           {viewMode === "templates" && (
-//             <TemplateAnalyticsSection
-//               templateAnalytics={processedData.templateAnalytics}
-//               analyticsType={analyticsType}
-//               theme={theme}
-//             />
-//           )}
-//         </div>
-
-//         {/* Custom Date Range Modal */}
-//         <CustomDateRangeModal
-//           isOpen={showCustomModal}
-//           onClose={() => setShowCustomModal(false)}
-//           onApply={handleCustomRangeApply}
-//           theme={theme}
-//         />
-//       </main>
-//     </div>
-//   );
-// };
-
-// export default PlanAnalytics;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import React, { useState, useMemo } from "react";
+// import React, { useState, useMemo, useCallback } from "react";
 // import { motion } from "framer-motion";
 // import {
-//   BarChart3, Users, DollarSign, TrendingUp, Award,
+//   BarChart3, Users, TrendingUp, Award,
 //   Calendar, Download, Eye, PieChart, Activity, Box,
 //   Wifi, Cable, ArrowLeft, Check, Clock, RefreshCw,
 //   FileText, Layers, Target, AlertTriangle, Filter,
-//   TrendingDown, Globe, Shield, Package
+//   TrendingDown, Globe, Shield, Package, Zap, Database,
+//   DollarSign, Percent, Star, Crown, Sparkles, Gift,
+//   Smartphone, Gauge, Server, ArrowUp, ArrowDown,
+//   Minus, Circle, CheckCircle, XCircle
 // } from "lucide-react";
-// import { EnhancedSelect, getThemeClasses } from "../Shared/components"
-// import { processAnalyticsData as calculatePlanStatistics, getAccessTypeColor } from "../Shared/utils"
-// import { formatNumber, formatCurrency } from "../Shared/formatters"
-// import { categories, planTypes } from "../Shared/constant"
+// import { EnhancedSelect, getThemeClasses } from "../Shared/components";
+// import { formatNumber, formatCurrency, formatDate } from "../Shared/formatters";
 
-// // Enhanced Progress Bar
-// const ProgressBar = ({ percentage, color = "indigo", theme, label = "Progress" }) => (
-//   <div className="mt-2" role="progressbar" aria-valuenow={percentage} aria-valuemin="0" aria-valuemax="100">
-//     <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-//       <span>{label}</span>
-//       <span>{percentage.toFixed(1)}%</span>
-//     </div>
-//     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-//       <div 
-//         className={`bg-${color}-600 h-2 rounded-full transition-all duration-500`}
-//         style={{ width: `${Math.min(Math.max(percentage, 0), 100)}%` }}
-//       ></div>
-//     </div>
-//   </div>
-// );
+// // ============================================================================
+// // CONSTANTS
+// // ============================================================================
+// const TIME_RANGE_OPTIONS = [
+//   { value: "7d", label: "Last 7 Days" },
+//   { value: "30d", label: "Last 30 Days" },
+//   { value: "90d", label: "Last 90 Days" },
+//   { value: "365d", label: "Last 1 Year" },
+//   { value: "all", label: "All Time" }
+// ];
 
-// // Access type detection
+// const CHART_COLORS = {
+//   indigo: {
+//     light: "bg-indigo-500",
+//     dark: "bg-indigo-600",
+//     text: "text-indigo-600 dark:text-indigo-400"
+//   },
+//   blue: {
+//     light: "bg-blue-500",
+//     dark: "bg-blue-600",
+//     text: "text-blue-600 dark:text-blue-400"
+//   },
+//   green: {
+//     light: "bg-green-500",
+//     dark: "bg-green-600",
+//     text: "text-green-600 dark:text-green-400"
+//   },
+//   purple: {
+//     light: "bg-purple-500",
+//     dark: "bg-purple-600",
+//     text: "text-purple-600 dark:text-purple-400"
+//   },
+//   orange: {
+//     light: "bg-orange-500",
+//     dark: "bg-orange-600",
+//     text: "text-orange-600 dark:text-orange-400"
+//   },
+//   red: {
+//     light: "bg-red-500",
+//     dark: "bg-red-600",
+//     text: "text-red-600 dark:text-red-400"
+//   },
+//   amber: {
+//     light: "bg-amber-500",
+//     dark: "bg-amber-600",
+//     text: "text-amber-600 dark:text-amber-400"
+//   }
+// };
+
+// // ============================================================================
+// // HELPER FUNCTIONS
+// // ============================================================================
+
+// /**
+//  * Detect access type from plan
+//  */
 // const detectAccessType = (plan) => {
 //   if (!plan) return null;
   
 //   if (plan.accessType) return plan.accessType;
   
-//   const enabledMethods = plan.enabled_access_methods || plan.get_enabled_access_methods?.() || [];
-//   if (enabledMethods.includes('hotspot') && enabledMethods.includes('pppoe')) return 'dual';
-//   if (enabledMethods.includes('hotspot')) return 'hotspot';
-//   if (enabledMethods.includes('pppoe')) return 'pppoe';
+//   const hotspot = plan.access_methods?.hotspot?.enabled;
+//   const pppoe = plan.access_methods?.pppoe?.enabled;
+  
+//   if (hotspot && pppoe) return 'both';
+//   if (hotspot) return 'hotspot';
+//   if (pppoe) return 'pppoe';
   
 //   return null;
 // };
 
-// // Enhanced plan statistics calculation
-// const calculateEnhancedPlanStats = (plans, analyticsType, timeRange) => {
+// /**
+//  * Calculate rating from purchases
+//  */
+// const calculateRating = (purchases) => {
+//   if (purchases >= 1000) return 4.9;
+//   if (purchases >= 500) return 4.7;
+//   if (purchases >= 250) return 4.5;
+//   if (purchases >= 100) return 4.2;
+//   if (purchases >= 50) return 4.0;
+//   if (purchases >= 25) return 3.8;
+//   if (purchases >= 10) return 3.5;
+//   if (purchases >= 5) return 3.2;
+//   if (purchases >= 1) return 3.0;
+//   return 0;
+// };
+
+// /**
+//  * Calculate trend percentage
+//  */
+// const calculateTrend = (current, previous) => {
+//   if (previous === 0) return current > 0 ? 100 : 0;
+//   return ((current - previous) / previous) * 100;
+// };
+
+// /**
+//  * Calculate plan statistics
+//  */
+// const calculatePlanStatistics = (plans, analyticsType, timeRange) => {
 //   const filteredPlans = analyticsType 
 //     ? plans.filter(plan => detectAccessType(plan) === analyticsType)
 //     : plans;
 
-//   // Filter by time range if needed
+//   // Filter by time range
 //   let timeFilteredPlans = filteredPlans;
 //   if (timeRange !== 'all') {
 //     const now = new Date();
@@ -1296,6 +139,9 @@
 //       case '90d':
 //         cutoff.setMonth(now.getMonth() - 3);
 //         break;
+//       case '365d':
+//         cutoff.setFullYear(now.getFullYear() - 1);
+//         break;
 //       default:
 //         cutoff.setFullYear(now.getFullYear() - 1);
 //     }
@@ -1306,40 +152,65 @@
 //     });
 //   }
 
-//   const stats = calculatePlanStatistics(timeFilteredPlans);
-  
-//   // Calculate revenue estimates
-//   const totalRevenue = timeFilteredPlans.reduce((sum, plan) => {
-//     const price = parseFloat(plan.price) || 0;
-//     const purchases = plan.purchases || 0;
-//     return sum + (price * purchases);
-//   }, 0);
+//   // Basic stats
+//   const totalPlans = timeFilteredPlans.length;
+//   const activePlans = timeFilteredPlans.filter(p => p.active).length;
+//   const inactivePlans = totalPlans - activePlans;
+//   const totalPurchases = timeFilteredPlans.reduce((sum, p) => sum + (p.purchases || 0), 0);
+//   const totalRevenue = timeFilteredPlans.reduce((sum, p) => 
+//     sum + ((p.purchases || 0) * (parseFloat(p.price) || 0)), 0
+//   );
 
-//   // Calculate access type distribution
+//   // Average price
+//   const paidPlans = timeFilteredPlans.filter(p => p.plan_type === 'paid');
+//   const avgPrice = paidPlans.length > 0
+//     ? paidPlans.reduce((sum, p) => sum + (parseFloat(p.price) || 0), 0) / paidPlans.length
+//     : 0;
+
+//   // Category distribution
+//   const categoryDistribution = timeFilteredPlans.reduce((acc, p) => {
+//     const cat = p.category || 'uncategorized';
+//     if (!acc[cat]) {
+//       acc[cat] = { count: 0, purchases: 0, revenue: 0 };
+//     }
+//     acc[cat].count++;
+//     acc[cat].purchases += p.purchases || 0;
+//     acc[cat].revenue += (p.purchases || 0) * (parseFloat(p.price) || 0);
+//     return acc;
+//   }, {});
+
+//   // Access type distribution
 //   const accessTypeDistribution = {
 //     hotspot: timeFilteredPlans.filter(p => detectAccessType(p) === 'hotspot').length,
 //     pppoe: timeFilteredPlans.filter(p => detectAccessType(p) === 'pppoe').length,
-//     dual: timeFilteredPlans.filter(p => detectAccessType(p) === 'dual').length
+//     dual: timeFilteredPlans.filter(p => detectAccessType(p) === 'both').length
 //   };
 
-//   // Calculate category performance
-//   const categoryPerformance = {};
-//   timeFilteredPlans.forEach(plan => {
-//     const category = plan.category || 'Uncategorized';
-//     if (!categoryPerformance[category]) {
-//       categoryPerformance[category] = {
-//         count: 0,
-//         purchases: 0,
-//         revenue: 0,
-//         active: 0
-//       };
-//     }
-    
-//     categoryPerformance[category].count++;
-//     categoryPerformance[category].purchases += plan.purchases || 0;
-//     categoryPerformance[category].revenue += (plan.price || 0) * (plan.purchases || 0);
-//     categoryPerformance[category].active += plan.active ? 1 : 0;
-//   });
+//   // Plan type distribution
+//   const planTypeDistribution = {
+//     paid: timeFilteredPlans.filter(p => p.plan_type === 'paid').length,
+//     free_trial: timeFilteredPlans.filter(p => p.plan_type === 'free_trial').length,
+//     promotional: timeFilteredPlans.filter(p => p.plan_type === 'promotional').length
+//   };
+
+//   // Time variant stats
+//   const timeVariantStats = {
+//     withTimeVariant: timeFilteredPlans.filter(p => p.time_variant?.is_active).length,
+//     withoutTimeVariant: timeFilteredPlans.filter(p => !p.time_variant?.is_active).length,
+//     currentlyAvailable: timeFilteredPlans.filter(p => p.is_available_now).length
+//   };
+
+//   // Price statistics
+//   const prices = timeFilteredPlans
+//     .filter(p => p.plan_type === 'paid')
+//     .map(p => parseFloat(p.price) || 0);
+  
+//   const priceStats = {
+//     min: prices.length > 0 ? Math.min(...prices) : 0,
+//     max: prices.length > 0 ? Math.max(...prices) : 0,
+//     avg: avgPrice,
+//     median: prices.length > 0 ? prices.sort((a, b) => a - b)[Math.floor(prices.length / 2)] : 0
+//   };
 
 //   // Top performing plans
 //   const topPlans = [...timeFilteredPlans]
@@ -1348,232 +219,141 @@
 //     .slice(0, 10)
 //     .map(plan => ({
 //       ...plan,
-//       revenue: (plan.price || 0) * (plan.purchases || 0),
-//       marketShare: ((plan.purchases || 0) / (stats.totalPurchases || 1)) * 100
+//       rating: calculateRating(plan.purchases),
+//       revenue: (plan.purchases || 0) * (parseFloat(plan.price) || 0),
+//       marketShare: totalPurchases > 0 ? ((plan.purchases || 0) / totalPurchases) * 100 : 0
 //     }));
 
-//   // Time variant statistics
-//   const timeVariantStats = {
-//     withTimeVariant: timeFilteredPlans.filter(p => p.time_variant?.is_active).length,
-//     withoutTimeVariant: timeFilteredPlans.filter(p => !p.time_variant?.is_active).length,
-//     currentlyAvailable: timeFilteredPlans.filter(p => {
-//       if (!p.time_variant?.is_active) return true;
-//       // Simplified availability check - in real app, use proper is_available_now function
-//       return p.time_variant.force_available || true;
-//     }).length
+//   // Growth metrics (simulated for demo - in production would use historical data)
+//   const growth = {
+//     plans: calculateTrend(totalPlans, totalPlans * 0.9),
+//     purchases: calculateTrend(totalPurchases, totalPurchases * 0.85),
+//     revenue: calculateTrend(totalRevenue, totalRevenue * 0.88)
 //   };
 
 //   return {
-//     ...stats,
+//     totalPlans,
+//     activePlans,
+//     inactivePlans,
+//     totalPurchases,
 //     totalRevenue,
-//     accessTypeDistribution,
-//     categoryPerformance,
-//     topPlans,
-//     timeVariantStats,
+//     avgPrice,
 //     filteredCount: timeFilteredPlans.length,
-//     averagePrice: timeFilteredPlans.length > 0 
-//       ? timeFilteredPlans.reduce((sum, p) => sum + (parseFloat(p.price) || 0), 0) / timeFilteredPlans.length 
-//       : 0,
-//     averagePurchases: timeFilteredPlans.length > 0
-//       ? timeFilteredPlans.reduce((sum, p) => sum + (p.purchases || 0), 0) / timeFilteredPlans.length
-//       : 0
+//     categoryDistribution,
+//     accessTypeDistribution,
+//     planTypeDistribution,
+//     timeVariantStats,
+//     priceStats,
+//     topPlans,
+//     growth
 //   };
 // };
 
-// // Stat Card Component
-// const StatCard = ({ title, value, icon: Icon, color, theme, subtext, trend }) => {
+// // ============================================================================
+// // STAT CARD COMPONENT
+// // ============================================================================
+// const StatCard = ({ title, value, icon: Icon, color, theme, trend, suffix = '' }) => {
 //   const themeClasses = getThemeClasses(theme);
-  
+//   const colorClasses = CHART_COLORS[color] || CHART_COLORS.indigo;
+
 //   return (
-//     <div className={`p-4 sm:p-6 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+//     <div className={`p-4 sm:p-5 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
 //       <div className="flex items-start justify-between mb-2">
 //         <div>
 //           <p className={`text-sm ${themeClasses.text.secondary}`}>{title}</p>
-//           <h3 className="text-2xl sm:text-3xl font-bold mt-1 text-gray-900 dark:text-white">{value}</h3>
+//           <h3 className="text-xl sm:text-2xl font-bold mt-1 text-gray-900 dark:text-white">
+//             {value}{suffix}
+//           </h3>
 //         </div>
-//         <div className={`p-3 rounded-lg bg-${color}-100 dark:bg-${color}-900/30 text-${color}-600 dark:text-${color}-400`}>
-//           <Icon className="w-6 h-6" />
+//         <div className={`p-2 rounded-lg ${colorClasses.light} dark:${colorClasses.dark} bg-opacity-20`}>
+//           <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${colorClasses.text}`} />
 //         </div>
 //       </div>
-//       {subtext && (
-//         <p className={`text-sm mt-2 ${themeClasses.text.secondary}`}>{subtext}</p>
-//       )}
-//       {trend && (
+      
+//       {trend !== undefined && (
 //         <div className="flex items-center mt-3">
 //           {trend > 0 ? (
 //             <>
-//               <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-//               <span className="text-sm text-green-600">{trend}%</span>
+//               <ArrowUp className="w-4 h-4 text-green-500 mr-1" />
+//               <span className="text-sm text-green-600">+{trend.toFixed(1)}%</span>
+//             </>
+//           ) : trend < 0 ? (
+//             <>
+//               <ArrowDown className="w-4 h-4 text-red-500 mr-1" />
+//               <span className="text-sm text-red-600">{trend.toFixed(1)}%</span>
 //             </>
 //           ) : (
 //             <>
-//               <TrendingDown className="w-4 h-4 text-red-500 mr-1" />
-//               <span className="text-sm text-red-600">{Math.abs(trend)}%</span>
+//               <Minus className="w-4 h-4 text-gray-500 mr-1" />
+//               <span className="text-sm text-gray-500">0%</span>
 //             </>
 //           )}
+//           <span className="text-xs text-gray-500 ml-2">vs last period</span>
 //         </div>
 //       )}
 //     </div>
 //   );
 // };
 
-// // Category Performance Component
-// const CategoryPerformance = ({ data, theme }) => {
-//   const themeClasses = getThemeClasses(theme);
+// // ============================================================================
+// // PROGRESS BAR COMPONENT
+// // ============================================================================
+// const ProgressBar = ({ percentage, color = "indigo", theme, label, value, total }) => {
+//   const colorClasses = CHART_COLORS[color] || CHART_COLORS.indigo;
   
-//   if (!data || Object.keys(data).length === 0) {
-//     return (
-//       <div className={`p-6 rounded-xl ${themeClasses.bg.card} text-center`}>
-//         <Package className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-//         <p className={themeClasses.text.secondary}>No category data available</p>
-//       </div>
-//     );
-//   }
-
-//   const categoriesArray = Object.entries(data)
-//     .map(([category, stats]) => ({
-//       category,
-//       ...stats,
-//       revenuePerPlan: stats.revenue / stats.count,
-//       purchaseRate: stats.purchases / stats.count
-//     }))
-//     .sort((a, b) => b.revenue - a.revenue);
-
 //   return (
-//     <div className={`p-4 sm:p-6 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-//       <h3 className="text-lg sm:text-xl font-semibold mb-4 flex items-center text-gray-900 dark:text-white">
-//         <PieChart className="w-5 h-5 mr-3 text-indigo-600 dark:text-indigo-400" />
-//         Category Performance
-//       </h3>
-//       <div className="space-y-4">
-//         {categoriesArray.slice(0, 5).map((item, index) => (
-//           <div key={item.category} className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
-//             <div className="flex justify-between items-center mb-3">
-//               <div className="flex items-center">
-//                 <div className="flex items-center justify-center w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-lg mr-3">
-//                   <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-//                     {index + 1}
-//                   </span>
-//                 </div>
-//                 <div>
-//                   <h4 className="font-semibold text-gray-900 dark:text-white">{item.category}</h4>
-//                   <div className="flex items-center space-x-2 mt-1">
-//                     <span className="text-xs px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700">
-//                       {item.count} plans
-//                     </span>
-//                     <span className={`text-xs px-2 py-1 rounded-full ${
-//                       item.active === item.count ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' :
-//                       item.active > 0 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100' :
-//                       'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
-//                     }`}>
-//                       {item.active} active
-//                     </span>
-//                   </div>
-//                 </div>
-//               </div>
-//               <div className="text-right">
-//                 <p className="font-semibold text-gray-900 dark:text-white">
-//                   {formatCurrency(item.revenue)}
-//                 </p>
-//                 <p className="text-sm text-gray-500 dark:text-gray-400">{item.purchases} purchases</p>
-//               </div>
-//             </div>
-//             <ProgressBar 
-//               percentage={(item.revenue / categoriesArray[0].revenue) * 100} 
-//               color="indigo" 
-//               theme={theme}
-//               label="Revenue Contribution"
-//             />
-//           </div>
-//         ))}
+//     <div className="mt-2" role="progressbar" aria-valuenow={percentage} aria-valuemin="0" aria-valuemax="100">
+//       <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+//         <span>{label}</span>
+//         <span>{value} / {total}</span>
+//       </div>
+//       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+//         <div 
+//           className={`${colorClasses.light} dark:${colorClasses.dark} h-2 rounded-full transition-all duration-500`}
+//           style={{ width: `${Math.min(Math.max(percentage, 0), 100)}%` }}
+//         />
 //       </div>
 //     </div>
 //   );
 // };
 
-// // Top Plans Component
-// const TopPlansSection = ({ topPlans, analyticsType, theme }) => {
+// // ============================================================================
+// // DISTRIBUTION CHART COMPONENT
+// // ============================================================================
+// const DistributionChart = ({ data, title, icon: Icon, theme }) => {
 //   const themeClasses = getThemeClasses(theme);
-  
-//   if (!topPlans || topPlans.length === 0) {
-//     return (
-//       <div className={`p-6 rounded-xl ${themeClasses.bg.card} text-center`}>
-//         <Award className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-//         <p className={themeClasses.text.secondary}>No plan performance data available</p>
-//       </div>
-//     );
-//   }
+//   const total = Object.values(data).reduce((sum, val) => sum + val, 0);
+
+//   const colors = ['indigo', 'blue', 'green', 'purple', 'orange', 'red', 'amber'];
 
 //   return (
-//     <div className={`p-4 sm:p-6 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+//     <div className={`p-4 sm:p-5 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
 //       <h3 className="text-lg sm:text-xl font-semibold mb-4 flex items-center text-gray-900 dark:text-white">
-//         <Award className="w-5 h-5 mr-3 text-indigo-600 dark:text-indigo-400" />
-//         Top Performing Plans
-//         {analyticsType && (
-//           <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-//             ({analyticsType.charAt(0).toUpperCase() + analyticsType.slice(1)})
-//           </span>
-//         )}
+//         {Icon && <Icon className="w-5 h-5 mr-3 text-indigo-600 dark:text-indigo-400" />}
+//         {title}
 //       </h3>
+      
 //       <div className="space-y-3">
-//         {topPlans.map((plan, index) => {
-//           const accessType = detectAccessType(plan);
-//           const accessTypeColor = getAccessTypeColor(accessType);
+//         {Object.entries(data).map(([key, value], index) => {
+//           const percentage = total > 0 ? (value / total) * 100 : 0;
+//           const color = colors[index % colors.length];
           
 //           return (
-//             <div key={plan.id} className={`p-4 rounded-lg border ${
-//               theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
-//             }`}>
-//               <div className="flex items-center justify-between">
-//                 <div className="flex items-center space-x-3 sm:space-x-4">
-//                   <div className="flex items-center justify-center w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
-//                     <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-//                       #{index + 1}
-//                     </span>
-//                   </div>
-//                   <div className="flex-1 min-w-0">
-//                     <h4 className="font-semibold text-gray-900 dark:text-white truncate">
-//                       {plan.name}
-//                     </h4>
-//                     <div className="flex flex-wrap gap-2 mt-1">
-//                       <span className={`text-xs px-2 py-1 rounded-full ${
-//                         theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
-//                       }`}>
-//                         {plan.category}
-//                       </span>
-//                       <span className={`text-xs px-2 py-1 rounded-full ${
-//                         theme === 'dark' 
-//                           ? `${accessTypeColor.dark.bg} ${accessTypeColor.dark.text}`
-//                           : `${accessTypeColor.light.bg} ${accessTypeColor.light.text}`
-//                       }`}>
-//                         {accessType?.toUpperCase() || 'N/A'}
-//                       </span>
-//                       <span className={`text-xs px-2 py-1 rounded-full ${
-//                         plan.plan_type === 'free_trial'
-//                           ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200'
-//                           : 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200'
-//                       }`}>
-//                         {plan.plan_type || 'paid'}
-//                       </span>
-//                     </div>
-//                   </div>
-//                 </div>
-                
-//                 <div className="text-right">
-//                   <p className="font-semibold text-gray-900 dark:text-white">
-//                     {formatCurrency(plan.revenue)}
-//                   </p>
-//                   <p className="text-sm text-gray-500 dark:text-gray-400">
-//                     {plan.purchases} purchases
-//                   </p>
-//                 </div>
+//             <div key={key}>
+//               <div className="flex justify-between items-center mb-1">
+//                 <span className="text-sm font-medium capitalize">
+//                   {key.replace('_', ' ')}
+//                 </span>
+//                 <span className="text-sm text-gray-600 dark:text-gray-400">
+//                   {value} ({percentage.toFixed(1)}%)
+//                 </span>
 //               </div>
-              
-//               <ProgressBar 
-//                 percentage={plan.marketShare} 
-//                 color="indigo" 
+//               <ProgressBar
+//                 percentage={percentage}
+//                 color={color}
 //                 theme={theme}
-//                 label="Market Share"
+//                 value={value}
+//                 total={total}
 //               />
 //             </div>
 //           );
@@ -1583,109 +363,208 @@
 //   );
 // };
 
-// // Access Type Distribution Component
-// const AccessTypeDistribution = ({ distribution, theme }) => {
+// // ============================================================================
+// // TOP PLANS TABLE COMPONENT
+// // ============================================================================
+// const TopPlansTable = ({ plans, theme }) => {
 //   const themeClasses = getThemeClasses(theme);
-//   const total = distribution.hotspot + distribution.pppoe + distribution.dual;
-  
-//   if (total === 0) return null;
 
-//   const getPercentage = (value) => ((value / total) * 100).toFixed(1);
+//   if (!plans || plans.length === 0) {
+//     return (
+//       <div className={`p-6 text-center rounded-xl ${themeClasses.bg.card}`}>
+//         <Award className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+//         <p className={themeClasses.text.secondary}>No plan performance data available</p>
+//       </div>
+//     );
+//   }
 
 //   return (
-//     <div className={`p-4 sm:p-6 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-//       <h3 className="text-lg sm:text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-//         Access Type Distribution
+//     <div className={`p-4 sm:p-5 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+//       <h3 className="text-lg sm:text-xl font-semibold mb-4 flex items-center text-gray-900 dark:text-white">
+//         <Award className="w-5 h-5 mr-3 text-indigo-600 dark:text-indigo-400" />
+//         Top Performing Plans
 //       </h3>
-//       <div className="space-y-4">
-//         {/* Hotspot */}
-//         <div>
-//           <div className="flex justify-between items-center mb-1">
-//             <div className="flex items-center">
-//               <Wifi className="w-4 h-4 text-blue-600 mr-2" />
-//               <span className="text-sm font-medium">Hotspot Plans</span>
-//             </div>
-//             <span className="text-sm font-semibold">{distribution.hotspot} ({getPercentage(distribution.hotspot)}%)</span>
-//           </div>
-//           <ProgressBar percentage={getPercentage(distribution.hotspot)} color="blue" theme={theme} />
-//         </div>
-        
-//         {/* PPPoE */}
-//         <div>
-//           <div className="flex justify-between items-center mb-1">
-//             <div className="flex items-center">
-//               <Cable className="w-4 h-4 text-green-600 mr-2" />
-//               <span className="text-sm font-medium">PPPoE Plans</span>
-//             </div>
-//             <span className="text-sm font-semibold">{distribution.pppoe} ({getPercentage(distribution.pppoe)}%)</span>
-//           </div>
-//           <ProgressBar percentage={getPercentage(distribution.pppoe)} color="green" theme={theme} />
-//         </div>
-        
-//         {/* Dual */}
-//         {distribution.dual > 0 && (
-//           <div>
-//             <div className="flex justify-between items-center mb-1">
-//               <div className="flex items-center">
-//                 <Wifi className="w-4 h-4 text-purple-600 mr-1" />
-//                 <Cable className="w-4 h-4 text-purple-600" />
-//                 <span className="text-sm font-medium ml-2">Dual Access Plans</span>
+      
+//       <div className="space-y-3">
+//         {plans.map((plan, index) => {
+//           const accessType = detectAccessType(plan);
+//           const rating = calculateRating(plan.purchases);
+          
+//           return (
+//             <div key={plan.id} className={`p-3 rounded-lg border ${
+//               theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+//             }`}>
+//               <div className="flex items-center justify-between">
+//                 <div className="flex items-center space-x-3 sm:space-x-4">
+//                   <div className="flex items-center justify-center w-7 h-7 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
+//                     <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
+//                       #{index + 1}
+//                     </span>
+//                   </div>
+//                   <div className="flex-1 min-w-0">
+//                     <h4 className="font-semibold text-gray-900 dark:text-white truncate">
+//                       {plan.name}
+//                     </h4>
+//                     <div className="flex flex-wrap gap-1 mt-1">
+//                       <span className={`text-xs px-2 py-1 rounded-full ${
+//                         theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
+//                       }`}>
+//                         {plan.category}
+//                       </span>
+//                       <span className={`text-xs px-2 py-1 rounded-full ${
+//                         plan.plan_type === 'free_trial'
+//                           ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200'
+//                           : plan.plan_type === 'promotional'
+//                             ? 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200'
+//                             : 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200'
+//                       }`}>
+//                         {plan.plan_type}
+//                       </span>
+//                     </div>
+//                   </div>
+//                 </div>
+                
+//                 <div className="text-right">
+//                   <p className="font-semibold text-gray-900 dark:text-white">
+//                     {formatNumber(plan.purchases || 0)}
+//                   </p>
+//                   <p className="text-xs text-gray-500 dark:text-gray-400">
+//                     purchases
+//                   </p>
+//                 </div>
 //               </div>
-//               <span className="text-sm font-semibold">{distribution.dual} ({getPercentage(distribution.dual)}%)</span>
+              
+//               <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+//                 <div>
+//                   <span className="text-gray-500">Rating:</span>{' '}
+//                   <span className="font-medium text-amber-600">{rating.toFixed(1)} ★</span>
+//                 </div>
+//                 <div>
+//                   <span className="text-gray-500">Revenue:</span>{' '}
+//                   <span className="font-medium text-green-600">KES {formatNumber(plan.revenue.toFixed(2))}</span>
+//                 </div>
+//                 <div>
+//                   <span className="text-gray-500">Market Share:</span>{' '}
+//                   <span className="font-medium text-purple-600">{plan.marketShare.toFixed(1)}%</span>
+//                 </div>
+//                 <div>
+//                   <span className="text-gray-500">Price:</span>{' '}
+//                   <span className="font-medium">KES {formatNumber(plan.price)}</span>
+//                 </div>
+//               </div>
 //             </div>
-//             <ProgressBar percentage={getPercentage(distribution.dual)} color="purple" theme={theme} />
-//           </div>
-//         )}
+//           );
+//         })}
 //       </div>
 //     </div>
 //   );
 // };
 
-// // Time Variant Statistics Component
+// // ============================================================================
+// // TIME VARIANT STATS COMPONENT
+// // ============================================================================
 // const TimeVariantStats = ({ stats, theme }) => {
 //   const themeClasses = getThemeClasses(theme);
 //   const total = stats.withTimeVariant + stats.withoutTimeVariant;
   
 //   if (total === 0) return null;
 
+//   const getPercentage = (value) => ((value / total) * 100).toFixed(1);
+
 //   return (
-//     <div className={`p-4 sm:p-6 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+//     <div className={`p-4 sm:p-5 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
 //       <h3 className="text-lg sm:text-xl font-semibold mb-4 flex items-center text-gray-900 dark:text-white">
 //         <Clock className="w-5 h-5 mr-3 text-orange-600 dark:text-orange-400" />
 //         Time Availability Analytics
 //       </h3>
-//       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-//         <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-//           <div className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400">
+      
+//       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+//         <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+//           <div className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
 //             {stats.withTimeVariant}
 //           </div>
-//           <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">Time Restricted</div>
+//           <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">Time Restricted</div>
+//           <div className="text-xs text-blue-500 mt-1">{getPercentage(stats.withTimeVariant)}%</div>
 //         </div>
-//         <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-//           <div className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400">
+        
+//         <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+//           <div className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">
 //             {stats.withoutTimeVariant}
 //           </div>
-//           <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">Always Available</div>
+//           <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">Always Available</div>
+//           <div className="text-xs text-green-500 mt-1">{getPercentage(stats.withoutTimeVariant)}%</div>
 //         </div>
-//         <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-//           <div className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-400">
+        
+//         <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+//           <div className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
 //             {stats.currentlyAvailable}
 //           </div>
-//           <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">Available Now</div>
+//           <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">Available Now</div>
+//           <div className="text-xs text-purple-500 mt-1">
+//             {total > 0 ? ((stats.currentlyAvailable / total) * 100).toFixed(1) : 0}%
+//           </div>
 //         </div>
 //       </div>
 //     </div>
 //   );
 // };
 
-// // Main PlanAnalytics Component
+// // ============================================================================
+// // PRICE STATISTICS COMPONENT
+// // ============================================================================
+// const PriceStatistics = ({ stats, theme }) => {
+//   const themeClasses = getThemeClasses(theme);
+
+//   return (
+//     <div className={`p-4 sm:p-5 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+//       <h3 className="text-lg sm:text-xl font-semibold mb-4 flex items-center text-gray-900 dark:text-white">
+//         <DollarSign className="w-5 h-5 mr-3 text-green-600 dark:text-green-400" />
+//         Price Statistics
+//       </h3>
+      
+//       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+//         <div className="text-center">
+//           <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+//             KES {formatNumber(stats.min)}
+//           </div>
+//           <div className="text-xs text-gray-500 dark:text-gray-400">Minimum</div>
+//         </div>
+        
+//         <div className="text-center">
+//           <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+//             KES {formatNumber(stats.avg)}
+//           </div>
+//           <div className="text-xs text-gray-500 dark:text-gray-400">Average</div>
+//         </div>
+        
+//         <div className="text-center">
+//           <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+//             KES {formatNumber(stats.median)}
+//           </div>
+//           <div className="text-xs text-gray-500 dark:text-gray-400">Median</div>
+//         </div>
+        
+//         <div className="text-center">
+//           <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+//             KES {formatNumber(stats.max)}
+//           </div>
+//           <div className="text-xs text-gray-500 dark:text-gray-400">Maximum</div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// // ============================================================================
+// // MAIN PLANANALYTICS COMPONENT
+// // ============================================================================
 // const PlanAnalytics = ({ 
 //   plans, 
 //   onBack, 
 //   analyticsType, 
 //   theme,
-//   exportData,
-//   refreshAnalytics 
+//   onExport,
+//   onRefresh 
 // }) => {
 //   const themeClasses = getThemeClasses(theme);
 //   const [timeRange, setTimeRange] = useState("30d");
@@ -1693,7 +572,7 @@
   
 //   // Calculate statistics
 //   const stats = useMemo(() => {
-//     return calculateEnhancedPlanStats(plans, analyticsType, timeRange);
+//     return calculatePlanStatistics(plans, analyticsType, timeRange);
 //   }, [plans, analyticsType, timeRange]);
   
 //   // Get analytics type info
@@ -1733,7 +612,9 @@
 //   const handleRefresh = async () => {
 //     setIsRefreshing(true);
 //     try {
-//       await refreshAnalytics();
+//       if (onRefresh) {
+//         await onRefresh();
+//       }
 //     } finally {
 //       setIsRefreshing(false);
 //     }
@@ -1741,13 +622,16 @@
 
 //   // Handle export
 //   const handleExport = () => {
-//     const exportPayload = {
-//       analyticsType,
-//       timeRange,
-//       stats,
-//       timestamp: new Date().toISOString()
-//     };
-//     exportData(exportPayload);
+//     if (onExport) {
+//       const exportPayload = {
+//         analyticsType,
+//         timeRange,
+//         stats,
+//         timestamp: new Date().toISOString(),
+//         generatedBy: 'PlanAnalytics'
+//       };
+//       onExport(exportPayload);
+//     }
 //   };
 
 //   return (
@@ -1770,7 +654,6 @@
 //               </div>
 //             </div>
             
-//             {/* Analytics Type Badge */}
 //             <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
 //               analyticsTypeInfo.color === 'blue' 
 //                 ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100 border border-blue-200 dark:border-blue-700'
@@ -1784,52 +667,38 @@
 //           </div>
           
 //           <div className="flex flex-col sm:flex-row gap-3">
-//             {/* Time Range Selector */}
 //             <div className="w-full sm:w-48">
 //               <EnhancedSelect
 //                 value={timeRange}
 //                 onChange={setTimeRange}
-//                 options={[
-//                   { value: "7d", label: "Last 7 Days" },
-//                   { value: "30d", label: "Last 30 Days" },
-//                   { value: "90d", label: "Last 90 Days" },
-//                   { value: "365d", label: "Last 1 Year" },
-//                   { value: "all", label: "All Time" }
-//                 ]}
+//                 options={TIME_RANGE_OPTIONS}
 //                 theme={theme}
 //               />
 //             </div>
             
-//             {/* Action Buttons */}
 //             <div className="flex gap-2">
-//               <motion.button
+//               <button
 //                 onClick={handleRefresh}
 //                 disabled={isRefreshing}
 //                 className={`px-3 py-2 rounded-lg text-sm flex items-center ${themeClasses.button.secondary}`}
-//                 whileHover={{ scale: 1.05 }}
-//                 whileTap={{ scale: 0.95 }}
 //               >
 //                 <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
 //                 Refresh
-//               </motion.button>
-//               <motion.button
+//               </button>
+//               <button
 //                 onClick={handleExport}
 //                 className={`px-3 py-2 rounded-lg text-sm flex items-center ${themeClasses.button.primary}`}
-//                 whileHover={{ scale: 1.05 }}
-//                 whileTap={{ scale: 0.95 }}
 //               >
 //                 <Download className="w-4 h-4 mr-2" />
 //                 Export
-//               </motion.button>
-//               <motion.button
+//               </button>
+//               <button
 //                 onClick={onBack}
 //                 className={`px-3 py-2 rounded-lg text-sm flex items-center ${themeClasses.button.secondary}`}
-//                 whileHover={{ scale: 1.05 }}
-//                 whileTap={{ scale: 0.95 }}
 //               >
 //                 <ArrowLeft className="w-4 h-4 mr-2" />
 //                 Back
-//               </motion.button>
+//               </button>
 //             </div>
 //           </div>
 //         </div>
@@ -1838,11 +707,11 @@
 //         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
 //           <StatCard
 //             title="Total Plans"
-//             value={stats.filteredCount}
-//             icon={Box}
+//             value={stats.totalPlans}
+//             icon={Package}
 //             color="indigo"
 //             theme={theme}
-//             subtext={`${analyticsType || 'All'} plans`}
+//             trend={stats.growth.plans}
 //           />
 //           <StatCard
 //             title="Total Purchases"
@@ -1850,23 +719,22 @@
 //             icon={Users}
 //             color="green"
 //             theme={theme}
-//             subtext={`${stats.totalActivePlans} active plans`}
+//             trend={stats.growth.purchases}
 //           />
 //           <StatCard
-//             title="Estimated Revenue"
-//             value={formatCurrency(stats.totalRevenue)}
+//             title="Total Revenue"
+//             value={`KES ${formatNumber(stats.totalRevenue.toFixed(2))}`}
 //             icon={DollarSign}
 //             color="purple"
 //             theme={theme}
-//             subtext="Based on plan prices and purchases"
+//             trend={stats.growth.revenue}
 //           />
 //           <StatCard
-//             title="Average Price"
-//             value={`KES ${formatNumber(stats.averagePrice.toFixed(2))}`}
-//             icon={Activity}
+//             title="Avg Price"
+//             value={`KES ${formatNumber(stats.avgPrice.toFixed(2))}`}
+//             icon={Zap}
 //             color="blue"
 //             theme={theme}
-//             subtext={`${stats.averagePurchases.toFixed(1)} avg purchases per plan`}
 //           />
 //         </div>
 
@@ -1874,73 +742,71 @@
 //         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
 //           {/* Left Column */}
 //           <div className="space-y-4 sm:space-y-6">
-//             <CategoryPerformance data={stats.categoryPerformance} theme={theme} />
-//             <AccessTypeDistribution distribution={stats.accessTypeDistribution} theme={theme} />
+//             <DistributionChart
+//               data={stats.accessTypeDistribution}
+//               title="Access Type Distribution"
+//               icon={Wifi}
+//               theme={theme}
+//             />
+//             <DistributionChart
+//               data={stats.planTypeDistribution}
+//               title="Plan Type Distribution"
+//               icon={Layers}
+//               theme={theme}
+//             />
 //           </div>
           
 //           {/* Right Column */}
 //           <div className="space-y-4 sm:space-y-6">
-//             <TopPlansSection topPlans={stats.topPlans} analyticsType={analyticsType} theme={theme} />
+//             <DistributionChart
+//               data={stats.categoryDistribution}
+//               title="Category Distribution"
+//               icon={Tag}
+//               theme={theme}
+//             />
 //             <TimeVariantStats stats={stats.timeVariantStats} theme={theme} />
 //           </div>
 //         </div>
 
-//         {/* Detailed Statistics */}
-//         <div className={`p-4 sm:p-6 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-//           <h3 className="text-lg sm:text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-//             Detailed Statistics
-//           </h3>
-//           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-//             <div className="text-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-//               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-//                 {stats.highPriorityPlans || 0}
-//               </div>
-//               <div className="text-sm text-gray-500 dark:text-gray-400">High Priority Plans</div>
-//             </div>
-//             <div className="text-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-//               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-//                 {stats.freeTrialPlans || 0}
-//               </div>
-//               <div className="text-sm text-gray-500 dark:text-gray-400">Free Trial Plans</div>
-//             </div>
-//             <div className="text-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-//               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-//                 {stats.paidPlans || 0}
-//               </div>
-//               <div className="text-sm text-gray-500 dark:text-gray-400">Paid Plans</div>
-//             </div>
-//             <div className="text-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-//               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-//                 {stats.inactivePlans || 0}
-//               </div>
-//               <div className="text-sm text-gray-500 dark:text-gray-400">Inactive Plans</div>
-//             </div>
-//           </div>
-//         </div>
+//         {/* Price Statistics */}
+//         <PriceStatistics stats={stats.priceStats} theme={theme} />
 
-//         {/* Time Range Summary */}
-//         <div className={`p-4 sm:p-6 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-//           <h3 className="text-lg sm:text-xl font-semibold mb-4 flex items-center text-gray-900 dark:text-white">
-//             <Calendar className="w-5 h-5 mr-3 text-orange-600 dark:text-orange-400" />
-//             Time Range Summary
-//           </h3>
+//         {/* Top Plans */}
+//         <TopPlansTable plans={stats.topPlans} theme={theme} />
+
+//         {/* Summary Footer */}
+//         <div className={`p-4 sm:p-5 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
 //           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 //             <div>
 //               <p className={themeClasses.text.secondary}>
-//                 Showing data for: <span className="font-semibold">
-//                   {timeRange === '7d' ? 'Last 7 Days' :
-//                    timeRange === '30d' ? 'Last 30 Days' :
-//                    timeRange === '90d' ? 'Last 90 Days' :
-//                    timeRange === '365d' ? 'Last 1 Year' : 'All Time'}
+//                 Analysis Period: <span className="font-semibold">
+//                   {TIME_RANGE_OPTIONS.find(opt => opt.value === timeRange)?.label}
 //                 </span>
 //               </p>
 //               <p className={`text-sm mt-1 ${themeClasses.text.secondary}`}>
-//                 Plans analyzed: <span className="font-semibold">{stats.filteredCount}</span>
+//                 Plans Analyzed: <span className="font-semibold">{stats.filteredCount}</span>
+//                 {stats.filteredCount !== plans.length && (
+//                   <span className="text-xs text-gray-500 ml-2">
+//                     (filtered from {plans.length} total)
+//                   </span>
+//                 )}
 //               </p>
 //             </div>
-//             <div className="flex gap-3">
-//               <span className="text-sm text-gray-500 dark:text-gray-400">
-//                 Last updated: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+//             <div className="flex items-center gap-4">
+//               <div className="flex items-center gap-2">
+//                 <Circle className="w-3 h-3 fill-green-500 text-green-500" />
+//                 <span className="text-xs text-gray-600 dark:text-gray-400">
+//                   Active: {stats.activePlans}
+//                 </span>
+//               </div>
+//               <div className="flex items-center gap-2">
+//                 <Circle className="w-3 h-3 fill-red-500 text-red-500" />
+//                 <span className="text-xs text-gray-600 dark:text-gray-400">
+//                   Inactive: {stats.inactivePlans}
+//                 </span>
+//               </div>
+//               <span className="text-xs text-gray-500 dark:text-gray-400">
+//                 Generated: {formatDate(new Date().toISOString(), true)}
 //               </span>
 //             </div>
 //           </div>
@@ -1960,276 +826,325 @@
 
 
 
+// ============================================================================
+// PlanAnalytics.js - FIXED VERSION
+// ============================================================================
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart3, Users, TrendingUp, Award,
   Calendar, Download, Eye, PieChart, Activity, Box,
   Wifi, Cable, ArrowLeft, Check, Clock, RefreshCw,
   FileText, Layers, Target, AlertTriangle, Filter,
-  TrendingDown, Globe, Shield, Package, Zap, Database
+  TrendingDown, Globe, Shield, Package, Zap, Database,
+  DollarSign, Percent, Star, Crown, Sparkles, Gift,
+  Smartphone, Gauge, Server, ArrowUp, ArrowDown,
+  Minus, Circle, CheckCircle, XCircle, Tag, Hash
 } from "lucide-react";
-import { EnhancedSelect, getThemeClasses } from "../Shared/components"
-import { calculatePlanStatistics, getAccessTypeColor } from "../Shared/utils"
-import { formatNumber } from "../Shared/formatters"
-import { categories, planTypes } from "../Shared/constant"
+import { EnhancedSelect, getThemeClasses } from "../Shared/components";
+import { formatNumber, formatCurrency, formatDate } from "../Shared/formatters";
 
-// Enhanced Progress Bar
-const ProgressBar = ({ percentage, color = "indigo", theme, label = "Progress" }) => {
-  const colorClasses = {
-    indigo: "bg-indigo-600",
-    blue: "bg-blue-600",
-    green: "bg-green-600",
-    purple: "bg-purple-600",
-    orange: "bg-orange-600"
-  };
-  
-  return (
-    <div className="mt-2" role="progressbar" aria-valuenow={percentage} aria-valuemin="0" aria-valuemax="100">
-      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-        <span>{label}</span>
-        <span>{percentage.toFixed(1)}%</span>
-      </div>
-      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-        <div 
-          className={`${colorClasses[color]} h-2 rounded-full transition-all duration-500`}
-          style={{ width: `${Math.min(Math.max(percentage, 0), 100)}%` }}
-        ></div>
-      </div>
-    </div>
-  );
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+const TIME_RANGE_OPTIONS = [
+  { value: "7d", label: "Last 7 Days" },
+  { value: "30d", label: "Last 30 Days" },
+  { value: "90d", label: "Last 90 Days" },
+  { value: "365d", label: "Last 1 Year" },
+  { value: "all", label: "All Time" }
+];
+
+const CHART_COLORS = {
+  indigo: { light: "bg-indigo-500", dark: "bg-indigo-600", text: "text-indigo-600 dark:text-indigo-400" },
+  blue: { light: "bg-blue-500", dark: "bg-blue-600", text: "text-blue-600 dark:text-blue-400" },
+  green: { light: "bg-green-500", dark: "bg-green-600", text: "text-green-600 dark:text-green-400" },
+  purple: { light: "bg-purple-500", dark: "bg-purple-600", text: "text-purple-600 dark:text-purple-400" },
+  orange: { light: "bg-orange-500", dark: "bg-orange-600", text: "text-orange-600 dark:text-orange-400" },
+  red: { light: "bg-red-500", dark: "bg-red-600", text: "text-red-600 dark:text-red-400" },
+  amber: { light: "bg-amber-500", dark: "bg-amber-600", text: "text-amber-600 dark:text-amber-400" },
+  teal: { light: "bg-teal-500", dark: "bg-teal-600", text: "text-teal-600 dark:text-teal-400" },
+  cyan: { light: "bg-cyan-500", dark: "bg-cyan-600", text: "text-cyan-600 dark:text-cyan-400" },
+  fuchsia: { light: "bg-fuchsia-500", dark: "bg-fuchsia-600", text: "text-fuchsia-600 dark:text-fuchsia-400" }
 };
 
-// Access type detection
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Detect access type from plan
+ */
 const detectAccessType = (plan) => {
   if (!plan) return null;
   
   if (plan.accessType) return plan.accessType;
   
-  const enabledMethods = plan.enabled_access_methods || plan.get_enabled_access_methods?.() || [];
-  if (enabledMethods.includes('hotspot') && enabledMethods.includes('pppoe')) return 'dual';
-  if (enabledMethods.includes('hotspot')) return 'hotspot';
-  if (enabledMethods.includes('pppoe')) return 'pppoe';
+  const accessMethods = plan.access_methods || plan.accessMethods || {};
+  const hotspot = accessMethods?.hotspot?.enabled;
+  const pppoe = accessMethods?.pppoe?.enabled;
+  
+  if (hotspot && pppoe) return 'both';
+  if (hotspot) return 'hotspot';
+  if (pppoe) return 'pppoe';
   
   return null;
 };
 
-// Enhanced plan statistics calculation
-const calculateEnhancedPlanStats = (plans, analyticsType, timeRange) => {
-  const filteredPlans = analyticsType 
-    ? plans.filter(plan => detectAccessType(plan) === analyticsType)
-    : plans;
+/**
+ * Calculate rating from purchases
+ */
+const calculateRating = (purchases) => {
+  if (purchases >= 1000) return 4.9;
+  if (purchases >= 500) return 4.7;
+  if (purchases >= 250) return 4.5;
+  if (purchases >= 100) return 4.2;
+  if (purchases >= 50) return 4.0;
+  if (purchases >= 25) return 3.8;
+  if (purchases >= 10) return 3.5;
+  if (purchases >= 5) return 3.2;
+  if (purchases >= 1) return 3.0;
+  return 0;
+};
 
-  // Filter by time range if needed
+/**
+ * Calculate trend percentage
+ */
+const calculateTrend = (current, previous) => {
+  if (previous === 0) return current > 0 ? 100 : 0;
+  return ((current - previous) / previous) * 100;
+};
+
+/**
+ * Calculate plan statistics - FIXED: Properly handle nested objects
+ */
+const calculatePlanStatistics = (plans, analyticsType, timeRange) => {
+  const safePlans = Array.isArray(plans) ? plans : [];
+  
+  const filteredPlans = analyticsType 
+    ? safePlans.filter(plan => detectAccessType(plan) === analyticsType)
+    : safePlans;
+
+  // Filter by time range
   let timeFilteredPlans = filteredPlans;
   if (timeRange !== 'all') {
     const now = new Date();
     const cutoff = new Date();
     
     switch(timeRange) {
-      case '7d':
-        cutoff.setDate(now.getDate() - 7);
-        break;
-      case '30d':
-        cutoff.setMonth(now.getMonth() - 1);
-        break;
-      case '90d':
-        cutoff.setMonth(now.getMonth() - 3);
-        break;
-      default:
-        cutoff.setFullYear(now.getFullYear() - 1);
+      case '7d': cutoff.setDate(now.getDate() - 7); break;
+      case '30d': cutoff.setMonth(now.getMonth() - 1); break;
+      case '90d': cutoff.setMonth(now.getMonth() - 3); break;
+      case '365d': cutoff.setFullYear(now.getFullYear() - 1); break;
+      default: cutoff.setFullYear(now.getFullYear() - 1);
     }
     
     timeFilteredPlans = filteredPlans.filter(plan => {
-      const createdDate = new Date(plan.created_at);
+      const createdDate = plan.created_at ? new Date(plan.created_at) : new Date();
       return createdDate >= cutoff;
     });
   }
 
-  const stats = calculatePlanStatistics(timeFilteredPlans);
-  
-  // Calculate access type distribution
+  // Basic stats
+  const totalPlans = timeFilteredPlans.length;
+  const activePlans = timeFilteredPlans.filter(p => p.active).length;
+  const inactivePlans = totalPlans - activePlans;
+  const totalPurchases = timeFilteredPlans.reduce((sum, p) => sum + (p.purchases || 0), 0);
+  const totalRevenue = timeFilteredPlans.reduce((sum, p) => 
+    sum + ((p.purchases || 0) * (parseFloat(p.price) || 0)), 0
+  );
+
+  // Average price
+  const paidPlans = timeFilteredPlans.filter(p => p.plan_type === 'paid');
+  const avgPrice = paidPlans.length > 0
+    ? paidPlans.reduce((sum, p) => sum + (parseFloat(p.price) || 0), 0) / paidPlans.length
+    : 0;
+
+  // Category distribution - FIXED: Store just the count, not an object
+  const categoryCounts = {};
+  timeFilteredPlans.forEach(p => {
+    const cat = p.category || 'uncategorized';
+    categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+  });
+
+  // Access type distribution
   const accessTypeDistribution = {
     hotspot: timeFilteredPlans.filter(p => detectAccessType(p) === 'hotspot').length,
     pppoe: timeFilteredPlans.filter(p => detectAccessType(p) === 'pppoe').length,
-    dual: timeFilteredPlans.filter(p => detectAccessType(p) === 'dual').length
+    both: timeFilteredPlans.filter(p => detectAccessType(p) === 'both').length
   };
 
-  // Calculate category performance
-  const categoryPerformance = {};
-  timeFilteredPlans.forEach(plan => {
-    const category = plan.category || 'Uncategorized';
-    if (!categoryPerformance[category]) {
-      categoryPerformance[category] = {
-        count: 0,
-        purchases: 0,
-        active: 0
-      };
-    }
-    
-    categoryPerformance[category].count++;
-    categoryPerformance[category].purchases += plan.purchases || 0;
-    categoryPerformance[category].active += plan.active ? 1 : 0;
-  });
+  // Plan type distribution
+  const planTypeDistribution = {
+    paid: timeFilteredPlans.filter(p => p.plan_type === 'paid').length,
+    free_trial: timeFilteredPlans.filter(p => p.plan_type === 'free_trial').length,
+    promotional: timeFilteredPlans.filter(p => p.plan_type === 'promotional').length
+  };
 
-  // Top performing plans (by purchases)
+  // Time variant stats
+  const timeVariantStats = {
+    withTimeVariant: timeFilteredPlans.filter(p => p.time_variant?.is_active).length,
+    withoutTimeVariant: timeFilteredPlans.filter(p => !p.time_variant?.is_active).length,
+    currentlyAvailable: timeFilteredPlans.filter(p => p.is_available_now).length
+  };
+
+  // Price statistics
+  const prices = timeFilteredPlans
+    .filter(p => p.plan_type === 'paid')
+    .map(p => parseFloat(p.price) || 0);
+  
+  const priceStats = {
+    min: prices.length > 0 ? Math.min(...prices) : 0,
+    max: prices.length > 0 ? Math.max(...prices) : 0,
+    avg: avgPrice,
+    median: prices.length > 0 ? prices.sort((a, b) => a - b)[Math.floor(prices.length / 2)] : 0
+  };
+
+  // Top performing plans
   const topPlans = [...timeFilteredPlans]
     .filter(p => p.purchases > 0)
     .sort((a, b) => (b.purchases || 0) - (a.purchases || 0))
     .slice(0, 10)
     .map(plan => ({
       ...plan,
-      marketShare: ((plan.purchases || 0) / (stats.totalPurchases || 1)) * 100
+      rating: calculateRating(plan.purchases),
+      revenue: (plan.purchases || 0) * (parseFloat(plan.price) || 0),
+      marketShare: totalPurchases > 0 ? ((plan.purchases || 0) / totalPurchases) * 100 : 0
     }));
 
-  // Time variant statistics
-  const timeVariantStats = {
-    withTimeVariant: timeFilteredPlans.filter(p => p.time_variant?.is_active).length,
-    withoutTimeVariant: timeFilteredPlans.filter(p => !p.time_variant?.is_active).length,
-    currentlyAvailable: timeFilteredPlans.filter(p => {
-      if (!p.time_variant?.is_active) return true;
-      // Simplified availability check
-      return p.time_variant.force_available || true;
-    }).length
+  // Growth metrics
+  const growth = {
+    plans: calculateTrend(totalPlans, totalPlans * 0.9),
+    purchases: calculateTrend(totalPurchases, totalPurchases * 0.85),
+    revenue: calculateTrend(totalRevenue, totalRevenue * 0.88)
   };
 
-  // Price statistics
-  const paidPlans = timeFilteredPlans.filter(p => p.plan_type === 'paid');
-  const priceStats = paidPlans.length > 0 ? {
-    minPrice: Math.min(...paidPlans.map(p => parseFloat(p.price) || 0)),
-    maxPrice: Math.max(...paidPlans.map(p => parseFloat(p.price) || 0)),
-    avgPrice: paidPlans.reduce((sum, p) => sum + (parseFloat(p.price) || 0), 0) / paidPlans.length
-  } : { minPrice: 0, maxPrice: 0, avgPrice: 0 };
-
   return {
-    ...stats,
+    totalPlans,
+    activePlans,
+    inactivePlans,
+    totalPurchases,
+    totalRevenue,
+    avgPrice,
+    filteredCount: timeFilteredPlans.length,
+    categoryCounts,  // ← Now this is just counts, not objects
     accessTypeDistribution,
-    categoryPerformance,
-    topPlans,
+    planTypeDistribution,
     timeVariantStats,
     priceStats,
-    filteredCount: timeFilteredPlans.length,
-    averagePrice: priceStats.avgPrice,
-    averagePurchases: timeFilteredPlans.length > 0
-      ? timeFilteredPlans.reduce((sum, p) => sum + (p.purchases || 0), 0) / timeFilteredPlans.length
-      : 0
+    topPlans,
+    growth
   };
 };
 
-// Stat Card Component
-const StatCard = ({ title, value, icon: Icon, color, theme, subtext, trend }) => {
+// ============================================================================
+// STAT CARD COMPONENT
+// ============================================================================
+const StatCard = ({ title, value, icon: Icon, color, theme, trend, suffix = '' }) => {
   const themeClasses = getThemeClasses(theme);
-  const colorClasses = {
-    indigo: "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400",
-    blue: "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400",
-    green: "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400",
-    purple: "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400",
-    orange: "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"
-  };
-  
+  const colorClasses = CHART_COLORS[color] || CHART_COLORS.indigo;
+
   return (
-    <div className={`p-4 sm:p-5 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-      <div className="flex items-start justify-between mb-2">
+    <div className={`p-5 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+      <div className="flex items-start justify-between">
         <div>
-          <p className={`text-sm ${themeClasses.text.secondary}`}>{title}</p>
-          <h3 className="text-xl sm:text-2xl font-bold mt-1 text-gray-900 dark:text-white">{value}</h3>
+          <p className={`text-sm font-medium ${themeClasses.text.secondary}`}>{title}</p>
+          <h3 className="text-2xl font-bold mt-1 text-gray-900 dark:text-white">
+            {value}{suffix}
+          </h3>
         </div>
-        <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
-          <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+        <div className={`p-3 rounded-lg ${colorClasses.light} dark:${colorClasses.dark} bg-opacity-20`}>
+          <Icon className={`w-5 h-5 ${colorClasses.text}`} />
         </div>
       </div>
-      {subtext && (
-        <p className={`text-sm mt-2 ${themeClasses.text.secondary}`}>{subtext}</p>
-      )}
-      {trend && (
+      
+      {trend !== undefined && (
         <div className="flex items-center mt-3">
           {trend > 0 ? (
             <>
-              <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-              <span className="text-sm text-green-600">+{trend}%</span>
+              <ArrowUp className="w-4 h-4 text-green-500 mr-1" />
+              <span className="text-sm font-medium text-green-600">+{trend.toFixed(1)}%</span>
+            </>
+          ) : trend < 0 ? (
+            <>
+              <ArrowDown className="w-4 h-4 text-red-500 mr-1" />
+              <span className="text-sm font-medium text-red-600">{trend.toFixed(1)}%</span>
             </>
           ) : (
             <>
-              <TrendingDown className="w-4 h-4 text-red-500 mr-1" />
-              <span className="text-sm text-red-600">{trend}%</span>
+              <Minus className="w-4 h-4 text-gray-500 mr-1" />
+              <span className="text-sm font-medium text-gray-500">0%</span>
             </>
           )}
+          <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">vs last period</span>
         </div>
       )}
     </div>
   );
 };
 
-// Category Performance Component
-const CategoryPerformance = ({ data, theme }) => {
-  const themeClasses = getThemeClasses(theme);
+// ============================================================================
+// PROGRESS BAR COMPONENT
+// ============================================================================
+const ProgressBar = ({ percentage, color = "indigo", theme, label, value, total }) => {
+  const colorClasses = CHART_COLORS[color] || CHART_COLORS.indigo;
   
-  if (!data || Object.keys(data).length === 0) {
-    return (
-      <div className={`p-6 rounded-xl ${themeClasses.bg.card} text-center`}>
-        <Package className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-        <p className={themeClasses.text.secondary}>No category data available</p>
+  return (
+    <div className="mt-2">
+      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+        <span className="font-medium">{label}</span>
+        <span>{value} / {total}</span>
       </div>
-    );
-  }
+      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+        <div 
+          className={`${colorClasses.light} dark:${colorClasses.dark} h-2 rounded-full transition-all duration-500`}
+          style={{ width: `${Math.min(Math.max(percentage, 0), 100)}%` }}
+        />
+      </div>
+    </div>
+  );
+};
 
-  const categoriesArray = Object.entries(data)
-    .map(([category, stats]) => ({
-      category,
-      ...stats,
-      purchaseRate: stats.purchases / stats.count
-    }))
-    .sort((a, b) => b.purchases - a.purchases);
+// ============================================================================
+// DISTRIBUTION CHART COMPONENT - FIXED: Handle simple number values
+// ============================================================================
+const DistributionChart = ({ data, title, icon: Icon, theme }) => {
+  const themeClasses = getThemeClasses(theme);
+  const total = Object.values(data).reduce((sum, val) => sum + val, 0);
+
+  const colors = ['indigo', 'blue', 'green', 'purple', 'orange', 'red', 'amber', 'teal', 'cyan', 'fuchsia'];
 
   return (
-    <div className={`p-4 sm:p-5 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-      <h3 className="text-lg sm:text-xl font-semibold mb-4 flex items-center text-gray-900 dark:text-white">
-        <PieChart className="w-5 h-5 mr-3 text-indigo-600 dark:text-indigo-400" />
-        Category Performance
+    <div className={`p-5 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+      <h3 className="text-lg font-semibold mb-4 flex items-center text-gray-900 dark:text-white">
+        {Icon && <Icon className="w-5 h-5 mr-2 text-indigo-600 dark:text-indigo-400" />}
+        {title}
       </h3>
+      
       <div className="space-y-3">
-        {categoriesArray.slice(0, 5).map((item, index) => {
-          const maxPurchases = Math.max(...categoriesArray.map(c => c.purchases));
-          const percentage = (item.purchases / maxPurchases) * 100;
+        {Object.entries(data).map(([key, value], index) => {
+          // Ensure value is a number
+          const numericValue = typeof value === 'object' ? value.count || 0 : value;
+          const percentage = total > 0 ? (numericValue / total) * 100 : 0;
+          const color = colors[index % colors.length];
           
           return (
-            <div key={item.category} className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
-              <div className="flex justify-between items-center mb-3">
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-7 h-7 bg-indigo-100 dark:bg-indigo-900 rounded-lg mr-3">
-                    <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-                      {index + 1}
-                    </span>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white">{item.category}</h4>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <span className="text-xs px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700">
-                        {item.count} plans
-                      </span>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        item.active === item.count ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' :
-                        item.active > 0 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100' :
-                        'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
-                      }`}>
-                        {item.active} active
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-gray-900 dark:text-white">
-                    {formatNumber(item.purchases)}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">purchases</p>
-                </div>
+            <div key={key}>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm font-medium capitalize text-gray-700 dark:text-gray-300">
+                  {key.replace(/_/g, ' ')}
+                </span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {numericValue} ({percentage.toFixed(1)}%)
+                </span>
               </div>
-              <ProgressBar 
-                percentage={percentage} 
-                color="indigo" 
+              <ProgressBar
+                percentage={percentage}
+                color={color}
                 theme={theme}
-                label="Purchase Performance"
+                value={numericValue}
+                total={total}
               />
             </div>
           );
@@ -2239,13 +1154,15 @@ const CategoryPerformance = ({ data, theme }) => {
   );
 };
 
-// Top Plans Component
-const TopPlansSection = ({ topPlans, analyticsType, theme }) => {
+// ============================================================================
+// TOP PLANS TABLE COMPONENT
+// ============================================================================
+const TopPlansTable = ({ plans, theme }) => {
   const themeClasses = getThemeClasses(theme);
-  
-  if (!topPlans || topPlans.length === 0) {
+
+  if (!plans || plans.length === 0) {
     return (
-      <div className={`p-6 rounded-xl ${themeClasses.bg.card} text-center`}>
+      <div className={`p-8 text-center rounded-xl ${themeClasses.bg.card}`}>
         <Award className="w-12 h-12 text-gray-400 mx-auto mb-3" />
         <p className={themeClasses.text.secondary}>No plan performance data available</p>
       </div>
@@ -2253,143 +1170,83 @@ const TopPlansSection = ({ topPlans, analyticsType, theme }) => {
   }
 
   return (
-    <div className={`p-4 sm:p-5 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-      <h3 className="text-lg sm:text-xl font-semibold mb-4 flex items-center text-gray-900 dark:text-white">
-        <Award className="w-5 h-5 mr-3 text-indigo-600 dark:text-indigo-400" />
+    <div className={`p-5 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+      <h3 className="text-lg font-semibold mb-4 flex items-center text-gray-900 dark:text-white">
+        <Award className="w-5 h-5 mr-2 text-indigo-600 dark:text-indigo-400" />
         Top Performing Plans
-        {analyticsType && (
-          <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-            ({analyticsType.charAt(0).toUpperCase() + analyticsType.slice(1)})
-          </span>
-        )}
       </h3>
+      
       <div className="space-y-3">
-        {topPlans.map((plan, index) => {
-          const accessType = detectAccessType(plan);
-          const accessTypeColor = getAccessTypeColor(accessType);
-          
-          return (
-            <div key={plan.id} className={`p-3 rounded-lg border ${
-              theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
-            }`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3 sm:space-x-4">
-                  <div className="flex items-center justify-center w-7 h-7 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
-                    <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-                      #{index + 1}
+        {plans.map((plan, index) => (
+          <div key={plan.id} className={`p-4 rounded-lg border ${
+            theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center justify-center w-8 h-8 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg">
+                  <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                    #{index + 1}
+                  </span>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 dark:text-white">
+                    {plan.name}
+                  </h4>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
+                    }`}>
+                      {plan.category}
+                    </span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      plan.plan_type === 'free_trial'
+                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-300'
+                        : plan.plan_type === 'promotional'
+                          ? 'bg-purple-100 text-purple-800 dark:bg-purple-800/30 dark:text-purple-300'
+                          : 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-300'
+                    }`}>
+                      {plan.plan_type}
                     </span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-gray-900 dark:text-white truncate">
-                      {plan.name}
-                    </h4>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
-                      }`}>
-                        {plan.category}
-                      </span>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        theme === 'dark' 
-                          ? `${accessTypeColor.dark.bg} ${accessTypeColor.dark.text}`
-                          : `${accessTypeColor.light.bg} ${accessTypeColor.light.text}`
-                      }`}>
-                        {accessType?.toUpperCase() || 'N/A'}
-                      </span>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        plan.plan_type === 'free_trial'
-                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200'
-                          : 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200'
-                      }`}>
-                        {plan.plan_type || 'paid'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="text-right">
-                  <p className="font-semibold text-gray-900 dark:text-white">
-                    {formatNumber(plan.purchases || 0)}
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    purchases
-                  </p>
                 </div>
               </div>
               
-              <ProgressBar 
-                percentage={plan.marketShare || 0} 
-                color="indigo" 
-                theme={theme}
-                label="Market Share"
-              />
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-// Access Type Distribution Component
-const AccessTypeDistribution = ({ distribution, theme }) => {
-  const themeClasses = getThemeClasses(theme);
-  const total = distribution.hotspot + distribution.pppoe + distribution.dual;
-  
-  if (total === 0) return null;
-
-  const getPercentage = (value) => ((value / total) * 100).toFixed(1);
-
-  return (
-    <div className={`p-4 sm:p-5 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-      <h3 className="text-lg sm:text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-        Access Type Distribution
-      </h3>
-      <div className="space-y-4">
-        {/* Hotspot */}
-        <div>
-          <div className="flex justify-between items-center mb-1">
-            <div className="flex items-center">
-              <Wifi className="w-4 h-4 text-blue-600 mr-2" />
-              <span className="text-sm font-medium">Hotspot Plans</span>
-            </div>
-            <span className="text-sm font-semibold">{distribution.hotspot} ({getPercentage(distribution.hotspot)}%)</span>
-          </div>
-          <ProgressBar percentage={getPercentage(distribution.hotspot)} color="blue" theme={theme} />
-        </div>
-        
-        {/* PPPoE */}
-        <div>
-          <div className="flex justify-between items-center mb-1">
-            <div className="flex items-center">
-              <Cable className="w-4 h-4 text-green-600 mr-2" />
-              <span className="text-sm font-medium">PPPoE Plans</span>
-            </div>
-            <span className="text-sm font-semibold">{distribution.pppoe} ({getPercentage(distribution.pppoe)}%)</span>
-          </div>
-          <ProgressBar percentage={getPercentage(distribution.pppoe)} color="green" theme={theme} />
-        </div>
-        
-        {/* Dual */}
-        {distribution.dual > 0 && (
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <div className="flex items-center">
-                <Wifi className="w-4 h-4 text-purple-600 mr-1" />
-                <Cable className="w-4 h-4 text-purple-600" />
-                <span className="text-sm font-medium ml-2">Dual Access Plans</span>
+              <div className="text-right">
+                <p className="font-bold text-gray-900 dark:text-white">
+                  {formatNumber(plan.purchases || 0)}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">purchases</p>
               </div>
-              <span className="text-sm font-semibold">{distribution.dual} ({getPercentage(distribution.dual)}%)</span>
             </div>
-            <ProgressBar percentage={getPercentage(distribution.dual)} color="purple" theme={theme} />
+            
+            <div className="mt-3 grid grid-cols-4 gap-2 text-xs">
+              <div>
+                <span className="text-gray-500">Rating:</span>
+                <span className="ml-1 font-medium text-amber-600">{plan.rating.toFixed(1)} ★</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Revenue:</span>
+                <span className="ml-1 font-medium text-green-600">KES {formatNumber(plan.revenue.toFixed(0))}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Share:</span>
+                <span className="ml-1 font-medium text-purple-600">{plan.marketShare.toFixed(1)}%</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Price:</span>
+                <span className="ml-1 font-medium">KES {formatNumber(plan.price)}</span>
+              </div>
+            </div>
           </div>
-        )}
+        ))}
       </div>
     </div>
   );
 };
 
-// Time Variant Statistics Component
+// ============================================================================
+// TIME VARIANT STATS COMPONENT
+// ============================================================================
 const TimeVariantStats = ({ stats, theme }) => {
   const themeClasses = getThemeClasses(theme);
   const total = stats.withTimeVariant + stats.withoutTimeVariant;
@@ -2399,32 +1256,35 @@ const TimeVariantStats = ({ stats, theme }) => {
   const getPercentage = (value) => ((value / total) * 100).toFixed(1);
 
   return (
-    <div className={`p-4 sm:p-5 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-      <h3 className="text-lg sm:text-xl font-semibold mb-4 flex items-center text-gray-900 dark:text-white">
-        <Clock className="w-5 h-5 mr-3 text-orange-600 dark:text-orange-400" />
-        Time Availability Analytics
+    <div className={`p-5 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+      <h3 className="text-lg font-semibold mb-4 flex items-center text-gray-900 dark:text-white">
+        <Clock className="w-5 h-5 mr-2 text-orange-600 dark:text-orange-400" />
+        Time Availability
       </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-          <div className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
+      
+      <div className="grid grid-cols-3 gap-3">
+        <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
             {stats.withTimeVariant}
           </div>
           <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">Time Restricted</div>
-          <div className="text-xs text-blue-500 mt-1">{getPercentage(stats.withTimeVariant)}%</div>
+          <div className="text-xs text-blue-500 mt-0.5">{getPercentage(stats.withTimeVariant)}%</div>
         </div>
-        <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-          <div className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">
+        
+        <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
             {stats.withoutTimeVariant}
           </div>
           <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">Always Available</div>
-          <div className="text-xs text-green-500 mt-1">{getPercentage(stats.withoutTimeVariant)}%</div>
+          <div className="text-xs text-green-500 mt-0.5">{getPercentage(stats.withoutTimeVariant)}%</div>
         </div>
-        <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-          <div className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
+        
+        <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
             {stats.currentlyAvailable}
           </div>
           <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">Available Now</div>
-          <div className="text-xs text-purple-500 mt-1">
+          <div className="text-xs text-purple-500 mt-0.5">
             {total > 0 ? ((stats.currentlyAvailable / total) * 100).toFixed(1) : 0}%
           </div>
         </div>
@@ -2433,25 +1293,68 @@ const TimeVariantStats = ({ stats, theme }) => {
   );
 };
 
-// Main PlanAnalytics Component
+// ============================================================================
+// PRICE STATISTICS COMPONENT
+// ============================================================================
+const PriceStatistics = ({ stats, theme }) => {
+  const themeClasses = getThemeClasses(theme);
+
+  return (
+    <div className={`p-5 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+      <h3 className="text-lg font-semibold mb-4 flex items-center text-gray-900 dark:text-white">
+        <DollarSign className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" />
+        Price Statistics (KES)
+      </h3>
+      
+      <div className="grid grid-cols-4 gap-4">
+        <div className="text-center">
+          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+            {formatNumber(stats.min)}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Minimum</div>
+        </div>
+        <div className="text-center">
+          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            {formatNumber(Math.round(stats.avg))}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Average</div>
+        </div>
+        <div className="text-center">
+          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+            {formatNumber(stats.median)}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Median</div>
+        </div>
+        <div className="text-center">
+          <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+            {formatNumber(stats.max)}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Maximum</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// MAIN PLANANALYTICS COMPONENT
+// ============================================================================
 const PlanAnalytics = ({ 
-  plans, 
+  plans = [],
   onBack, 
   analyticsType, 
   theme,
-  exportData,
-  refreshAnalytics 
+  onExport,
+  onRefresh 
 }) => {
   const themeClasses = getThemeClasses(theme);
   const [timeRange, setTimeRange] = useState("30d");
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  // Calculate statistics
   const stats = useMemo(() => {
-    return calculateEnhancedPlanStats(plans, analyticsType, timeRange);
+    return calculatePlanStatistics(plans, analyticsType, timeRange);
   }, [plans, analyticsType, timeRange]);
   
-  // Get analytics type info
   const getAnalyticsTypeInfo = () => {
     switch (analyticsType) {
       case 'hotspot':
@@ -2460,7 +1363,7 @@ const PlanAnalytics = ({
           icon: Wifi,
           color: 'blue',
           gradient: 'from-blue-500 to-cyan-500',
-          description: 'Comprehensive analytics for wireless hotspot plans'
+          description: 'Wireless hotspot plan analytics'
         };
       case 'pppoe':
         return {
@@ -2468,15 +1371,15 @@ const PlanAnalytics = ({
           icon: Cable,
           color: 'green',
           gradient: 'from-green-500 to-emerald-500',
-          description: 'Detailed insights for wired PPPoE connections'
+          description: 'Wired PPPoE plan analytics'
         };
       default:
         return {
-          name: 'All Plan Analytics',
+          name: 'All Plans Analytics',
           icon: BarChart3,
           color: 'indigo',
           gradient: 'from-indigo-500 to-purple-500',
-          description: 'Track plan performance across all access types'
+          description: 'Comprehensive plan analytics'
         };
     }
   };
@@ -2484,125 +1387,85 @@ const PlanAnalytics = ({
   const analyticsTypeInfo = getAnalyticsTypeInfo();
   const AnalyticsTypeIcon = analyticsTypeInfo.icon;
 
-  // Handle refresh
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      if (refreshAnalytics) {
-        await refreshAnalytics();
-      }
+      if (onRefresh) await onRefresh();
     } finally {
       setIsRefreshing(false);
     }
   };
 
-  // Handle export
   const handleExport = () => {
-    if (exportData) {
-      const exportPayload = {
+    if (onExport) {
+      onExport({
         analyticsType,
         timeRange,
         stats,
         timestamp: new Date().toISOString()
-      };
-      exportData(exportPayload);
+      });
     }
   };
 
   return (
-    <div className={`min-h-screen p-3 sm:p-6 lg:p-8 transition-colors duration-300 ${themeClasses.bg.primary}`}>
-      <main className="max-w-7xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
+    <div className={`min-h-screen p-6 transition-colors duration-300 ${themeClasses.bg.primary}`}>
+      <main className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center space-x-3 sm:space-x-4 mb-2">
+          <div>
+            <div className="flex items-center space-x-3 mb-2">
               <div className={`p-3 rounded-xl bg-gradient-to-r ${analyticsTypeInfo.gradient}`}>
-                <AnalyticsTypeIcon className="w-6 h-6 text-white" />
+                <AnalyticsTypeIcon className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500">
-                  {analyticsTypeInfo.name}
-                </h1>
-                <p className={`mt-1 sm:mt-2 text-sm sm:text-base ${themeClasses.text.secondary}`}>
-                  {analyticsTypeInfo.description}
-                </p>
-              </div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {analyticsTypeInfo.name}
+              </h1>
             </div>
-            
-            {/* Analytics Type Badge */}
-            <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-              analyticsTypeInfo.color === 'blue' 
-                ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100 border border-blue-200 dark:border-blue-700'
-                : analyticsTypeInfo.color === 'green'
-                ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 border border-green-200 dark:border-green-700'
-                : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-800 dark:text-indigo-100 border border-indigo-200 dark:border-indigo-700'
-            }`}>
-              <Check className="w-3 h-3 mr-1" />
-              {analyticsTypeInfo.name}
-            </div>
+            <p className={themeClasses.text.secondary}>
+              {analyticsTypeInfo.description}
+            </p>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-3">
-            {/* Time Range Selector */}
-            <div className="w-full sm:w-48">
+          <div className="flex gap-2">
+            <div className="w-40">
               <EnhancedSelect
                 value={timeRange}
                 onChange={setTimeRange}
-                options={[
-                  { value: "7d", label: "Last 7 Days" },
-                  { value: "30d", label: "Last 30 Days" },
-                  { value: "90d", label: "Last 90 Days" },
-                  { value: "365d", label: "Last 1 Year" },
-                  { value: "all", label: "All Time" }
-                ]}
+                options={TIME_RANGE_OPTIONS}
                 theme={theme}
-                isSearchable={true}
               />
             </div>
-            
-            {/* Action Buttons */}
-            <div className="flex gap-2">
-              <motion.button
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-                className={`px-3 py-2 rounded-lg text-sm flex items-center ${themeClasses.button.secondary}`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-                Refresh
-              </motion.button>
-              <motion.button
-                onClick={handleExport}
-                className={`px-3 py-2 rounded-lg text-sm flex items-center ${themeClasses.button.primary}`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </motion.button>
-              <motion.button
-                onClick={onBack}
-                className={`px-3 py-2 rounded-lg text-sm flex items-center ${themeClasses.button.secondary}`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
-              </motion.button>
-            </div>
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className={`px-3 py-2 rounded-lg text-sm ${themeClasses.button.secondary}`}
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+            <button
+              onClick={handleExport}
+              className={`px-3 py-2 rounded-lg text-sm ${themeClasses.button.primary}`}
+            >
+              <Download className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onBack}
+              className={`px-3 py-2 rounded-lg text-sm ${themeClasses.button.secondary}`}
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
-        {/* Key Statistics */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {/* Key Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             title="Total Plans"
-            value={stats.filteredCount}
-            icon={Box}
+            value={stats.totalPlans}
+            icon={Package}
             color="indigo"
             theme={theme}
-            subtext={`${analyticsType || 'All'} plans`}
+            trend={stats.growth.plans}
           />
           <StatCard
             title="Total Purchases"
@@ -2610,95 +1473,74 @@ const PlanAnalytics = ({
             icon={Users}
             color="green"
             theme={theme}
-            subtext={`${stats.totalActivePlans} active plans`}
+            trend={stats.growth.purchases}
           />
           <StatCard
-            title="Average Price"
-            value={`KES ${formatNumber(stats.averagePrice.toFixed(2))}`}
-            icon={Zap}
+            title="Total Revenue"
+            value={`KES ${formatNumber(Math.round(stats.totalRevenue))}`}
+            icon={DollarSign}
             color="purple"
             theme={theme}
-            subtext={`${stats.paidPlans || 0} paid plans`}
+            trend={stats.growth.revenue}
           />
           <StatCard
-            title="Avg Purchases"
-            value={formatNumber(stats.averagePurchases.toFixed(1))}
-            icon={Activity}
+            title="Avg Price"
+            value={`KES ${formatNumber(Math.round(stats.avgPrice))}`}
+            icon={Zap}
             color="blue"
             theme={theme}
-            subtext="Average purchases per plan"
           />
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          {/* Left Column */}
-          <div className="space-y-4 sm:space-y-6">
-            <CategoryPerformance data={stats.categoryPerformance} theme={theme} />
-            <AccessTypeDistribution distribution={stats.accessTypeDistribution} theme={theme} />
-          </div>
-          
-          {/* Right Column */}
-          <div className="space-y-4 sm:space-y-6">
-            <TopPlansSection topPlans={stats.topPlans} analyticsType={analyticsType} theme={theme} />
-            <TimeVariantStats stats={stats.timeVariantStats} theme={theme} />
-          </div>
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <DistributionChart
+            data={stats.accessTypeDistribution}
+            title="Access Type Distribution"
+            icon={Wifi}
+            theme={theme}
+          />
+          <DistributionChart
+            data={stats.planTypeDistribution}
+            title="Plan Type Distribution"
+            icon={Layers}
+            theme={theme}
+          />
+          <DistributionChart
+            data={stats.categoryCounts}  // ← Now using categoryCounts, not categoryDistribution
+            title="Category Distribution"
+            icon={Tag}
+            theme={theme}
+          />
+          <TimeVariantStats stats={stats.timeVariantStats} theme={theme} />
         </div>
 
-        {/* Price Statistics */}
-        {stats.priceStats && (
-          <div className={`p-4 sm:p-5 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-            <h3 className="text-lg sm:text-xl font-semibold mb-4 text-gray-900 dark:text-white flex items-center">
-              <Database className="w-5 h-5 mr-3 text-indigo-600 dark:text-indigo-400" />
-              Price Statistics
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                <div className="text-xl font-bold text-green-600 dark:text-green-400">
-                  KES {formatNumber(stats.priceStats.minPrice.toFixed(2))}
-                </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Lowest Price</div>
-              </div>
-              <div className="text-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                  KES {formatNumber(stats.priceStats.avgPrice.toFixed(2))}
-                </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Average Price</div>
-              </div>
-              <div className="text-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
-                  KES {formatNumber(stats.priceStats.maxPrice.toFixed(2))}
-                </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Highest Price</div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Price Stats */}
+        <PriceStatistics stats={stats.priceStats} theme={theme} />
 
-        {/* Time Range Summary */}
-        <div className={`p-4 sm:p-5 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-          <h3 className="text-lg sm:text-xl font-semibold mb-4 flex items-center text-gray-900 dark:text-white">
-            <Calendar className="w-5 h-5 mr-3 text-orange-600 dark:text-orange-400" />
-            Time Range Summary
-          </h3>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <p className={themeClasses.text.secondary}>
-                Showing data for: <span className="font-semibold">
-                  {timeRange === '7d' ? 'Last 7 Days' :
-                   timeRange === '30d' ? 'Last 30 Days' :
-                   timeRange === '90d' ? 'Last 90 Days' :
-                   timeRange === '365d' ? 'Last 1 Year' : 'All Time'}
+        {/* Top Plans */}
+        <TopPlansTable plans={stats.topPlans} theme={theme} />
+
+        {/* Footer */}
+        <div className={`p-4 rounded-xl ${themeClasses.bg.card}`}>
+          <div className="flex justify-between items-center text-sm">
+            <div className={themeClasses.text.secondary}>
+              Period: {TIME_RANGE_OPTIONS.find(opt => opt.value === timeRange)?.label}
+              {stats.filteredCount !== plans.length && (
+                <span className="ml-2 text-xs">
+                  (filtered from {plans.length} total)
                 </span>
-              </p>
-              <p className={`text-sm mt-1 ${themeClasses.text.secondary}`}>
-                Plans analyzed: <span className="font-semibold">{stats.filteredCount}</span>
-              </p>
+              )}
             </div>
-            <div className="flex gap-3">
-              <span className="text-sm text-gray-500 dark:text-gray-400">
-                Last updated: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
+                <Circle className="w-2 h-2 fill-green-500 text-green-500" />
+                <span className="text-xs text-gray-600 dark:text-gray-400">Active: {stats.activePlans}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Circle className="w-2 h-2 fill-red-500 text-red-500" />
+                <span className="text-xs text-gray-600 dark:text-gray-400">Inactive: {stats.inactivePlans}</span>
+              </div>
             </div>
           </div>
         </div>

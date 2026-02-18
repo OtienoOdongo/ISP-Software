@@ -1,7 +1,896 @@
 
+import React, { useState, useMemo, useEffect, useCallback } from "react";
+import PropTypes from 'prop-types';
+import { motion } from "framer-motion";
+import { EnhancedSelect, getThemeClasses } from "../Shared/components";
+import { 
+  speedUnits, 
+  dataLimitPresets,
+  usageLimitPresets,
+  validityPeriodPresets,
+  deviceLimitOptions,
+  sessionTimeoutOptions,
+  idleTimeoutOptions,
+  bandwidthPresets
+} from "../Shared/constant";
+import { 
+  Users, Clock, Shield, Calendar, Wifi, Database, Zap, Gauge, 
+  Smartphone, Infinity as InfinityIcon, AlertCircle 
+} from "lucide-react";
+
+// FIXED: Using default parameters instead of defaultProps
+const HotspotConfiguration = ({ 
+  form = {}, 
+  errors = {}, 
+  onChange, 
+  onNestedChange, 
+  theme = 'light' 
+}) => {
+  const themeClasses = getThemeClasses(theme);
+  
+  // Safely extract hotspot configuration with fallbacks
+  const access_methods = form.access_methods || form.accessMethods || {};
+  const hotspot = access_methods.hotspot || {
+    enabled: false,
+    download_speed: { value: "", unit: "Mbps" },
+    upload_speed: { value: "", unit: "Mbps" },
+    data_limit: { value: "", unit: "GB" },
+    usage_limit: { value: "", unit: "Hours" },
+    bandwidth_limit: 0,
+    max_devices: "",
+    session_timeout: "",
+    idle_timeout: "",
+    validity_period: { value: "", unit: "Days" },
+    mac_binding: false
+  };
+
+  // State for preset selections
+  const [dataLimitPreset, setDataLimitPreset] = useState('custom');
+  const [usageLimitPreset, setUsageLimitPreset] = useState('custom');
+  const [validityPreset, setValidityPreset] = useState('custom');
+  const [bandwidthPreset, setBandwidthPreset] = useState('custom');
+  const [bandwidthUnit, setBandwidthUnit] = useState('Mbps');
+
+  // FIXED: Ensure all options have proper labels
+  const getSafeSpeedUnits = useCallback(() => {
+    if (!Array.isArray(speedUnits) || speedUnits.length === 0) {
+      return [{ value: 'Mbps', label: 'Mbps' }];
+    }
+    
+    return speedUnits.map(unit => {
+      if (typeof unit === 'string') {
+        return { value: unit, label: unit };
+      }
+      return {
+        value: unit?.value || 'Mbps',
+        label: unit?.label || unit?.value || 'Mbps'
+      };
+    });
+  }, []);
+
+  const getSafeDataLimitPresets = useCallback(() => {
+    if (!Array.isArray(dataLimitPresets) || dataLimitPresets.length === 0) {
+      return [{ value: 'custom', label: 'Set custom data amount' }];
+    }
+    
+    const options = dataLimitPresets.map(preset => {
+      const value = preset?.value?.toString() || '';
+      const label = preset?.label || '';
+      const description = preset?.description || '';
+      
+      return {
+        value,
+        label: description ? `${label} - ${description}` : label
+      };
+    }).filter(option => option.value && option.label);
+    
+    return [
+      ...options,
+      { value: 'custom', label: 'Set custom data amount' }
+    ];
+  }, []);
+
+  const getSafeUsageLimitPresets = useCallback(() => {
+    if (!Array.isArray(usageLimitPresets) || usageLimitPresets.length === 0) {
+      return [{ value: 'custom', label: 'Set custom hours' }];
+    }
+    
+    const options = usageLimitPresets.map(preset => {
+      const value = preset?.value?.toString() || '';
+      const label = preset?.label || '';
+      const description = preset?.description || '';
+      
+      return {
+        value,
+        label: description ? `${label} - ${description}` : label
+      };
+    }).filter(option => option.value && option.label);
+    
+    return [
+      ...options,
+      { value: 'custom', label: 'Set custom hours' }
+    ];
+  }, []);
+
+  const getSafeValidityPeriodPresets = useCallback(() => {
+    if (!Array.isArray(validityPeriodPresets) || validityPeriodPresets.length === 0) {
+      return [{ value: 'custom', label: 'Set custom duration' }];
+    }
+    
+    const options = validityPeriodPresets.map(preset => {
+      const value = preset?.value?.toString() || '';
+      const label = preset?.label || '';
+      const description = preset?.description || '';
+      
+      return {
+        value,
+        label: description ? `${label} - ${description}` : label
+      };
+    }).filter(option => option.value && option.label);
+    
+    return [
+      ...options,
+      { value: 'custom', label: 'Set custom duration' }
+    ];
+  }, []);
+
+  const getSafeBandwidthPresets = useCallback(() => {
+    if (!Array.isArray(bandwidthPresets) || bandwidthPresets.length === 0) {
+      return [{ value: 'custom', label: 'Set custom bandwidth' }];
+    }
+    
+    const options = bandwidthPresets.map(preset => {
+      const value = preset?.value?.toString() || '';
+      const label = preset?.label || '';
+      const description = preset?.description || '';
+      
+      return {
+        value,
+        label: value === '0' 
+          ? 'Unlimited - No restrictions' 
+          : description ? `${label} - ${description}` : label
+      };
+    }).filter(option => option.value !== undefined);
+    
+    return [
+      ...options,
+      { value: 'custom', label: 'Set custom bandwidth' }
+    ];
+  }, []);
+
+  // FIXED: Get device limit options with proper labels
+  const getSafeDeviceLimitOptions = useCallback(() => {
+    if (!Array.isArray(deviceLimitOptions) || deviceLimitOptions.length === 0) {
+      return [
+        { value: 1, label: '1 Device' },
+        { value: 2, label: '2 Devices' },
+        { value: 3, label: '3 Devices' },
+        { value: 4, label: '4 Devices' },
+        { value: 5, label: '5 Devices' }
+      ];
+    }
+    
+    return deviceLimitOptions.map(option => {
+      if (typeof option === 'object' && option !== null) {
+        const value = option.value;
+        const label = option.label || `${value} Device${value > 1 ? 's' : ''}`;
+        return { value, label };
+      }
+      const value = option;
+      return { 
+        value, 
+        label: `${value} Device${value > 1 ? 's' : ''}` 
+      };
+    });
+  }, []);
+
+  // FIXED: Get timeout options with proper labels
+  const getSafeTimeoutOptions = useCallback((optionsArray, type = 'session') => {
+    if (!Array.isArray(optionsArray) || optionsArray.length === 0) {
+      if (type === 'session') {
+        return [
+          { value: 3600, label: '1 Hour' },
+          { value: 7200, label: '2 Hours' },
+          { value: 14400, label: '4 Hours' },
+          { value: 28800, label: '8 Hours' },
+          { value: 43200, label: '12 Hours' },
+          { value: 86400, label: '24 Hours' }
+        ];
+      } else {
+        return [
+          { value: 300, label: '5 Minutes' },
+          { value: 600, label: '10 Minutes' },
+          { value: 900, label: '15 Minutes' },
+          { value: 1800, label: '30 Minutes' },
+          { value: 3600, label: '1 Hour' }
+        ];
+      }
+    }
+    
+    return optionsArray.map(option => {
+      if (typeof option === 'object' && option !== null) {
+        const value = option.value;
+        let label = option.label;
+        
+        // If no label, create one
+        if (!label) {
+          const hours = value / 3600;
+          const minutes = value / 60;
+          
+          if (hours >= 24) {
+            const days = hours / 24;
+            label = days === 1 ? '1 Day' : `${days} Days`;
+          } else if (hours >= 1) {
+            label = hours === 1 ? '1 Hour' : `${hours} Hours`;
+          } else {
+            label = minutes === 1 ? '1 Minute' : `${minutes} Minutes`;
+          }
+        }
+        
+        return { value, label };
+      }
+      
+      const value = option;
+      const hours = value / 3600;
+      const minutes = value / 60;
+      
+      let label;
+      if (hours >= 24) {
+        const days = hours / 24;
+        label = days === 1 ? '1 Day' : `${days} Days`;
+      } else if (hours >= 1) {
+        label = hours === 1 ? '1 Hour' : `${hours} Hours`;
+      } else {
+        label = minutes === 1 ? '1 Minute' : `${minutes} Minutes`;
+      }
+      
+      return { value, label };
+    });
+  }, []);
+
+  // Get unit options with proper labels
+  const getUnitOptions = useCallback((units) => {
+    if (!Array.isArray(units)) {
+      return [{ value: 'Mbps', label: 'Mbps' }];
+    }
+    
+    return units.map(unit => {
+      if (typeof unit === 'string') {
+        return { value: unit, label: unit };
+      }
+      return {
+        value: unit?.value || 'Mbps',
+        label: unit?.label || unit?.value || 'Mbps'
+      };
+    });
+  }, []);
+
+  // Safe unit renderer
+  const renderUnitDropdown = useCallback((field, value, onChangeFunc, units) => {
+    const safeValue = value || 'Mbps';
+    const safeOptions = getUnitOptions(units);
+
+    return (
+      <EnhancedSelect
+        value={safeValue}
+        onChange={(newValue) => onNestedChange('hotspot', field, 'unit', newValue)}
+        options={safeOptions}
+        className="text-xs min-w-[5rem]"
+        theme={theme}
+      />
+    );
+  }, [theme, onNestedChange, getUnitOptions]);
+
+  // Handle data limit preset with validation
+  const handleDataLimitPreset = useCallback((presetKey) => {
+    setDataLimitPreset(presetKey);
+    if (presetKey !== 'custom') {
+      const preset = dataLimitPresets.find(p => String(p.value) === presetKey);
+      if (preset) {
+        onNestedChange('hotspot', 'data_limit', 'value', preset.value);
+        onNestedChange('hotspot', 'data_limit', 'unit', preset.unit);
+      }
+    } else {
+      onNestedChange('hotspot', 'data_limit', 'value', '');
+    }
+  }, [dataLimitPresets, onNestedChange]);
+
+  const handleUsageLimitPreset = useCallback((presetKey) => {
+    setUsageLimitPreset(presetKey);
+    if (presetKey !== 'custom') {
+      const preset = usageLimitPresets.find(p => String(p.value) === presetKey);
+      if (preset) {
+        onNestedChange('hotspot', 'usage_limit', 'value', preset.value);
+        onNestedChange('hotspot', 'usage_limit', 'unit', preset.unit);
+      }
+    } else {
+      onNestedChange('hotspot', 'usage_limit', 'value', '');
+    }
+  }, [usageLimitPresets, onNestedChange]);
+
+  const handleValidityPreset = useCallback((presetKey) => {
+    setValidityPreset(presetKey);
+    if (presetKey !== 'custom') {
+      const preset = validityPeriodPresets.find(p => String(p.value) === presetKey);
+      if (preset) {
+        onNestedChange('hotspot', 'validity_period', 'value', preset.value);
+        onNestedChange('hotspot', 'validity_period', 'unit', preset.unit);
+      }
+    } else {
+      onNestedChange('hotspot', 'validity_period', 'value', '');
+    }
+  }, [validityPeriodPresets, onNestedChange]);
+
+  const handleBandwidthPreset = useCallback((presetKey) => {
+    setBandwidthPreset(presetKey);
+    if (presetKey !== 'custom') {
+      const presetValue = parseInt(presetKey, 10);
+      const preset = bandwidthPresets.find(p => p.value === presetValue);
+      if (preset) {
+        onChange('hotspot', 'bandwidth_limit', preset.value);
+      }
+    }
+  }, [bandwidthPresets, onChange]);
+
+  // Format time for display
+  const formatTimeDisplay = useCallback((seconds) => {
+    if (!seconds || seconds === 0) return "No Limit";
+    const hours = seconds / 3600;
+    if (hours >= 24) {
+      const days = hours / 24;
+      return days === 1 ? "1 Day" : `${days} Days`;
+    }
+    return hours === 1 ? "1 Hour" : `${hours} Hours`;
+  }, []);
+
+  // Format bandwidth for display
+  const formatBandwidthDisplay = useCallback((kbps) => {
+    if (!kbps || kbps === 0) return "Unlimited";
+    const numKbps = Number(kbps);
+    if (numKbps >= 1000) {
+      const mbps = numKbps / 1000;
+      return `${mbps.toFixed(mbps % 1 === 0 ? 0 : 1)} Mbps`;
+    }
+    return `${numKbps} Kbps`;
+  }, []);
+
+  // Get display value for bandwidth input based on unit
+  const getBandwidthDisplayValue = useCallback(() => {
+    const bandwidth = Number(hotspot.bandwidth_limit) || 0;
+    if (bandwidthUnit === 'Mbps') {
+      return (bandwidth / 1000) || '';
+    }
+    return bandwidth || '';
+  }, [hotspot.bandwidth_limit, bandwidthUnit]);
+
+  // Handle bandwidth input change
+  const handleBandwidthChange = useCallback((value) => {
+    const numValue = parseFloat(value) || 0;
+    if (bandwidthUnit === 'Mbps') {
+      onChange('hotspot', 'bandwidth_limit', numValue * 1000);
+    } else {
+      onChange('hotspot', 'bandwidth_limit', numValue);
+    }
+  }, [bandwidthUnit, onChange]);
+
+  // Handle input change with validation
+  const handleInputChange = useCallback((field, subfield, value) => {
+    onNestedChange('hotspot', field, subfield, value);
+  }, [onNestedChange]);
+
+  const handleToggle = useCallback(() => {
+    onChange('hotspot', 'enabled', !hotspot.enabled);
+  }, [onChange, hotspot.enabled]);
+
+  // Plan summary
+  const planSummary = useMemo(() => {
+    const maxDevicesValue = Number.isNaN(hotspot.max_devices) || hotspot.max_devices === undefined 
+      ? 0 
+      : Number(hotspot.max_devices);
+    
+    const dataLimitValue = hotspot.data_limit?.value || '0';
+    const dataLimitUnit = hotspot.data_limit?.unit || 'GB';
+    const dataLimitDisplay = dataLimitValue === 'Unlimited' 
+      ? 'Unlimited' 
+      : `${dataLimitValue} ${dataLimitUnit}`;
+    
+    const usageLimitValue = hotspot.usage_limit?.value || '0';
+    const usageLimitUnit = hotspot.usage_limit?.unit || 'Hours';
+    const usageLimitDisplay = usageLimitValue === 'Unlimited' 
+      ? 'Unlimited' 
+      : `${usageLimitValue} ${usageLimitUnit}`;
+
+    const validityValue = hotspot.validity_period?.value || '0';
+    const validityUnit = hotspot.validity_period?.unit || 'Days';
+    const validityDisplay = validityValue === '0' || validityValue === 0
+      ? 'No Expiry'
+      : `${validityValue} ${validityUnit}`;
+
+    return {
+      dataLimit: dataLimitDisplay,
+      usageLimit: usageLimitDisplay,
+      validity: validityDisplay,
+      maxDevices: maxDevicesValue === 0 ? 'Unlimited' : `${maxDevicesValue} device${maxDevicesValue > 1 ? 's' : ''}`,
+      sessionTimeout: formatTimeDisplay(hotspot.session_timeout),
+      idleTimeout: hotspot.idle_timeout === 0 ? 'No Timeout' : `${(hotspot.idle_timeout / 60)} minutes`,
+      bandwidth: formatBandwidthDisplay(hotspot.bandwidth_limit)
+    };
+  }, [hotspot, formatTimeDisplay, formatBandwidthDisplay]);
+
+  return (
+    <div className={`p-4 lg:p-6 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg lg:text-xl font-semibold flex items-center">
+          <Wifi className="w-5 h-5 mr-2 text-blue-600" />
+          Hotspot Configuration
+        </h3>
+        <div className="flex items-center">
+          <label className={`block text-sm font-medium mr-4 ${themeClasses.text.primary}`}>
+            Enable Hotspot
+          </label>
+          <div 
+            onClick={handleToggle}
+            className={`relative inline-flex items-center h-6 w-11 rounded-full cursor-pointer transition-colors duration-200 ease-in-out ${
+              hotspot.enabled 
+                ? 'bg-blue-600'
+                : theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'
+            }`}
+          >
+            <span className={`inline-block h-4 w-4 transform bg-white rounded-full shadow-md transition-transform duration-200 ease-in-out ${
+              hotspot.enabled ? "translate-x-6" : "translate-x-1"
+            }`} />
+          </div>
+        </div>
+      </div>
+
+      {hotspot.enabled ? (
+        <div className="space-y-6 lg:space-y-8">
+          {/* Speed Configuration */}
+          <div className={`p-4 rounded-lg border ${themeClasses.border.light} ${theme === 'dark' ? 'bg-blue-900/10' : 'bg-blue-50'}`}>
+            <h4 className="text-md font-semibold mb-4 text-blue-700 dark:text-blue-300 flex items-center">
+              <Zap className="w-4 h-4 mr-2" />
+              Speed & Bandwidth Settings
+            </h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+              {/* Download Speed */}
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
+                  Download Speed <span className="text-red-500">*</span>
+                </label>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input 
+                    type="number" 
+                    value={hotspot.download_speed?.value || ""} 
+                    onChange={(e) => handleInputChange('download_speed', 'value', e.target.value)} 
+                    className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
+                    min="0.01" 
+                    step="0.01" 
+                    placeholder="e.g., 10" 
+                    required 
+                  />
+                  <div className="w-full sm:w-auto">
+                    {renderUnitDropdown('download_speed', hotspot.download_speed?.unit, onNestedChange, speedUnits)}
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Maximum download speed for users</p>
+              </div>
+              
+              {/* Upload Speed */}
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
+                  Upload Speed <span className="text-red-500">*</span>
+                </label>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input 
+                    type="number" 
+                    value={hotspot.upload_speed?.value || ""} 
+                    onChange={(e) => handleInputChange('upload_speed', 'value', e.target.value)} 
+                    className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
+                    min="0.01" 
+                    step="0.01" 
+                    placeholder="e.g., 2" 
+                    required 
+                  />
+                  <div className="w-full sm:w-auto">
+                    {renderUnitDropdown('upload_speed', hotspot.upload_speed?.unit, onNestedChange, speedUnits)}
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Maximum upload speed for users</p>
+              </div>
+            </div>
+
+            {/* Bandwidth Limit */}
+            <div className="mt-6">
+              <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
+                Total Bandwidth Limit
+                <span className="text-xs text-gray-500 ml-2">Shared bandwidth for all connected devices</span>
+              </label>
+              
+              <div className="mb-3">
+                <EnhancedSelect
+                  value={bandwidthPreset}
+                  onChange={handleBandwidthPreset}
+                  options={getSafeBandwidthPresets()}
+                  theme={theme}
+                  disabled={!hotspot.enabled}
+                />
+              </div>
+              
+              {bandwidthPreset === 'custom' && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-3"
+                >
+                  <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+                    <input 
+                      type="number" 
+                      value={getBandwidthDisplayValue()} 
+                      onChange={(e) => handleBandwidthChange(e.target.value)} 
+                      className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
+                      min="0" 
+                      step="any" 
+                      placeholder="Enter value" 
+                      disabled={!hotspot.enabled}
+                    />
+                    <EnhancedSelect
+                      value={bandwidthUnit}
+                      onChange={setBandwidthUnit}
+                      options={[
+                        { value: 'Mbps', label: 'Mbps' },
+                        { value: 'Kbps', label: 'Kbps' }
+                      ]}
+                      className="text-xs min-w-[5rem]"
+                      theme={theme}
+                      disabled={!hotspot.enabled}
+                    />
+                    <span className="text-sm text-gray-500 whitespace-nowrap">
+                      ({formatBandwidthDisplay(hotspot.bandwidth_limit)})
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Enter bandwidth and select unit. Internally stored as Kbps.
+                  </p>
+                </motion.div>
+              )}
+              
+              {bandwidthPreset !== 'custom' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.2 }}
+                  className={`p-3 rounded-lg flex items-center gap-2 ${theme === 'dark' ? 'bg-blue-800/20' : 'bg-blue-100'}`}
+                >
+                  {hotspot.bandwidth_limit === 0 && <InfinityIcon className="w-4 h-4 text-blue-600 dark:text-blue-300" />}
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    <strong>Selected:</strong> {formatBandwidthDisplay(hotspot.bandwidth_limit)}
+                  </p>
+                </motion.div>
+              )}
+            </div>
+          </div>
+
+          {/* Data & Usage Limits */}
+          <div className={`p-4 rounded-lg border ${themeClasses.border.light} ${theme === 'dark' ? 'bg-purple-900/10' : 'bg-purple-50'}`}>
+            <h4 className="text-md font-semibold mb-4 text-purple-700 dark:text-purple-300 flex items-center">
+              <Database className="w-4 h-4 mr-2" />
+              Plan Limits & Duration
+            </h4>
+            
+            {/* Validity Period */}
+            <div className="mb-6">
+              <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
+                <Calendar className="w-4 h-4 inline mr-1" />
+                Plan Duration <span className="text-red-500">*</span>
+              </label>
+              <div className="mb-2">
+                <EnhancedSelect
+                  value={validityPreset}
+                  onChange={handleValidityPreset}
+                  options={getSafeValidityPeriodPresets()}
+                  theme={theme}
+                  disabled={!hotspot.enabled}
+                />
+              </div>
+              {validityPreset === 'custom' && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-2"
+                >
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input 
+                      value={hotspot.validity_period?.value || ""} 
+                      onChange={(e) => handleInputChange('validity_period', 'value', e.target.value)} 
+                      className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
+                      placeholder="Enter duration value" 
+                      required 
+                      disabled={!hotspot.enabled}
+                    />
+                    <div className="w-full sm:w-auto">
+                      {renderUnitDropdown('validity_period', hotspot.validity_period?.unit, onNestedChange, ['Hours', 'Days', 'Weeks', 'Months'])}
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Set the custom duration for this plan
+                  </p>
+                </motion.div>
+              )}
+              <p className="text-xs text-gray-500 mt-1">How long the plan remains active after activation</p>
+            </div>
+
+            {/* Data Limit */}
+            <div className="mb-6">
+              <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
+                Total Data Allowance <span className="text-red-500">*</span>
+              </label>
+              <div className="mb-2">
+                <EnhancedSelect
+                  value={dataLimitPreset}
+                  onChange={handleDataLimitPreset}
+                  options={getSafeDataLimitPresets()}
+                  theme={theme}
+                  disabled={!hotspot.enabled}
+                />
+              </div>
+              {dataLimitPreset === 'custom' && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-2"
+                >
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input 
+                      value={hotspot.data_limit?.value || ""} 
+                      onChange={(e) => handleInputChange('data_limit', 'value', e.target.value)} 
+                      className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
+                      placeholder="Enter data amount" 
+                      required 
+                      disabled={!hotspot.enabled}
+                    />
+                    <div className="w-full sm:w-auto">
+                      {renderUnitDropdown('data_limit', hotspot.data_limit?.unit, onNestedChange, ['MB', 'GB', 'TB', 'Unlimited'])}
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Set the custom data limit for this plan
+                  </p>
+                </motion.div>
+              )}
+              <p className="text-xs text-gray-500 mt-1">Total data available for the entire plan duration</p>
+            </div>
+
+            {/* Usage Limit */}
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
+                <Clock className="w-4 h-4 inline mr-1" />
+                Daily Time Limit <span className="text-red-500">*</span>
+              </label>
+              <div className="mb-2">
+                <EnhancedSelect
+                  value={usageLimitPreset}
+                  onChange={handleUsageLimitPreset}
+                  options={getSafeUsageLimitPresets()}
+                  theme={theme}
+                  disabled={!hotspot.enabled}
+                />
+              </div>
+              {usageLimitPreset === 'custom' && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-2"
+                >
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input 
+                      value={hotspot.usage_limit?.value || ""} 
+                      onChange={(e) => handleInputChange('usage_limit', 'value', e.target.value)} 
+                      className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
+                      placeholder="Enter hours per day" 
+                      required 
+                      disabled={!hotspot.enabled}
+                    />
+                    <div className="w-full sm:w-auto">
+                      {renderUnitDropdown('usage_limit', hotspot.usage_limit?.unit, onNestedChange, ['Hours', 'Unlimited'])}
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Set the custom daily usage limit in hours
+                  </p>
+                </motion.div>
+              )}
+              <p className="text-xs text-gray-500 mt-1">Maximum connection time allowed per day</p>
+            </div>
+          </div>
+
+          {/* Security Features */}
+          <div className={`p-4 rounded-lg border ${themeClasses.border.light} ${theme === 'dark' ? 'bg-green-900/10' : 'bg-green-50'}`}>
+            <h4 className="text-md font-semibold mb-4 text-green-700 dark:text-green-300 flex items-center">
+              <Shield className="w-4 h-4 mr-2" />
+              Security & Device Management
+            </h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+              {/* Maximum Devices */}
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
+                  <Users className="w-4 h-4 inline mr-1" />
+                  Maximum Connected Devices
+                </label>
+                <EnhancedSelect
+                  value={hotspot.max_devices ?? ""}
+                  onChange={(value) => onChange('hotspot', 'max_devices', parseInt(value, 10) || 0)}
+                  options={getSafeDeviceLimitOptions()}
+                  placeholder="Select device limit"
+                  theme={theme}
+                  disabled={!hotspot.enabled}
+                />
+                <p className="text-xs text-gray-500 mt-1">Limit simultaneous connections</p>
+              </div>
+
+              {/* Session Timeout */}
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
+                  <Clock className="w-4 h-4 inline mr-1" />
+                  Session Timeout
+                </label>
+                <EnhancedSelect
+                  value={hotspot.session_timeout}
+                  onChange={(value) => onChange('hotspot', 'session_timeout', parseInt(value, 10))}
+                  options={getSafeTimeoutOptions(sessionTimeoutOptions, 'session')}
+                  theme={theme}
+                  disabled={!hotspot.enabled}
+                />
+                <p className="text-xs text-gray-500 mt-1">Forces reconnection for security</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 mt-4">
+              {/* Idle Timeout */}
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
+                  Idle Timeout
+                </label>
+                <EnhancedSelect
+                  value={hotspot.idle_timeout}
+                  onChange={(value) => onChange('hotspot', 'idle_timeout', parseInt(value, 10))}
+                  options={getSafeTimeoutOptions(idleTimeoutOptions, 'idle')}
+                  theme={theme}
+                  disabled={!hotspot.enabled}
+                />
+                <p className="text-xs text-gray-500 mt-1">Disconnects after inactivity</p>
+              </div>
+
+              {/* MAC Binding */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg gap-2">
+                <div className="flex-1">
+                  <label className={`block text-sm font-medium ${themeClasses.text.primary}`}>
+                    <Smartphone className="w-4 h-4 inline mr-1" />
+                    Device Lock (MAC Binding)
+                  </label>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Restrict access to specific devices only
+                  </p>
+                </div>
+                <div 
+                  onClick={() => hotspot.enabled && onChange('hotspot', 'mac_binding', !hotspot.mac_binding)} 
+                  className={`relative inline-flex items-center h-6 w-11 rounded-full cursor-pointer transition-colors duration-200 ease-in-out flex-shrink-0 ${
+                    !hotspot.enabled 
+                      ? 'cursor-not-allowed opacity-50 bg-gray-400' 
+                      : hotspot.mac_binding 
+                        ? 'bg-green-600'
+                        : theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'
+                  }`}
+                >
+                  <span className={`inline-block h-4 w-4 transform bg-white rounded-full shadow-md transition-transform duration-200 ease-in-out ${
+                    hotspot.mac_binding ? "translate-x-6" : "translate-x-1"
+                  }`} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Plan Summary */}
+          <div className={`p-4 rounded-lg border ${themeClasses.border.light} ${theme === 'dark' ? 'bg-indigo-900/10' : 'bg-indigo-50'}`}>
+            <h4 className="text-md font-semibold mb-4 text-indigo-700 dark:text-indigo-300 flex items-center">
+              <Calendar className="w-4 h-4 mr-2" />
+              Plan Summary
+            </h4>
+            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3">
+              <div className={`text-center p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+                <Calendar className="w-5 h-5 text-blue-600 mx-auto mb-1" />
+                <div className="text-sm font-semibold truncate">{planSummary.validity}</div>
+                <div className="text-xs text-gray-500">Duration</div>
+              </div>
+              <div className={`text-center p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+                <Database className="w-5 h-5 text-green-600 mx-auto mb-1" />
+                <div className="text-sm font-semibold truncate">{planSummary.dataLimit}</div>
+                <div className="text-xs text-gray-500">Total Data</div>
+              </div>
+              <div className={`text-center p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+                <Clock className="w-5 h-5 text-purple-600 mx-auto mb-1" />
+                <div className="text-sm font-semibold truncate">{planSummary.usageLimit}</div>
+                <div className="text-xs text-gray-500">Daily Time</div>
+              </div>
+              <div className={`text-center p-3 rounded-lg flex flex-col items-center justify-center ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+                <Users className="w-5 h-5 text-orange-600 mx-auto mb-1" />
+                <div className="text-sm font-semibold flex items-center justify-center gap-1">
+                  {planSummary.maxDevices === 'Unlimited' && <InfinityIcon className="w-4 h-4" />}
+                  <span className="truncate">{planSummary.maxDevices}</span>
+                </div>
+                <div className="text-xs text-gray-500">Max Devices</div>
+              </div>
+              <div className={`text-center p-3 rounded-lg flex flex-col items-center justify-center ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+                <Gauge className="w-5 h-5 text-teal-600 mx-auto mb-1" />
+                <div className="text-sm font-semibold flex items-center justify-center gap-1">
+                  {planSummary.bandwidth === 'Unlimited' && <InfinityIcon className="w-4 h-4" />}
+                  <span className="truncate">{planSummary.bandwidth}</span>
+                </div>
+                <div className="text-xs text-gray-500">Bandwidth</div>
+              </div>
+              <div className={`text-center p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+                <Shield className="w-5 h-5 text-red-600 mx-auto mb-1" />
+                <div className="text-sm font-semibold truncate">{hotspot.mac_binding ? 'Enabled' : 'Disabled'}</div>
+                <div className="text-xs text-gray-500">Device Lock</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className={`p-8 text-center rounded-lg ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
+          <Wifi className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+          <h4 className="text-lg font-medium mb-2 text-gray-600">Hotspot Disabled</h4>
+          <p className="text-sm text-gray-500 mb-4">
+            Enable Hotspot to configure wireless access settings for this plan.
+          </p>
+          <button
+            onClick={handleToggle}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Enable Hotspot
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+HotspotConfiguration.propTypes = {
+  form: PropTypes.object,
+  errors: PropTypes.object,
+  onChange: PropTypes.func.isRequired,
+  onNestedChange: PropTypes.func.isRequired,
+  theme: PropTypes.oneOf(['light', 'dark'])
+};
+
+// FIXED: Removed defaultProps, using default parameters in function definition
+
+export default React.memo(HotspotConfiguration);
 
 
-// import React, { useState, useMemo, useEffect } from "react";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import React, { useState, useMemo, useEffect, useCallback } from "react";
+// import PropTypes from 'prop-types';
 // import { motion } from "framer-motion";
 // import { EnhancedSelect, getThemeClasses } from "../Shared/components";
 // import { 
@@ -13,12 +902,37 @@
 //   sessionTimeoutOptions,
 //   idleTimeoutOptions,
 //   bandwidthPresets
-// } from "../Shared/constant"
-// import { Users, Clock, Shield, Calendar, Wifi, Database, Zap, Gauge, Smartphone, Globe, Infinity as InfinityIcon } from "lucide-react";
+// } from "../Shared/constant";
+// import { 
+//   Users, Clock, Shield, Calendar, Wifi, Database, Zap, Gauge, 
+//   Smartphone, Infinity as InfinityIcon, AlertCircle 
+// } from "lucide-react";
 
-// const HotspotConfiguration = ({ form, errors, onChange, onNestedChange, theme }) => {
+// // Using default parameters instead of defaultProps
+// const HotspotConfiguration = ({ 
+//   form = {}, 
+//   errors = {}, 
+//   onChange, 
+//   onNestedChange, 
+//   theme = 'light' 
+// }) => {
 //   const themeClasses = getThemeClasses(theme);
-//   const hotspot = form.accessMethods.hotspot;
+  
+//   // Safely extract hotspot configuration with fallbacks
+//   const access_methods = form.access_methods || form.accessMethods || {};
+//   const hotspot = access_methods.hotspot || {
+//     enabled: false,
+//     download_speed: { value: "", unit: "Mbps" },
+//     upload_speed: { value: "", unit: "Mbps" },
+//     data_limit: { value: "", unit: "GB" },
+//     usage_limit: { value: "", unit: "Hours" },
+//     bandwidth_limit: 0,
+//     max_devices: "",
+//     session_timeout: "",
+//     idle_timeout: "",
+//     validity_period: { value: "", unit: "Days" },
+//     mac_binding: false
+//   };
 
 //   // State for preset selections
 //   const [dataLimitPreset, setDataLimitPreset] = useState('custom');
@@ -27,151 +941,403 @@
 //   const [bandwidthPreset, setBandwidthPreset] = useState('custom');
 //   const [bandwidthUnit, setBandwidthUnit] = useState('Mbps');
 
-//   // Reset validity period when component mounts to remove 720 hours default
-//   useEffect(() => {
-//     if (hotspot.validityPeriod.value === 720 && hotspot.validityPeriod.unit === 'Hours') {
-//       onNestedChange('hotspot', 'validityPeriod', 'value', '');
-//     }
+//   // ==========================================================================
+//   // HELPER FUNCTIONS - Type conversion utilities
+//   // ==========================================================================
+
+//   const toSafeNumber = useCallback((value) => {
+//     if (value === "" || value === null || value === undefined) return 0;
+//     const num = Number(value);
+//     return isNaN(num) ? 0 : num;
 //   }, []);
 
-//   // Auto-suggest DNS servers based on user type
-//   const getSuggestedDNS = () => {
-//     return ["8.8.8.8", "1.1.1.1"]; // Google + Cloudflare
-//   };
+//   const isEmpty = useCallback((value) => {
+//     return value === "" || value === null || value === undefined;
+//   }, []);
 
-//   const handleToggle = () => {
-//     onChange('hotspot', 'enabled', !hotspot.enabled);
-//   };
+//   // ==========================================================================
+//   // SAFE OPTIONS WITH FALLBACKS
+//   // ==========================================================================
 
-//   const renderUnitDropdown = (field, value, onChange, units) => (
-//     <EnhancedSelect
-//       value={value}
-//       onChange={(newValue) => onChange('hotspot', field, 'unit', newValue)}
-//       options={units.map(unit => ({ value: unit, label: unit }))}
-//       className="text-xs min-w-20"
-//       theme={theme}
-//     />
-//   );
+//   const getSafeSpeedUnits = useCallback(() => {
+//     if (!Array.isArray(speedUnits) || speedUnits.length === 0) {
+//       return [{ value: 'Mbps', label: 'Mbps' }];
+//     }
+    
+//     return speedUnits.map(unit => {
+//       if (typeof unit === 'string') {
+//         return { value: unit, label: unit };
+//       }
+//       return {
+//         value: unit?.value || 'Mbps',
+//         label: unit?.label || unit?.value || 'Mbps'
+//       };
+//     });
+//   }, []);
 
-//   // Handle preset selections
-//   const handleDataLimitPreset = (presetKey) => {
+//   const getSafeDataLimitPresets = useCallback(() => {
+//     if (!Array.isArray(dataLimitPresets) || dataLimitPresets.length === 0) {
+//       return [{ value: 'custom', label: 'Set custom data amount' }];
+//     }
+    
+//     const options = dataLimitPresets.map(preset => {
+//       const value = preset?.value?.toString() || '';
+//       const label = preset?.label || '';
+//       const description = preset?.description || '';
+      
+//       return {
+//         value,
+//         label: description ? `${label} - ${description}` : label
+//       };
+//     }).filter(option => option.value && option.label);
+    
+//     return [
+//       ...options,
+//       { value: 'custom', label: 'Set custom data amount' }
+//     ];
+//   }, []);
+
+//   const getSafeUsageLimitPresets = useCallback(() => {
+//     if (!Array.isArray(usageLimitPresets) || usageLimitPresets.length === 0) {
+//       return [{ value: 'custom', label: 'Set custom hours' }];
+//     }
+    
+//     const options = usageLimitPresets.map(preset => {
+//       const value = preset?.value?.toString() || '';
+//       const label = preset?.label || '';
+//       const description = preset?.description || '';
+      
+//       return {
+//         value,
+//         label: description ? `${label} - ${description}` : label
+//       };
+//     }).filter(option => option.value && option.label);
+    
+//     return [
+//       ...options,
+//       { value: 'custom', label: 'Set custom hours' }
+//     ];
+//   }, []);
+
+//   const getSafeValidityPeriodPresets = useCallback(() => {
+//     if (!Array.isArray(validityPeriodPresets) || validityPeriodPresets.length === 0) {
+//       return [{ value: 'custom', label: 'Set custom duration' }];
+//     }
+    
+//     const options = validityPeriodPresets.map(preset => {
+//       const value = preset?.value?.toString() || '';
+//       const label = preset?.label || '';
+//       const description = preset?.description || '';
+      
+//       return {
+//         value,
+//         label: description ? `${label} - ${description}` : label
+//       };
+//     }).filter(option => option.value && option.label);
+    
+//     return [
+//       ...options,
+//       { value: 'custom', label: 'Set custom duration' }
+//     ];
+//   }, []);
+
+//   const getSafeBandwidthPresets = useCallback(() => {
+//     if (!Array.isArray(bandwidthPresets) || bandwidthPresets.length === 0) {
+//       return [{ value: 'custom', label: 'Set custom bandwidth' }];
+//     }
+    
+//     const options = bandwidthPresets.map(preset => {
+//       const value = preset?.value?.toString() || '';
+//       const label = preset?.label || '';
+//       const description = preset?.description || '';
+      
+//       return {
+//         value,
+//         label: value === '0' 
+//           ? 'Unlimited - No restrictions' 
+//           : description ? `${label} - ${description}` : label
+//       };
+//     }).filter(option => option.value !== undefined);
+    
+//     return [
+//       ...options,
+//       { value: 'custom', label: 'Set custom bandwidth' }
+//     ];
+//   }, []);
+
+//   const getSafeDeviceLimitOptions = useCallback(() => {
+//     if (!Array.isArray(deviceLimitOptions) || deviceLimitOptions.length === 0) {
+//       return [
+//         { value: 1, label: '1 Device' },
+//         { value: 2, label: '2 Devices' },
+//         { value: 3, label: '3 Devices' },
+//         { value: 4, label: '4 Devices' },
+//         { value: 5, label: '5 Devices' }
+//       ];
+//     }
+    
+//     return deviceLimitOptions.map(option => {
+//       if (typeof option === 'object' && option !== null) {
+//         const value = option.value;
+//         const label = option.label || `${value} Device${value > 1 ? 's' : ''}`;
+//         return { value, label };
+//       }
+//       const value = option;
+//       return { 
+//         value, 
+//         label: `${value} Device${value > 1 ? 's' : ''}` 
+//       };
+//     });
+//   }, []);
+
+//   const getSafeTimeoutOptions = useCallback((optionsArray, type = 'session') => {
+//     if (!Array.isArray(optionsArray) || optionsArray.length === 0) {
+//       if (type === 'session') {
+//         return [
+//           { value: 3600, label: '1 Hour' },
+//           { value: 7200, label: '2 Hours' },
+//           { value: 14400, label: '4 Hours' },
+//           { value: 28800, label: '8 Hours' },
+//           { value: 43200, label: '12 Hours' },
+//           { value: 86400, label: '24 Hours' }
+//         ];
+//       } else {
+//         return [
+//           { value: 300, label: '5 Minutes' },
+//           { value: 600, label: '10 Minutes' },
+//           { value: 900, label: '15 Minutes' },
+//           { value: 1800, label: '30 Minutes' },
+//           { value: 3600, label: '1 Hour' }
+//         ];
+//       }
+//     }
+    
+//     return optionsArray.map(option => {
+//       if (typeof option === 'object' && option !== null) {
+//         const value = option.value;
+//         let label = option.label;
+        
+//         if (!label) {
+//           const hours = value / 3600;
+//           const minutes = value / 60;
+          
+//           if (hours >= 24) {
+//             const days = hours / 24;
+//             label = days === 1 ? '1 Day' : `${days} Days`;
+//           } else if (hours >= 1) {
+//             label = hours === 1 ? '1 Hour' : `${hours} Hours`;
+//           } else {
+//             label = minutes === 1 ? '1 Minute' : `${minutes} Minutes`;
+//           }
+//         }
+        
+//         return { value, label };
+//       }
+      
+//       const value = option;
+//       const hours = value / 3600;
+//       const minutes = value / 60;
+      
+//       let label;
+//       if (hours >= 24) {
+//         const days = hours / 24;
+//         label = days === 1 ? '1 Day' : `${days} Days`;
+//       } else if (hours >= 1) {
+//         label = hours === 1 ? '1 Hour' : `${hours} Hours`;
+//       } else {
+//         label = minutes === 1 ? '1 Minute' : `${minutes} Minutes`;
+//       }
+      
+//       return { value, label };
+//     });
+//   }, []);
+
+//   const getUnitOptions = useCallback((units) => {
+//     if (!Array.isArray(units)) {
+//       return [{ value: 'Mbps', label: 'Mbps' }];
+//     }
+    
+//     return units.map(unit => {
+//       if (typeof unit === 'string') {
+//         return { value: unit, label: unit };
+//       }
+//       return {
+//         value: unit?.value || 'Mbps',
+//         label: unit?.label || unit?.value || 'Mbps'
+//       };
+//     });
+//   }, []);
+
+//   // ==========================================================================
+//   // RENDER HELPERS
+//   // ==========================================================================
+
+//   const renderUnitDropdown = useCallback((field, value, onChangeFunc, units) => {
+//     const safeValue = value || 'Mbps';
+//     const safeOptions = getUnitOptions(units);
+
+//     return (
+//       <EnhancedSelect
+//         value={safeValue}
+//         onChange={(newValue) => onNestedChange('hotspot', field, 'unit', newValue)}
+//         options={safeOptions}
+//         className="text-xs min-w-[5rem]"
+//         theme={theme}
+//       />
+//     );
+//   }, [theme, onNestedChange, getUnitOptions]);
+
+//   // ==========================================================================
+//   // PRESET HANDLERS
+//   // ==========================================================================
+
+//   const handleDataLimitPreset = useCallback((presetKey) => {
 //     setDataLimitPreset(presetKey);
 //     if (presetKey !== 'custom') {
-//       const preset = dataLimitPresets.find(p => p.value === presetKey);
+//       const preset = dataLimitPresets?.find(p => String(p.value) === presetKey);
 //       if (preset) {
-//         onNestedChange('hotspot', 'dataLimit', 'value', preset.value);
-//         onNestedChange('hotspot', 'dataLimit', 'unit', preset.unit);
+//         onNestedChange('hotspot', 'data_limit', 'value', preset.value);
+//         onNestedChange('hotspot', 'data_limit', 'unit', preset.unit);
 //       }
 //     } else {
-//       // Reset to empty when switching to custom
-//       onNestedChange('hotspot', 'dataLimit', 'value', '');
+//       onNestedChange('hotspot', 'data_limit', 'value', '');
 //     }
-//   };
+//   }, [dataLimitPresets, onNestedChange]);
 
-//   const handleUsageLimitPreset = (presetKey) => {
+//   const handleUsageLimitPreset = useCallback((presetKey) => {
 //     setUsageLimitPreset(presetKey);
 //     if (presetKey !== 'custom') {
-//       const preset = usageLimitPresets.find(p => p.value === presetKey);
+//       const preset = usageLimitPresets?.find(p => String(p.value) === presetKey);
 //       if (preset) {
-//         onNestedChange('hotspot', 'usageLimit', 'value', preset.value);
-//         onNestedChange('hotspot', 'usageLimit', 'unit', preset.unit);
+//         onNestedChange('hotspot', 'usage_limit', 'value', preset.value);
+//         onNestedChange('hotspot', 'usage_limit', 'unit', preset.unit);
 //       }
 //     } else {
-//       // Reset to empty when switching to custom
-//       onNestedChange('hotspot', 'usageLimit', 'value', '');
+//       onNestedChange('hotspot', 'usage_limit', 'value', '');
 //     }
-//   };
+//   }, [usageLimitPresets, onNestedChange]);
 
-//   const handleValidityPreset = (presetKey) => {
+//   const handleValidityPreset = useCallback((presetKey) => {
 //     setValidityPreset(presetKey);
 //     if (presetKey !== 'custom') {
-//       const preset = validityPeriodPresets.find(p => p.value === presetKey);
+//       const preset = validityPeriodPresets?.find(p => String(p.value) === presetKey);
 //       if (preset) {
-//         onNestedChange('hotspot', 'validityPeriod', 'value', preset.value);
-//         onNestedChange('hotspot', 'validityPeriod', 'unit', preset.unit);
+//         onNestedChange('hotspot', 'validity_period', 'value', preset.value);
+//         onNestedChange('hotspot', 'validity_period', 'unit', preset.unit);
 //       }
 //     } else {
-//       // Reset to empty when switching to custom
-//       onNestedChange('hotspot', 'validityPeriod', 'value', '');
+//       onNestedChange('hotspot', 'validity_period', 'value', '');
 //     }
-//   };
+//   }, [validityPeriodPresets, onNestedChange]);
 
-//   const handleBandwidthPreset = (presetKey) => {
+//   const handleBandwidthPreset = useCallback((presetKey) => {
 //     setBandwidthPreset(presetKey);
 //     if (presetKey !== 'custom') {
-//       const preset = bandwidthPresets.find(p => p.value === parseInt(presetKey));
+//       const presetValue = parseInt(presetKey, 10);
+//       const preset = bandwidthPresets?.find(p => p.value === presetValue);
 //       if (preset) {
-//         onChange('hotspot', 'bandwidthLimit', preset.value);
+//         onChange('hotspot', 'bandwidth_limit', preset.value);
 //       }
 //     }
-//   };
+//   }, [bandwidthPresets, onChange]);
 
-//   // Function to convert Mbps to Kbps
-//   const convertToKbps = (value, unit) => {
-//     if (unit === 'Mbps') {
-//       return parseFloat(value) * 1000 || 0;
+//   // ==========================================================================
+//   // BANDWIDTH HANDLING
+//   // ==========================================================================
+
+//   const getBandwidthDisplayValue = useCallback(() => {
+//     const bandwidth = toSafeNumber(hotspot.bandwidth_limit);
+//     if (bandwidthUnit === 'Mbps') {
+//       return (bandwidth / 1000) || '';
 //     }
-//     return parseFloat(value) || 0;
-//   };
+//     return bandwidth || '';
+//   }, [hotspot.bandwidth_limit, bandwidthUnit, toSafeNumber]);
 
-//   // Helper to format time for display
-//   const formatTimeDisplay = (seconds) => {
-//     if (seconds === 0) return "No Limit";
-//     const hours = seconds / 3600;
+//   const handleBandwidthChange = useCallback((value) => {
+//     const numValue = parseFloat(value) || 0;
+//     if (bandwidthUnit === 'Mbps') {
+//       onChange('hotspot', 'bandwidth_limit', numValue * 1000);
+//     } else {
+//       onChange('hotspot', 'bandwidth_limit', numValue);
+//     }
+//   }, [bandwidthUnit, onChange]);
+
+//   // ==========================================================================
+//   // EVENT HANDLERS
+//   // ==========================================================================
+
+//   const handleInputChange = useCallback((field, subfield, value) => {
+//     onNestedChange('hotspot', field, subfield, value);
+//   }, [onNestedChange]);
+
+//   const handleToggle = useCallback(() => {
+//     onChange('hotspot', 'enabled', !hotspot.enabled);
+//   }, [onChange, hotspot.enabled]);
+
+//   // ==========================================================================
+//   // FORMATTING FUNCTIONS
+//   // ==========================================================================
+
+//   const formatTimeDisplay = useCallback((seconds) => {
+//     const numSeconds = toSafeNumber(seconds);
+//     if (numSeconds === 0) return "No Limit";
+//     const hours = numSeconds / 3600;
 //     if (hours >= 24) {
 //       const days = hours / 24;
 //       return days === 1 ? "1 Day" : `${days} Days`;
 //     }
 //     return hours === 1 ? "1 Hour" : `${hours} Hours`;
-//   };
+//   }, [toSafeNumber]);
 
-//   // Format bandwidth for display
-//   const formatBandwidthDisplay = (kbps) => {
-//     if (kbps === 0) return "Unlimited";
-//     if (kbps >= 1000) {
-//       const mbps = kbps / 1000;
-//       return `${mbps} Mbps`;
+//   const formatBandwidthDisplay = useCallback((kbps) => {
+//     const numKbps = toSafeNumber(kbps);
+//     if (numKbps === 0) return "Unlimited";
+//     if (numKbps >= 1000) {
+//       const mbps = numKbps / 1000;
+//       return `${mbps.toFixed(mbps % 1 === 0 ? 0 : 1)} Mbps`;
 //     }
-//     return `${kbps} Kbps`;
-//   };
+//     return `${numKbps} Kbps`;
+//   }, [toSafeNumber]);
 
-//   // Get display value for bandwidth input based on unit
-//   const getBandwidthDisplayValue = () => {
-//     if (bandwidthUnit === 'Mbps') {
-//       return (hotspot.bandwidthLimit / 1000) || '';
-//     }
-//     return hotspot.bandwidthLimit || '';
-//   };
+//   // ==========================================================================
+//   // PLAN SUMMARY
+//   // ==========================================================================
 
-//   // Fixed plan summary with proper unlimited handling
 //   const planSummary = useMemo(() => {
-//     const maxDevicesValue = Number.isNaN(hotspot.maxDevices) || hotspot.maxDevices === undefined ? 0 : hotspot.maxDevices;
+//     const maxDevicesValue = toSafeNumber(hotspot.max_devices);
     
-//     // Fixed: Proper handling for unlimited data and time
-//     const dataLimitDisplay = hotspot.dataLimit.value === 'Unlimited' 
-//       ? 'Unlimited - No data Caps' 
-//       : `${hotspot.dataLimit.value || '0'} ${hotspot.dataLimit.unit}`;
+//     const dataLimitValue = hotspot.data_limit?.value || '0';
+//     const dataLimitUnit = hotspot.data_limit?.unit || 'GB';
+//     const dataLimitDisplay = dataLimitValue === 'Unlimited' 
+//       ? 'Unlimited' 
+//       : `${dataLimitValue} ${dataLimitUnit}`;
     
-//     const usageLimitDisplay = hotspot.usageLimit.value === 'Unlimited' 
-//       ? 'Unlimited - No restrictions' 
-//       : `${hotspot.usageLimit.value || '0'} ${hotspot.usageLimit.unit}`;
+//     const usageLimitValue = hotspot.usage_limit?.value || '0';
+//     const usageLimitUnit = hotspot.usage_limit?.unit || 'Hours';
+//     const usageLimitDisplay = usageLimitValue === 'Unlimited' 
+//       ? 'Unlimited' 
+//       : `${usageLimitValue} ${usageLimitUnit}`;
 
-//     const validityDisplay = hotspot.validityPeriod.value === '0' || hotspot.validityPeriod.value === 0
+//     const validityValue = hotspot.validity_period?.value || '0';
+//     const validityUnit = hotspot.validity_period?.unit || 'Days';
+//     const validityDisplay = validityValue === '0' || validityValue === 0
 //       ? 'No Expiry'
-//       : `${hotspot.validityPeriod.value || ''} ${hotspot.validityPeriod.unit}`;
+//       : `${validityValue} ${validityUnit}`;
 
 //     return {
 //       dataLimit: dataLimitDisplay,
 //       usageLimit: usageLimitDisplay,
 //       validity: validityDisplay,
 //       maxDevices: maxDevicesValue === 0 ? 'Unlimited' : `${maxDevicesValue} device${maxDevicesValue > 1 ? 's' : ''}`,
-//       sessionTimeout: formatTimeDisplay(hotspot.sessionTimeout),
-//       idleTimeout: hotspot.idleTimeout === 0 ? 'No Timeout' : `${hotspot.idleTimeout / 60} minutes`,
-//       bandwidth: formatBandwidthDisplay(hotspot.bandwidthLimit),
-//       ipPool: hotspot.ipPool || 'Default Pool',
-//       dnsServers: Array.isArray(hotspot.dnsServers) ? hotspot.dnsServers.join(', ') : 'Default DNS'
+//       sessionTimeout: formatTimeDisplay(hotspot.session_timeout),
+//       idleTimeout: hotspot.idle_timeout === 0 ? 'No Timeout' : `${(hotspot.idle_timeout / 60)} minutes`,
+//       bandwidth: formatBandwidthDisplay(hotspot.bandwidth_limit)
 //     };
-//   }, [hotspot]);
+//   }, [hotspot, formatTimeDisplay, formatBandwidthDisplay, toSafeNumber]);
+
+//   // ==========================================================================
+//   // RENDER
+//   // ==========================================================================
 
 //   return (
 //     <div className={`p-4 lg:p-6 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
@@ -191,6 +1357,10 @@
 //                 ? 'bg-blue-600'
 //                 : theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'
 //             }`}
+//             role="switch"
+//             aria-checked={hotspot.enabled}
+//             tabIndex={0}
+//             onKeyPress={(e) => e.key === 'Enter' && handleToggle()}
 //           >
 //             <span className={`inline-block h-4 w-4 transform bg-white rounded-full shadow-md transition-transform duration-200 ease-in-out ${
 //               hotspot.enabled ? "translate-x-6" : "translate-x-1"
@@ -199,676 +1369,7 @@
 //         </div>
 //       </div>
 
-//       {hotspot.enabled && (
-//         <div className="space-y-6 lg:space-y-8">
-//           {/* Hotspot Network Settings - UPDATED: Removed service name duplication */}
-//           <div className={`p-4 rounded-lg border ${themeClasses.border.light} ${theme === 'dark' ? 'bg-blue-900/10' : 'bg-blue-50'}`}>
-//             <h4 className="text-md font-semibold mb-4 text-blue-700 dark:text-blue-300 flex items-center">
-//               <Wifi className="w-4 h-4 mr-2" />
-//               Hotspot Network Settings
-//             </h4>
-            
-//             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
-//               {/* IP Pool */}
-//               <div>
-//                 <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//                   IP Address Range
-//                   <span className="text-xs text-gray-500 ml-2">- Network range for connected devices</span>
-//                 </label>
-//                 <EnhancedSelect
-//                   value={hotspot.ipPool}
-//                   onChange={(value) => onChange('hotspot', 'ipPool', value)}
-//                   options={[
-//                     { value: "hotspot-pool-1", label: "Default Range - For general use" },
-//                     { value: "hotspot-pool-2", label: "Extended Range - More IP addresses" },
-//                     { value: "dynamic-pool", label: "Dynamic Pool - Automatic assignment" },
-//                     { value: "guest-pool", label: "Guest Pool - Isolated network" },
-//                     { value: "premium-pool", label: "Premium Pool - Priority users" }
-//                   ]}
-//                   theme={theme}
-//                 />
-//                 <p className="text-xs text-gray-500 mt-1">Choose how IP addresses are assigned to users</p>
-//               </div>
-
-//               {/* DNS Servers with auto-suggestion */}
-//               <div>
-//                 <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//                   <Globe className="w-4 h-4 inline mr-1" />
-//                   DNS Servers
-//                   <span className="text-xs text-gray-500 ml-2">- Domain name resolution for users</span>
-//                 </label>
-//                 <div className="flex gap-2">
-//                   <input 
-//                     value={Array.isArray(hotspot.dnsServers) ? hotspot.dnsServers.join(", ") : ""} 
-//                     onChange={(e) => onChange('hotspot', 'dnsServers', e.target.value.split(",").map(s => s.trim()))} 
-//                     className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-//                     placeholder="8.8.8.8, 1.1.1.1" 
-//                   />
-//                   <button
-//                     type="button"
-//                     onClick={() => onChange('hotspot', 'dnsServers', getSuggestedDNS())}
-//                     className="px-3 py-2 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-//                   >
-//                     Auto
-//                   </button>
-//                 </div>
-//                 <p className="text-xs text-gray-500 mt-1">
-//                   Domain name servers for users. Auto sets reliable public DNS servers.
-//                 </p>
-//               </div>
-//             </div>
-//           </div>
-
-//           {/* Speed Configuration */}
-//           <div className={`p-4 rounded-lg border ${themeClasses.border.light} ${theme === 'dark' ? 'bg-blue-900/10' : 'bg-blue-50'}`}>
-//             <h4 className="text-md font-semibold mb-4 text-blue-700 dark:text-blue-300 flex items-center">
-//               <Zap className="w-4 h-4 mr-2" />
-//               Speed & Bandwidth Settings
-//             </h4>
-            
-//             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
-//               {/* Download Speed */}
-//               <div>
-//                 <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//                   Download Speed <span className="text-red-500">*</span>
-//                 </label>
-//                 <div className="flex gap-2">
-//                   <input 
-//                     type="number" 
-//                     value={hotspot.downloadSpeed.value || ""} 
-//                     onChange={(e) => onNestedChange('hotspot', 'downloadSpeed', 'value', e.target.value)} 
-//                     className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-//                     min="0.01" 
-//                     step="0.01" 
-//                     placeholder="e.g., 10" 
-//                     required 
-//                   />
-//                   {renderUnitDropdown('downloadSpeed', hotspot.downloadSpeed.unit, onNestedChange, speedUnits)}
-//                 </div>
-//                 <p className="text-xs text-gray-500 mt-1">Maximum download speed for users</p>
-//                 {errors.hotspot_downloadSpeed && <p className="text-red-500 text-xs mt-1">{errors.hotspot_downloadSpeed}</p>}
-//               </div>
-              
-//               {/* Upload Speed */}
-//               <div>
-//                 <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//                   Upload Speed <span className="text-red-500">*</span>
-//                 </label>
-//                 <div className="flex gap-2">
-//                   <input 
-//                     type="number" 
-//                     value={hotspot.uploadSpeed.value || ""} 
-//                     onChange={(e) => onNestedChange('hotspot', 'uploadSpeed', 'value', e.target.value)} 
-//                     className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-//                     min="0.01" 
-//                     step="0.01" 
-//                     placeholder="e.g., 2" 
-//                     required 
-//                   />
-//                   {renderUnitDropdown('uploadSpeed', hotspot.uploadSpeed.unit, onNestedChange, speedUnits)}
-//                 </div>
-//                 <p className="text-xs text-gray-500 mt-1">Maximum upload speed for users</p>
-//                 {errors.hotspot_uploadSpeed && <p className="text-red-500 text-xs mt-1">{errors.hotspot_uploadSpeed}</p>}
-//               </div>
-//             </div>
-
-//             {/* Bandwidth Limit */}
-//             <div className="mt-6">
-//               <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
-//                 <Gauge className="w-4 h-4 inline mr-1" />
-//                 Total Bandwidth Limit
-//                 <span className="text-xs text-gray-500 ml-2">- Shared bandwidth for all connected devices</span>
-//               </label>
-              
-//               <div className="mb-3">
-//                 <EnhancedSelect
-//                   value={bandwidthPreset}
-//                   onChange={handleBandwidthPreset}
-//                   options={bandwidthPresets.map(preset => ({
-//                     value: preset.value.toString(),
-//                     label: preset.value === 0 ? 'Unlimited - No restrictions' : `${preset.label} - ${preset.description}`
-//                   })).concat([
-//                     { value: 'custom', label: 'Set custom bandwidth' }
-//                   ])}
-//                   theme={theme}
-//                 />
-//               </div>
-              
-//               {bandwidthPreset === 'custom' && (
-//                 <motion.div
-//                   initial={{ opacity: 0, height: 0 }}
-//                   animate={{ opacity: 1, height: 'auto' }}
-//                   className="space-y-3"
-//                 >
-//                   <div className="flex gap-2 items-center">
-//                     <input 
-//                       type="number" 
-//                       value={getBandwidthDisplayValue()} 
-//                       onChange={(e) => onChange('hotspot', 'bandwidthLimit', convertToKbps(e.target.value, bandwidthUnit))} 
-//                       className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-//                       min="0" 
-//                       step="any" 
-//                       placeholder="Enter value (e.g., 5)" 
-//                     />
-//                     <EnhancedSelect
-//                       value={bandwidthUnit}
-//                       onChange={setBandwidthUnit}
-//                       options={[
-//                         { value: 'Mbps', label: 'Mbps' },
-//                         { value: 'Kbps', label: 'Kbps' }
-//                       ]}
-//                       className="text-xs min-w-20"
-//                       theme={theme}
-//                     />
-//                     <span className="text-sm text-gray-500 whitespace-nowrap">
-//                       ({formatBandwidthDisplay(hotspot.bandwidthLimit)})
-//                     </span>
-//                   </div>
-//                   <p className="text-xs text-gray-500">
-//                     Enter bandwidth and select unit. Automatically converts to Kbps internally.
-//                   </p>
-//                 </motion.div>
-//               )}
-              
-//               {bandwidthPreset !== 'custom' && (
-//                 <motion.div
-//                   initial={{ opacity: 0, scale: 0.95 }}
-//                   animate={{ opacity: 1, scale: 1 }}
-//                   transition={{ duration: 0.2 }}
-//                   className={`p-3 rounded-lg flex items-center gap-2 ${theme === 'dark' ? 'bg-blue-800/20' : 'bg-blue-100'}`}
-//                 >
-//                   {hotspot.bandwidthLimit === 0 && <InfinityIcon className="w-4 h-4 text-blue-600 dark:text-blue-300" />}
-//                   <p className="text-sm text-blue-700 dark:text-blue-300">
-//                     <strong>Selected:</strong> {formatBandwidthDisplay(hotspot.bandwidthLimit)}
-//                   </p>
-//                 </motion.div>
-//               )}
-//             </div>
-//           </div>
-
-//           {/* Data & Usage Limits */}
-//           <div className={`p-4 rounded-lg border ${themeClasses.border.light} ${theme === 'dark' ? 'bg-purple-900/10' : 'bg-purple-50'}`}>
-//             <h4 className="text-md font-semibold mb-4 text-purple-700 dark:text-purple-300 flex items-center">
-//               <Database className="w-4 h-4 mr-2" />
-//               Plan Limits & Duration
-//             </h4>
-            
-//             {/* Validity Period */}
-//             <div className="mb-6">
-//               <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
-//                 <Calendar className="w-4 h-4 inline mr-1" />
-//                 Plan Duration <span className="text-red-500">*</span>
-//               </label>
-//               <div className="mb-2">
-//                 <EnhancedSelect
-//                   value={validityPreset}
-//                   onChange={handleValidityPreset}
-//                   options={validityPeriodPresets.map(preset => ({ 
-//                     value: preset.value, 
-//                     label: `${preset.label} - ${preset.description}`
-//                   })).concat([
-//                     { value: 'custom', label: 'Set custom duration' }
-//                   ])}
-//                   theme={theme}
-//                 />
-//               </div>
-//               {validityPreset === 'custom' && (
-//                 <motion.div
-//                   initial={{ opacity: 0, height: 0 }}
-//                   animate={{ opacity: 1, height: 'auto' }}
-//                   className="space-y-2"
-//                 >
-//                   <div className="flex gap-2">
-//                     <input 
-//                       value={hotspot.validityPeriod.value || ""} 
-//                       onChange={(e) => onNestedChange('hotspot', 'validityPeriod', 'value', e.target.value)} 
-//                       className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-//                       placeholder="Enter duration value (e.g., 30)" 
-//                       required 
-//                     />
-//                     {renderUnitDropdown('validityPeriod', hotspot.validityPeriod.unit, onNestedChange, ['Hours', 'Days', 'Weeks', 'Months'])}
-//                   </div>
-//                   <p className="text-xs text-gray-500">
-//                     Set the custom duration for this plan
-//                   </p>
-//                 </motion.div>
-//               )}
-//               <p className="text-xs text-gray-500 mt-1">How long the plan remains active after activation</p>
-//             </div>
-
-//             {/* Data Limit */}
-//             <div className="mb-6">
-//               <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
-//                 Total Data Allowance <span className="text-red-500">*</span>
-//               </label>
-//               <div className="mb-2">
-//                 <EnhancedSelect
-//                   value={dataLimitPreset}
-//                   onChange={handleDataLimitPreset}
-//                   options={dataLimitPresets.map(preset => ({ 
-//                     value: preset.value, 
-//                     label: `${preset.label} - ${preset.description}`
-//                   })).concat([
-//                     { value: 'custom', label: 'Set custom data amount' }
-//                   ])}
-//                   theme={theme}
-//                 />
-//               </div>
-//               {dataLimitPreset === 'custom' && (
-//                 <motion.div
-//                   initial={{ opacity: 0, height: 0 }}
-//                   animate={{ opacity: 1, height: 'auto' }}
-//                   className="space-y-2"
-//                 >
-//                   <div className="flex gap-2">
-//                     <input 
-//                       value={hotspot.dataLimit.value || ""} 
-//                       onChange={(e) => onNestedChange('hotspot', 'dataLimit', 'value', e.target.value)} 
-//                       className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-//                       placeholder="Enter data amount (e.g., 100)" 
-//                       required 
-//                     />
-//                     {renderUnitDropdown('dataLimit', hotspot.dataLimit.unit, onNestedChange, ['MB', 'GB', 'TB', 'Unlimited'])}
-//                   </div>
-//                   <p className="text-xs text-gray-500">
-//                     Set the custom data limit for this plan
-//                   </p>
-//                 </motion.div>
-//               )}
-//               <p className="text-xs text-gray-500 mt-1">Total data available for the entire plan duration</p>
-//               {errors.hotspot_dataLimit && <p className="text-red-500 text-xs mt-1">{errors.hotspot_dataLimit}</p>}
-//             </div>
-
-//             {/* Usage Limit */}
-//             <div>
-//               <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
-//                 <Clock className="w-4 h-4 inline mr-1" />
-//                 Daily Time Limit <span className="text-red-500">*</span>
-//               </label>
-//               <div className="mb-2">
-//                 <EnhancedSelect
-//                   value={usageLimitPreset}
-//                   onChange={handleUsageLimitPreset}
-//                   options={usageLimitPresets.map(preset => ({ 
-//                     value: preset.value, 
-//                     label: `${preset.label} - ${preset.description}`
-//                   })).concat([
-//                     { value: 'custom', label: 'Set custom hours' }
-//                   ])}
-//                   theme={theme}
-//                 />
-//               </div>
-//               {usageLimitPreset === 'custom' && (
-//                 <motion.div
-//                   initial={{ opacity: 0, height: 0 }}
-//                   animate={{ opacity: 1, height: 'auto' }}
-//                   className="space-y-2"
-//                 >
-//                   <div className="flex gap-2">
-//                     <input 
-//                       value={hotspot.usageLimit.value || ""} 
-//                       onChange={(e) => onNestedChange('hotspot', 'usageLimit', 'value', e.target.value)} 
-//                       className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-//                       placeholder="Enter hours per day (e.g., 8)" 
-//                       required 
-//                     />
-//                     {renderUnitDropdown('usageLimit', hotspot.usageLimit.unit, onNestedChange, ['Hours', 'Unlimited'])}
-//                   </div>
-//                   <p className="text-xs text-gray-500">
-//                     Set the custom daily usage limit in hours
-//                   </p>
-//                 </motion.div>
-//               )}
-//               <p className="text-xs text-gray-500 mt-1">Maximum connection time allowed per day</p>
-//               {errors.hotspot_usageLimit && <p className="text-red-500 text-xs mt-1">{errors.hotspot_usageLimit}</p>}
-//             </div>
-//           </div>
-
-//           {/* Security & Management Features */}
-//           <div className={`p-4 rounded-lg border ${themeClasses.border.light} ${theme === 'dark' ? 'bg-green-900/10' : 'bg-green-50'}`}>
-//             <h4 className="text-md font-semibold mb-4 text-green-700 dark:text-green-300 flex items-center">
-//               <Shield className="w-4 h-4 mr-2" />
-//               Security & Device Management
-//             </h4>
-            
-//             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
-//               {/* Maximum Devices */}
-//               <div>
-//                 <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//                   <Users className="w-4 h-4 inline mr-1" />
-//                   Maximum Connected Devices
-//                 </label>
-//                 <EnhancedSelect
-//                   value={hotspot.maxDevices ?? 0}
-//                   onChange={(value) => onChange('hotspot', 'maxDevices', Number.isNaN(parseInt(value, 10)) ? 0 : parseInt(value, 10))}
-//                   options={deviceLimitOptions}
-//                   placeholder="Select device limit"
-//                   theme={theme}
-//                 />
-//                 <p className="text-xs text-gray-500 mt-1">Limit simultaneous connections</p>
-//               </div>
-
-//               {/* Session Timeout */}
-//               <div>
-//                 <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//                   <Clock className="w-4 h-4 inline mr-1" />
-//                   Session Timeout
-//                 </label>
-//                 <EnhancedSelect
-//                   value={hotspot.sessionTimeout}
-//                   onChange={(value) => onChange('hotspot', 'sessionTimeout', parseInt(value, 10))}
-//                   options={sessionTimeoutOptions}
-//                   theme={theme}
-//                 />
-//                 <p className="text-xs text-gray-500 mt-1">Forces reconnection for security</p>
-//               </div>
-//             </div>
-
-//             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6 mt-4">
-//               {/* Idle Timeout */}
-//               <div>
-//                 <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-//                   Idle Timeout
-//                 </label>
-//                 <EnhancedSelect
-//                   value={hotspot.idleTimeout}
-//                   onChange={(value) => onChange('hotspot', 'idleTimeout', parseInt(value, 10))}
-//                   options={idleTimeoutOptions}
-//                   theme={theme}
-//                 />
-//                 <p className="text-xs text-gray-500 mt-1">Disconnects after inactivity</p>
-//               </div>
-
-//               {/* MAC Binding */}
-//               <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-//                 <div>
-//                   <label className={`block text-sm font-medium ${themeClasses.text.primary}`}>
-//                     <Smartphone className="w-4 h-4 inline mr-1" />
-//                     Device Lock (MAC Binding)
-//                   </label>
-//                   <p className="text-xs text-gray-500 mt-1">
-//                     Restrict access to specific devices only
-//                   </p>
-//                 </div>
-//                 <div 
-//                   onClick={() => onChange('hotspot', 'macBinding', !hotspot.macBinding)} 
-//                   className={`relative inline-flex items-center h-6 w-11 rounded-full cursor-pointer transition-colors duration-200 ease-in-out ${
-//                     hotspot.macBinding 
-//                       ? 'bg-green-600'
-//                       : theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'
-//                   }`}
-//                 >
-//                   <span className={`inline-block h-4 w-4 transform bg-white rounded-full shadow-md transition-transform duration-200 ease-in-out ${
-//                     hotspot.macBinding ? "translate-x-6" : "translate-x-1"
-//                   }`} />
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-
-//           {/* Plan Summary - UPDATED: Removed service name */}
-//           <div className={`p-4 rounded-lg border ${themeClasses.border.light} ${theme === 'dark' ? 'bg-indigo-900/10' : 'bg-indigo-50'}`}>
-//             <h4 className="text-md font-semibold mb-4 text-indigo-700 dark:text-indigo-300 flex items-center">
-//               <Calendar className="w-4 h-4 mr-2" />
-//               Plan Summary
-//             </h4>
-//             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-//               <div className={`text-center p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-//                 <Calendar className="w-5 h-5 text-blue-600 mx-auto mb-1" />
-//                 <div className="text-sm font-semibold">{planSummary.validity}</div>
-//                 <div className="text-xs text-gray-500">Plan Duration</div>
-//               </div>
-//               <div className={`text-center p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-//                 <Database className="w-5 h-5 text-green-600 mx-auto mb-1" />
-//                 <div className="text-sm font-semibold">{planSummary.dataLimit}</div>
-//                 <div className="text-xs text-gray-500">Total Data</div>
-//               </div>
-//               <div className={`text-center p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-//                 <Clock className="w-5 h-5 text-purple-600 mx-auto mb-1" />
-//                 <div className="text-sm font-semibold">{planSummary.usageLimit}</div>
-//                 <div className="text-xs text-gray-500">Daily Time</div>
-//               </div>
-//               <div className={`text-center p-3 rounded-lg flex flex-col items-center justify-center ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-//                 <Users className="w-5 h-5 text-orange-600 mx-auto mb-1" />
-//                 <div className="text-sm font-semibold flex items-center gap-1">
-//                   {planSummary.maxDevices === 'Unlimited' && <InfinityIcon className="w-4 h-4" />}
-//                   {planSummary.maxDevices}
-//                 </div>
-//                 <div className="text-xs text-gray-500">Max Devices</div>
-//               </div>
-//               <div className={`text-center p-3 rounded-lg flex flex-col items-center justify-center ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-//                 <Gauge className="w-5 h-5 text-teal-600 mx-auto mb-1" />
-//                 <div className="text-sm font-semibold flex items-center gap-1">
-//                   {planSummary.bandwidth === 'Unlimited' && <InfinityIcon className="w-4 h-4" />}
-//                   {planSummary.bandwidth}
-//                 </div>
-//                 <div className="text-xs text-gray-500">Bandwidth</div>
-//               </div>
-//               <div className={`text-center p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-//                 <Shield className="w-5 h-5 text-red-600 mx-auto mb-1" />
-//                 <div className="text-sm font-semibold">{hotspot.macBinding ? 'Enabled' : 'Disabled'}</div>
-//                 <div className="text-xs text-gray-500">Device Lock</div>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default HotspotConfiguration;
-
-
-
-
-
-
-
-
-
-
-// import React, { useState, useMemo, useEffect } from "react";
-// import { motion } from "framer-motion";
-// import { EnhancedSelect, getThemeClasses } from "../Shared/components";
-// import { 
-//   speedUnits, 
-//   dataLimitPresets,
-//   usageLimitPresets,
-//   validityPeriodPresets,
-//   deviceLimitOptions,
-//   sessionTimeoutOptions,
-//   idleTimeoutOptions,
-//   bandwidthPresets
-// } from "../Shared/constant"
-// import { Users, Clock, Shield, Calendar, Wifi, Database, Zap, Gauge, Smartphone, Infinity as InfinityIcon } from "lucide-react";
-
-// const HotspotConfiguration = ({ form, errors, onChange, onNestedChange, theme }) => {
-//   const themeClasses = getThemeClasses(theme);
-//   const hotspot = form.accessMethods.hotspot;
-
-//   // State for preset selections
-//   const [dataLimitPreset, setDataLimitPreset] = useState('custom');
-//   const [usageLimitPreset, setUsageLimitPreset] = useState('custom');
-//   const [validityPreset, setValidityPreset] = useState('custom');
-//   const [bandwidthPreset, setBandwidthPreset] = useState('custom');
-//   const [bandwidthUnit, setBandwidthUnit] = useState('Mbps');
-
-//   // Reset validity period when component mounts
-//   useEffect(() => {
-//     if (hotspot.validityPeriod.value === 720 && hotspot.validityPeriod.unit === 'Hours') {
-//       onNestedChange('hotspot', 'validityPeriod', 'value', '');
-//     }
-//   }, [hotspot.validityPeriod.value, hotspot.validityPeriod.unit, onNestedChange]);
-
-//   const handleToggle = () => {
-//     onChange('hotspot', 'enabled', !hotspot.enabled);
-//   };
-
-//   const renderUnitDropdown = (field, value, onChange, units) => (
-//     <EnhancedSelect
-//       value={value}
-//       onChange={(newValue) => onChange('hotspot', field, 'unit', newValue)}
-//       options={units.map(unit => ({ value: unit, label: unit }))}
-//       className="text-xs min-w-[5rem]"
-//       theme={theme}
-//     />
-//   );
-
-//   // Handle preset selections
-//   const handleDataLimitPreset = (presetKey) => {
-//     setDataLimitPreset(presetKey);
-//     if (presetKey !== 'custom') {
-//       const preset = dataLimitPresets.find(p => p.value === presetKey);
-//       if (preset) {
-//         onNestedChange('hotspot', 'dataLimit', 'value', preset.value);
-//         onNestedChange('hotspot', 'dataLimit', 'unit', preset.unit);
-//       }
-//     } else {
-//       onNestedChange('hotspot', 'dataLimit', 'value', '');
-//     }
-//   };
-
-//   const handleUsageLimitPreset = (presetKey) => {
-//     setUsageLimitPreset(presetKey);
-//     if (presetKey !== 'custom') {
-//       const preset = usageLimitPresets.find(p => p.value === presetKey);
-//       if (preset) {
-//         onNestedChange('hotspot', 'usageLimit', 'value', preset.value);
-//         onNestedChange('hotspot', 'usageLimit', 'unit', preset.unit);
-//       }
-//     } else {
-//       onNestedChange('hotspot', 'usageLimit', 'value', '');
-//     }
-//   };
-
-//   const handleValidityPreset = (presetKey) => {
-//     setValidityPreset(presetKey);
-//     if (presetKey !== 'custom') {
-//       const preset = validityPeriodPresets.find(p => p.value === presetKey);
-//       if (preset) {
-//         onNestedChange('hotspot', 'validityPeriod', 'value', preset.value);
-//         onNestedChange('hotspot', 'validityPeriod', 'unit', preset.unit);
-//       }
-//     } else {
-//       onNestedChange('hotspot', 'validityPeriod', 'value', '');
-//     }
-//   };
-
-//   const handleBandwidthPreset = (presetKey) => {
-//     setBandwidthPreset(presetKey);
-//     if (presetKey !== 'custom') {
-//       const preset = bandwidthPresets.find(p => p.value === parseInt(presetKey));
-//       if (preset) {
-//         onChange('hotspot', 'bandwidthLimit', preset.value);
-//       }
-//     }
-//   };
-
-//   // Convert Mbps to Kbps and vice versa
-//   const convertBandwidth = (value, fromUnit, toUnit) => {
-//     const numValue = parseFloat(value) || 0;
-//     if (fromUnit === 'Mbps' && toUnit === 'Kbps') {
-//       return Math.round(numValue * 1000);
-//     } else if (fromUnit === 'Kbps' && toUnit === 'Mbps') {
-//       return numValue / 1000;
-//     }
-//     return numValue;
-//   };
-
-//   // Helper to format time for display
-//   const formatTimeDisplay = (seconds) => {
-//     if (seconds === 0) return "No Limit";
-//     const hours = seconds / 3600;
-//     if (hours >= 24) {
-//       const days = hours / 24;
-//       return days === 1 ? "1 Day" : `${days} Days`;
-//     }
-//     return hours === 1 ? "1 Hour" : `${hours} Hours`;
-//   };
-
-//   // Format bandwidth for display
-//   const formatBandwidthDisplay = (kbps) => {
-//     if (kbps === 0) return "Unlimited";
-//     if (kbps >= 1000) {
-//       const mbps = kbps / 1000;
-//       return `${mbps.toFixed(1)} Mbps`;
-//     }
-//     return `${kbps} Kbps`;
-//   };
-
-//   // Get display value for bandwidth input based on unit
-//   const getBandwidthDisplayValue = () => {
-//     if (bandwidthUnit === 'Mbps') {
-//       return (hotspot.bandwidthLimit / 1000) || '';
-//     }
-//     return hotspot.bandwidthLimit || '';
-//   };
-
-//   // Handle bandwidth input change
-//   const handleBandwidthChange = (value) => {
-//     const numValue = parseFloat(value) || 0;
-//     if (bandwidthUnit === 'Mbps') {
-//       onChange('hotspot', 'bandwidthLimit', numValue * 1000);
-//     } else {
-//       onChange('hotspot', 'bandwidthLimit', numValue);
-//     }
-//   };
-
-//   // Fixed plan summary
-//   const planSummary = useMemo(() => {
-//     const maxDevicesValue = Number.isNaN(hotspot.maxDevices) || hotspot.maxDevices === undefined ? 0 : hotspot.maxDevices;
-    
-//     const dataLimitDisplay = hotspot.dataLimit.value === 'Unlimited' 
-//       ? 'Unlimited' 
-//       : `${hotspot.dataLimit.value || '0'} ${hotspot.dataLimit.unit}`;
-    
-//     const usageLimitDisplay = hotspot.usageLimit.value === 'Unlimited' 
-//       ? 'Unlimited' 
-//       : `${hotspot.usageLimit.value || '0'} ${hotspot.usageLimit.unit}`;
-
-//     const validityDisplay = hotspot.validityPeriod.value === '0' || hotspot.validityPeriod.value === 0
-//       ? 'No Expiry'
-//       : `${hotspot.validityPeriod.value || ''} ${hotspot.validityPeriod.unit}`;
-
-//     return {
-//       dataLimit: dataLimitDisplay,
-//       usageLimit: usageLimitDisplay,
-//       validity: validityDisplay,
-//       maxDevices: maxDevicesValue === 0 ? 'Unlimited' : `${maxDevicesValue} device${maxDevicesValue > 1 ? 's' : ''}`,
-//       sessionTimeout: formatTimeDisplay(hotspot.sessionTimeout),
-//       idleTimeout: hotspot.idleTimeout === 0 ? 'No Timeout' : `${hotspot.idleTimeout / 60} minutes`,
-//       bandwidth: formatBandwidthDisplay(hotspot.bandwidthLimit)
-//     };
-//   }, [hotspot]);
-
-//   return (
-//     <div className={`p-4 lg:p-6 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-//       <div className="flex items-center justify-between mb-4">
-//         <h3 className="text-lg lg:text-xl font-semibold flex items-center">
-//           <Wifi className="w-5 h-5 mr-2 text-blue-600" />
-//           Hotspot Configuration
-//         </h3>
-//         <div className="flex items-center">
-//           <label className={`block text-sm font-medium mr-4 ${themeClasses.text.primary}`}>
-//             Enable Hotspot
-//           </label>
-//           <div 
-//             onClick={handleToggle}
-//             className={`relative inline-flex items-center h-6 w-11 rounded-full cursor-pointer transition-colors duration-200 ease-in-out ${
-//               hotspot.enabled 
-//                 ? 'bg-blue-600'
-//                 : theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'
-//             }`}
-//           >
-//             <span className={`inline-block h-4 w-4 transform bg-white rounded-full shadow-md transition-transform duration-200 ease-in-out ${
-//               hotspot.enabled ? "translate-x-6" : "translate-x-1"
-//             }`} />
-//           </div>
-//         </div>
-//       </div>
-
-//       {hotspot.enabled && (
+//       {hotspot.enabled ? (
 //         <div className="space-y-6 lg:space-y-8">
 //           {/* Speed Configuration */}
 //           <div className={`p-4 rounded-lg border ${themeClasses.border.light} ${theme === 'dark' ? 'bg-blue-900/10' : 'bg-blue-50'}`}>
@@ -886,8 +1387,8 @@
 //                 <div className="flex flex-col sm:flex-row gap-2">
 //                   <input 
 //                     type="number" 
-//                     value={hotspot.downloadSpeed.value || ""} 
-//                     onChange={(e) => onNestedChange('hotspot', 'downloadSpeed', 'value', e.target.value)} 
+//                     value={hotspot.download_speed?.value || ""} 
+//                     onChange={(e) => handleInputChange('download_speed', 'value', e.target.value)} 
 //                     className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
 //                     min="0.01" 
 //                     step="0.01" 
@@ -895,11 +1396,10 @@
 //                     required 
 //                   />
 //                   <div className="w-full sm:w-auto">
-//                     {renderUnitDropdown('downloadSpeed', hotspot.downloadSpeed.unit, onNestedChange, speedUnits)}
+//                     {renderUnitDropdown('download_speed', hotspot.download_speed?.unit, onNestedChange, speedUnits)}
 //                   </div>
 //                 </div>
 //                 <p className="text-xs text-gray-500 mt-1">Maximum download speed for users</p>
-//                 {errors.hotspot_downloadSpeed && <p className="text-red-500 text-xs mt-1">{errors.hotspot_downloadSpeed}</p>}
 //               </div>
               
 //               {/* Upload Speed */}
@@ -910,8 +1410,8 @@
 //                 <div className="flex flex-col sm:flex-row gap-2">
 //                   <input 
 //                     type="number" 
-//                     value={hotspot.uploadSpeed.value || ""} 
-//                     onChange={(e) => onNestedChange('hotspot', 'uploadSpeed', 'value', e.target.value)} 
+//                     value={hotspot.upload_speed?.value || ""} 
+//                     onChange={(e) => handleInputChange('upload_speed', 'value', e.target.value)} 
 //                     className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
 //                     min="0.01" 
 //                     step="0.01" 
@@ -919,18 +1419,16 @@
 //                     required 
 //                   />
 //                   <div className="w-full sm:w-auto">
-//                     {renderUnitDropdown('uploadSpeed', hotspot.uploadSpeed.unit, onNestedChange, speedUnits)}
+//                     {renderUnitDropdown('upload_speed', hotspot.upload_speed?.unit, onNestedChange, speedUnits)}
 //                   </div>
 //                 </div>
 //                 <p className="text-xs text-gray-500 mt-1">Maximum upload speed for users</p>
-//                 {errors.hotspot_uploadSpeed && <p className="text-red-500 text-xs mt-1">{errors.hotspot_uploadSpeed}</p>}
 //               </div>
 //             </div>
 
 //             {/* Bandwidth Limit */}
 //             <div className="mt-6">
 //               <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
-//                 <Gauge className="w-4 h-4 inline mr-1" />
 //                 Total Bandwidth Limit
 //                 <span className="text-xs text-gray-500 ml-2">Shared bandwidth for all connected devices</span>
 //               </label>
@@ -939,13 +1437,9 @@
 //                 <EnhancedSelect
 //                   value={bandwidthPreset}
 //                   onChange={handleBandwidthPreset}
-//                   options={bandwidthPresets.map(preset => ({
-//                     value: preset.value.toString(),
-//                     label: preset.value === 0 ? 'Unlimited - No restrictions' : `${preset.label} - ${preset.description}`
-//                   })).concat([
-//                     { value: 'custom', label: 'Set custom bandwidth' }
-//                   ])}
+//                   options={getSafeBandwidthPresets()}
 //                   theme={theme}
+//                   disabled={!hotspot.enabled}
 //                 />
 //               </div>
               
@@ -953,6 +1447,7 @@
 //                 <motion.div
 //                   initial={{ opacity: 0, height: 0 }}
 //                   animate={{ opacity: 1, height: 'auto' }}
+//                   exit={{ opacity: 0, height: 0 }}
 //                   className="space-y-3"
 //                 >
 //                   <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
@@ -964,6 +1459,7 @@
 //                       min="0" 
 //                       step="any" 
 //                       placeholder="Enter value" 
+//                       disabled={!hotspot.enabled}
 //                     />
 //                     <EnhancedSelect
 //                       value={bandwidthUnit}
@@ -974,9 +1470,10 @@
 //                       ]}
 //                       className="text-xs min-w-[5rem]"
 //                       theme={theme}
+//                       disabled={!hotspot.enabled}
 //                     />
 //                     <span className="text-sm text-gray-500 whitespace-nowrap">
-//                       ({formatBandwidthDisplay(hotspot.bandwidthLimit)})
+//                       ({formatBandwidthDisplay(hotspot.bandwidth_limit)})
 //                     </span>
 //                   </div>
 //                   <p className="text-xs text-gray-500">
@@ -992,9 +1489,9 @@
 //                   transition={{ duration: 0.2 }}
 //                   className={`p-3 rounded-lg flex items-center gap-2 ${theme === 'dark' ? 'bg-blue-800/20' : 'bg-blue-100'}`}
 //                 >
-//                   {hotspot.bandwidthLimit === 0 && <InfinityIcon className="w-4 h-4 text-blue-600 dark:text-blue-300" />}
+//                   {hotspot.bandwidth_limit === 0 && <InfinityIcon className="w-4 h-4 text-blue-600 dark:text-blue-300" />}
 //                   <p className="text-sm text-blue-700 dark:text-blue-300">
-//                     <strong>Selected:</strong> {formatBandwidthDisplay(hotspot.bandwidthLimit)}
+//                     <strong>Selected:</strong> {formatBandwidthDisplay(hotspot.bandwidth_limit)}
 //                   </p>
 //                 </motion.div>
 //               )}
@@ -1018,31 +1515,29 @@
 //                 <EnhancedSelect
 //                   value={validityPreset}
 //                   onChange={handleValidityPreset}
-//                   options={validityPeriodPresets.map(preset => ({ 
-//                     value: preset.value, 
-//                     label: `${preset.label} - ${preset.description}`
-//                   })).concat([
-//                     { value: 'custom', label: 'Set custom duration' }
-//                   ])}
+//                   options={getSafeValidityPeriodPresets()}
 //                   theme={theme}
+//                   disabled={!hotspot.enabled}
 //                 />
 //               </div>
 //               {validityPreset === 'custom' && (
 //                 <motion.div
 //                   initial={{ opacity: 0, height: 0 }}
 //                   animate={{ opacity: 1, height: 'auto' }}
+//                   exit={{ opacity: 0, height: 0 }}
 //                   className="space-y-2"
 //                 >
 //                   <div className="flex flex-col sm:flex-row gap-2">
 //                     <input 
-//                       value={hotspot.validityPeriod.value || ""} 
-//                       onChange={(e) => onNestedChange('hotspot', 'validityPeriod', 'value', e.target.value)} 
+//                       value={hotspot.validity_period?.value || ""} 
+//                       onChange={(e) => handleInputChange('validity_period', 'value', e.target.value)} 
 //                       className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
 //                       placeholder="Enter duration value" 
 //                       required 
+//                       disabled={!hotspot.enabled}
 //                     />
 //                     <div className="w-full sm:w-auto">
-//                       {renderUnitDropdown('validityPeriod', hotspot.validityPeriod.unit, onNestedChange, ['Hours', 'Days', 'Weeks', 'Months'])}
+//                       {renderUnitDropdown('validity_period', hotspot.validity_period?.unit, onNestedChange, ['Hours', 'Days', 'Weeks', 'Months'])}
 //                     </div>
 //                   </div>
 //                   <p className="text-xs text-gray-500">
@@ -1062,31 +1557,29 @@
 //                 <EnhancedSelect
 //                   value={dataLimitPreset}
 //                   onChange={handleDataLimitPreset}
-//                   options={dataLimitPresets.map(preset => ({ 
-//                     value: preset.value, 
-//                     label: `${preset.label} - ${preset.description}`
-//                   })).concat([
-//                     { value: 'custom', label: 'Set custom data amount' }
-//                   ])}
+//                   options={getSafeDataLimitPresets()}
 //                   theme={theme}
+//                   disabled={!hotspot.enabled}
 //                 />
 //               </div>
 //               {dataLimitPreset === 'custom' && (
 //                 <motion.div
 //                   initial={{ opacity: 0, height: 0 }}
 //                   animate={{ opacity: 1, height: 'auto' }}
+//                   exit={{ opacity: 0, height: 0 }}
 //                   className="space-y-2"
 //                 >
 //                   <div className="flex flex-col sm:flex-row gap-2">
 //                     <input 
-//                       value={hotspot.dataLimit.value || ""} 
-//                       onChange={(e) => onNestedChange('hotspot', 'dataLimit', 'value', e.target.value)} 
+//                       value={hotspot.data_limit?.value || ""} 
+//                       onChange={(e) => handleInputChange('data_limit', 'value', e.target.value)} 
 //                       className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
 //                       placeholder="Enter data amount" 
 //                       required 
+//                       disabled={!hotspot.enabled}
 //                     />
 //                     <div className="w-full sm:w-auto">
-//                       {renderUnitDropdown('dataLimit', hotspot.dataLimit.unit, onNestedChange, ['MB', 'GB', 'TB', 'Unlimited'])}
+//                       {renderUnitDropdown('data_limit', hotspot.data_limit?.unit, onNestedChange, ['MB', 'GB', 'TB', 'Unlimited'])}
 //                     </div>
 //                   </div>
 //                   <p className="text-xs text-gray-500">
@@ -1095,7 +1588,6 @@
 //                 </motion.div>
 //               )}
 //               <p className="text-xs text-gray-500 mt-1">Total data available for the entire plan duration</p>
-//               {errors.hotspot_dataLimit && <p className="text-red-500 text-xs mt-1">{errors.hotspot_dataLimit}</p>}
 //             </div>
 
 //             {/* Usage Limit */}
@@ -1108,31 +1600,29 @@
 //                 <EnhancedSelect
 //                   value={usageLimitPreset}
 //                   onChange={handleUsageLimitPreset}
-//                   options={usageLimitPresets.map(preset => ({ 
-//                     value: preset.value, 
-//                     label: `${preset.label} - ${preset.description}`
-//                   })).concat([
-//                     { value: 'custom', label: 'Set custom hours' }
-//                   ])}
+//                   options={getSafeUsageLimitPresets()}
 //                   theme={theme}
+//                   disabled={!hotspot.enabled}
 //                 />
 //               </div>
 //               {usageLimitPreset === 'custom' && (
 //                 <motion.div
 //                   initial={{ opacity: 0, height: 0 }}
 //                   animate={{ opacity: 1, height: 'auto' }}
+//                   exit={{ opacity: 0, height: 0 }}
 //                   className="space-y-2"
 //                 >
 //                   <div className="flex flex-col sm:flex-row gap-2">
 //                     <input 
-//                       value={hotspot.usageLimit.value || ""} 
-//                       onChange={(e) => onNestedChange('hotspot', 'usageLimit', 'value', e.target.value)} 
+//                       value={hotspot.usage_limit?.value || ""} 
+//                       onChange={(e) => handleInputChange('usage_limit', 'value', e.target.value)} 
 //                       className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
 //                       placeholder="Enter hours per day" 
 //                       required 
+//                       disabled={!hotspot.enabled}
 //                     />
 //                     <div className="w-full sm:w-auto">
-//                       {renderUnitDropdown('usageLimit', hotspot.usageLimit.unit, onNestedChange, ['Hours', 'Unlimited'])}
+//                       {renderUnitDropdown('usage_limit', hotspot.usage_limit?.unit, onNestedChange, ['Hours', 'Unlimited'])}
 //                     </div>
 //                   </div>
 //                   <p className="text-xs text-gray-500">
@@ -1141,11 +1631,10 @@
 //                 </motion.div>
 //               )}
 //               <p className="text-xs text-gray-500 mt-1">Maximum connection time allowed per day</p>
-//               {errors.hotspot_usageLimit && <p className="text-red-500 text-xs mt-1">{errors.hotspot_usageLimit}</p>}
 //             </div>
 //           </div>
 
-//           {/* Security & Management Features */}
+//           {/* Security Features */}
 //           <div className={`p-4 rounded-lg border ${themeClasses.border.light} ${theme === 'dark' ? 'bg-green-900/10' : 'bg-green-50'}`}>
 //             <h4 className="text-md font-semibold mb-4 text-green-700 dark:text-green-300 flex items-center">
 //               <Shield className="w-4 h-4 mr-2" />
@@ -1160,11 +1649,12 @@
 //                   Maximum Connected Devices
 //                 </label>
 //                 <EnhancedSelect
-//                   value={hotspot.maxDevices ?? 0}
-//                   onChange={(value) => onChange('hotspot', 'maxDevices', parseInt(value, 10) || 0)}
-//                   options={deviceLimitOptions}
+//                   value={hotspot.max_devices ?? ""}
+//                   onChange={(value) => onChange('hotspot', 'max_devices', parseInt(value, 10) || 0)}
+//                   options={getSafeDeviceLimitOptions()}
 //                   placeholder="Select device limit"
 //                   theme={theme}
+//                   disabled={!hotspot.enabled}
 //                 />
 //                 <p className="text-xs text-gray-500 mt-1">Limit simultaneous connections</p>
 //               </div>
@@ -1176,10 +1666,11 @@
 //                   Session Timeout
 //                 </label>
 //                 <EnhancedSelect
-//                   value={hotspot.sessionTimeout}
-//                   onChange={(value) => onChange('hotspot', 'sessionTimeout', parseInt(value, 10))}
-//                   options={sessionTimeoutOptions}
+//                   value={hotspot.session_timeout}
+//                   onChange={(value) => onChange('hotspot', 'session_timeout', parseInt(value, 10))}
+//                   options={getSafeTimeoutOptions(sessionTimeoutOptions, 'session')}
 //                   theme={theme}
+//                   disabled={!hotspot.enabled}
 //                 />
 //                 <p className="text-xs text-gray-500 mt-1">Forces reconnection for security</p>
 //               </div>
@@ -1192,10 +1683,11 @@
 //                   Idle Timeout
 //                 </label>
 //                 <EnhancedSelect
-//                   value={hotspot.idleTimeout}
-//                   onChange={(value) => onChange('hotspot', 'idleTimeout', parseInt(value, 10))}
-//                   options={idleTimeoutOptions}
+//                   value={hotspot.idle_timeout}
+//                   onChange={(value) => onChange('hotspot', 'idle_timeout', parseInt(value, 10))}
+//                   options={getSafeTimeoutOptions(idleTimeoutOptions, 'idle')}
 //                   theme={theme}
+//                   disabled={!hotspot.enabled}
 //                 />
 //                 <p className="text-xs text-gray-500 mt-1">Disconnects after inactivity</p>
 //               </div>
@@ -1212,15 +1704,21 @@
 //                   </p>
 //                 </div>
 //                 <div 
-//                   onClick={() => onChange('hotspot', 'macBinding', !hotspot.macBinding)} 
+//                   onClick={() => hotspot.enabled && onChange('hotspot', 'mac_binding', !hotspot.mac_binding)} 
 //                   className={`relative inline-flex items-center h-6 w-11 rounded-full cursor-pointer transition-colors duration-200 ease-in-out flex-shrink-0 ${
-//                     hotspot.macBinding 
-//                       ? 'bg-green-600'
-//                       : theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'
+//                     !hotspot.enabled 
+//                       ? 'cursor-not-allowed opacity-50 bg-gray-400' 
+//                       : hotspot.mac_binding 
+//                         ? 'bg-green-600'
+//                         : theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'
 //                   }`}
+//                   role="switch"
+//                   aria-checked={hotspot.mac_binding}
+//                   tabIndex={0}
+//                   onKeyPress={(e) => e.key === 'Enter' && hotspot.enabled && onChange('hotspot', 'mac_binding', !hotspot.mac_binding)}
 //                 >
 //                   <span className={`inline-block h-4 w-4 transform bg-white rounded-full shadow-md transition-transform duration-200 ease-in-out ${
-//                     hotspot.macBinding ? "translate-x-6" : "translate-x-1"
+//                     hotspot.mac_binding ? "translate-x-6" : "translate-x-1"
 //                   }`} />
 //                 </div>
 //               </div>
@@ -1267,771 +1765,39 @@
 //               </div>
 //               <div className={`text-center p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
 //                 <Shield className="w-5 h-5 text-red-600 mx-auto mb-1" />
-//                 <div className="text-sm font-semibold truncate">{hotspot.macBinding ? 'Enabled' : 'Disabled'}</div>
+//                 <div className="text-sm font-semibold truncate">{hotspot.mac_binding ? 'Enabled' : 'Disabled'}</div>
 //                 <div className="text-xs text-gray-500">Device Lock</div>
 //               </div>
 //             </div>
 //           </div>
+//         </div>
+//       ) : (
+//         <div className={`p-8 text-center rounded-lg ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
+//           <Wifi className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+//           <h4 className="text-lg font-medium mb-2 text-gray-600">Hotspot Disabled</h4>
+//           <p className="text-sm text-gray-500 mb-4">
+//             Enable Hotspot to configure wireless access settings for this plan.
+//           </p>
+//           <button
+//             onClick={handleToggle}
+//             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+//           >
+//             Enable Hotspot
+//           </button>
 //         </div>
 //       )}
 //     </div>
 //   );
 // };
 
-// export default HotspotConfiguration;
+// HotspotConfiguration.propTypes = {
+//   form: PropTypes.object,
+//   errors: PropTypes.object,
+//   onChange: PropTypes.func.isRequired,
+//   onNestedChange: PropTypes.func.isRequired,
+//   theme: PropTypes.oneOf(['light', 'dark'])
+// };
 
 
 
-
-import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
-import { EnhancedSelect, getThemeClasses } from "../Shared/components";
-import { 
-  speedUnits, 
-  dataLimitPresets,
-  usageLimitPresets,
-  validityPeriodPresets,
-  deviceLimitOptions,
-  sessionTimeoutOptions,
-  idleTimeoutOptions,
-  bandwidthPresets
-} from "../Shared/constant"
-import { 
-  Users, Clock, Shield, Calendar, Wifi, Database, Zap, Gauge, 
-  Smartphone, Infinity as InfinityIcon, AlertCircle 
-} from "lucide-react";
-
-const HotspotConfiguration = ({ form, errors, onChange, onNestedChange, theme }) => {
-  const themeClasses = getThemeClasses(theme);
-  
-  // Safely extract hotspot configuration with fallbacks
-  const access_methods = form.access_methods || form.accessMethods || {};
-  const hotspot = access_methods.hotspot || {
-    enabled: false,
-    downloadSpeed: { value: "", unit: "Mbps" },
-    uploadSpeed: { value: "", unit: "Mbps" },
-    dataLimit: { value: "", unit: "GB" },
-    usageLimit: { value: "", unit: "Hours" },
-    bandwidthLimit: 0,
-    maxDevices: 1,
-    sessionTimeout: 86400,
-    idleTimeout: 300,
-    validityPeriod: { value: "", unit: "Days" },
-    macBinding: false
-  };
-
-  // State for preset selections
-  const [dataLimitPreset, setDataLimitPreset] = useState('custom');
-  const [usageLimitPreset, setUsageLimitPreset] = useState('custom');
-  const [validityPreset, setValidityPreset] = useState('custom');
-  const [bandwidthPreset, setBandwidthPreset] = useState('custom');
-  const [bandwidthUnit, setBandwidthUnit] = useState('Mbps');
-
-  // Reset validity period when component mounts
-  useEffect(() => {
-    if (hotspot.validityPeriod?.value === "720" && hotspot.validityPeriod?.unit === "Hours") {
-      onNestedChange('hotspot', 'validityPeriod', 'value', '');
-    }
-  }, [hotspot.validityPeriod?.value, hotspot.validityPeriod?.unit, onNestedChange]);
-
-  const handleToggle = useCallback(() => {
-    onChange('hotspot', 'enabled', !hotspot.enabled);
-  }, [onChange, hotspot.enabled]);
-
-  // Safe unit renderer
-  const renderUnitDropdown = useCallback((field, value, onChangeFunc, units) => {
-    const safeValue = value || (units[0] || 'Mbps');
-    const safeOptions = units.map(unit => ({
-      value: unit,
-      label: unit
-    }));
-
-    return (
-      <EnhancedSelect
-        value={safeValue}
-        onChange={(newValue) => {
-          if (typeof onChangeFunc === 'function') {
-            onNestedChange('hotspot', field, 'unit', newValue);
-          }
-        }}
-        options={safeOptions}
-        className="text-xs min-w-[5rem]"
-        theme={theme}
-      />
-    );
-  }, [theme, onNestedChange]);
-
-  // Create preset options
-  const createPresetOptions = useCallback((presets, customLabel = 'Set custom') => {
-    const safePresets = presets.map(preset => ({
-      value: String(preset.value),
-      label: `${preset.label} - ${preset.description}`
-    }));
-    
-    return [
-      ...safePresets,
-      { value: 'custom', label: customLabel }
-    ];
-  }, []);
-
-  // Handle preset selections
-  const handleDataLimitPreset = useCallback((presetKey) => {
-    setDataLimitPreset(presetKey);
-    if (presetKey !== 'custom') {
-      const preset = dataLimitPresets.find(p => String(p.value) === presetKey);
-      if (preset) {
-        onNestedChange('hotspot', 'dataLimit', 'value', preset.value);
-        onNestedChange('hotspot', 'dataLimit', 'unit', preset.unit);
-      }
-    } else {
-      onNestedChange('hotspot', 'dataLimit', 'value', '');
-    }
-  }, [dataLimitPresets, onNestedChange]);
-
-  const handleUsageLimitPreset = useCallback((presetKey) => {
-    setUsageLimitPreset(presetKey);
-    if (presetKey !== 'custom') {
-      const preset = usageLimitPresets.find(p => String(p.value) === presetKey);
-      if (preset) {
-        onNestedChange('hotspot', 'usageLimit', 'value', preset.value);
-        onNestedChange('hotspot', 'usageLimit', 'unit', preset.unit);
-      }
-    } else {
-      onNestedChange('hotspot', 'usageLimit', 'value', '');
-    }
-  }, [usageLimitPresets, onNestedChange]);
-
-  const handleValidityPreset = useCallback((presetKey) => {
-    setValidityPreset(presetKey);
-    if (presetKey !== 'custom') {
-      const preset = validityPeriodPresets.find(p => String(p.value) === presetKey);
-      if (preset) {
-        onNestedChange('hotspot', 'validityPeriod', 'value', preset.value);
-        onNestedChange('hotspot', 'validityPeriod', 'unit', preset.unit);
-      }
-    } else {
-      onNestedChange('hotspot', 'validityPeriod', 'value', '');
-    }
-  }, [validityPeriodPresets, onNestedChange]);
-
-  // Get bandwidth options
-  const getBandwidthOptions = useCallback(() => {
-    const safeBandwidthPresets = bandwidthPresets.map(preset => ({
-      value: String(preset.value),
-      label: preset.value === 0 
-        ? 'Unlimited - No restrictions' 
-        : `${preset.label} - ${preset.description}`
-    }));
-    
-    return [
-      ...safeBandwidthPresets,
-      { value: 'custom', label: 'Set custom bandwidth' }
-    ];
-  }, []);
-
-  const handleBandwidthPreset = useCallback((presetKey) => {
-    setBandwidthPreset(presetKey);
-    if (presetKey !== 'custom') {
-      const presetValue = parseInt(presetKey, 10);
-      const preset = bandwidthPresets.find(p => p.value === presetValue);
-      if (preset) {
-        onChange('hotspot', 'bandwidthLimit', preset.value);
-      }
-    }
-  }, [bandwidthPresets, onChange]);
-
-  // Helper to format time for display
-  const formatTimeDisplay = useCallback((seconds) => {
-    if (!seconds || seconds === 0) return "No Limit";
-    const hours = seconds / 3600;
-    if (hours >= 24) {
-      const days = hours / 24;
-      return days === 1 ? "1 Day" : `${days} Days`;
-    }
-    return hours === 1 ? "1 Hour" : `${hours} Hours`;
-  }, []);
-
-  // Format bandwidth for display
-  const formatBandwidthDisplay = useCallback((kbps) => {
-    if (!kbps || kbps === 0) return "Unlimited";
-    const numKbps = Number(kbps);
-    if (numKbps >= 1000) {
-      const mbps = numKbps / 1000;
-      return `${mbps.toFixed(mbps % 1 === 0 ? 0 : 1)} Mbps`;
-    }
-    return `${numKbps} Kbps`;
-  }, []);
-
-  // Get display value for bandwidth input based on unit
-  const getBandwidthDisplayValue = useCallback(() => {
-    const bandwidth = Number(hotspot.bandwidthLimit) || 0;
-    if (bandwidthUnit === 'Mbps') {
-      return (bandwidth / 1000) || '';
-    }
-    return bandwidth || '';
-  }, [hotspot.bandwidthLimit, bandwidthUnit]);
-
-  // Handle bandwidth input change
-  const handleBandwidthChange = useCallback((value) => {
-    const numValue = parseFloat(value) || 0;
-    if (bandwidthUnit === 'Mbps') {
-      onChange('hotspot', 'bandwidthLimit', numValue * 1000);
-    } else {
-      onChange('hotspot', 'bandwidthLimit', numValue);
-    }
-  }, [bandwidthUnit, onChange]);
-
-  // Get device limit options safely
-  const getSafeDeviceLimitOptions = useCallback(() => {
-    return deviceLimitOptions.map(option => {
-      if (typeof option === 'object' && option !== null) {
-        return {
-          value: option.value,
-          label: option.label || String(option.value)
-        };
-      }
-      return {
-        value: option,
-        label: String(option)
-      };
-    });
-  }, []);
-
-  // Get timeout options safely
-  const getSafeTimeoutOptions = useCallback((optionsArray) => {
-    return optionsArray.map(option => {
-      if (typeof option === 'object' && option !== null) {
-        return {
-          value: option.value,
-          label: option.label || String(option.value)
-        };
-      }
-      return {
-        value: option,
-        label: String(option)
-      };
-    });
-  }, []);
-
-  // Fixed plan summary with memoization
-  const planSummary = useMemo(() => {
-    const maxDevicesValue = Number.isNaN(hotspot.maxDevices) || hotspot.maxDevices === undefined 
-      ? 0 
-      : Number(hotspot.maxDevices);
-    
-    const dataLimitValue = hotspot.dataLimit?.value || '0';
-    const dataLimitUnit = hotspot.dataLimit?.unit || 'GB';
-    const dataLimitDisplay = dataLimitValue === 'Unlimited' 
-      ? 'Unlimited' 
-      : `${dataLimitValue} ${dataLimitUnit}`;
-    
-    const usageLimitValue = hotspot.usageLimit?.value || '0';
-    const usageLimitUnit = hotspot.usageLimit?.unit || 'Hours';
-    const usageLimitDisplay = usageLimitValue === 'Unlimited' 
-      ? 'Unlimited' 
-      : `${usageLimitValue} ${usageLimitUnit}`;
-
-    const validityValue = hotspot.validityPeriod?.value || '0';
-    const validityUnit = hotspot.validityPeriod?.unit || 'Days';
-    const validityDisplay = validityValue === '0' || validityValue === 0
-      ? 'No Expiry'
-      : `${validityValue} ${validityUnit}`;
-
-    return {
-      dataLimit: dataLimitDisplay,
-      usageLimit: usageLimitDisplay,
-      validity: validityDisplay,
-      maxDevices: maxDevicesValue === 0 ? 'Unlimited' : `${maxDevicesValue} device${maxDevicesValue > 1 ? 's' : ''}`,
-      sessionTimeout: formatTimeDisplay(hotspot.sessionTimeout),
-      idleTimeout: hotspot.idleTimeout === 0 ? 'No Timeout' : `${(hotspot.idleTimeout / 60)} minutes`,
-      bandwidth: formatBandwidthDisplay(hotspot.bandwidthLimit)
-    };
-  }, [hotspot, formatTimeDisplay, formatBandwidthDisplay]);
-
-  // Handle input change with validation
-  const handleInputChange = useCallback((field, subfield, value) => {
-    onNestedChange('hotspot', field, subfield, value);
-  }, [onNestedChange]);
-
-  // Render speed configuration section
-  const renderSpeedConfiguration = () => (
-    <div className={`p-4 rounded-lg border ${themeClasses.border.light} ${theme === 'dark' ? 'bg-blue-900/10' : 'bg-blue-50'}`}>
-      <h4 className="text-md font-semibold mb-4 text-blue-700 dark:text-blue-300 flex items-center">
-        <Zap className="w-4 h-4 mr-2" />
-        Speed & Bandwidth Settings
-      </h4>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-        {/* Download Speed */}
-        <div>
-          <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-            Download Speed <span className="text-red-500">*</span>
-          </label>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <input 
-              type="number" 
-              value={hotspot.downloadSpeed?.value || ""} 
-              onChange={(e) => handleInputChange('downloadSpeed', 'value', e.target.value)} 
-              className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-              min="0.01" 
-              step="0.01" 
-              placeholder="e.g., 10" 
-              required 
-            />
-            <div className="w-full sm:w-auto">
-              {renderUnitDropdown('downloadSpeed', hotspot.downloadSpeed?.unit, onNestedChange, speedUnits)}
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-1">Maximum download speed for users</p>
-          {errors.hotspot_downloadSpeed && (
-            <p className="text-red-500 text-xs mt-1 flex items-center">
-              <AlertCircle className="w-3 h-3 mr-1" />
-              {errors.hotspot_downloadSpeed}
-            </p>
-          )}
-        </div>
-        
-        {/* Upload Speed */}
-        <div>
-          <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-            Upload Speed <span className="text-red-500">*</span>
-          </label>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <input 
-              type="number" 
-              value={hotspot.uploadSpeed?.value || ""} 
-              onChange={(e) => handleInputChange('uploadSpeed', 'value', e.target.value)} 
-              className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-              min="0.01" 
-              step="0.01" 
-              placeholder="e.g., 2" 
-              required 
-            />
-            <div className="w-full sm:w-auto">
-              {renderUnitDropdown('uploadSpeed', hotspot.uploadSpeed?.unit, onNestedChange, speedUnits)}
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-1">Maximum upload speed for users</p>
-          {errors.hotspot_uploadSpeed && (
-            <p className="text-red-500 text-xs mt-1 flex items-center">
-              <AlertCircle className="w-3 h-3 mr-1" />
-              {errors.hotspot_uploadSpeed}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Bandwidth Limit */}
-      <div className="mt-6">
-        <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
-          <Gauge className="w-4 h-4 inline mr-1" />
-          Total Bandwidth Limit
-          <span className="text-xs text-gray-500 ml-2">Shared bandwidth for all connected devices</span>
-        </label>
-        
-        <div className="mb-3">
-          <EnhancedSelect
-            value={bandwidthPreset}
-            onChange={handleBandwidthPreset}
-            options={getBandwidthOptions()}
-            theme={theme}
-            disabled={!hotspot.enabled}
-          />
-        </div>
-        
-        {bandwidthPreset === 'custom' && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="space-y-3"
-          >
-            <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
-              <input 
-                type="number" 
-                value={getBandwidthDisplayValue()} 
-                onChange={(e) => handleBandwidthChange(e.target.value)} 
-                className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-                min="0" 
-                step="any" 
-                placeholder="Enter value" 
-                disabled={!hotspot.enabled}
-              />
-              <EnhancedSelect
-                value={bandwidthUnit}
-                onChange={setBandwidthUnit}
-                options={[
-                  { value: 'Mbps', label: 'Mbps' },
-                  { value: 'Kbps', label: 'Kbps' }
-                ]}
-                className="text-xs min-w-[5rem]"
-                theme={theme}
-                disabled={!hotspot.enabled}
-              />
-              <span className="text-sm text-gray-500 whitespace-nowrap">
-                ({formatBandwidthDisplay(hotspot.bandwidthLimit)})
-              </span>
-            </div>
-            <p className="text-xs text-gray-500">
-              Enter bandwidth and select unit. Internally stored as Kbps.
-            </p>
-          </motion.div>
-        )}
-        
-        {bandwidthPreset !== 'custom' && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.2 }}
-            className={`p-3 rounded-lg flex items-center gap-2 ${theme === 'dark' ? 'bg-blue-800/20' : 'bg-blue-100'}`}
-          >
-            {hotspot.bandwidthLimit === 0 && <InfinityIcon className="w-4 h-4 text-blue-600 dark:text-blue-300" />}
-            <p className="text-sm text-blue-700 dark:text-blue-300">
-              <strong>Selected:</strong> {formatBandwidthDisplay(hotspot.bandwidthLimit)}
-            </p>
-          </motion.div>
-        )}
-      </div>
-    </div>
-  );
-
-  // Render data & usage limits section
-  const renderDataUsageLimits = () => (
-    <div className={`p-4 rounded-lg border ${themeClasses.border.light} ${theme === 'dark' ? 'bg-purple-900/10' : 'bg-purple-50'}`}>
-      <h4 className="text-md font-semibold mb-4 text-purple-700 dark:text-purple-300 flex items-center">
-        <Database className="w-4 h-4 mr-2" />
-        Plan Limits & Duration
-      </h4>
-      
-      {/* Validity Period */}
-      <div className="mb-6">
-        <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
-          <Calendar className="w-4 h-4 inline mr-1" />
-          Plan Duration <span className="text-red-500">*</span>
-        </label>
-        <div className="mb-2">
-          <EnhancedSelect
-            value={validityPreset}
-            onChange={handleValidityPreset}
-            options={createPresetOptions(validityPeriodPresets, 'Set custom duration')}
-            theme={theme}
-            disabled={!hotspot.enabled}
-          />
-        </div>
-        {validityPreset === 'custom' && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="space-y-2"
-          >
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input 
-                value={hotspot.validityPeriod?.value || ""} 
-                onChange={(e) => handleInputChange('validityPeriod', 'value', e.target.value)} 
-                className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-                placeholder="Enter duration value" 
-                required 
-                disabled={!hotspot.enabled}
-              />
-              <div className="w-full sm:w-auto">
-                {renderUnitDropdown('validityPeriod', hotspot.validityPeriod?.unit, onNestedChange, ['Hours', 'Days', 'Weeks', 'Months'])}
-              </div>
-            </div>
-            <p className="text-xs text-gray-500">
-              Set the custom duration for this plan
-            </p>
-          </motion.div>
-        )}
-        <p className="text-xs text-gray-500 mt-1">How long the plan remains active after activation</p>
-      </div>
-
-      {/* Data Limit */}
-      <div className="mb-6">
-        <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
-          Total Data Allowance <span className="text-red-500">*</span>
-        </label>
-        <div className="mb-2">
-          <EnhancedSelect
-            value={dataLimitPreset}
-            onChange={handleDataLimitPreset}
-            options={createPresetOptions(dataLimitPresets, 'Set custom data amount')}
-            theme={theme}
-            disabled={!hotspot.enabled}
-          />
-        </div>
-        {dataLimitPreset === 'custom' && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="space-y-2"
-          >
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input 
-                value={hotspot.dataLimit?.value || ""} 
-                onChange={(e) => handleInputChange('dataLimit', 'value', e.target.value)} 
-                className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-                placeholder="Enter data amount" 
-                required 
-                disabled={!hotspot.enabled}
-              />
-              <div className="w-full sm:w-auto">
-                {renderUnitDropdown('dataLimit', hotspot.dataLimit?.unit, onNestedChange, ['MB', 'GB', 'TB', 'Unlimited'])}
-              </div>
-            </div>
-            <p className="text-xs text-gray-500">
-              Set the custom data limit for this plan
-            </p>
-          </motion.div>
-        )}
-        <p className="text-xs text-gray-500 mt-1">Total data available for the entire plan duration</p>
-        {errors.hotspot_dataLimit && (
-          <p className="text-red-500 text-xs mt-1 flex items-center">
-            <AlertCircle className="w-3 h-3 mr-1" />
-            {errors.hotspot_dataLimit}
-          </p>
-        )}
-      </div>
-
-      {/* Usage Limit */}
-      <div>
-        <label className={`block text-sm font-medium mb-2 ${themeClasses.text.primary}`}>
-          <Clock className="w-4 h-4 inline mr-1" />
-          Daily Time Limit <span className="text-red-500">*</span>
-        </label>
-        <div className="mb-2">
-          <EnhancedSelect
-            value={usageLimitPreset}
-            onChange={handleUsageLimitPreset}
-            options={createPresetOptions(usageLimitPresets, 'Set custom hours')}
-            theme={theme}
-            disabled={!hotspot.enabled}
-          />
-        </div>
-        {usageLimitPreset === 'custom' && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="space-y-2"
-          >
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input 
-                value={hotspot.usageLimit?.value || ""} 
-                onChange={(e) => handleInputChange('usageLimit', 'value', e.target.value)} 
-                className={`flex-1 px-3 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-                placeholder="Enter hours per day" 
-                required 
-                disabled={!hotspot.enabled}
-              />
-              <div className="w-full sm:w-auto">
-                {renderUnitDropdown('usageLimit', hotspot.usageLimit?.unit, onNestedChange, ['Hours', 'Unlimited'])}
-              </div>
-            </div>
-            <p className="text-xs text-gray-500">
-              Set the custom daily usage limit in hours
-            </p>
-          </motion.div>
-        )}
-        <p className="text-xs text-gray-500 mt-1">Maximum connection time allowed per day</p>
-        {errors.hotspot_usageLimit && (
-          <p className="text-red-500 text-xs mt-1 flex items-center">
-            <AlertCircle className="w-3 h-3 mr-1" />
-            {errors.hotspot_usageLimit}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-
-  // Render security & management features
-  const renderSecurityFeatures = () => (
-    <div className={`p-4 rounded-lg border ${themeClasses.border.light} ${theme === 'dark' ? 'bg-green-900/10' : 'bg-green-50'}`}>
-      <h4 className="text-md font-semibold mb-4 text-green-700 dark:text-green-300 flex items-center">
-        <Shield className="w-4 h-4 mr-2" />
-        Security & Device Management
-      </h4>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-        {/* Maximum Devices */}
-        <div>
-          <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-            <Users className="w-4 h-4 inline mr-1" />
-            Maximum Connected Devices
-          </label>
-          <EnhancedSelect
-            value={hotspot.maxDevices ?? 0}
-            onChange={(value) => onChange('hotspot', 'maxDevices', parseInt(value, 10) || 0)}
-            options={getSafeDeviceLimitOptions()}
-            placeholder="Select device limit"
-            theme={theme}
-            disabled={!hotspot.enabled}
-          />
-          <p className="text-xs text-gray-500 mt-1">Limit simultaneous connections</p>
-        </div>
-
-        {/* Session Timeout */}
-        <div>
-          <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-            <Clock className="w-4 h-4 inline mr-1" />
-            Session Timeout
-          </label>
-          <EnhancedSelect
-            value={hotspot.sessionTimeout}
-            onChange={(value) => onChange('hotspot', 'sessionTimeout', parseInt(value, 10))}
-            options={getSafeTimeoutOptions(sessionTimeoutOptions)}
-            theme={theme}
-            disabled={!hotspot.enabled}
-          />
-          <p className="text-xs text-gray-500 mt-1">Forces reconnection for security</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 mt-4">
-        {/* Idle Timeout */}
-        <div>
-          <label className={`block text-sm font-medium mb-1 ${themeClasses.text.primary}`}>
-            Idle Timeout
-          </label>
-          <EnhancedSelect
-            value={hotspot.idleTimeout}
-            onChange={(value) => onChange('hotspot', 'idleTimeout', parseInt(value, 10))}
-            options={getSafeTimeoutOptions(idleTimeoutOptions)}
-            theme={theme}
-            disabled={!hotspot.enabled}
-          />
-          <p className="text-xs text-gray-500 mt-1">Disconnects after inactivity</p>
-        </div>
-
-        {/* MAC Binding */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg gap-2">
-          <div className="flex-1">
-            <label className={`block text-sm font-medium ${themeClasses.text.primary}`}>
-              <Smartphone className="w-4 h-4 inline mr-1" />
-              Device Lock (MAC Binding)
-            </label>
-            <p className="text-xs text-gray-500 mt-1">
-              Restrict access to specific devices only
-            </p>
-          </div>
-          <div 
-            onClick={() => hotspot.enabled && onChange('hotspot', 'macBinding', !hotspot.macBinding)} 
-            className={`relative inline-flex items-center h-6 w-11 rounded-full cursor-pointer transition-colors duration-200 ease-in-out flex-shrink-0 ${
-              !hotspot.enabled 
-                ? 'cursor-not-allowed opacity-50 bg-gray-400' 
-                : hotspot.macBinding 
-                  ? 'bg-green-600'
-                  : theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'
-            }`}
-          >
-            <span className={`inline-block h-4 w-4 transform bg-white rounded-full shadow-md transition-transform duration-200 ease-in-out ${
-              hotspot.macBinding ? "translate-x-6" : "translate-x-1"
-            }`} />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Render plan summary
-  const renderPlanSummary = () => (
-    <div className={`p-4 rounded-lg border ${themeClasses.border.light} ${theme === 'dark' ? 'bg-indigo-900/10' : 'bg-indigo-50'}`}>
-      <h4 className="text-md font-semibold mb-4 text-indigo-700 dark:text-indigo-300 flex items-center">
-        <Calendar className="w-4 h-4 mr-2" />
-        Plan Summary
-      </h4>
-      <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3">
-        <div className={`text-center p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-          <Calendar className="w-5 h-5 text-blue-600 mx-auto mb-1" />
-          <div className="text-sm font-semibold truncate">{planSummary.validity}</div>
-          <div className="text-xs text-gray-500">Duration</div>
-        </div>
-        <div className={`text-center p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-          <Database className="w-5 h-5 text-green-600 mx-auto mb-1" />
-          <div className="text-sm font-semibold truncate">{planSummary.dataLimit}</div>
-          <div className="text-xs text-gray-500">Total Data</div>
-        </div>
-        <div className={`text-center p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-          <Clock className="w-5 h-5 text-purple-600 mx-auto mb-1" />
-          <div className="text-sm font-semibold truncate">{planSummary.usageLimit}</div>
-          <div className="text-xs text-gray-500">Daily Time</div>
-        </div>
-        <div className={`text-center p-3 rounded-lg flex flex-col items-center justify-center ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-          <Users className="w-5 h-5 text-orange-600 mx-auto mb-1" />
-          <div className="text-sm font-semibold flex items-center justify-center gap-1">
-            {planSummary.maxDevices === 'Unlimited' && <InfinityIcon className="w-4 h-4" />}
-            <span className="truncate">{planSummary.maxDevices}</span>
-          </div>
-          <div className="text-xs text-gray-500">Max Devices</div>
-        </div>
-        <div className={`text-center p-3 rounded-lg flex flex-col items-center justify-center ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-          <Gauge className="w-5 h-5 text-teal-600 mx-auto mb-1" />
-          <div className="text-sm font-semibold flex items-center justify-center gap-1">
-            {planSummary.bandwidth === 'Unlimited' && <InfinityIcon className="w-4 h-4" />}
-            <span className="truncate">{planSummary.bandwidth}</span>
-          </div>
-          <div className="text-xs text-gray-500">Bandwidth</div>
-        </div>
-        <div className={`text-center p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-          <Shield className="w-5 h-5 text-red-600 mx-auto mb-1" />
-          <div className="text-sm font-semibold truncate">{hotspot.macBinding ? 'Enabled' : 'Disabled'}</div>
-          <div className="text-xs text-gray-500">Device Lock</div>
-        </div>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className={`p-4 lg:p-6 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg lg:text-xl font-semibold flex items-center">
-          <Wifi className="w-5 h-5 mr-2 text-blue-600" />
-          Hotspot Configuration
-        </h3>
-        <div className="flex items-center">
-          <label className={`block text-sm font-medium mr-4 ${themeClasses.text.primary}`}>
-            Enable Hotspot
-          </label>
-          <div 
-            onClick={handleToggle}
-            className={`relative inline-flex items-center h-6 w-11 rounded-full cursor-pointer transition-colors duration-200 ease-in-out ${
-              hotspot.enabled 
-                ? 'bg-blue-600'
-                : theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'
-            }`}
-          >
-            <span className={`inline-block h-4 w-4 transform bg-white rounded-full shadow-md transition-transform duration-200 ease-in-out ${
-              hotspot.enabled ? "translate-x-6" : "translate-x-1"
-            }`} />
-          </div>
-        </div>
-      </div>
-
-      {hotspot.enabled ? (
-        <div className="space-y-6 lg:space-y-8">
-          {renderSpeedConfiguration()}
-          {renderDataUsageLimits()}
-          {renderSecurityFeatures()}
-          {renderPlanSummary()}
-        </div>
-      ) : (
-        <div className={`p-8 text-center rounded-lg ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
-          <Wifi className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-          <h4 className="text-lg font-medium mb-2 text-gray-600">Hotspot Disabled</h4>
-          <p className="text-sm text-gray-500 mb-4">
-            Enable Hotspot to configure wireless access settings for this plan.
-          </p>
-          <button
-            onClick={handleToggle}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Enable Hotspot
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default React.memo(HotspotConfiguration);
+// export default React.memo(HotspotConfiguration);

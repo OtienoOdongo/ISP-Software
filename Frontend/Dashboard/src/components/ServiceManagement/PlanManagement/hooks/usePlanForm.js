@@ -2,340 +2,80 @@
 
 
 
+
+
+
 // import { useState, useCallback } from "react";
-// import { deepClone, validateRequired, validateNumber, validatePrice } from "../../Shared/utils"
-
-// // Initial form state with clear separation
-// export const getInitialFormState = () => ({
-//   // Basic details
-//   planType: "Paid",
-//   name: "",
-//   price: "",
-//   active: true,
-//   category: "Residential",
-//   description: "",
-  
-//   // Access type selection (NEW: Clear separation)
-//   accessType: "hotspot", // "hotspot" or "pppoe"
-  
-//   // Access methods configuration - now only one is active at a time
-//   accessMethods: {
-//     hotspot: {
-//       enabled: true,
-//       downloadSpeed: { value: "", unit: "Mbps" },
-//       uploadSpeed: { value: "", unit: "Mbps" },
-//       dataLimit: { value: "", unit: "GB" },
-//       usageLimit: { value: "", unit: "Hours" },
-//       bandwidthLimit: 0,
-      
-//       // NEW FEATURES
-//       maxDevices: 1, // Maximum devices per user
-//       sessionTimeout: 86400, // Maximum continuous connection time
-//       idleTimeout: 300, // Disconnect after inactivity
-//       validityPeriod: { value: 720, unit: "Hours" }, // Plan expiry
-//       macBinding: false, // MAC address binding
-//     },
-//     pppoe: {
-//       enabled: false,
-//       downloadSpeed: { value: "", unit: "Mbps" },
-//       uploadSpeed: { value: "", unit: "Mbps" },
-//       dataLimit: { value: "", unit: "GB" },
-//       usageLimit: { value: "", unit: "Hours" },
-//       bandwidthLimit: 0,
-      
-//       // NEW FEATURES
-//       maxDevices: 1,
-//       sessionTimeout: 86400,
-//       idleTimeout: 300,
-//       validityPeriod: { value: 720, unit: "Hours" },
-//       macBinding: false,
-//       ipPool: "pppoe-pool-1", // IP pool assignment
-//       serviceName: "",
-//       mtu: 1492,
-//       dnsServers: ["8.8.8.8", "1.1.1.1"],
-//     }
-//   },
-  
-//   // Shared settings
-//   purchases: 0,
-//   createdAt: new Date().toISOString().split("T")[0],
-//   client_sessions: {},
-//   priority_level: 4,
-//   router_specific: false,
-//   allowed_routers_ids: [],
-//   FUP_policy: "",
-//   FUP_threshold: 80,
-// });
-
-// const usePlanForm = (initialState = getInitialFormState()) => {
-//   const [form, setForm] = useState(deepClone(initialState));
-//   const [errors, setErrors] = useState({});
-//   const [touched, setTouched] = useState({});
-
-//   const handleChange = useCallback((e) => {
-//     const { name, value, type, checked } = e.target;
-//     setForm(prev => ({ 
-//       ...prev, 
-//       [name]: type === 'checkbox' ? checked : value 
-//     }));
-    
-//     // Clear error when user starts typing
-//     if (errors[name]) {
-//       setErrors(prev => ({ ...prev, [name]: '' }));
-//     }
-//   }, [errors]);
-
-//   // NEW: Handle access type change with proper separation
-//   const handleAccessTypeChange = useCallback((accessType) => {
-//     setForm(prev => {
-//       const newForm = { ...prev, accessType };
-      
-//       // Enable the selected access method and disable the other
-//       newForm.accessMethods = {
-//         hotspot: {
-//           ...prev.accessMethods.hotspot,
-//           enabled: accessType === 'hotspot'
-//         },
-//         pppoe: {
-//           ...prev.accessMethods.pppoe,
-//           enabled: accessType === 'pppoe'
-//         }
-//       };
-      
-//       return newForm;
-//     });
-//   }, []);
-
-//   const handleNestedChange = useCallback((field, key, value) => {
-//     setForm(prev => ({ 
-//       ...prev, 
-//       [field]: { ...prev[field], [key]: value } 
-//     }));
-//   }, []);
-
-//   const handleAccessMethodChange = useCallback((method, field, value) => {
-//     setForm(prev => ({
-//       ...prev,
-//       accessMethods: {
-//         ...prev.accessMethods,
-//         [method]: {
-//           ...prev.accessMethods[method],
-//           [field]: value
-//         }
-//       }
-//     }));
-//   }, []);
-
-//   const handleAccessMethodNestedChange = useCallback((method, parent, key, value) => {
-//     setForm(prev => ({
-//       ...prev,
-//       accessMethods: {
-//         ...prev.accessMethods,
-//         [method]: {
-//           ...prev.accessMethods[method],
-//           [parent]: {
-//             ...prev.accessMethods[method][parent],
-//             [key]: value
-//           }
-//         }
-//       }
-//     }));
-//   }, []);
-
-//   const handleFieldBlur = useCallback((field) => {
-//     if (!touched[field]) {
-//       setTouched(prev => ({ ...prev, [field]: true }));
-//     }
-//   }, [touched]);
-
-//   const validateField = useCallback((name, value) => {
-//     const newErrors = { ...errors };
-    
-//     switch (name) {
-//       case 'name':
-//         newErrors[name] = validateRequired(value, 'Plan name');
-//         break;
-//       case 'price':
-//         newErrors[name] = validatePrice(value, form.planType);
-//         break;
-//       case 'category':
-//         newErrors[name] = validateRequired(value, 'Category');
-//         break;
-//       default:
-//         break;
-//     }
-    
-//     setErrors(newErrors);
-//     return !newErrors[name];
-//   }, [errors, form.planType]);
-
-//   const validateForm = useCallback(() => {
-//     const newErrors = {};
-    
-//     // Basic validations
-//     newErrors.name = validateRequired(form.name, 'Plan name');
-//     newErrors.category = validateRequired(form.category, 'Category');
-//     newErrors.price = validatePrice(form.price, form.planType);
-    
-//     // Access method validations - only validate the enabled method
-//     const enabledMethod = form.accessType;
-//     const config = form.accessMethods[enabledMethod];
-    
-//     if (config.enabled) {
-//       newErrors[`${enabledMethod}_downloadSpeed`] = validateRequired(
-//         config.downloadSpeed.value, 
-//         `${enabledMethod.toUpperCase()} Download Speed`
-//       );
-//       newErrors[`${enabledMethod}_uploadSpeed`] = validateRequired(
-//         config.uploadSpeed.value, 
-//         `${enabledMethod.toUpperCase()} Upload Speed`
-//       );
-//       newErrors[`${enabledMethod}_dataLimit`] = validateRequired(
-//         config.dataLimit.value, 
-//         `${enabledMethod.toUpperCase()} Data Limit`
-//       );
-//       newErrors[`${enabledMethod}_usageLimit`] = validateRequired(
-//         config.usageLimit.value, 
-//         `${enabledMethod.toUpperCase()} Usage Limit`
-//       );
-//     }
-
-//     // Remove empty errors
-//     Object.keys(newErrors).forEach(key => {
-//       if (!newErrors[key]) delete newErrors[key];
-//     });
-
-//     setErrors(newErrors);
-//     return Object.keys(newErrors).length === 0;
-//   }, [form]);
-
-//   const resetForm = useCallback(() => {
-//     setForm(deepClone(initialState));
-//     setErrors({});
-//     setTouched({});
-//   }, [initialState]);
-
-//   const setFormData = useCallback((data) => {
-//     setForm(deepClone(data));
-//   }, []);
-
-//   return {
-//     form,
-//     setForm: setFormData,
-//     errors,
-//     touched,
-//     setTouched,
-//     handleChange,
-//     handleAccessTypeChange, // NEW: Export access type handler
-//     handleNestedChange,
-//     handleAccessMethodChange,
-//     handleAccessMethodNestedChange,
-//     handleFieldBlur,
-//     validateField,
-//     validateForm,
-//     resetForm,
-//   };
-// };
-
-// export default usePlanForm;
-
-
-
-
-
-
-
-
-
-
-
-// import { useState, useCallback, useEffect } from "react";
 // import { 
 //   deepClone, 
 //   validateRequired, 
-//   validateNumber, 
 //   validatePrice,
 //   validateTimeVariant as validateTimeVariantUtil
 // } from "../../Shared/utils.js";
-// import { 
-//   planTypes, 
-//   categories, 
-//   priorityOptions,
-//   clientTypeRestrictions
-// } from "../../Shared/constant";
 
-// // Initial form state that matches backend structure
+// // Initial form state with NO default values
 // export const getInitialFormState = () => ({
-//   // Basic details - matches backend field names
-//   plan_type: "paid",
+//   // Basic details - all empty strings or null, no defaults
+//   plan_type: "",
 //   name: "",
-//   price: "0",
+//   price: "", // NO DEFAULT VALUE
 //   active: true,
-//   category: "Residential",
+//   category: "",
 //   description: "",
   
-//   // Access type selection
-//   accessType: "hotspot", // "hotspot", "pppoe", or "both"
-  
-//   // Access methods configuration 
+//   // Access methods configuration
 //   access_methods: {
 //     hotspot: {
 //       enabled: true,
-//       downloadSpeed: { value: "10", unit: "Mbps" },
-//       uploadSpeed: { value: "5", unit: "Mbps" },
-//       dataLimit: { value: "10", unit: "GB" },
-//       usageLimit: { value: "24", unit: "Hours" },
-//       bandwidthLimit: 0,
-//       maxDevices: 1,
-//       sessionTimeout: 86400,
-//       idleTimeout: 300,
-//       validityPeriod: { value: "30", unit: "Days" },
-//       macBinding: false,
-     
+//       download_speed: { value: "", unit: "Mbps" },
+//       upload_speed: { value: "", unit: "Mbps" },
+//       data_limit: { value: "", unit: "GB" },
+//       usage_limit: { value: "", unit: "Hours" },
+//       bandwidth_limit: "",
+//       max_devices: "", // Optional
+//       session_timeout: "", // Optional
+//       idle_timeout: "", // Optional
+//       validity_period: { value: "", unit: "Days" },
+//       mac_binding: false, // Optional
 //     },
 //     pppoe: {
 //       enabled: false,
-//       downloadSpeed: { value: "10", unit: "Mbps" },
-//       uploadSpeed: { value: "5", unit: "Mbps" },
-//       dataLimit: { value: "10", unit: "GB" },
-//       usageLimit: { value: "24", unit: "Hours" },
-//       bandwidthLimit: 0,
-//       maxDevices: 1,
-//       sessionTimeout: 86400,
-//       idleTimeout: 300,
-//       validityPeriod: { value: "30", unit: "Days" },
-//       macBinding: false,
-//       ipPool: "pppoe-pool-1",
-//       serviceName: "",
-//       mtu: 1492,
-      
+//       download_speed: { value: "", unit: "Mbps" },
+//       upload_speed: { value: "", unit: "Mbps" },
+//       data_limit: { value: "", unit: "GB" },
+//       usage_limit: { value: "", unit: "Hours" },
+//       bandwidth_limit: "",
+//       max_devices: "", // Optional
+//       session_timeout: "", // Optional
+//       idle_timeout: "", // Optional
+//       validity_period: { value: "", unit: "Days" },
+//       mac_binding: false, // Optional
+//       ip_pool: "", // Optional
+//       service_name: "", // Optional
+//       mtu: "", // Optional
 //     }
 //   },
   
+//   // Access type selection (frontend only)
+//   accessType: "hotspot",
+  
 //   // Time variant configuration
-//   time_variant: null,
 //   time_variant_id: null,
   
 //   // Advanced settings
-//   priority_level: 4,
+//   priority_level: "",
 //   router_specific: false,
 //   allowed_routers_ids: [],
-//   FUP_policy: "",
-//   FUP_threshold: 80,
+//   fup_policy: "",
+//   fup_threshold: 80,
   
 //   // Template reference
-//   template: null,
+//   template_id: null,
   
-//   // Pricing references
-//   pricing_matrix_id: null,
-//   discount_rule_ids: [],
-  
-//   // Read-only fields (for display only)
+//   // Read-only fields
 //   purchases: 0,
 //   created_at: null,
 //   updated_at: null,
-  
-//   // Client sessions
 //   client_sessions: {},
 // });
 
@@ -345,142 +85,85 @@
 //   const [touched, setTouched] = useState({});
 //   const [isLoading, setIsLoading] = useState(false);
 
-//   // Initialize form from backend data
+//   // Initialize from backend data
 //   const initializeFromBackend = useCallback((backendData) => {
 //     if (!backendData) {
 //       resetForm();
 //       return;
 //     }
 
+//     const planData = backendData.data || backendData;
+
 //     const normalizedForm = {
-//       // Map backend fields to form fields
-//       plan_type: backendData.planType || backendData.plan_type || "paid",
-//       name: backendData.name || "",
-//       price: backendData.price?.toString() || "",
-//       active: backendData.active !== false,
-//       category: backendData.category || "Residential",
-//       description: backendData.description || "",
+//       // Basic fields
+//       plan_type: planData.plan_type || "",
+//       name: planData.name || "",
+//       price: planData.price?.toString() || "",
+//       active: planData.active !== false,
+//       category: planData.category || "",
+//       description: planData.description || "",
       
-//       // Determine access type from enabled methods
+//       // Access type from enabled methods
 //       accessType: (() => {
-//         const hotspotEnabled = backendData.accessMethods?.hotspot?.enabled || 
-//                               backendData.access_methods?.hotspot?.enabled;
-//         const pppoeEnabled = backendData.accessMethods?.pppoe?.enabled || 
-//                             backendData.access_methods?.pppoe?.enabled;
+//         const hotspotEnabled = planData.access_methods?.hotspot?.enabled || false;
+//         const pppoeEnabled = planData.access_methods?.pppoe?.enabled || false;
         
 //         if (hotspotEnabled && pppoeEnabled) return "both";
 //         if (pppoeEnabled) return "pppoe";
 //         return "hotspot";
 //       })(),
       
-//       // Access methods - prioritize backend structure
+//       // Access methods
 //       access_methods: {
 //         hotspot: {
-//           enabled: backendData.accessMethods?.hotspot?.enabled || 
-//                   backendData.access_methods?.hotspot?.enabled || 
-//                   false,
-//           downloadSpeed: backendData.accessMethods?.hotspot?.downloadSpeed || 
-//                         backendData.access_methods?.hotspot?.downloadSpeed || 
-//                         { value: "10", unit: "Mbps" },
-//           uploadSpeed: backendData.accessMethods?.hotspot?.uploadSpeed || 
-//                       backendData.access_methods?.hotspot?.uploadSpeed || 
-//                       { value: "5", unit: "Mbps" },
-//           dataLimit: backendData.accessMethods?.hotspot?.dataLimit || 
-//                     backendData.access_methods?.hotspot?.dataLimit || 
-//                     { value: "10", unit: "GB" },
-//           usageLimit: backendData.accessMethods?.hotspot?.usageLimit || 
-//                      backendData.access_methods?.hotspot?.usageLimit || 
-//                      { value: "24", unit: "Hours" },
-//           bandwidthLimit: backendData.accessMethods?.hotspot?.bandwidthLimit || 
-//                         backendData.access_methods?.hotspot?.bandwidthLimit || 
-//                         0,
-//           maxDevices: backendData.accessMethods?.hotspot?.maxDevices || 
-//                      backendData.access_methods?.hotspot?.maxDevices || 
-//                      1,
-//           sessionTimeout: backendData.accessMethods?.hotspot?.sessionTimeout || 
-//                          backendData.access_methods?.hotspot?.sessionTimeout || 
-//                          86400,
-//           idleTimeout: backendData.accessMethods?.hotspot?.idleTimeout || 
-//                       backendData.access_methods?.hotspot?.idleTimeout || 
-//                       300,
-//           validityPeriod: backendData.accessMethods?.hotspot?.validityPeriod || 
-//                          backendData.access_methods?.hotspot?.validityPeriod || 
-//                          { value: "30", unit: "Days" },
-//           macBinding: backendData.accessMethods?.hotspot?.macBinding || 
-//                      backendData.access_methods?.hotspot?.macBinding || 
-//                      false,
+//           enabled: planData.access_methods?.hotspot?.enabled || false,
+//           download_speed: planData.access_methods?.hotspot?.download_speed || { value: "", unit: "Mbps" },
+//           upload_speed: planData.access_methods?.hotspot?.upload_speed || { value: "", unit: "Mbps" },
+//           data_limit: planData.access_methods?.hotspot?.data_limit || { value: "", unit: "GB" },
+//           usage_limit: planData.access_methods?.hotspot?.usage_limit || { value: "", unit: "Hours" },
+//           bandwidth_limit: planData.access_methods?.hotspot?.bandwidth_limit || "",
+//           max_devices: planData.access_methods?.hotspot?.max_devices || "",
+//           session_timeout: planData.access_methods?.hotspot?.session_timeout || "",
+//           idle_timeout: planData.access_methods?.hotspot?.idle_timeout || "",
+//           validity_period: planData.access_methods?.hotspot?.validity_period || { value: "", unit: "Days" },
+//           mac_binding: planData.access_methods?.hotspot?.mac_binding || false,
 //         },
 //         pppoe: {
-//           enabled: backendData.accessMethods?.pppoe?.enabled || 
-//                   backendData.access_methods?.pppoe?.enabled || 
-//                   false,
-//           downloadSpeed: backendData.accessMethods?.pppoe?.downloadSpeed || 
-//                         backendData.access_methods?.pppoe?.downloadSpeed || 
-//                         { value: "10", unit: "Mbps" },
-//           uploadSpeed: backendData.accessMethods?.pppoe?.uploadSpeed || 
-//                       backendData.access_methods?.pppoe?.uploadSpeed || 
-//                       { value: "5", unit: "Mbps" },
-//           dataLimit: backendData.accessMethods?.pppoe?.dataLimit || 
-//                     backendData.access_methods?.pppoe?.dataLimit || 
-//                     { value: "10", unit: "GB" },
-//           usageLimit: backendData.accessMethods?.pppoe?.usageLimit || 
-//                      backendData.access_methods?.pppoe?.usageLimit || 
-//                      { value: "24", unit: "Hours" },
-//           bandwidthLimit: backendData.accessMethods?.pppoe?.bandwidthLimit || 
-//                         backendData.access_methods?.pppoe?.bandwidthLimit || 
-//                         0,
-//           maxDevices: backendData.accessMethods?.pppoe?.maxDevices || 
-//                      backendData.access_methods?.pppoe?.maxDevices || 
-//                      1,
-//           sessionTimeout: backendData.accessMethods?.pppoe?.sessionTimeout || 
-//                          backendData.access_methods?.pppoe?.sessionTimeout || 
-//                          86400,
-//           idleTimeout: backendData.accessMethods?.pppoe?.idleTimeout || 
-//                       backendData.access_methods?.pppoe?.idleTimeout || 
-//                       300,
-//           validityPeriod: backendData.accessMethods?.pppoe?.validityPeriod || 
-//                          backendData.access_methods?.pppoe?.validityPeriod || 
-//                          { value: "30", unit: "Days" },
-//           macBinding: backendData.accessMethods?.pppoe?.macBinding || 
-//                      backendData.access_methods?.pppoe?.macBinding || 
-//                      false,
-//           ipPool: backendData.accessMethods?.pppoe?.ipPool || 
-//                  backendData.access_methods?.pppoe?.ipPool || 
-//                  "pppoe-pool-1",
-//           serviceName: backendData.accessMethods?.pppoe?.serviceName || 
-//                       backendData.access_methods?.pppoe?.serviceName || 
-//                       "",
-//           mtu: backendData.accessMethods?.pppoe?.mtu || 
-//                backendData.access_methods?.pppoe?.mtu || 
-//                1492,
+//           enabled: planData.access_methods?.pppoe?.enabled || false,
+//           download_speed: planData.access_methods?.pppoe?.download_speed || { value: "", unit: "Mbps" },
+//           upload_speed: planData.access_methods?.pppoe?.upload_speed || { value: "", unit: "Mbps" },
+//           data_limit: planData.access_methods?.pppoe?.data_limit || { value: "", unit: "GB" },
+//           usage_limit: planData.access_methods?.pppoe?.usage_limit || { value: "", unit: "Hours" },
+//           bandwidth_limit: planData.access_methods?.pppoe?.bandwidth_limit || "",
+//           max_devices: planData.access_methods?.pppoe?.max_devices || "",
+//           session_timeout: planData.access_methods?.pppoe?.session_timeout || "",
+//           idle_timeout: planData.access_methods?.pppoe?.idle_timeout || "",
+//           validity_period: planData.access_methods?.pppoe?.validity_period || { value: "", unit: "Days" },
+//           mac_binding: planData.access_methods?.pppoe?.mac_binding || false,
+//           ip_pool: planData.access_methods?.pppoe?.ip_pool || "",
+//           service_name: planData.access_methods?.pppoe?.service_name || "",
+//           mtu: planData.access_methods?.pppoe?.mtu || "",
 //         }
 //       },
       
 //       // Time variant
-//       time_variant: backendData.time_variant || null,
-//       time_variant_id: backendData.time_variant_id || null,
+//       time_variant_id: planData.time_variant_id || planData.time_variant?.id || null,
       
 //       // Advanced settings
-//       priority_level: backendData.priority_level || 4,
-//       router_specific: backendData.router_specific || false,
-//       allowed_routers_ids: backendData.allowed_routers_ids || 
-//                           backendData.allowed_routers?.map(r => r.id) || 
-//                           [],
-//       FUP_policy: backendData.FUP_policy || "",
-//       FUP_threshold: backendData.FUP_threshold || 80,
+//       priority_level: planData.priority_level || "",
+//       router_specific: planData.router_specific || false,
+//       allowed_routers_ids: planData.allowed_routers_ids || [],
+//       fup_policy: planData.fup_policy || "",
+//       fup_threshold: planData.fup_threshold || 80,
       
 //       // Template
-//       template: backendData.template || null,
-      
-//       // Pricing
-//       pricing_matrix_id: backendData.pricing_matrix_id || null,
-//       discount_rule_ids: backendData.discount_rule_ids || [],
+//       template_id: planData.template_id || planData.template?.id || null,
       
 //       // Read-only fields
-//       purchases: backendData.purchases || 0,
-//       created_at: backendData.created_at || null,
-//       updated_at: backendData.updated_at || null,
-//       client_sessions: backendData.client_sessions || {},
+//       purchases: planData.purchases || 0,
+//       created_at: planData.created_at || null,
+//       updated_at: planData.updated_at || null,
+//       client_sessions: planData.client_sessions || {},
 //     };
 
 //     setForm(normalizedForm);
@@ -488,64 +171,97 @@
 //     setTouched({});
 //   }, []);
 
-//   // Handle basic field changes
+//   // Handle field changes
 //   const handleChange = useCallback((field, value) => {
-//     setForm(prev => ({ 
-//       ...prev, 
-//       [field]: value 
-//     }));
+//     setForm(prev => {
+//       const newForm = { ...prev, [field]: value };
+      
+//       // Special handling for plan_type changes
+//       if (field === 'plan_type') {
+//         // User selected Free_trial
+//         if (value === 'Free_trial') {
+//           console.log('🔧 Free trial selected - auto-setting required fields');
+//           newForm.price = "0.00";
+//           newForm.category = "Promotional";
+          
+//           // Ensure hotspot is enabled for free trial
+//           if (newForm.access_methods) {
+//             newForm.access_methods.hotspot.enabled = true;
+//             newForm.access_methods.pppoe.enabled = false;
+//             newForm.accessType = "hotspot";
+//           }
+//         } 
+//         // User selected Promotional
+//         else if (value === 'Promotional') {
+//           console.log('🔧 Promotional selected - auto-setting category');
+//           newForm.category = "Promotional";
+//         }
+//         // User selected Paid
+//         else if (value === 'Paid') {
+//           console.log('🔧 Paid selected - no auto-settings');
+//         }
+//       }
+      
+//       return newForm;
+//     });
     
-//     // Clear error when user starts typing
+//     // Clear error for this field
 //     if (errors[field]) {
 //       setErrors(prev => ({ ...prev, [field]: '' }));
 //     }
 //   }, [errors]);
 
-//   // Handle input field changes (for form inputs)
-//   const handleInputChange = useCallback((e) => {
-//     const { name, value, type, checked } = e.target;
-//     const fieldValue = type === 'checkbox' ? checked : value;
-    
-//     handleChange(name, fieldValue);
-//   }, [handleChange]);
-
-//   // Handle access type change - SIMPLIFIED for backend compatibility
+//   // Handle access type change
 //   const handleAccessTypeChange = useCallback((accessType) => {
 //     setForm(prev => {
-//       const newForm = { ...prev, accessType };
+//       const hotspotEnabled = accessType === 'hotspot' || accessType === 'both';
+//       const pppoeEnabled = accessType === 'pppoe' || accessType === 'both';
       
-//       // Update enabled status based on access type
-//       newForm.access_methods = {
-//         ...prev.access_methods,
-//         hotspot: {
-//           ...prev.access_methods.hotspot,
-//           enabled: accessType === 'hotspot' || accessType === 'both'
-//         },
-//         pppoe: {
-//           ...prev.access_methods.pppoe,
-//           enabled: accessType === 'pppoe' || accessType === 'both'
+//       // For free trial, enforce hotspot only
+//       const finalHotspotEnabled = prev.plan_type === 'Free_trial' ? true : hotspotEnabled;
+//       const finalPppoeEnabled = prev.plan_type === 'Free_trial' ? false : pppoeEnabled;
+      
+//       return {
+//         ...prev,
+//         accessType: prev.plan_type === 'Free_trial' ? 'hotspot' : accessType,
+//         access_methods: {
+//           ...prev.access_methods,
+//           hotspot: {
+//             ...prev.access_methods.hotspot,
+//             enabled: finalHotspotEnabled
+//           },
+//           pppoe: {
+//             ...prev.access_methods.pppoe,
+//             enabled: finalPppoeEnabled
+//           }
 //         }
 //       };
-      
-//       return newForm;
 //     });
 //   }, []);
 
-//   // Handle access method configuration changes
+//   // Handle access method changes
 //   const handleAccessMethodChange = useCallback((method, field, value) => {
-//     setForm(prev => ({
-//       ...prev,
-//       access_methods: {
-//         ...prev.access_methods,
-//         [method]: {
-//           ...prev.access_methods[method],
-//           [field]: value
-//         }
+//     setForm(prev => {
+//       // For free trial, prevent enabling PPPoE
+//       if (prev.plan_type === 'Free_trial' && method === 'pppoe' && field === 'enabled' && value === true) {
+//         console.log('⚠️ Cannot enable PPPoE for free trial plans');
+//         return prev;
 //       }
-//     }));
+      
+//       return {
+//         ...prev,
+//         access_methods: {
+//           ...prev.access_methods,
+//           [method]: {
+//             ...prev.access_methods[method],
+//             [field]: value
+//           }
+//         }
+//       };
+//     });
 //   }, []);
 
-//   // Handle nested access method changes (like downloadSpeed.value)
+//   // Handle nested access method changes
 //   const handleAccessMethodNestedChange = useCallback((method, parentField, key, value) => {
 //     setForm(prev => ({
 //       ...prev,
@@ -562,14 +278,6 @@
 //     }));
 //   }, []);
 
-//   // Handle time variant changes
-//   const handleTimeVariantChange = useCallback((timeVariantData) => {
-//     setForm(prev => ({
-//       ...prev,
-//       time_variant: timeVariantData
-//     }));
-//   }, []);
-
 //   // Set time variant ID
 //   const setTimeVariantId = useCallback((timeVariantId) => {
 //     setForm(prev => ({
@@ -578,61 +286,74 @@
 //     }));
 //   }, []);
 
+//   // Set template ID
+//   const setTemplateId = useCallback((templateId) => {
+//     setForm(prev => ({
+//       ...prev,
+//       template_id: templateId
+//     }));
+//   }, []);
+
 //   // Handle field blur
 //   const handleFieldBlur = useCallback((field) => {
 //     if (!touched[field]) {
 //       setTouched(prev => ({ ...prev, [field]: true }));
 //     }
-//   }, [touched]);
+//     validateField(field, form[field]);
+//   }, [touched, form]);
 
-//   // Validate a specific field
+//   // Validate field
 //   const validateField = useCallback((name, value) => {
 //     const newErrors = { ...errors };
-//     let isValid = true;
     
 //     switch (name) {
 //       case 'name':
 //         newErrors[name] = validateRequired(value, 'Plan name');
-//         isValid = !newErrors[name];
 //         break;
 //       case 'price':
 //         newErrors[name] = validatePrice(value, form.plan_type);
-//         isValid = !newErrors[name];
 //         break;
 //       case 'category':
 //         newErrors[name] = validateRequired(value, 'Category');
-//         isValid = !newErrors[name];
 //         break;
 //       case 'plan_type':
-//         if (value === 'free_trial' && parseFloat(form.price) > 0) {
-//           newErrors[name] = 'Free trial plans must have price set to 0';
-//           isValid = false;
-//         }
+//         newErrors[name] = validateRequired(value, 'Plan type');
+//         break;
+//       case 'priority_level':
+//         newErrors[name] = validateRequired(value, 'Priority level');
 //         break;
 //       default:
 //         break;
 //     }
     
-//     if (isValid && newErrors[name]) {
-//       delete newErrors[name];
-//     }
+//     // Remove empty errors
+//     Object.keys(newErrors).forEach(key => {
+//       if (!newErrors[key]) delete newErrors[key];
+//     });
     
 //     setErrors(newErrors);
-//     return isValid;
-//   }, [errors, form.plan_type, form.price]);
+//     return Object.keys(newErrors).length === 0;
+//   }, [errors, form.plan_type]);
 
-//   // Validate entire form
+//   // FIXED: Validate entire form - only mandatory fields are required
+//   // Security & device management fields are now optional
 //   const validateForm = useCallback(() => {
 //     const newErrors = {};
     
-//     // Basic validations
+//     // ================================================================
+//     // MANDATORY FIELDS - These are always required
+//     // ================================================================
+    
+//     // Basic required fields
 //     newErrors.name = validateRequired(form.name, 'Plan name');
 //     newErrors.category = validateRequired(form.category, 'Category');
+//     newErrors.plan_type = validateRequired(form.plan_type, 'Plan type');
 //     newErrors.price = validatePrice(form.price, form.plan_type);
+//     newErrors.priority_level = validateRequired(form.priority_level, 'Priority level');
     
-//     // Free Trial validation
-//     if (form.plan_type === 'free_trial') {
-//       if (parseFloat(form.price) > 0) {
+//     // Free trial specific validations
+//     if (form.plan_type === 'Free_trial') {
+//       if (parseFloat(form.price || 0) > 0) {
 //         newErrors.price = 'Free Trial plans must have price set to 0';
 //       }
 //       if (form.router_specific) {
@@ -641,9 +362,20 @@
 //       if (form.priority_level > 4) {
 //         newErrors.priority_level = 'Free Trial plans cannot have premium priority levels';
 //       }
+//       if (form.access_methods?.pppoe?.enabled) {
+//         newErrors.access_methods = 'Free Trial plans cannot use PPPoE access method';
+//       }
 //     }
     
-//     // Access methods validation
+//     // Promotional validation
+//     if (form.plan_type === 'Promotional' && form.category !== 'Promotional') {
+//       newErrors.category = 'Promotional plans should have Promotional category';
+//     }
+    
+//     // ================================================================
+//     // ACCESS METHODS - At least one must be enabled
+//     // ================================================================
+    
 //     const enabledMethods = [];
 //     if (form.access_methods.hotspot.enabled) enabledMethods.push('hotspot');
 //     if (form.access_methods.pppoe.enabled) enabledMethods.push('pppoe');
@@ -652,52 +384,76 @@
 //       newErrors.access_methods = 'At least one access method must be enabled';
 //     }
     
-//     // Validate each enabled access method
+//     // ================================================================
+//     // REQUIRED FIELDS FOR ENABLED ACCESS METHODS
+//     // These are the core plan features that MUST be specified
+//     // ================================================================
+    
 //     enabledMethods.forEach(method => {
 //       const config = form.access_methods[method];
       
-//       // Required technical fields
-//       const requiredFields = ['downloadSpeed', 'uploadSpeed', 'dataLimit', 'usageLimit'];
-//       requiredFields.forEach(field => {
-//         if (!config[field]?.value) {
-//           newErrors[`${method}_${field}`] = `${method.toUpperCase()} ${field} is required`;
-//         }
-//       });
-      
-//       // Numeric validations
-//       if (config.maxDevices && (config.maxDevices < 1 || config.maxDevices > 10)) {
-//         newErrors[`${method}_maxDevices`] = 'Max devices must be between 1 and 10';
+//       // Speed settings are required
+//       if (!config.download_speed?.value && config.download_speed?.value !== 0) {
+//         newErrors[`${method}_download_speed`] = `${method.toUpperCase()} download speed is required`;
 //       }
       
-//       if (config.sessionTimeout && config.sessionTimeout < 300) {
-//         newErrors[`${method}_sessionTimeout`] = 'Session timeout must be at least 300 seconds (5 minutes)';
+//       if (!config.upload_speed?.value && config.upload_speed?.value !== 0) {
+//         newErrors[`${method}_upload_speed`] = `${method.toUpperCase()} upload speed is required`;
 //       }
       
-//       if (config.idleTimeout && config.idleTimeout < 60) {
-//         newErrors[`${method}_idleTimeout`] = 'Idle timeout must be at least 60 seconds (1 minute)';
+//       // Data limit is required
+//       if (!config.data_limit?.value && config.data_limit?.value !== 0) {
+//         newErrors[`${method}_data_limit`] = `${method.toUpperCase()} data limit is required`;
 //       }
       
-//       // PPPoE specific validations
-//       if (method === 'pppoe' && config.ipPool && config.ipPool.length < 3) {
-//         newErrors[`${method}_ipPool`] = 'IP Pool name is required';
+//       // Usage limit (daily time limit) is required
+//       if (!config.usage_limit?.value && config.usage_limit?.value !== 0) {
+//         newErrors[`${method}_usage_limit`] = `${method.toUpperCase()} daily time limit is required`;
 //       }
       
-//       if (method === 'pppoe' && config.mtu && (config.mtu < 576 || config.mtu > 1500)) {
-//         newErrors[`${method}_mtu`] = 'MTU must be between 576 and 1500';
+//       // Validity period is required
+//       if (!config.validity_period?.value && config.validity_period?.value !== 0) {
+//         newErrors[`${method}_validity_period`] = `${method.toUpperCase()} validity period is required`;
+//       }
+      
+//       // ================================================================
+//       // OPTIONAL FIELDS - No validation errors for these
+//       // ================================================================
+      
+//       // max_devices - OPTIONAL (no validation)
+//       // session_timeout - OPTIONAL (no validation)
+//       // idle_timeout - OPTIONAL (no validation)
+//       // mac_binding - OPTIONAL (no validation)
+//       // bandwidth_limit - OPTIONAL (no validation)
+      
+//       // Numeric validations only if values are provided
+//       if (config.max_devices && (config.max_devices < 1 || config.max_devices > 10)) {
+//         newErrors[`${method}_max_devices`] = 'Max devices must be between 1 and 10';
 //       }
 //     });
     
-//     // Time variant validation if active
-//     if (form.time_variant?.is_active) {
-//       const timeVariantErrors = validateTimeVariantUtil(form.time_variant);
-//       Object.keys(timeVariantErrors).forEach(key => {
-//         newErrors[`time_variant_${key}`] = timeVariantErrors[key];
-//       });
+//     // ================================================================
+//     // PPPoE SPECIFIC FIELDS - Only required if PPPoE is enabled
+//     // ================================================================
+    
+//     if (form.access_methods.pppoe.enabled) {
+//       // IP Pool is optional now (no validation error)
+//       // Service name is optional (no validation error)
+//       // MTU is optional now (no validation error)
+      
+//       // Only validate if values are provided
+//       if (form.access_methods.pppoe.mtu && 
+//           (form.access_methods.pppoe.mtu < 576 || form.access_methods.pppoe.mtu > 1500)) {
+//         newErrors.pppoe_mtu = 'MTU must be between 576 and 1500';
+//       }
 //     }
     
-//     // FUP threshold validation
-//     if (form.FUP_threshold && (form.FUP_threshold < 1 || form.FUP_threshold > 100)) {
-//       newErrors.FUP_threshold = 'FUP threshold must be between 1% and 100%';
+//     // ================================================================
+//     // FUP THRESHOLD VALIDATION
+//     // ================================================================
+    
+//     if (form.fup_threshold && (form.fup_threshold < 1 || form.fup_threshold > 100)) {
+//       newErrors.fup_threshold = 'FUP threshold must be between 1% and 100%';
 //     }
     
 //     // Remove empty errors
@@ -706,156 +462,117 @@
 //     });
 
 //     setErrors(newErrors);
+    
+//     // Log validation errors for debugging
+//     if (Object.keys(newErrors).length > 0) {
+//       console.log('❌ Validation errors:', newErrors);
+//     } else {
+//       console.log('✅ Form validation passed');
+//     }
+    
 //     return Object.keys(newErrors).length === 0;
 //   }, [form]);
 
-//   // Prepare form data for backend API
+//   // Prepare data for backend
 //   const prepareForBackend = useCallback(() => {
 //     const backendData = {
+//       // Basic fields
 //       plan_type: form.plan_type,
 //       name: form.name.trim(),
-//       price: parseFloat(form.price) || 0,
+//       price: form.price || "0.00",
 //       active: form.active !== false,
 //       category: form.category,
 //       description: form.description.trim(),
       
-//       // Access methods - ensure proper structure
+//       // Access methods
 //       access_methods: {
 //         hotspot: {
 //           enabled: form.access_methods.hotspot.enabled || false,
-//           downloadSpeed: {
-//             value: form.access_methods.hotspot.downloadSpeed.value || "10",
-//             unit: form.access_methods.hotspot.downloadSpeed.unit || "Mbps"
+//           download_speed: {
+//             value: String(form.access_methods.hotspot.download_speed?.value || ""),
+//             unit: form.access_methods.hotspot.download_speed?.unit || "Mbps"
 //           },
-//           uploadSpeed: {
-//             value: form.access_methods.hotspot.uploadSpeed.value || "5",
-//             unit: form.access_methods.hotspot.uploadSpeed.unit || "Mbps"
+//           upload_speed: {
+//             value: String(form.access_methods.hotspot.upload_speed?.value || ""),
+//             unit: form.access_methods.hotspot.upload_speed?.unit || "Mbps"
 //           },
-//           dataLimit: {
-//             value: form.access_methods.hotspot.dataLimit.value || "10",
-//             unit: form.access_methods.hotspot.dataLimit.unit || "GB"
+//           data_limit: {
+//             value: String(form.access_methods.hotspot.data_limit?.value || ""),
+//             unit: form.access_methods.hotspot.data_limit?.unit || "GB"
 //           },
-//           usageLimit: {
-//             value: form.access_methods.hotspot.usageLimit.value || "24",
-//             unit: form.access_methods.hotspot.usageLimit.unit || "Hours"
+//           usage_limit: {
+//             value: String(form.access_methods.hotspot.usage_limit?.value || ""),
+//             unit: form.access_methods.hotspot.usage_limit?.unit || "Hours"
 //           },
-//           bandwidthLimit: parseInt(form.access_methods.hotspot.bandwidthLimit) || 0,
-//           maxDevices: parseInt(form.access_methods.hotspot.maxDevices) || 1,
-//           sessionTimeout: parseInt(form.access_methods.hotspot.sessionTimeout) || 86400,
-//           idleTimeout: parseInt(form.access_methods.hotspot.idleTimeout) || 300,
-//           validityPeriod: {
-//             value: form.access_methods.hotspot.validityPeriod.value || "30",
-//             unit: form.access_methods.hotspot.validityPeriod.unit || "Days"
+//           bandwidth_limit: parseInt(form.access_methods.hotspot.bandwidth_limit) || "",
+//           max_devices: parseInt(form.access_methods.hotspot.max_devices) || "",
+//           session_timeout: parseInt(form.access_methods.hotspot.session_timeout) || "",
+//           idle_timeout: parseInt(form.access_methods.hotspot.idle_timeout) || "",
+//           validity_period: {
+//             value: String(form.access_methods.hotspot.validity_period?.value || ""),
+//             unit: form.access_methods.hotspot.validity_period?.unit || "Days"
 //           },
-//           macBinding: form.access_methods.hotspot.macBinding || false,
+//           mac_binding: form.access_methods.hotspot.mac_binding || false,
 //         },
 //         pppoe: {
 //           enabled: form.access_methods.pppoe.enabled || false,
-//           downloadSpeed: {
-//             value: form.access_methods.pppoe.downloadSpeed.value || "10",
-//             unit: form.access_methods.pppoe.downloadSpeed.unit || "Mbps"
+//           download_speed: {
+//             value: String(form.access_methods.pppoe.download_speed?.value || ""),
+//             unit: form.access_methods.pppoe.download_speed?.unit || "Mbps"
 //           },
-//           uploadSpeed: {
-//             value: form.access_methods.pppoe.uploadSpeed.value || "5",
-//             unit: form.access_methods.pppoe.uploadSpeed.unit || "Mbps"
+//           upload_speed: {
+//             value: String(form.access_methods.pppoe.upload_speed?.value || ""),
+//             unit: form.access_methods.pppoe.upload_speed?.unit || "Mbps"
 //           },
-//           dataLimit: {
-//             value: form.access_methods.pppoe.dataLimit.value || "10",
-//             unit: form.access_methods.pppoe.dataLimit.unit || "GB"
+//           data_limit: {
+//             value: String(form.access_methods.pppoe.data_limit?.value || ""),
+//             unit: form.access_methods.pppoe.data_limit?.unit || "GB"
 //           },
-//           usageLimit: {
-//             value: form.access_methods.pppoe.usageLimit.value || "24",
-//             unit: form.access_methods.pppoe.usageLimit.unit || "Hours"
+//           usage_limit: {
+//             value: String(form.access_methods.pppoe.usage_limit?.value || ""),
+//             unit: form.access_methods.pppoe.usage_limit?.unit || "Hours"
 //           },
-//           bandwidthLimit: parseInt(form.access_methods.pppoe.bandwidthLimit) || 0,
-//           maxDevices: parseInt(form.access_methods.pppoe.maxDevices) || 1,
-//           sessionTimeout: parseInt(form.access_methods.pppoe.sessionTimeout) || 86400,
-//           idleTimeout: parseInt(form.access_methods.pppoe.idleTimeout) || 300,
-//           validityPeriod: {
-//             value: form.access_methods.pppoe.validityPeriod.value || "30",
-//             unit: form.access_methods.pppoe.validityPeriod.unit || "Days"
+//           bandwidth_limit: parseInt(form.access_methods.pppoe.bandwidth_limit) || "",
+//           max_devices: parseInt(form.access_methods.pppoe.max_devices) || "",
+//           session_timeout: parseInt(form.access_methods.pppoe.session_timeout) || "",
+//           idle_timeout: parseInt(form.access_methods.pppoe.idle_timeout) || "",
+//           validity_period: {
+//             value: String(form.access_methods.pppoe.validity_period?.value || ""),
+//             unit: form.access_methods.pppoe.validity_period?.unit || "Days"
 //           },
-//           macBinding: form.access_methods.pppoe.macBinding || false,
-//           ipPool: form.access_methods.pppoe.ipPool || "pppoe-pool-1",
-//           serviceName: form.access_methods.pppoe.serviceName || "",
-//           mtu: parseInt(form.access_methods.pppoe.mtu) || 1492,
+//           mac_binding: form.access_methods.pppoe.mac_binding || false,
+//           ip_pool: form.access_methods.pppoe.ip_pool || "",
+//           service_name: form.access_methods.pppoe.service_name || "",
+//           mtu: parseInt(form.access_methods.pppoe.mtu) || "",
 //         }
 //       },
       
-//       priority_level: form.priority_level || 4,
+//       // Advanced settings
+//       priority_level: form.priority_level || "",
 //       router_specific: form.router_specific || false,
-//       allowed_routers_ids: form.router_specific ? form.allowed_routers_ids : [],
-//       FUP_policy: form.FUP_policy || "",
-//       FUP_threshold: form.FUP_threshold || 80,
+//       fup_policy: form.fup_policy || "",
+//       fup_threshold: form.fup_threshold || 80,
       
-//       // References
-//       template: form.template || null,
+//       // Relationship IDs
 //       time_variant_id: form.time_variant_id || null,
-//       pricing_matrix_id: form.pricing_matrix_id || null,
-//       discount_rule_ids: form.discount_rule_ids || []
+//       template_id: form.template_id || null,
 //     };
+    
+//     // Add allowed routers only if router specific
+//     if (form.router_specific) {
+//       backendData.allowed_routers_ids = form.allowed_routers_ids || [];
+//     }
     
 //     return backendData;
 //   }, [form]);
 
 //   // Reset form
 //   const resetForm = useCallback(() => {
-//     setForm(deepClone(initialState));
+//     setForm(deepClone(getInitialFormState()));
 //     setErrors({});
 //     setTouched({});
 //     setIsLoading(false);
-//   }, [initialState]);
-
-//   // Set specific field value
-//   const setFormField = useCallback((field, value) => {
-//     setForm(prev => ({ ...prev, [field]: value }));
 //   }, []);
-
-//   // Bulk update form fields
-//   const updateFormFields = useCallback((updates) => {
-//     setForm(prev => ({ ...prev, ...updates }));
-//   }, []);
-
-//   // Check if form has changes compared to original
-//   const hasChanges = useCallback((originalForm) => {
-//     if (!originalForm) return true;
-    
-//     const currentData = prepareForBackend();
-//     const originalData = deepClone(originalForm);
-    
-//     // Compare key fields
-//     const fieldsToCompare = [
-//       'plan_type', 'name', 'price', 'category', 'description',
-//       'priority_level', 'router_specific', 'FUP_policy', 'FUP_threshold'
-//     ];
-    
-//     for (const field of fieldsToCompare) {
-//       if (currentData[field] !== originalData[field]) {
-//         return true;
-//       }
-//     }
-    
-//     // Compare access methods
-//     const compareAccessMethod = (method) => {
-//       const curr = currentData.access_methods[method];
-//       const orig = originalData.access_methods[method];
-      
-//       if (curr.enabled !== orig.enabled) return true;
-//       if (JSON.stringify(curr.downloadSpeed) !== JSON.stringify(orig.downloadSpeed)) return true;
-//       if (JSON.stringify(curr.uploadSpeed) !== JSON.stringify(orig.uploadSpeed)) return true;
-//       if (JSON.stringify(curr.dataLimit) !== JSON.stringify(orig.dataLimit)) return true;
-//       if (JSON.stringify(curr.usageLimit) !== JSON.stringify(orig.usageLimit)) return true;
-//       if (curr.maxDevices !== orig.maxDevices) return true;
-      
-//       return false;
-//     };
-    
-//     if (compareAccessMethod('hotspot') || compareAccessMethod('pppoe')) {
-//       return true;
-//     }
-    
-//     return false;
-//   }, [prepareForBackend]);
 
 //   // Get enabled access methods
 //   const getEnabledAccessMethods = useCallback(() => {
@@ -865,9 +582,16 @@
 //     return methods;
 //   }, [form.access_methods]);
 
-//   // Get access type category
-//   const getAccessType = useCallback(() => {
-//     const enabledMethods = getEnabledAccessMethods();
+//   // Get access type
+//   const getAccessType = useCallback((plan) => {
+//     let enabledMethods = [];
+//     if (plan) {
+//       if (plan.access_methods?.hotspot?.enabled) enabledMethods.push('hotspot');
+//       if (plan.access_methods?.pppoe?.enabled) enabledMethods.push('pppoe');
+//     } else {
+//       enabledMethods = getEnabledAccessMethods();
+//     }
+    
 //     if (enabledMethods.includes('hotspot') && enabledMethods.includes('pppoe')) {
 //       return 'dual';
 //     } else if (enabledMethods.includes('hotspot')) {
@@ -878,75 +602,39 @@
 //     return 'none';
 //   }, [getEnabledAccessMethods]);
 
-//   // Check if plan has enabled access methods
-//   const hasEnabledAccessMethods = useCallback(() => {
-//     return getEnabledAccessMethods().length > 0;
-//   }, [getEnabledAccessMethods]);
-
-//   // Check if time variant is active
-//   const hasTimeVariant = useCallback(() => {
-//     return form.time_variant?.is_active || false;
-//   }, [form.time_variant]);
-
-//   // Get configuration for specific access method
-//   const getConfigForMethod = useCallback((method) => {
-//     return form.access_methods[method] || {};
-//   }, [form.access_methods]);
-
-//   // Load form from backend data
-//   const loadFromBackend = useCallback(async (planId, apiService) => {
-//     if (!planId || !apiService) return;
+//   // Get display info for a plan
+//   const getPlanDisplayInfo = useCallback((planData) => {
+//     const info = {
+//       name: planData.name || '',
+//       type: planData.plan_type || '',
+//       category: planData.category || '',
+//       price: planData.price || '',
+//       accessType: '',
+//       typeDisplay: '',
+//     };
     
-//     setIsLoading(true);
-//     try {
-//       const response = await apiService.getPlan(planId);
-//       if (response.success && response.data) {
-//         initializeFromBackend(response.data);
-//       }
-//     } catch (error) {
-//       console.error('Error loading plan data:', error);
-//       setErrors({ fetch: 'Failed to load plan data' });
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   }, [initializeFromBackend]);
-
-//   // Auto-save form (optional)
-//   const autoSave = useCallback(async (apiService, planId) => {
-//     if (!validateForm()) {
-//       return { success: false, errors };
+//     // Determine display text based on plan type
+//     if (planData.plan_type === 'Free_trial') {
+//       info.typeDisplay = 'Free Trial';
+//       info.priceDisplay = 'Free Trial';
+//     } else if (planData.plan_type === 'Promotional') {
+//       info.typeDisplay = 'Promotional';
+//       info.priceDisplay = planData.price ? `KES ${planData.price}` : 'Free';
+//     } else {
+//       info.typeDisplay = 'Paid';
+//       info.priceDisplay = planData.price ? `KES ${planData.price}` : 'Free';
 //     }
     
-//     setIsLoading(true);
-//     try {
-//       const formData = prepareForBackend();
-//       let response;
-      
-//       if (planId) {
-//         // Update existing plan
-//         response = await apiService.updatePlan(planId, formData);
-//       } else {
-//         // Create new plan
-//         response = await apiService.createPlan(formData);
-//       }
-      
-//       if (response.success) {
-//         return { success: true, data: response.data };
-//       } else {
-//         return { success: false, errors: response.errors };
-//       }
-//     } catch (error) {
-//       console.error('Auto-save error:', error);
-//       return { 
-//         success: false, 
-//         errors: { 
-//           save: error.response?.data?.detail || 'Failed to save plan' 
-//         } 
-//       };
-//     } finally {
-//       setIsLoading(false);
+//     // Get access type
+//     if (planData.access_methods) {
+//       const methods = [];
+//       if (planData.access_methods.hotspot?.enabled) methods.push('Hotspot');
+//       if (planData.access_methods.pppoe?.enabled) methods.push('PPPoE');
+//       info.accessType = methods.join(' + ') || 'None';
 //     }
-//   }, [validateForm, prepareForBackend, errors]);
+    
+//     return info;
+//   }, []);
 
 //   return {
 //     // Form state
@@ -957,20 +645,17 @@
     
 //     // Setters
 //     setForm: initializeFromBackend,
-//     setFormField,
-//     updateFormFields,
 //     setErrors,
 //     setTouched,
 //     setIsLoading,
     
 //     // Handlers
 //     handleChange,
-//     handleInputChange,
 //     handleAccessTypeChange,
 //     handleAccessMethodChange,
 //     handleAccessMethodNestedChange,
-//     handleTimeVariantChange,
 //     setTimeVariantId,
+//     setTemplateId,
 //     handleFieldBlur,
     
 //     // Validations
@@ -980,20 +665,9 @@
 //     // Utilities
 //     prepareForBackend,
 //     resetForm,
-//     hasChanges,
-//     hasEnabledAccessMethods,
-//     hasTimeVariant,
 //     getEnabledAccessMethods,
 //     getAccessType,
-//     getConfigForMethod,
-//     loadFromBackend,
-//     autoSave,
-    
-//     // Constants for forms
-//     planTypes,
-//     categories,
-//     priorityOptions,
-//     clientTypeRestrictions,
+//     getPlanDisplayInfo,
 //   };
 // };
 
@@ -1003,100 +677,80 @@
 
 
 
-
-
-
-
-
-
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { 
   deepClone, 
   validateRequired, 
-  validateNumber, 
   validatePrice,
   validateTimeVariant as validateTimeVariantUtil
 } from "../../Shared/utils.js";
-import { 
-  planTypes, 
-  categories, 
-  priorityOptions,
-  clientTypeRestrictions
-} from "../../Shared/constant";
 
-// Initial form state that matches backend structure
+// Initial form state - MATCHES BACKEND EXPECTATIONS
 export const getInitialFormState = () => ({
-  // Basic details - matches backend field names
-  plan_type: "paid",
-  name: "",
-  price: "",  // Changed to empty string for no default
-  active: true,
-  category: "Residential",
-  description: "",
+  // Basic details - snake_case to match backend
+  plan_type: "",           // matches backend
+  name: "",                 // matches backend
+  price: "",                // will be converted to Decimal
+  active: true,             // matches backend
+  category: "",             // matches backend
+  description: "",          // matches backend
   
-  // Access type selection
-  accessType: "hotspot", // "hotspot", "pppoe", or "both"
-  
-  // Access methods configuration 
+  // Access methods configuration - EXACT structure backend expects
   access_methods: {
     hotspot: {
       enabled: true,
-      downloadSpeed: { value: "10", unit: "Mbps" },
-      uploadSpeed: { value: "5", unit: "Mbps" },
-      dataLimit: { value: "10", unit: "GB" },
-      usageLimit: { value: "24", unit: "Hours" },
-      bandwidthLimit: 0,
-      maxDevices: 1,
-      sessionTimeout: 86400,
-      idleTimeout: 300,
-      validityPeriod: { value: "30", unit: "Days" },
-      macBinding: false,
-     
+      download_speed: { value: "", unit: "Mbps" },
+      upload_speed: { value: "", unit: "Mbps" },
+      data_limit: { value: "", unit: "GB" },
+      usage_limit: { value: "", unit: "hours" }, // FIXED: lowercase to match backend
+      bandwidth_limit: "",
+      max_devices: "",
+      session_timeout: "",
+      idle_timeout: "",
+      validity_period: { value: "", unit: "days" }, // FIXED: lowercase
+      mac_binding: false,
     },
     pppoe: {
       enabled: false,
-      downloadSpeed: { value: "10", unit: "Mbps" },
-      uploadSpeed: { value: "5", unit: "Mbps" },
-      dataLimit: { value: "10", unit: "GB" },
-      usageLimit: { value: "24", unit: "Hours" },
-      bandwidthLimit: 0,
-      maxDevices: 1,
-      sessionTimeout: 86400,
-      idleTimeout: 300,
-      validityPeriod: { value: "30", unit: "Days" },
-      macBinding: false,
-      ipPool: "pppoe-pool-1",
-      serviceName: "",
-      mtu: 1492,
-      
+      download_speed: { value: "", unit: "Mbps" },
+      upload_speed: { value: "", unit: "Mbps" },
+      data_limit: { value: "", unit: "GB" },
+      usage_limit: { value: "", unit: "hours" }, // FIXED: lowercase
+      bandwidth_limit: "",
+      max_devices: "",
+      session_timeout: "",
+      idle_timeout: "",
+      validity_period: { value: "", unit: "days" }, // FIXED: lowercase
+      mac_binding: false,
+      ip_pool: "",
+      service_name: "",
+      mtu: "",
     }
   },
   
-  // Time variant configuration
-  time_variant: null,
-  time_variant_id: null,
+  // Access type selection (frontend only - not sent to backend)
+  accessType: "hotspot",
   
-  // Advanced settings
-  priority_level: 4,
+  // Time variant - matches backend field names
+  time_variant_id: null,    // snake_case
+  
+  // Advanced settings - snake_case
+  priority_level: "",       // will be converted to integer
   router_specific: false,
-  allowed_routers_ids: [],
-  FUP_policy: "",
-  FUP_threshold: 80,
+  allowed_routers_ids: [],  // snake_case - array of integers
+  
+  // FUP settings
+  fup_policy: "",           // snake_case
+  fup_threshold: 80,        // integer
   
   // Template reference
-  template: null,
+  template_id: null,        // snake_case
   
-  // Pricing references
-  pricing_matrix_id: null,
-  discount_rule_ids: [],
-  
-  // Read-only fields (for display only)
+  // Read-only fields (preserved from backend)
   purchases: 0,
   created_at: null,
   updated_at: null,
-  
-  // Client sessions
-  client_sessions: {},
+  client_sessions: {},      // matches backend
 });
 
 const usePlanForm = (initialState = getInitialFormState()) => {
@@ -1105,207 +759,203 @@ const usePlanForm = (initialState = getInitialFormState()) => {
   const [touched, setTouched] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
-  // Initialize form from backend data
+  // Define resetForm first so it's available for other callbacks
+  const resetForm = useCallback(() => {
+    setForm(deepClone(getInitialFormState()));
+    setErrors({});
+    setTouched({});
+    setIsLoading(false);
+  }, []);
+
+  // FIXED: Initialize from backend data - handles nested response structures
   const initializeFromBackend = useCallback((backendData) => {
     if (!backendData) {
-      resetForm();
+      resetForm(); // Now this works because resetForm is defined above
       return;
     }
 
+    // Handle both direct data and nested response
+    const planData = backendData.data || backendData;
+
+    console.log('🔄 Initializing form from backend:', planData);
+
     const normalizedForm = {
-      // Map backend fields to form fields
-      plan_type: backendData.planType || backendData.plan_type || "paid",
-      name: backendData.name || "",
-      price: backendData.price?.toString() || "",
-      active: backendData.active !== false,
-      category: backendData.category || "Residential",
-      description: backendData.description || "",
+      // Basic fields - directly from backend (snake_case)
+      plan_type: planData.plan_type || "",
+      name: planData.name || "",
+      price: planData.price?.toString() || "",
+      active: planData.active !== false,
+      category: planData.category || "",
+      description: planData.description || "",
       
-      // Determine access type from enabled methods
+      // Access type derived from enabled methods
       accessType: (() => {
-        const hotspotEnabled = backendData.accessMethods?.hotspot?.enabled || 
-                              backendData.access_methods?.hotspot?.enabled;
-        const pppoeEnabled = backendData.accessMethods?.pppoe?.enabled || 
-                            backendData.access_methods?.pppoe?.enabled;
+        const hotspotEnabled = planData.access_methods?.hotspot?.enabled || false;
+        const pppoeEnabled = planData.access_methods?.pppoe?.enabled || false;
         
         if (hotspotEnabled && pppoeEnabled) return "both";
         if (pppoeEnabled) return "pppoe";
         return "hotspot";
       })(),
       
-      // Access methods - prioritize backend structure
+      // Access methods - preserve exact backend structure
       access_methods: {
         hotspot: {
-          enabled: backendData.accessMethods?.hotspot?.enabled || 
-                  backendData.access_methods?.hotspot?.enabled || 
-                  false,
-          downloadSpeed: backendData.accessMethods?.hotspot?.downloadSpeed || 
-                        backendData.access_methods?.hotspot?.downloadSpeed || 
-                        { value: "10", unit: "Mbps" },
-          uploadSpeed: backendData.accessMethods?.hotspot?.uploadSpeed || 
-                      backendData.access_methods?.hotspot?.uploadSpeed || 
-                      { value: "5", unit: "Mbps" },
-          dataLimit: backendData.accessMethods?.hotspot?.dataLimit || 
-                    backendData.access_methods?.hotspot?.dataLimit || 
-                    { value: "10", unit: "GB" },
-          usageLimit: backendData.accessMethods?.hotspot?.usageLimit || 
-                     backendData.access_methods?.hotspot?.usageLimit || 
-                     { value: "24", unit: "Hours" },
-          bandwidthLimit: backendData.accessMethods?.hotspot?.bandwidthLimit || 
-                        backendData.access_methods?.hotspot?.bandwidthLimit || 
-                        0,
-          maxDevices: backendData.accessMethods?.hotspot?.maxDevices || 
-                     backendData.access_methods?.hotspot?.maxDevices || 
-                     1,
-          sessionTimeout: backendData.accessMethods?.hotspot?.sessionTimeout || 
-                         backendData.access_methods?.hotspot?.sessionTimeout || 
-                         86400,
-          idleTimeout: backendData.accessMethods?.hotspot?.idleTimeout || 
-                      backendData.access_methods?.hotspot?.idleTimeout || 
-                      300,
-          validityPeriod: backendData.accessMethods?.hotspot?.validityPeriod || 
-                         backendData.access_methods?.hotspot?.validityPeriod || 
-                         { value: "30", unit: "Days" },
-          macBinding: backendData.accessMethods?.hotspot?.macBinding || 
-                     backendData.access_methods?.hotspot?.macBinding || 
-                     false,
+          enabled: planData.access_methods?.hotspot?.enabled || false,
+          download_speed: planData.access_methods?.hotspot?.download_speed || { value: "", unit: "Mbps" },
+          upload_speed: planData.access_methods?.hotspot?.upload_speed || { value: "", unit: "Mbps" },
+          data_limit: planData.access_methods?.hotspot?.data_limit || { value: "", unit: "GB" },
+          usage_limit: planData.access_methods?.hotspot?.usage_limit || { value: "", unit: "hours" },
+          bandwidth_limit: planData.access_methods?.hotspot?.bandwidth_limit || "",
+          max_devices: planData.access_methods?.hotspot?.max_devices || "",
+          session_timeout: planData.access_methods?.hotspot?.session_timeout || "",
+          idle_timeout: planData.access_methods?.hotspot?.idle_timeout || "",
+          validity_period: planData.access_methods?.hotspot?.validity_period || { value: "", unit: "days" },
+          mac_binding: planData.access_methods?.hotspot?.mac_binding || false,
         },
         pppoe: {
-          enabled: backendData.accessMethods?.pppoe?.enabled || 
-                  backendData.access_methods?.pppoe?.enabled || 
-                  false,
-          downloadSpeed: backendData.accessMethods?.pppoe?.downloadSpeed || 
-                        backendData.access_methods?.pppoe?.downloadSpeed || 
-                        { value: "10", unit: "Mbps" },
-          uploadSpeed: backendData.accessMethods?.pppoe?.uploadSpeed || 
-                      backendData.access_methods?.pppoe?.uploadSpeed || 
-                      { value: "5", unit: "Mbps" },
-          dataLimit: backendData.accessMethods?.pppoe?.dataLimit || 
-                    backendData.access_methods?.pppoe?.dataLimit || 
-                    { value: "10", unit: "GB" },
-          usageLimit: backendData.accessMethods?.pppoe?.usageLimit || 
-                     backendData.access_methods?.pppoe?.usageLimit || 
-                     { value: "24", unit: "Hours" },
-          bandwidthLimit: backendData.accessMethods?.pppoe?.bandwidthLimit || 
-                        backendData.access_methods?.pppoe?.bandwidthLimit || 
-                        0,
-          maxDevices: backendData.accessMethods?.pppoe?.maxDevices || 
-                     backendData.access_methods?.pppoe?.maxDevices || 
-                     1,
-          sessionTimeout: backendData.accessMethods?.pppoe?.sessionTimeout || 
-                         backendData.access_methods?.pppoe?.sessionTimeout || 
-                         86400,
-          idleTimeout: backendData.accessMethods?.pppoe?.idleTimeout || 
-                      backendData.access_methods?.pppoe?.idleTimeout || 
-                      300,
-          validityPeriod: backendData.accessMethods?.pppoe?.validityPeriod || 
-                         backendData.access_methods?.pppoe?.validityPeriod || 
-                         { value: "30", unit: "Days" },
-          macBinding: backendData.accessMethods?.pppoe?.macBinding || 
-                     backendData.access_methods?.pppoe?.macBinding || 
-                     false,
-          ipPool: backendData.accessMethods?.pppoe?.ipPool || 
-                 backendData.access_methods?.pppoe?.ipPool || 
-                 "pppoe-pool-1",
-          serviceName: backendData.accessMethods?.pppoe?.serviceName || 
-                      backendData.access_methods?.pppoe?.serviceName || 
-                      "",
-          mtu: backendData.accessMethods?.pppoe?.mtu || 
-               backendData.access_methods?.pppoe?.mtu || 
-               1492,
+          enabled: planData.access_methods?.pppoe?.enabled || false,
+          download_speed: planData.access_methods?.pppoe?.download_speed || { value: "", unit: "Mbps" },
+          upload_speed: planData.access_methods?.pppoe?.upload_speed || { value: "", unit: "Mbps" },
+          data_limit: planData.access_methods?.pppoe?.data_limit || { value: "", unit: "GB" },
+          usage_limit: planData.access_methods?.pppoe?.usage_limit || { value: "", unit: "hours" },
+          bandwidth_limit: planData.access_methods?.pppoe?.bandwidth_limit || "",
+          max_devices: planData.access_methods?.pppoe?.max_devices || "",
+          session_timeout: planData.access_methods?.pppoe?.session_timeout || "",
+          idle_timeout: planData.access_methods?.pppoe?.idle_timeout || "",
+          validity_period: planData.access_methods?.pppoe?.validity_period || { value: "", unit: "days" },
+          mac_binding: planData.access_methods?.pppoe?.mac_binding || false,
+          ip_pool: planData.access_methods?.pppoe?.ip_pool || "",
+          service_name: planData.access_methods?.pppoe?.service_name || "",
+          mtu: planData.access_methods?.pppoe?.mtu || "",
         }
       },
       
-      // Time variant
-      time_variant: backendData.time_variant || null,
-      time_variant_id: backendData.time_variant_id || null,
+      // Time variant - handle both direct ID and nested object
+      time_variant_id: planData.time_variant_id || planData.time_variant?.id || null,
       
       // Advanced settings
-      priority_level: backendData.priority_level || 4,
-      router_specific: backendData.router_specific || false,
-      allowed_routers_ids: backendData.allowed_routers_ids || 
-                          backendData.allowed_routers?.map(r => r.id) || 
-                          [],
-      FUP_policy: backendData.FUP_policy || "",
-      FUP_threshold: backendData.FUP_threshold || 80,
+      priority_level: planData.priority_level || "",
+      router_specific: planData.router_specific || false,
+      allowed_routers_ids: planData.allowed_routers_ids || [],
       
-      // Template
-      template: backendData.template || null,
+      // FUP settings
+      fup_policy: planData.fup_policy || "",
+      fup_threshold: planData.fup_threshold || 80,
       
-      // Pricing
-      pricing_matrix_id: backendData.pricing_matrix_id || null,
-      discount_rule_ids: backendData.discount_rule_ids || [],
+      // Template reference
+      template_id: planData.template_id || planData.template?.id || null,
       
-      // Read-only fields
-      purchases: backendData.purchases || 0,
-      created_at: backendData.created_at || null,
-      updated_at: backendData.updated_at || null,
-      client_sessions: backendData.client_sessions || {},
+      // Read-only fields (preserved)
+      purchases: planData.purchases || 0,
+      created_at: planData.created_at || null,
+      updated_at: planData.updated_at || null,
+      client_sessions: planData.client_sessions || {},
     };
 
+    console.log('✅ Form initialized:', normalizedForm);
     setForm(normalizedForm);
     setErrors({});
     setTouched({});
-  }, []);
+  }, [resetForm]); // Add resetForm to dependencies
 
-  // Handle basic field changes
+  // Handle field changes - FIXED: Better handling of plan_type changes
   const handleChange = useCallback((field, value) => {
-    setForm(prev => ({ 
-      ...prev, 
-      [field]: value 
-    }));
+    setForm(prev => {
+      const newForm = { ...prev, [field]: value };
+      
+      // Special handling for plan_type changes to match backend expectations
+      if (field === 'plan_type') {
+        // Free trial - must match backend validation
+        if (value === 'free_trial') {
+          console.log('🔧 Free trial selected - applying backend rules');
+          newForm.price = "0";
+          newForm.category = "promotional";
+          
+          // Free trial must use hotspot only (backend validation)
+          if (newForm.access_methods) {
+            newForm.access_methods.hotspot.enabled = true;
+            newForm.access_methods.pppoe.enabled = false;
+            newForm.accessType = "hotspot";
+          }
+          
+          // Free trial cannot have high priority (backend validation)
+          newForm.priority_level = "3";
+          newForm.router_specific = false;
+        } 
+        // Promotional
+        else if (value === 'promotional') {
+          console.log('🔧 Promotional selected');
+          if (!newForm.category) {
+            newForm.category = "promotional";
+          }
+        }
+        // Paid
+        else if (value === 'paid') {
+          console.log('🔧 Paid selected');
+        }
+      }
+      
+      return newForm;
+    });
     
-    // Clear error when user starts typing
+    // Clear error for this field
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
   }, [errors]);
 
-  // Handle input field changes (for form inputs)
-  const handleInputChange = useCallback((e) => {
-    const { name, value, type, checked } = e.target;
-    const fieldValue = type === 'checkbox' ? checked : value;
-    
-    handleChange(name, fieldValue);
-  }, [handleChange]);
-
-  // Handle access type change - SIMPLIFIED for backend compatibility
+  // Handle access type change - FIXED: Respects backend validations
   const handleAccessTypeChange = useCallback((accessType) => {
     setForm(prev => {
-      const newForm = { ...prev, accessType };
+      const hotspotEnabled = accessType === 'hotspot' || accessType === 'both';
+      const pppoeEnabled = accessType === 'pppoe' || accessType === 'both';
       
-      // Update enabled status based on access type
-      newForm.access_methods = {
-        ...prev.access_methods,
-        hotspot: {
-          ...prev.access_methods.hotspot,
-          enabled: accessType === 'hotspot' || accessType === 'both'
-        },
-        pppoe: {
-          ...prev.access_methods.pppoe,
-          enabled: accessType === 'pppoe' || accessType === 'both'
+      // For free trial, enforce hotspot only (backend requirement)
+      const finalHotspotEnabled = prev.plan_type === 'free_trial' ? true : hotspotEnabled;
+      const finalPppoeEnabled = prev.plan_type === 'free_trial' ? false : pppoeEnabled;
+      
+      return {
+        ...prev,
+        accessType: prev.plan_type === 'free_trial' ? 'hotspot' : accessType,
+        access_methods: {
+          ...prev.access_methods,
+          hotspot: {
+            ...prev.access_methods.hotspot,
+            enabled: finalHotspotEnabled
+          },
+          pppoe: {
+            ...prev.access_methods.pppoe,
+            enabled: finalPppoeEnabled
+          }
         }
       };
-      
-      return newForm;
     });
   }, []);
 
-  // Handle access method configuration changes
+  // Handle access method changes - FIXED: Preserves nested structure
   const handleAccessMethodChange = useCallback((method, field, value) => {
-    setForm(prev => ({
-      ...prev,
-      access_methods: {
-        ...prev.access_methods,
-        [method]: {
-          ...prev.access_methods[method],
-          [field]: value
-        }
+    setForm(prev => {
+      // For free trial, prevent enabling PPPoE (backend validation)
+      if (prev.plan_type === 'free_trial' && method === 'pppoe' && field === 'enabled' && value === true) {
+        console.log('⚠️ Cannot enable PPPoE for free trial plans');
+        return prev;
       }
-    }));
+      
+      return {
+        ...prev,
+        access_methods: {
+          ...prev.access_methods,
+          [method]: {
+            ...prev.access_methods[method],
+            [field]: value
+          }
+        }
+      };
+    });
   }, []);
 
-  // Handle nested access method changes (like downloadSpeed.value)
+  // Handle nested access method changes (for objects like download_speed)
   const handleAccessMethodNestedChange = useCallback((method, parentField, key, value) => {
     setForm(prev => ({
       ...prev,
@@ -1322,14 +972,6 @@ const usePlanForm = (initialState = getInitialFormState()) => {
     }));
   }, []);
 
-  // Handle time variant changes
-  const handleTimeVariantChange = useCallback((timeVariantData) => {
-    setForm(prev => ({
-      ...prev,
-      time_variant: timeVariantData
-    }));
-  }, []);
-
   // Set time variant ID
   const setTimeVariantId = useCallback((timeVariantId) => {
     setForm(prev => ({
@@ -1338,298 +980,356 @@ const usePlanForm = (initialState = getInitialFormState()) => {
     }));
   }, []);
 
+  // Set template ID
+  const setTemplateId = useCallback((templateId) => {
+    setForm(prev => ({
+      ...prev,
+      template_id: templateId
+    }));
+  }, []);
+
   // Handle field blur
   const handleFieldBlur = useCallback((field) => {
     if (!touched[field]) {
       setTouched(prev => ({ ...prev, [field]: true }));
     }
-  }, [touched]);
+    validateField(field, form[field]);
+  }, [touched, form]);
 
-  // Validate a specific field
+  // FIXED: Validate field with backend rules
   const validateField = useCallback((name, value) => {
     const newErrors = { ...errors };
-    let isValid = true;
     
     switch (name) {
       case 'name':
-        newErrors[name] = validateRequired(value, 'Plan name');
-        isValid = !newErrors[name];
+        if (!value || !value.trim()) {
+          newErrors[name] = 'Plan name is required';
+        } else {
+          delete newErrors[name];
+        }
         break;
       case 'price':
-        newErrors[name] = validatePrice(value, form.plan_type);
-        isValid = !newErrors[name];
+        const priceError = validatePrice(value, form.plan_type);
+        if (priceError) {
+          newErrors[name] = priceError;
+        } else {
+          delete newErrors[name];
+        }
         break;
       case 'category':
-        newErrors[name] = validateRequired(value, 'Category');
-        isValid = !newErrors[name];
+        if (!value) {
+          newErrors[name] = 'Category is required';
+        } else {
+          delete newErrors[name];
+        }
         break;
       case 'plan_type':
-        if (value === 'free_trial' && parseFloat(form.price) > 0 && form.price !== '') {
-          newErrors[name] = 'Free trial plans must have price set to 0';
-          isValid = false;
+        if (!value) {
+          newErrors[name] = 'Plan type is required';
+        } else {
+          delete newErrors[name];
+        }
+        break;
+      case 'priority_level':
+        if (!value) {
+          newErrors[name] = 'Priority level is required';
+        } else if (parseInt(value) < 1 || parseInt(value) > 8) {
+          newErrors[name] = 'Priority level must be between 1 and 8';
+        } else {
+          delete newErrors[name];
         }
         break;
       default:
         break;
     }
     
-    if (isValid && newErrors[name]) {
-      delete newErrors[name];
-    }
-    
     setErrors(newErrors);
-    return isValid;
-  }, [errors, form.plan_type, form.price]);
+    return !newErrors[name];
+  }, [errors, form.plan_type]);
 
-  // Validate entire form
+  // FIXED: Validate entire form matching backend validation rules
   const validateForm = useCallback(() => {
     const newErrors = {};
     
-    // Basic validations
-    newErrors.name = validateRequired(form.name, 'Plan name');
-    newErrors.category = validateRequired(form.category, 'Category');
-    newErrors.price = validatePrice(form.price, form.plan_type);
+    // ================================================================
+    // MANDATORY FIELDS - Match backend validators
+    // ================================================================
     
-    // Free Trial validation
+    // Basic required fields
+    if (!form.name?.trim()) {
+      newErrors.name = 'Plan name is required';
+    }
+    
+    if (!form.category) {
+      newErrors.category = 'Category is required';
+    }
+    
+    if (!form.plan_type) {
+      newErrors.plan_type = 'Plan type is required';
+    }
+    
+    // Price validation - matches backend DecimalField validation
+    const priceValue = parseFloat(form.price);
+    if (isNaN(priceValue) || priceValue < 0) {
+      newErrors.price = 'Valid price is required';
+    }
+    
+    // Priority level - matches backend IntegerField validation
+    const priorityValue = parseInt(form.priority_level);
+    if (isNaN(priorityValue) || priorityValue < 1 || priorityValue > 8) {
+      newErrors.priority_level = 'Priority level must be between 1 and 8';
+    }
+    
+    // Free trial specific validations (match backend Plan.clean() method)
     if (form.plan_type === 'free_trial') {
-      if (parseFloat(form.price) > 0 && form.price !== '') {
+      if (parseFloat(form.price || 0) !== 0) {
         newErrors.price = 'Free Trial plans must have price set to 0';
       }
       if (form.router_specific) {
         newErrors.router_specific = 'Free Trial plans cannot be router-specific';
       }
-      if (form.priority_level > 4) {
+      if (priorityValue > 4) {
         newErrors.priority_level = 'Free Trial plans cannot have premium priority levels';
+      }
+      if (form.access_methods?.pppoe?.enabled) {
+        newErrors.access_methods = 'Free Trial plans cannot use PPPoE access method';
       }
     }
     
-    // Access methods validation
+    // Promotional validation
+    if (form.plan_type === 'promotional' && form.category !== 'promotional') {
+      newErrors.category = 'Promotional plans should have Promotional category';
+    }
+    
+    // ================================================================
+    // ACCESS METHODS - At least one must be enabled (backend requirement)
+    // ================================================================
+    
     const enabledMethods = [];
-    if (form.access_methods.hotspot.enabled) enabledMethods.push('hotspot');
-    if (form.access_methods.pppoe.enabled) enabledMethods.push('pppoe');
+    if (form.access_methods?.hotspot?.enabled) enabledMethods.push('hotspot');
+    if (form.access_methods?.pppoe?.enabled) enabledMethods.push('pppoe');
     
     if (enabledMethods.length === 0) {
       newErrors.access_methods = 'At least one access method must be enabled';
     }
     
-    // Validate each enabled access method
+    // ================================================================
+    // REQUIRED FIELDS FOR ENABLED ACCESS METHODS
+    // These match backend validation in clean() method
+    // ================================================================
+    
     enabledMethods.forEach(method => {
       const config = form.access_methods[method];
       
-      // Required technical fields
-      const requiredFields = ['downloadSpeed', 'uploadSpeed', 'dataLimit', 'usageLimit'];
-      requiredFields.forEach(field => {
-        if (!config[field]?.value) {
-          newErrors[`${method}_${field}`] = `${method.toUpperCase()} ${field} is required`;
+      // Speed settings are required (backend validates)
+      if (!config?.download_speed?.value) {
+        newErrors[`${method}_download_speed`] = `${method.toUpperCase()} download speed is required`;
+      }
+      
+      if (!config?.upload_speed?.value) {
+        newErrors[`${method}_upload_speed`] = `${method.toUpperCase()} upload speed is required`;
+      }
+      
+      // Data limit is required
+      if (!config?.data_limit?.value) {
+        newErrors[`${method}_data_limit`] = `${method.toUpperCase()} data limit is required`;
+      }
+      
+      // Usage limit is required
+      if (!config?.usage_limit?.value) {
+        newErrors[`${method}_usage_limit`] = `${method.toUpperCase()} usage limit is required`;
+      }
+      
+      // Validity period is required
+      if (!config?.validity_period?.value) {
+        newErrors[`${method}_validity_period`] = `${method.toUpperCase()} validity period is required`;
+      }
+      
+      // Numeric validations only if values are provided
+      if (config?.max_devices) {
+        const maxDevices = parseInt(config.max_devices);
+        if (isNaN(maxDevices) || maxDevices < 1 || maxDevices > 10) {
+          newErrors[`${method}_max_devices`] = 'Max devices must be between 1 and 10';
         }
-      });
-      
-      // Numeric validations
-      if (config.maxDevices && (config.maxDevices < 1 || config.maxDevices > 10)) {
-        newErrors[`${method}_maxDevices`] = 'Max devices must be between 1 and 10';
-      }
-      
-      if (config.sessionTimeout && config.sessionTimeout < 300) {
-        newErrors[`${method}_sessionTimeout`] = 'Session timeout must be at least 300 seconds (5 minutes)';
-      }
-      
-      if (config.idleTimeout && config.idleTimeout < 60) {
-        newErrors[`${method}_idleTimeout`] = 'Idle timeout must be at least 60 seconds (1 minute)';
-      }
-      
-      // PPPoE specific validations
-      if (method === 'pppoe' && config.ipPool && config.ipPool.length < 3) {
-        newErrors[`${method}_ipPool`] = 'IP Pool name is required';
-      }
-      
-      if (method === 'pppoe' && config.mtu && (config.mtu < 576 || config.mtu > 1500)) {
-        newErrors[`${method}_mtu`] = 'MTU must be between 576 and 1500';
       }
     });
     
-    // Time variant validation if active
-    if (form.time_variant?.is_active) {
-      const timeVariantErrors = validateTimeVariantUtil(form.time_variant);
-      Object.keys(timeVariantErrors).forEach(key => {
-        newErrors[`time_variant_${key}`] = timeVariantErrors[key];
-      });
+    // ================================================================
+    // PPPoE SPECIFIC FIELDS
+    // ================================================================
+    
+    if (form.access_methods?.pppoe?.enabled) {
+      // MTU validation if provided
+      if (form.access_methods.pppoe.mtu) {
+        const mtu = parseInt(form.access_methods.pppoe.mtu);
+        if (isNaN(mtu) || mtu < 576 || mtu > 1500) {
+          newErrors.pppoe_mtu = 'MTU must be between 576 and 1500';
+        }
+      }
     }
     
-    // FUP threshold validation
-    if (form.FUP_threshold && (form.FUP_threshold < 1 || form.FUP_threshold > 100)) {
-      newErrors.FUP_threshold = 'FUP threshold must be between 1% and 100%';
+    // ================================================================
+    // FUP THRESHOLD VALIDATION
+    // ================================================================
+    
+    if (form.fup_threshold) {
+      const threshold = parseInt(form.fup_threshold);
+      if (isNaN(threshold) || threshold < 1 || threshold > 100) {
+        newErrors.fup_threshold = 'FUP threshold must be between 1% and 100%';
+      }
     }
     
-    // Remove empty errors
-    Object.keys(newErrors).forEach(key => {
-      if (!newErrors[key]) delete newErrors[key];
-    });
-
     setErrors(newErrors);
+    
+    // Log validation results
+    if (Object.keys(newErrors).length > 0) {
+      console.log('❌ Validation errors:', newErrors);
+    } else {
+      console.log('✅ Form validation passed');
+    }
+    
     return Object.keys(newErrors).length === 0;
   }, [form]);
 
-  // Prepare form data for backend API
+  // FIXED: Prepare data for backend - MATCHES DJANGO SERIALIZER EXPECTATIONS
   const prepareForBackend = useCallback(() => {
     const backendData = {
+      // Basic fields - snake_case as expected by backend
       plan_type: form.plan_type,
-      name: form.name.trim(),
-      price: form.price === '' ? 0 : parseFloat(form.price),  // Default to 0 if empty for backend
+      name: form.name?.trim(),
+      price: parseFloat(form.price) || 0, // Convert to number for DecimalField
       active: form.active !== false,
       category: form.category,
-      description: form.description.trim(),
+      description: form.description?.trim() || '',
       
-      // Access methods - ensure proper structure
+      // Access methods - exact structure backend expects
       access_methods: {
         hotspot: {
-          enabled: form.access_methods.hotspot.enabled || false,
-          downloadSpeed: {
-            value: form.access_methods.hotspot.downloadSpeed.value || "10",
-            unit: form.access_methods.hotspot.downloadSpeed.unit || "Mbps"
+          enabled: Boolean(form.access_methods?.hotspot?.enabled),
+          download_speed: {
+            value: form.access_methods?.hotspot?.download_speed?.value?.toString() || '',
+            unit: form.access_methods?.hotspot?.download_speed?.unit || 'Mbps'
           },
-          uploadSpeed: {
-            value: form.access_methods.hotspot.uploadSpeed.value || "5",
-            unit: form.access_methods.hotspot.uploadSpeed.unit || "Mbps"
+          upload_speed: {
+            value: form.access_methods?.hotspot?.upload_speed?.value?.toString() || '',
+            unit: form.access_methods?.hotspot?.upload_speed?.unit || 'Mbps'
           },
-          dataLimit: {
-            value: form.access_methods.hotspot.dataLimit.value || "10",
-            unit: form.access_methods.hotspot.dataLimit.unit || "GB"
+          data_limit: {
+            value: form.access_methods?.hotspot?.data_limit?.value?.toString() || '',
+            unit: form.access_methods?.hotspot?.data_limit?.unit || 'GB'
           },
-          usageLimit: {
-            value: form.access_methods.hotspot.usageLimit.value || "24",
-            unit: form.access_methods.hotspot.usageLimit.unit || "Hours"
+          usage_limit: {
+            value: form.access_methods?.hotspot?.usage_limit?.value?.toString() || '',
+            unit: form.access_methods?.hotspot?.usage_limit?.unit || 'hours'
           },
-          bandwidthLimit: parseInt(form.access_methods.hotspot.bandwidthLimit) || 0,
-          maxDevices: parseInt(form.access_methods.hotspot.maxDevices) || 1,
-          sessionTimeout: parseInt(form.access_methods.hotspot.sessionTimeout) || 86400,
-          idleTimeout: parseInt(form.access_methods.hotspot.idleTimeout) || 300,
-          validityPeriod: {
-            value: form.access_methods.hotspot.validityPeriod.value || "30",
-            unit: form.access_methods.hotspot.validityPeriod.unit || "Days"
+          bandwidth_limit: form.access_methods?.hotspot?.bandwidth_limit 
+            ? parseInt(form.access_methods.hotspot.bandwidth_limit) 
+            : null,
+          max_devices: form.access_methods?.hotspot?.max_devices
+            ? parseInt(form.access_methods.hotspot.max_devices)
+            : null,
+          session_timeout: form.access_methods?.hotspot?.session_timeout
+            ? parseInt(form.access_methods.hotspot.session_timeout)
+            : null,
+          idle_timeout: form.access_methods?.hotspot?.idle_timeout
+            ? parseInt(form.access_methods.hotspot.idle_timeout)
+            : null,
+          validity_period: {
+            value: form.access_methods?.hotspot?.validity_period?.value?.toString() || '',
+            unit: form.access_methods?.hotspot?.validity_period?.unit || 'days'
           },
-          macBinding: form.access_methods.hotspot.macBinding || false,
+          mac_binding: Boolean(form.access_methods?.hotspot?.mac_binding)
         },
         pppoe: {
-          enabled: form.access_methods.pppoe.enabled || false,
-          downloadSpeed: {
-            value: form.access_methods.pppoe.downloadSpeed.value || "10",
-            unit: form.access_methods.pppoe.downloadSpeed.unit || "Mbps"
+          enabled: Boolean(form.access_methods?.pppoe?.enabled),
+          download_speed: {
+            value: form.access_methods?.pppoe?.download_speed?.value?.toString() || '',
+            unit: form.access_methods?.pppoe?.download_speed?.unit || 'Mbps'
           },
-          uploadSpeed: {
-            value: form.access_methods.pppoe.uploadSpeed.value || "5",
-            unit: form.access_methods.pppoe.uploadSpeed.unit || "Mbps"
+          upload_speed: {
+            value: form.access_methods?.pppoe?.upload_speed?.value?.toString() || '',
+            unit: form.access_methods?.pppoe?.upload_speed?.unit || 'Mbps'
           },
-          dataLimit: {
-            value: form.access_methods.pppoe.dataLimit.value || "10",
-            unit: form.access_methods.pppoe.dataLimit.unit || "GB"
+          data_limit: {
+            value: form.access_methods?.pppoe?.data_limit?.value?.toString() || '',
+            unit: form.access_methods?.pppoe?.data_limit?.unit || 'GB'
           },
-          usageLimit: {
-            value: form.access_methods.pppoe.usageLimit.value || "24",
-            unit: form.access_methods.pppoe.usageLimit.unit || "Hours"
+          usage_limit: {
+            value: form.access_methods?.pppoe?.usage_limit?.value?.toString() || '',
+            unit: form.access_methods?.pppoe?.usage_limit?.unit || 'hours'
           },
-          bandwidthLimit: parseInt(form.access_methods.pppoe.bandwidthLimit) || 0,
-          maxDevices: parseInt(form.access_methods.pppoe.maxDevices) || 1,
-          sessionTimeout: parseInt(form.access_methods.pppoe.sessionTimeout) || 86400,
-          idleTimeout: parseInt(form.access_methods.pppoe.idleTimeout) || 300,
-          validityPeriod: {
-            value: form.access_methods.pppoe.validityPeriod.value || "30",
-            unit: form.access_methods.pppoe.validityPeriod.unit || "Days"
+          bandwidth_limit: form.access_methods?.pppoe?.bandwidth_limit
+            ? parseInt(form.access_methods.pppoe.bandwidth_limit)
+            : null,
+          max_devices: form.access_methods?.pppoe?.max_devices
+            ? parseInt(form.access_methods.pppoe.max_devices)
+            : null,
+          session_timeout: form.access_methods?.pppoe?.session_timeout
+            ? parseInt(form.access_methods.pppoe.session_timeout)
+            : null,
+          idle_timeout: form.access_methods?.pppoe?.idle_timeout
+            ? parseInt(form.access_methods.pppoe.idle_timeout)
+            : null,
+          validity_period: {
+            value: form.access_methods?.pppoe?.validity_period?.value?.toString() || '',
+            unit: form.access_methods?.pppoe?.validity_period?.unit || 'days'
           },
-          macBinding: form.access_methods.pppoe.macBinding || false,
-          ipPool: form.access_methods.pppoe.ipPool || "pppoe-pool-1",
-          serviceName: form.access_methods.pppoe.serviceName || "",
-          mtu: parseInt(form.access_methods.pppoe.mtu) || 1492,
+          mac_binding: Boolean(form.access_methods?.pppoe?.mac_binding),
+          ip_pool: form.access_methods?.pppoe?.ip_pool || '',
+          service_name: form.access_methods?.pppoe?.service_name || '',
+          mtu: form.access_methods?.pppoe?.mtu ? parseInt(form.access_methods.pppoe.mtu) : null
         }
       },
       
-      priority_level: form.priority_level || 4,
-      router_specific: form.router_specific || false,
-      allowed_routers_ids: form.router_specific ? form.allowed_routers_ids : [],
-      FUP_policy: form.FUP_policy || "",
-      FUP_threshold: form.FUP_threshold || 80,
+      // Advanced settings
+      priority_level: parseInt(form.priority_level) || 4,
+      router_specific: Boolean(form.router_specific),
+      fup_policy: form.fup_policy || '',
+      fup_threshold: parseInt(form.fup_threshold) || 80,
       
-      // References
-      template: form.template || null,
+      // Relationship IDs
       time_variant_id: form.time_variant_id || null,
-      pricing_matrix_id: form.pricing_matrix_id || null,
-      discount_rule_ids: form.discount_rule_ids || []
+      template_id: form.template_id || null,
     };
     
+    // Add allowed routers only if router specific - as array of integers
+    if (form.router_specific && Array.isArray(form.allowed_routers_ids)) {
+      backendData.allowed_routers_ids = form.allowed_routers_ids
+        .map(id => parseInt(id))
+        .filter(id => !isNaN(id));
+    }
+    
+    // Remove null values to let backend use defaults
+    Object.keys(backendData).forEach(key => {
+      if (backendData[key] === null) {
+        delete backendData[key];
+      }
+    });
+    
+    console.log('📤 Prepared data for backend:', backendData);
     return backendData;
   }, [form]);
-
-  // Reset form
-  const resetForm = useCallback(() => {
-    setForm(deepClone(initialState));
-    setErrors({});
-    setTouched({});
-    setIsLoading(false);
-  }, [initialState]);
-
-  // Set specific field value
-  const setFormField = useCallback((field, value) => {
-    setForm(prev => ({ ...prev, [field]: value }));
-  }, []);
-
-  // Bulk update form fields
-  const updateFormFields = useCallback((updates) => {
-    setForm(prev => ({ ...prev, ...updates }));
-  }, []);
-
-  // Check if form has changes compared to original
-  const hasChanges = useCallback((originalForm) => {
-    if (!originalForm) return true;
-    
-    const currentData = prepareForBackend();
-    const originalData = deepClone(originalForm);
-    
-    // Compare key fields
-    const fieldsToCompare = [
-      'plan_type', 'name', 'price', 'category', 'description',
-      'priority_level', 'router_specific', 'FUP_policy', 'FUP_threshold'
-    ];
-    
-    for (const field of fieldsToCompare) {
-      if (currentData[field] !== originalData[field]) {
-        return true;
-      }
-    }
-    
-    // Compare access methods
-    const compareAccessMethod = (method) => {
-      const curr = currentData.access_methods[method];
-      const orig = originalData.access_methods[method];
-      
-      if (curr.enabled !== orig.enabled) return true;
-      if (JSON.stringify(curr.downloadSpeed) !== JSON.stringify(orig.downloadSpeed)) return true;
-      if (JSON.stringify(curr.uploadSpeed) !== JSON.stringify(orig.uploadSpeed)) return true;
-      if (JSON.stringify(curr.dataLimit) !== JSON.stringify(orig.dataLimit)) return true;
-      if (JSON.stringify(curr.usageLimit) !== JSON.stringify(orig.usageLimit)) return true;
-      if (curr.maxDevices !== orig.maxDevices) return true;
-      
-      return false;
-    };
-    
-    if (compareAccessMethod('hotspot') || compareAccessMethod('pppoe')) {
-      return true;
-    }
-    
-    return false;
-  }, [prepareForBackend]);
 
   // Get enabled access methods
   const getEnabledAccessMethods = useCallback(() => {
     const methods = [];
-    if (form.access_methods.hotspot.enabled) methods.push('hotspot');
-    if (form.access_methods.pppoe.enabled) methods.push('pppoe');
+    if (form.access_methods?.hotspot?.enabled) methods.push('hotspot');
+    if (form.access_methods?.pppoe?.enabled) methods.push('pppoe');
     return methods;
   }, [form.access_methods]);
 
-  // Get access type category
-  const getAccessType = useCallback(() => {
-    const enabledMethods = getEnabledAccessMethods();
+  // Get access type
+  const getAccessType = useCallback((plan) => {
+    let enabledMethods = [];
+    if (plan) {
+      if (plan.access_methods?.hotspot?.enabled) enabledMethods.push('hotspot');
+      if (plan.access_methods?.pppoe?.enabled) enabledMethods.push('pppoe');
+    } else {
+      enabledMethods = getEnabledAccessMethods();
+    }
+    
     if (enabledMethods.includes('hotspot') && enabledMethods.includes('pppoe')) {
-      return 'dual';
+      return 'both';
     } else if (enabledMethods.includes('hotspot')) {
       return 'hotspot';
     } else if (enabledMethods.includes('pppoe')) {
@@ -1638,75 +1338,40 @@ const usePlanForm = (initialState = getInitialFormState()) => {
     return 'none';
   }, [getEnabledAccessMethods]);
 
-  // Check if plan has enabled access methods
-  const hasEnabledAccessMethods = useCallback(() => {
-    return getEnabledAccessMethods().length > 0;
-  }, [getEnabledAccessMethods]);
-
-  // Check if time variant is active
-  const hasTimeVariant = useCallback(() => {
-    return form.time_variant?.is_active || false;
-  }, [form.time_variant]);
-
-  // Get configuration for specific access method
-  const getConfigForMethod = useCallback((method) => {
-    return form.access_methods[method] || {};
-  }, [form.access_methods]);
-
-  // Load form from backend data
-  const loadFromBackend = useCallback(async (planId, apiService) => {
-    if (!planId || !apiService) return;
+  // Get display info for a plan
+  const getPlanDisplayInfo = useCallback((planData) => {
+    const info = {
+      name: planData.name || '',
+      type: planData.plan_type || '',
+      category: planData.category || '',
+      price: planData.price || '',
+      accessType: '',
+      typeDisplay: '',
+      priceDisplay: '',
+    };
     
-    setIsLoading(true);
-    try {
-      const response = await apiService.getPlan(planId);
-      if (response.success && response.data) {
-        initializeFromBackend(response.data);
-      }
-    } catch (error) {
-      console.error('Error loading plan data:', error);
-      setErrors({ fetch: 'Failed to load plan data' });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [initializeFromBackend]);
-
-  // Auto-save form (optional)
-  const autoSave = useCallback(async (apiService, planId) => {
-    if (!validateForm()) {
-      return { success: false, errors };
+    // Determine display text based on plan type
+    if (planData.plan_type === 'free_trial') {
+      info.typeDisplay = 'Free Trial';
+      info.priceDisplay = 'Free Trial';
+    } else if (planData.plan_type === 'promotional') {
+      info.typeDisplay = 'Promotional';
+      info.priceDisplay = planData.price ? `KES ${parseFloat(planData.price).toFixed(2)}` : 'Free';
+    } else {
+      info.typeDisplay = 'Paid';
+      info.priceDisplay = planData.price ? `KES ${parseFloat(planData.price).toFixed(2)}` : 'Free';
     }
     
-    setIsLoading(true);
-    try {
-      const formData = prepareForBackend();
-      let response;
-      
-      if (planId) {
-        // Update existing plan
-        response = await apiService.updatePlan(planId, formData);
-      } else {
-        // Create new plan
-        response = await apiService.createPlan(formData);
-      }
-      
-      if (response.success) {
-        return { success: true, data: response.data };
-      } else {
-        return { success: false, errors: response.errors };
-      }
-    } catch (error) {
-      console.error('Auto-save error:', error);
-      return { 
-        success: false, 
-        errors: { 
-          save: error.response?.data?.detail || 'Failed to save plan' 
-        } 
-      };
-    } finally {
-      setIsLoading(false);
+    // Get access type
+    if (planData.access_methods) {
+      const methods = [];
+      if (planData.access_methods.hotspot?.enabled) methods.push('Hotspot');
+      if (planData.access_methods.pppoe?.enabled) methods.push('PPPoE');
+      info.accessType = methods.join(' + ') || 'None';
     }
-  }, [validateForm, prepareForBackend, errors]);
+    
+    return info;
+  }, []);
 
   return {
     // Form state
@@ -1717,20 +1382,17 @@ const usePlanForm = (initialState = getInitialFormState()) => {
     
     // Setters
     setForm: initializeFromBackend,
-    setFormField,
-    updateFormFields,
     setErrors,
     setTouched,
     setIsLoading,
     
     // Handlers
     handleChange,
-    handleInputChange,
     handleAccessTypeChange,
     handleAccessMethodChange,
     handleAccessMethodNestedChange,
-    handleTimeVariantChange,
     setTimeVariantId,
+    setTemplateId,
     handleFieldBlur,
     
     // Validations
@@ -1740,20 +1402,9 @@ const usePlanForm = (initialState = getInitialFormState()) => {
     // Utilities
     prepareForBackend,
     resetForm,
-    hasChanges,
-    hasEnabledAccessMethods,
-    hasTimeVariant,
     getEnabledAccessMethods,
     getAccessType,
-    getConfigForMethod,
-    loadFromBackend,
-    autoSave,
-    
-    // Constants for forms
-    planTypes,
-    categories,
-    priorityOptions,
-    clientTypeRestrictions,
+    getPlanDisplayInfo,
   };
 };
 

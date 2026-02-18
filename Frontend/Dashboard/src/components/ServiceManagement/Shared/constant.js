@@ -1180,9 +1180,9 @@
 
 // Plan types (matches InternetPlan.PLAN_TYPES)
 export const planTypes = Object.freeze([
-  { value: "paid", label: "Paid Plan" },
-  { value: "free_trial", label: "Free Trial" },
-  { value: "promotional", label: "Promotional" }
+  { value: "Paid", label: "Paid Plan" },
+  { value: "Free_trial", label: "Free Trial" },
+  { value: "Promotional", label: "Promotional" }
 ]);
 
 // Plan categories (matches InternetPlan.CATEGORIES)

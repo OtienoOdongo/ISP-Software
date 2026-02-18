@@ -1,900 +1,864 @@
 
 
 
-// import React, { useState, useEffect } from "react";
-// import { motion, AnimatePresence } from "framer-motion";
-// import { ArrowLeft, Plus, Search, Box, Check, X, Save, Trash2, AlertTriangle, RefreshCw } from "lucide-react";
-// import { getThemeClasses } from "../Shared/components";
-// import { deepClone } from "../Shared/utils";
-// import { EnhancedSelect, ConfirmationModal } from "../Shared/components";
-// import { categories } from "../Shared/constant";
-// import api from "../../../api";
-
-// // Components
-// import TemplateTypeSelection from "../Templates/TemplateTypeSelection";
-// import TemplateCard from "../Templates/TemplateCard";
-// import TemplateForm from "../Templates/TemplateForm";
-// import TemplatePreview from "../Templates/TemplatePreview";
-
-// const PlanTemplates = ({ templates: initialTemplates, onApplyTemplate, onCreateFromTemplate, onBack, theme }) => {
-//   const themeClasses = getThemeClasses(theme);
-//   const [selectedTemplate, setSelectedTemplate] = useState(null);
-//   const [templates, setTemplates] = useState(initialTemplates || []);
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [isRefreshing, setIsRefreshing] = useState(false);
-//   const [viewMode, setViewMode] = useState("browse");
-//   const [searchTerm, setSearchTerm] = useState("");
-//   const [filterCategory, setFilterCategory] = useState("All");
-//   const [filterVisibility, setFilterVisibility] = useState("All");
-//   const [filterAccessType, setFilterAccessType] = useState("All");
-//   const [templateType, setTemplateType] = useState("hotspot");
-  
-//   // Enhanced state management
-//   const [toast, setToast] = useState({
-//     visible: false,
-//     message: "",
-//     type: "success"
-//   });
-
-//   const [deleteModal, setDeleteModal] = useState({
-//     isOpen: false,
-//     template: null
-//   });
-
-//   // Template form state
-//   const [templateForm, setTemplateForm] = useState({
-//     name: "",
-//     description: "",
-//     category: "Residential",
-//     basePrice: "0",
-//     isPublic: true,
-//     isActive: true,
-//     priority_level: 4,
-//     router_specific: false,
-//     allowed_routers_ids: [],
-//     FUP_policy: "",
-//     FUP_threshold: 80,
-//     accessMethods: {
-//       hotspot: {
-//         enabled: true,
-//         downloadSpeed: { value: "10", unit: "Mbps" },
-//         uploadSpeed: { value: "5", unit: "Mbps" },
-//         dataLimit: { value: "10", unit: "GB" },
-//         usageLimit: { value: "24", unit: "Hours" },
-//         bandwidthLimit: 0,
-//         maxDevices: 1,
-//         sessionTimeout: 86400,
-//         idleTimeout: 300,
-//         validityPeriod: { value: "30", unit: "Days" },
-//         macBinding: false,
-//       },
-//       pppoe: {
-//         enabled: false,
-//         downloadSpeed: { value: "10", unit: "Mbps" },
-//         uploadSpeed: { value: "5", unit: "Mbps" },
-//         dataLimit: { value: "10", unit: "GB" },
-//         usageLimit: { value: "24", unit: "Hours" },
-//         bandwidthLimit: 0,
-//         maxDevices: 1,
-//         sessionTimeout: 86400,
-//         idleTimeout: 300,
-//         validityPeriod: { value: "30", unit: "Days" },
-//         macBinding: false,
-//         ipPool: "pppoe-pool-1",
-//         serviceName: "",
-//         mtu: 1492,
-//         dnsServers: ["8.8.8.8", "1.1.1.1"],
-//       }
-//     }
-//   });
-
-//   // Show toast notification
-//   const showToast = (message, type = "success") => {
-//     setToast({
-//       visible: true,
-//       message,
-//       type
-//     });
-//     setTimeout(() => {
-//       setToast({ visible: false, message: "", type: "success" });
-//     }, 4000);
-//   };
-
-//   // Enhanced template fetching with error handling
-//   const fetchTemplates = async () => {
-//     setIsRefreshing(true);
-//     try {
-//       const response = await api.get("/api/internet_plans/templates/");
-//       const templatesData = response.data.results || response.data;
-//       if (Array.isArray(templatesData)) {
-//         setTemplates(templatesData);
-//         showToast("Templates refreshed successfully");
-//       } else {
-//         throw new Error("Invalid templates data format");
-//       }
-//     } catch (error) {
-//       console.error("Error fetching templates:", error);
-//       showToast("Failed to load templates", "error");
-//     } finally {
-//       setIsRefreshing(false);
-//     }
-//   };
-
-//   // Load templates on component mount
-//   useEffect(() => {
-//     if (!initialTemplates || initialTemplates.length === 0) {
-//       fetchTemplates();
-//     }
-//   }, [initialTemplates]);
-
-//   // Enhanced template application with proper usage tracking
-//   const handleApplyTemplate = async (template) => {
-//     try {
-//       setIsLoading(true);
-      
-//       // Apply template to form immediately for user feedback
-//       if (onApplyTemplate) {
-//         onApplyTemplate(template);
-//       }
-      
-//       // Increment usage count via API
-//       await api.patch(`/api/internet_plans/templates/${template.id}/increment-usage/`);
-      
-//       // Update local state to reflect usage count
-//       setTemplates(prev => prev.map(t => 
-//         t.id === template.id 
-//           ? { 
-//               ...t, 
-//               usageCount: (t.usageCount || 0) + 1,
-//               usage_count: (t.usage_count || 0) + 1
-//             }
-//           : t
-//       ));
-      
-//       showToast(`Template "${template.name}" applied successfully!`);
-//     } catch (error) {
-//       console.error("Error applying template:", error);
-//       showToast("Failed to apply template", "error");
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   };
-
-//   // Enhanced template creation with proper plan creation and usage tracking
-//   const handleCreateFromTemplate = async (template, planName = null) => {
-//     try {
-//       let finalPlanName = planName;
-      
-//       // If no plan name provided, use the modern modal (handled in TemplateCard)
-//       if (!finalPlanName) {
-//         finalPlanName = prompt("Enter plan name:", `${template.name} - ${new Date().toLocaleDateString()}`);
-//       }
-      
-//       if (!finalPlanName || !finalPlanName.trim()) {
-//         if (!planName) { // Only show toast if it's from prompt (not modal)
-//           showToast("Plan name cannot be empty", "error");
-//         }
-//         return;
-//       }
-
-//       setIsLoading(true);
-      
-//       // Create plan from template via API
-//       const response = await api.post(`/api/internet_plans/templates/${template.id}/create-plan/`, {
-//         name: finalPlanName.trim()
-//       });
-
-//       // Update local usage count
-//       setTemplates(prev => prev.map(t => 
-//         t.id === template.id 
-//           ? { 
-//               ...t, 
-//               usageCount: (t.usageCount || 0) + 1,
-//               usage_count: (t.usage_count || 0) + 1
-//             }
-//           : t
-//       ));
-
-//       // Call the parent handler with the created plan data
-//       if (onCreateFromTemplate) {
-//         await onCreateFromTemplate(response.data);
-//       }
-      
-//       if (!planName) { // Only show toast if it's from prompt (not modal)
-//         showToast(`Plan "${finalPlanName}" created successfully!`);
-//       }
-      
-//       return response.data; // Return the created plan data
-//     } catch (error) {
-//       console.error("Error creating plan from template:", error);
-//       const errorMessage = error.response?.data?.error || 
-//                           error.response?.data?.details?.[0] || 
-//                           error.response?.data?.detail || 
-//                           "Failed to create plan from template";
-      
-//       if (!planName) { // Only show toast if it's from prompt (not modal)
-//         showToast(errorMessage, "error");
-//       } else {
-//         // Re-throw error for modal to handle
-//         throw error;
-//       }
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   };
-
-//   // Enhanced delete template with confirmation
-//   const handleDeleteTemplate = (template) => {
-//     setDeleteModal({
-//       isOpen: true,
-//       template
-//     });
-//   };
-
-//   const confirmDeleteTemplate = async () => {
-//     const { template } = deleteModal;
-    
-//     setIsLoading(true);
-//     try {
-//       await api.delete(`/api/internet_plans/templates/${template.id}/`);
-      
-//       // Remove template from local state
-//       setTemplates(prev => prev.filter(t => t.id !== template.id));
-      
-//       // Clear selected template if it was deleted
-//       if (selectedTemplate?.id === template.id) {
-//         setSelectedTemplate(null);
-//       }
-      
-//       showToast(`Template "${template.name}" deleted successfully!`);
-//     } catch (error) {
-//       console.error("Error deleting template:", error);
-//       const errorMessage = error.response?.data?.detail || 
-//                           error.response?.data?.error || 
-//                           "Failed to delete template";
-//       showToast(errorMessage, "error");
-//     } finally {
-//       setIsLoading(false);
-//       setDeleteModal({ isOpen: false, template: null });
-//     }
-//   };
-
-//   // Enhanced template filtering with access type support
-//   const filteredTemplates = templates.filter(template => {
-//     const matchesSearch = template.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//                          template.description?.toLowerCase().includes(searchTerm.toLowerCase());
-//     const matchesCategory = filterCategory === "All" || template.category === filterCategory;
-//     const matchesVisibility = filterVisibility === "All" || 
-//                              (filterVisibility === "Public" && template.isPublic) ||
-//                              (filterVisibility === "Private" && !template.isPublic);
-    
-//     // Enhanced access type filtering
-//     const matchesAccessType = filterAccessType === "All" || 
-//       (filterAccessType === "hotspot" && template.accessMethods?.hotspot?.enabled) ||
-//       (filterAccessType === "pppoe" && template.accessMethods?.pppoe?.enabled) ||
-//       (filterAccessType === "both" && template.accessMethods?.hotspot?.enabled && template.accessMethods?.pppoe?.enabled);
-    
-//     return matchesSearch && matchesCategory && matchesVisibility && matchesAccessType;
-//   });
-
-//   // Get template statistics for display
-//   const templateStats = {
-//     total: templates.length,
-//     hotspot: templates.filter(t => t.accessMethods?.hotspot?.enabled).length,
-//     pppoe: templates.filter(t => t.accessMethods?.pppoe?.enabled).length,
-//     public: templates.filter(t => t.isPublic).length,
-//     private: templates.filter(t => !t.isPublic).length
-//   };
-
-//   // Toast Notification Component
-//   const ToastNotification = () => {
-//     if (!toast.visible) return null;
-
-//     return (
-//       <motion.div
-//         initial={{ opacity: 0, y: -50, scale: 0.8 }}
-//         animate={{ opacity: 1, y: 0, scale: 1 }}
-//         exit={{ opacity: 0, y: -50, scale: 0.8 }}
-//         className={`fixed top-4 right-4 z-50 max-w-sm w-full ${
-//           toast.type === "success" 
-//             ? "bg-green-500 border-green-600" 
-//             : "bg-red-500 border-red-600"
-//         } text-white p-4 rounded-lg shadow-lg border`}
-//       >
-//         <div className="flex items-center justify-between">
-//           <div className="flex items-center">
-//             {toast.type === "success" ? (
-//               <Check className="w-5 h-5 mr-2" />
-//             ) : (
-//               <X className="w-5 h-5 mr-2" />
-//             )}
-//             <span className="font-medium">{toast.message}</span>
-//           </div>
-//           <button
-//             onClick={() => setToast({ visible: false, message: "", type: "success" })}
-//             className="ml-4 text-white hover:text-gray-200 transition-colors"
-//           >
-//             <X className="w-4 h-4" />
-//           </button>
-//         </div>
-//       </motion.div>
-//     );
-//   };
-
-//   if (isLoading && viewMode === "browse") {
-//     return (
-//       <div className={`min-h-screen p-3 sm:p-6 lg:p-8 transition-colors duration-300 ${themeClasses.bg.primary}`}>
-//         <main className="max-w-7xl mx-auto space-y-6 lg:space-y-8">
-//           <div className="flex items-center space-x-4">
-//             <button
-//               onClick={onBack}
-//               className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg"
-//             >
-//               <ArrowLeft className="w-5 h-5" />
-//             </button>
-//             <div>
-//               <h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500">
-//                 Plan Templates
-//               </h1>
-//               <p className={`mt-1 lg:mt-2 text-sm lg:text-lg ${themeClasses.text.secondary}`}>
-//                 Loading templates...
-//               </p>
-//             </div>
-//           </div>
-//           <div className="flex justify-center items-center py-12">
-//             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-//           </div>
-//         </main>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className={`min-h-screen p-3 sm:p-6 lg:p-8 transition-colors duration-300 ${themeClasses.bg.primary}`}>
-//       <main className="max-w-7xl mx-auto space-y-6 lg:space-y-8">
-//         {/* Toast Notification */}
-//         <ToastNotification />
-
-//         {/* Header */}
-//         <div className="flex items-center justify-between">
-//           <div className="flex items-center space-x-4">
-//             <button
-//               onClick={onBack}
-//               className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
-//             >
-//               <ArrowLeft className="w-5 h-5" />
-//             </button>
-//             <div>
-//               <h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500">
-//                 Plan Templates
-//               </h1>
-//               <p className={`mt-1 lg:mt-2 text-sm lg:text-lg ${themeClasses.text.secondary}`}>
-//                 {viewMode === "browse" ? "Quick start with pre-configured plan templates" : 
-//                  viewMode === "create" ? "Create a new template" : 
-//                  viewMode === "type-select" ? "Select template type" : "Edit template"}
-//               </p>
-//             </div>
-//           </div>
-          
-//           {viewMode === "browse" && (
-//             <div className="flex items-center space-x-3">
-//               {/* Template Statistics */}
-//               <div className="hidden md:flex items-center space-x-4 text-sm text-gray-500">
-//                 <span>Total: {templateStats.total}</span>
-//                 <span>Hotspot: {templateStats.hotspot}</span>
-//                 <span>PPPoE: {templateStats.pppoe}</span>
-//               </div>
-              
-//               {/* Refresh Button */}
-//               <motion.button
-//                 onClick={fetchTemplates}
-//                 disabled={isRefreshing}
-//                 className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
-//                 whileHover={{ scale: 1.05 }}
-//                 whileTap={{ scale: 0.95 }}
-//                 title="Refresh Templates"
-//               >
-//                 <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
-//               </motion.button>
-              
-//               {/* New Template Button */}
-//               <motion.button
-//                 onClick={() => setViewMode("type-select")}
-//                 className={`px-4 py-2 rounded-lg flex items-center ${themeClasses.button.success}`}
-//                 whileHover={{ scale: 1.05 }}
-//                 whileTap={{ scale: 0.95 }}
-//               >
-//                 <Plus className="w-4 h-4 mr-2" />
-//                 New Template
-//               </motion.button>
-//             </div>
-//           )}
-//         </div>
-
-//         {/* Browse View */}
-//         {viewMode === "browse" && (
-//           <>
-//             {/* Enhanced Filters */}
-//             <div className={`p-4 lg:p-6 rounded-xl shadow-lg ${themeClasses.bg.card}`}>
-//               <div className="flex flex-col lg:flex-row gap-4 items-end">
-//                 {/* Search */}
-//                 <div className="flex-1">
-//                   <div className="relative">
-//                     <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${themeClasses.text.tertiary}`} />
-//                     <input
-//                       type="text"
-//                       placeholder="Search templates by name or description..."
-//                       value={searchTerm}
-//                       onChange={(e) => setSearchTerm(e.target.value)}
-//                       className={`w-full pl-10 pr-4 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-//                     />
-//                   </div>
-//                 </div>
-                
-//                 {/* Filter Group */}
-//                 <div className="flex flex-wrap gap-4">
-//                   <div className="w-40">
-//                     <EnhancedSelect
-//                       value={filterCategory}
-//                       onChange={setFilterCategory}
-//                       options={[
-//                         { value: "All", label: "All Categories" },
-//                         ...categories.map(cat => ({ value: cat, label: cat }))
-//                       ]}
-//                       theme={theme}
-//                     />
-//                   </div>
-                  
-//                   <div className="w-32">
-//                     <EnhancedSelect
-//                       value={filterVisibility}
-//                       onChange={setFilterVisibility}
-//                       options={[
-//                         { value: "All", label: "All" },
-//                         { value: "Public", label: "Public" },
-//                         { value: "Private", label: "Private" }
-//                       ]}
-//                       theme={theme}
-//                     />
-//                   </div>
-
-//                   <div className="w-36">
-//                     <EnhancedSelect
-//                       value={filterAccessType}
-//                       onChange={setFilterAccessType}
-//                       options={[
-//                         { value: "All", label: "All Types" },
-//                         { value: "hotspot", label: "Hotspot Only" },
-//                         { value: "pppoe", label: "PPPoE Only" },
-//                         { value: "both", label: "Both Enabled" }
-//                       ]}
-//                       theme={theme}
-//                     />
-//                   </div>
-//                 </div>
-//               </div>
-
-//               {/* Results Summary */}
-//               <div className="mt-4 flex justify-between items-center">
-//                 <p className={`text-sm ${themeClasses.text.secondary}`}>
-//                   Showing {filteredTemplates.length} of {templates.length} templates
-//                 </p>
-//                 {(searchTerm || filterCategory !== "All" || filterVisibility !== "All" || filterAccessType !== "All") && (
-//                   <button
-//                     onClick={() => {
-//                       setSearchTerm("");
-//                       setFilterCategory("All");
-//                       setFilterVisibility("All");
-//                       setFilterAccessType("All");
-//                     }}
-//                     className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
-//                   >
-//                     Clear all filters
-//                   </button>
-//                 )}
-//               </div>
-//             </div>
-
-//             {/* Templates Grid */}
-//             {filteredTemplates.length === 0 ? (
-//               <div className={`rounded-xl shadow-lg p-12 text-center ${themeClasses.bg.card}`}>
-//                 <Box className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-//                 <h3 className="text-xl font-semibold mb-2">
-//                   {templates.length === 0 ? "No Templates Available" : "No Templates Found"}
-//                 </h3>
-//                 <p className={`mb-6 ${themeClasses.text.secondary}`}>
-//                   {templates.length === 0 
-//                     ? "Create your first template to get started!" 
-//                     : "Try adjusting your search or filters"}
-//                 </p>
-//                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-//                   <button
-//                     onClick={() => setViewMode("type-select")}
-//                     className={`px-6 py-3 rounded-lg ${themeClasses.button.primary}`}
-//                   >
-//                     <Plus className="w-4 h-4 mr-2 inline" />
-//                     Create First Template
-//                   </button>
-//                   <button
-//                     onClick={onBack}
-//                     className={`px-6 py-3 rounded-lg ${themeClasses.button.secondary}`}
-//                   >
-//                     Back to Plans
-//                   </button>
-//                 </div>
-//               </div>
-//             ) : (
-//               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-//                 {filteredTemplates.map((template) => (
-//                   <TemplateCard 
-//                     key={template.id} 
-//                     template={template}
-//                     onSelect={setSelectedTemplate}
-//                     onApplyTemplate={handleApplyTemplate}
-//                     onCreateFromTemplate={handleCreateFromTemplate}
-//                     onEditTemplate={(template) => {
-//                       const formData = deepClone({
-//                         name: template.name,
-//                         description: template.description,
-//                         category: template.category,
-//                         basePrice: template.basePrice?.toString() || template.base_price?.toString() || "0",
-//                         isPublic: template.isPublic !== false,
-//                         isActive: template.isActive !== false,
-//                         priority_level: template.priority_level || 4,
-//                         router_specific: template.router_specific || false,
-//                         allowed_routers_ids: template.allowed_routers_ids || [],
-//                         FUP_policy: template.FUP_policy || "",
-//                         FUP_threshold: template.FUP_threshold || 80,
-//                         accessMethods: template.accessMethods || template.access_methods
-//                       });
-                      
-//                       setTemplateForm(formData);
-//                       setTemplateType(formData.accessMethods?.hotspot?.enabled ? "hotspot" : "pppoe");
-//                       setSelectedTemplate(template);
-//                       setViewMode("edit");
-//                     }}
-//                     onDeleteTemplate={handleDeleteTemplate}
-//                     theme={theme}
-//                   />
-//                 ))}
-//               </div>
-//             )}
-//           </>
-//         )}
-
-//         {/* Other view modes */}
-//         {viewMode === "type-select" && (
-//           <TemplateTypeSelection
-//             templateType={templateType}
-//             onTemplateTypeSelect={setTemplateType}
-//             onContinue={() => setViewMode("create")}
-//             theme={theme}
-//           />
-//         )}
-
-//         {(viewMode === "create" || viewMode === "edit") && (
-//           <TemplateForm
-//             templateForm={templateForm}
-//             templateType={templateType}
-//             viewMode={viewMode}
-//             isLoading={isLoading}
-//             onFormChange={(field, value) => setTemplateForm(prev => ({ ...prev, [field]: value }))}
-//             onAccessMethodChange={(method, field, value) => {
-//               setTemplateForm(prev => ({
-//                 ...prev,
-//                 accessMethods: {
-//                   ...prev.accessMethods,
-//                   [method]: {
-//                     ...prev.accessMethods[method],
-//                     [field]: value
-//                   }
-//                 }
-//               }));
-//             }}
-//             onAccessMethodNestedChange={(method, parent, key, value) => {
-//               setTemplateForm(prev => ({
-//                 ...prev,
-//                 accessMethods: {
-//                   ...prev.accessMethods,
-//                   [method]: {
-//                     ...prev.accessMethods[method],
-//                     [parent]: {
-//                       ...prev.accessMethods[method][parent],
-//                       [key]: value
-//                     }
-//                   }
-//                 }
-//               }));
-//             }}
-//             onCancel={() => {
-//               setViewMode("browse");
-//               setTemplateForm({
-//                 name: "",
-//                 description: "",
-//                 category: "Residential",
-//                 basePrice: "0",
-//                 isPublic: true,
-//                 isActive: true,
-//                 priority_level: 4,
-//                 router_specific: false,
-//                 allowed_routers_ids: [],
-//                 FUP_policy: "",
-//                 FUP_threshold: 80,
-//                 accessMethods: {
-//                   hotspot: {
-//                     enabled: true,
-//                     downloadSpeed: { value: "10", unit: "Mbps" },
-//                     uploadSpeed: { value: "5", unit: "Mbps" },
-//                     dataLimit: { value: "10", unit: "GB" },
-//                     usageLimit: { value: "24", unit: "Hours" },
-//                     bandwidthLimit: 0,
-//                     maxDevices: 1,
-//                     sessionTimeout: 86400,
-//                     idleTimeout: 300,
-//                     validityPeriod: { value: "30", unit: "Days" },
-//                     macBinding: false,
-//                   },
-//                   pppoe: {
-//                     enabled: false,
-//                     downloadSpeed: { value: "10", unit: "Mbps" },
-//                     uploadSpeed: { value: "5", unit: "Mbps" },
-//                     dataLimit: { value: "10", unit: "GB" },
-//                     usageLimit: { value: "24", unit: "Hours" },
-//                     bandwidthLimit: 0,
-//                     maxDevices: 1,
-//                     sessionTimeout: 86400,
-//                     idleTimeout: 300,
-//                     validityPeriod: { value: "30", unit: "Days" },
-//                     macBinding: false,
-//                     ipPool: "pppoe-pool-1",
-//                     serviceName: "",
-//                     mtu: 1492,
-//                     dnsServers: ["8.8.8.8", "1.1.1.1"],
-//                   }
-//                 }
-//               });
-//               setSelectedTemplate(null);
-//             }}
-//             onSubmit={async () => {
-//               setIsLoading(true);
-//               try {
-//                 const templateData = {
-//                   name: templateForm.name.trim(),
-//                   description: templateForm.description.trim(),
-//                   category: templateForm.category,
-//                   basePrice: parseFloat(templateForm.basePrice) || 0,
-//                   isPublic: templateForm.isPublic,
-//                   isActive: templateForm.isActive,
-//                   priority_level: templateForm.priority_level,
-//                   router_specific: templateForm.router_specific,
-//                   allowed_routers_ids: templateForm.allowed_routers_ids,
-//                   FUP_policy: templateForm.FUP_policy,
-//                   FUP_threshold: templateForm.FUP_threshold,
-//                   accessMethods: templateForm.accessMethods
-//                 };
-
-//                 let response;
-//                 if (viewMode === "create") {
-//                   response = await api.post("/api/internet_plans/templates/", templateData);
-//                   setTemplates(prev => [...prev, response.data]);
-//                   showToast(`Template "${templateForm.name}" created successfully!`);
-//                 } else {
-//                   response = await api.put(`/api/internet_plans/templates/${selectedTemplate.id}/`, templateData);
-//                   setTemplates(prev => prev.map(t => t.id === selectedTemplate.id ? response.data : t));
-//                   showToast(`Template "${templateForm.name}" updated successfully!`);
-//                 }
-
-//                 setViewMode("browse");
-//                 setSelectedTemplate(null);
-//               } catch (error) {
-//                 console.error(`Error ${viewMode === "create" ? "creating" : "updating"} template:`, error);
-//                 const errorMessage = error.response?.data?.detail || 
-//                                     error.response?.data?.error || 
-//                                     error.response?.data?.details?.[0] ||
-//                                     `Failed to ${viewMode === "create" ? "create" : "update"} template`;
-//                 showToast(errorMessage, "error");
-//               } finally {
-//                 setIsLoading(false);
-//               }
-//             }}
-//             theme={theme}
-//           />
-//         )}
-
-//         {/* Selected Template Preview */}
-//         {selectedTemplate && viewMode === "browse" && (
-//           <TemplatePreview
-//             template={selectedTemplate}
-//             onClose={() => setSelectedTemplate(null)}
-//             onApplyTemplate={handleApplyTemplate}
-//             onCreateFromTemplate={handleCreateFromTemplate}
-//             theme={theme}
-//           />
-//         )}
-
-//         {/* Delete Confirmation Modal */}
-//         <ConfirmationModal
-//           isOpen={deleteModal.isOpen}
-//           onClose={() => setDeleteModal({ isOpen: false, template: null })}
-//           onConfirm={confirmDeleteTemplate}
-//           title="Delete Template"
-//           message={`Are you sure you want to delete template "${deleteModal.template?.name}"? This action cannot be undone and will affect any plans using this template.`}
-//           confirmText="Delete Template"
-//           cancelText="Cancel"
-//           type="danger"
-//           theme={theme}
-//         />
-//       </main>
-//     </div>
-//   );
-// };
-
-// export default PlanTemplates;
 
 
 
 
 
-
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, Search, Box, Check, X, Save, Trash2, AlertTriangle, RefreshCw } from "lucide-react";
-import { getThemeClasses } from "../Shared/components";
+import { 
+  ArrowLeft, Plus, Search, Box, Check, X, RefreshCw, Clock, 
+  AlertCircle, Filter, Grid, List, Edit, Trash2, Copy, Eye,
+  Wifi, Cable, Server, DollarSign, Users, Star, Calendar,
+  Download, Upload, Settings, Zap, Shield, Package, Globe,
+  HelpCircle
+} from "lucide-react";
+import { getThemeClasses, ConfirmationModal } from "../Shared/components";
 import { deepClone } from "../Shared/utils";
-import { EnhancedSelect, ConfirmationModal } from "../Shared/components";
-import { categories } from "../Shared/constant";
+import { EnhancedSelect } from "../Shared/components";
 import api from "../../../api";
+import { useAuth } from "../../../context/AuthContext";
 
 // Components
-import TemplateTypeSelection from "../Templates/TemplateTypeSelection";
-import TemplateCard from "../Templates/TemplateCard";
-import TemplateForm from "../Templates/TemplateForm";
-import TemplatePreview from "../Templates/TemplatePreview";
+import TemplateTypeSelection from "./TemplateTypeSelection";
+import TemplateCard from "./TemplateCard";
+import TemplateForm from "./TemplateForm";
+import TemplatePreview from "./TemplatePreview";
 
-const PlanTemplates = ({ templates: initialTemplates, onApplyTemplate, onCreateFromTemplate, onBack, theme }) => {
+// ============================================================================
+// CONSTANTS - TRY MULTIPLE FORMATS TO HANDLE BACKEND INCONSISTENCIES
+// ============================================================================
+
+// Try all possible formats the backend might accept
+const CATEGORY_VARIANTS = {
+  // Capitalized (from model)
+  'Residential': ['Residential', 'residential', 'RESIDENTIAL'],
+  'Business': ['Business', 'business', 'BUSINESS'],
+  'Promotional': ['Promotional', 'promotional', 'PROMOTIONAL'],
+  'Enterprise': ['Enterprise', 'enterprise', 'ENTERPRISE'],
+  
+  // Common variations
+  'Resi': ['Resi', 'resi'],
+  'Biz': ['Biz', 'biz'],
+  'Promo': ['Promo', 'promo'],
+  'Ent': ['Ent', 'ent']
+};
+
+// Default to try capitalized first, then fallback to lowercase
+const DEFAULT_CATEGORY = "Residential";
+const FALLBACK_CATEGORY = "residential";
+
+// Access method types
+const ACCESS_TYPES = [
+  { value: "all", label: "All Types" },
+  { value: "hotspot", label: "Hotspot Only" },
+  { value: "pppoe", label: "PPPoE Only" },
+  { value: "dual", label: "Both Enabled" }
+];
+
+// Visibility options
+const VISIBILITY_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "public", label: "Public" },
+  { value: "private", label: "Private" }
+];
+
+// Time variant options
+const TIME_VARIANT_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "has", label: "Has Time Variant" },
+  { value: "none", label: "No Time Variant" }
+];
+
+// Sort options
+const SORT_OPTIONS = [
+  { value: "name", label: "Name" },
+  { value: "base_price", label: "Price" },
+  { value: "usage_count", label: "Usage Count" },
+  { value: "created_at", label: "Date Created" },
+  { value: "updated_at", label: "Last Updated" }
+];
+
+// ============================================================================
+// ERROR BOUNDARY COMPONENT
+// ============================================================================
+
+class TemplateErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Template component error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-6 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+          <div className="flex items-center mb-4">
+            <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400 mr-3" />
+            <h3 className="text-lg font-semibold text-red-700 dark:text-red-300">
+              Something went wrong
+            </h3>
+          </div>
+          <p className="text-red-600 dark:text-red-400 mb-4">
+            {this.state.error?.message || 'An unexpected error occurred in the template component'}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Refresh Page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+/**
+ * Enhanced category normalization that tries multiple formats
+ */
+const normalizeCategory = (category, attempt = 1) => {
+  if (!category) return attempt === 1 ? DEFAULT_CATEGORY : FALLBACK_CATEGORY;
+  
+  // If it's an object from select
+  if (typeof category === 'object') {
+    category = category.value || category.label || '';
+  }
+  
+  // Convert to string and clean
+  const categoryStr = String(category).trim();
+  
+  // If empty, return default
+  if (!categoryStr) return attempt === 1 ? DEFAULT_CATEGORY : FALLBACK_CATEGORY;
+  
+  // First attempt: try to match against known patterns
+  const lowerStr = categoryStr.toLowerCase();
+  
+  if (lowerStr.includes('resid') || lowerStr === 'resi') {
+    return attempt === 1 ? 'Residential' : 'residential';
+  }
+  if (lowerStr.includes('busi') || lowerStr === 'biz') {
+    return attempt === 1 ? 'Business' : 'business';
+  }
+  if (lowerStr.includes('promo')) {
+    return attempt === 1 ? 'Promotional' : 'promotional';
+  }
+  if (lowerStr.includes('enter') || lowerStr === 'ent') {
+    return attempt === 1 ? 'Enterprise' : 'enterprise';
+  }
+  
+  // Second attempt: check if it's already in correct format
+  const validCapitalized = ['Residential', 'Business', 'Promotional', 'Enterprise'];
+  const validLowercase = ['residential', 'business', 'promotional', 'enterprise'];
+  
+  if (attempt === 1) {
+    if (validCapitalized.includes(categoryStr)) return categoryStr;
+    if (validLowercase.includes(categoryStr)) {
+      // Convert lowercase to capitalized
+      const index = validLowercase.indexOf(categoryStr);
+      return validCapitalized[index];
+    }
+  } else {
+    if (validLowercase.includes(categoryStr)) return categoryStr;
+    if (validCapitalized.includes(categoryStr)) {
+      // Convert capitalized to lowercase
+      const index = validCapitalized.indexOf(categoryStr);
+      return validLowercase[index];
+    }
+  }
+  
+  // Final fallback
+  return attempt === 1 ? DEFAULT_CATEGORY : FALLBACK_CATEGORY;
+};
+
+/**
+ * Parse backend error messages to extract useful information
+ */
+const parseBackendError = (error) => {
+  const result = {
+    message: 'An unknown error occurred',
+    fieldErrors: {},
+    suggestion: ''
+  };
+
+  try {
+    if (error.response?.data) {
+      const data = error.response.data;
+      
+      // Handle string errors that contain Python dict representation
+      if (typeof data.details === 'string' && data.details.includes('{')) {
+        try {
+          // Try to extract category error
+          const match = data.details.match(/'category':\s*\[([^\]]+)\]/);
+          if (match) {
+            result.fieldErrors.category = match[1].replace(/[{}']/g, '').trim();
+            result.message = 'Category validation failed';
+            result.suggestion = 'Try using "Residential", "Business", "Promotional", or "Enterprise"';
+          }
+        } catch (e) {
+          // Ignore parsing errors
+        }
+      }
+      
+      // Handle structured errors
+      if (data.details?.category) {
+        result.fieldErrors.category = Array.isArray(data.details.category) 
+          ? data.details.category.join(', ') 
+          : String(data.details.category);
+        result.message = 'Category validation failed';
+      }
+      
+      if (data.error) {
+        result.message = data.error;
+      }
+      
+      if (data.detail) {
+        result.message = data.detail;
+      }
+    }
+  } catch (e) {
+    console.error('Error parsing backend error:', e);
+  }
+
+  return result;
+};
+
+/**
+ * Normalize unit values to match backend expectations
+ */
+const normalizeUnit = (unit) => {
+  if (!unit || typeof unit !== 'string') return '';
+  
+  const normalized = unit.toLowerCase().trim();
+  
+  const unitMap = {
+    'gb': 'gb', 'gbs': 'gb', 'gigabyte': 'gb', 'gigabytes': 'gb',
+    'mb': 'mb', 'mbs': 'mb', 'megabyte': 'mb', 'megabytes': 'mb',
+    'tb': 'tb', 'tbs': 'tb', 'terabyte': 'tb', 'terabytes': 'tb',
+    'unlimited': 'unlimited', 'unl': 'unlimited',
+    'hours': 'hours', 'hour': 'hours', 'hrs': 'hours', 'hr': 'hours',
+    'days': 'days', 'day': 'days',
+    'weeks': 'weeks', 'week': 'weeks',
+    'months': 'months', 'month': 'months',
+    'mbps': 'mbps', 'mbp': 'mbps',
+    'kbps': 'kbps', 'kbp': 'kbps',
+    'gbps': 'gbps', 'gbp': 'gbps'
+  };
+  
+  return unitMap[normalized] || normalized;
+};
+
+/**
+ * Convert value to empty string if falsy
+ */
+const toEmptyString = (value) => {
+  if (value === undefined || value === null || value === '') {
+    return '';
+  }
+  return String(value);
+};
+
+/**
+ * Normalize nested field object
+ */
+const normalizeField = (field) => {
+  if (!field || typeof field !== 'object') {
+    return { value: "", unit: "" };
+  }
+  
+  return {
+    value: field.value !== undefined && field.value !== null && field.value !== '' 
+      ? String(field.value) 
+      : "",
+    unit: normalizeUnit(field.unit)
+  };
+};
+
+/**
+ * Get default unit for a field type
+ */
+const getDefaultUnit = (field) => {
+  const units = {
+    download_speed: 'mbps',
+    upload_speed: 'mbps',
+    data_limit: 'gb',
+    usage_limit: 'hours',
+    validity_period: 'days'
+  };
+  return units[field] || '';
+};
+
+/**
+ * Get default access method configuration
+ */
+const getDefaultAccessMethod = (method, enabled = false) => {
+  const baseConfig = {
+    enabled,
+    download_speed: { value: "10", unit: "mbps" },
+    upload_speed: { value: "5", unit: "mbps" },
+    data_limit: { value: "10", unit: "gb" },
+    usage_limit: { value: "24", unit: "hours" },
+    bandwidth_limit: "",
+    max_devices: "",
+    session_timeout: "",
+    idle_timeout: "",
+    validity_period: { value: "30", unit: "days" },
+    mac_binding: false
+  };
+  
+  if (method === 'pppoe') {
+    return {
+      ...baseConfig,
+      ip_pool: "",
+      service_name: "",
+      mtu: ""
+    };
+  }
+  
+  return baseConfig;
+};
+
+/**
+ * Get initial template form state
+ */
+const getInitialFormState = (templateType = 'hotspot') => {
+  return {
+    name: "",
+    description: "",
+    category: DEFAULT_CATEGORY,
+    base_price: "",
+    is_public: true,
+    is_active: true,
+    priority_level: 4,
+    router_specific: false,
+    allowed_routers_ids: [],
+    fup_policy: "",
+    fup_threshold: 80,
+    access_methods: {
+      hotspot: getDefaultAccessMethod('hotspot', templateType === 'hotspot' || templateType === 'dual'),
+      pppoe: getDefaultAccessMethod('pppoe', templateType === 'pppoe' || templateType === 'dual')
+    },
+    time_variant: null,
+    time_variant_id: null
+  };
+};
+
+/**
+ * Get initial time variant state
+ */
+const getInitialTimeVariantState = () => ({
+  is_active: false,
+  start_time: "",
+  end_time: "",
+  available_days: [],
+  schedule_active: false,
+  schedule_start_date: "",
+  schedule_end_date: "",
+  duration_active: false,
+  duration_value: 0,
+  duration_unit: "days",
+  duration_start_date: "",
+  exclusion_dates: [],
+  timezone: "Africa/Nairobi",
+  force_available: false
+});
+
+// ============================================================================
+// NOTIFICATION COMPONENT
+// ============================================================================
+
+const ToastNotification = ({ visible, message, type, suggestion, onClose }) => {
+  if (!visible) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -50, scale: 0.8 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -50, scale: 0.8 }}
+      className={`fixed top-4 right-4 z-50 max-w-md w-full ${
+        type === "success" 
+          ? "bg-green-500 border-green-600" 
+          : "bg-red-500 border-red-600"
+      } text-white p-4 rounded-lg shadow-lg border`}
+    >
+      <div className="flex items-start">
+        {type === "success" ? (
+          <Check className="w-5 h-5 mr-3 flex-shrink-0 mt-0.5" />
+        ) : (
+          <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0 mt-0.5" />
+        )}
+        <div className="flex-1">
+          <p className="font-medium">{message}</p>
+          {suggestion && (
+            <p className="text-sm mt-1 text-white/90">{suggestion}</p>
+          )}
+        </div>
+        <button
+          onClick={onClose}
+          className="ml-4 text-white hover:text-gray-200 transition-colors flex-shrink-0"
+          aria-label="Close notification"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    </motion.div>
+  );
+};
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+const PlanTemplates = ({ 
+  templates: initialTemplates = [], 
+  onApplyTemplate, 
+  onCreateFromTemplate,
+  onTemplatesChange,
+  onRefresh,
+  onBack, 
+  theme,
+  isMobile = false,
+  isLoading: externalLoading = false
+}) => {
   const themeClasses = getThemeClasses(theme);
+  const { isAuthenticated, user, token } = useAuth();
+
+  // ========================================================================
+  // STATE MANAGEMENT
+  // ========================================================================
+
+  // Templates state
+  const [templates, setTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [templates, setTemplates] = useState(initialTemplates || []);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState("browse");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterCategory, setFilterCategory] = useState("All");
-  const [filterVisibility, setFilterVisibility] = useState("All");
-  const [filterAccessType, setFilterAccessType] = useState("All");
+
+  // Form state
   const [templateType, setTemplateType] = useState("hotspot");
-  
-  // Enhanced state management
+  const [templateForm, setTemplateForm] = useState(getInitialFormState());
+  const [timeVariantConfig, setTimeVariantConfig] = useState(getInitialTimeVariantState());
+  const [showTimeVariant, setShowTimeVariant] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
+
+  // Filtering state
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterVisibility, setFilterVisibility] = useState("all");
+  const [filterAccessType, setFilterAccessType] = useState("all");
+  const [filterTimeVariant, setFilterTimeVariant] = useState("all");
+  const [sortBy, setSortBy] = useState("name");
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [viewType, setViewType] = useState("grid");
+
+  // UI state
   const [toast, setToast] = useState({
     visible: false,
     message: "",
-    type: "success"
+    type: "success",
+    suggestion: ""
   });
-
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     template: null
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [authError, setAuthError] = useState(false);
 
-  // Template form state
-  const [templateForm, setTemplateForm] = useState({
-    name: "",
-    description: "",
-    category: "Residential",
-    basePrice: "0",
-    isPublic: true,
-    isActive: true,
-    priority_level: 4,
-    router_specific: false,
-    allowed_routers_ids: [],
-    FUP_policy: "",
-    FUP_threshold: 80,
-    accessMethods: {
-      hotspot: {
-        enabled: true,
-        downloadSpeed: { value: "10", unit: "Mbps" },
-        uploadSpeed: { value: "5", unit: "Mbps" },
-        dataLimit: { value: "10", unit: "GB" },
-        usageLimit: { value: "24", unit: "Hours" },
-        bandwidthLimit: 0,
-        maxDevices: 1,
-        sessionTimeout: 86400,
-        idleTimeout: 300,
-        validityPeriod: { value: "30", unit: "Days" },
-        macBinding: false,
-      },
-      pppoe: {
-        enabled: false,
-        downloadSpeed: { value: "10", unit: "Mbps" },
-        uploadSpeed: { value: "5", unit: "Mbps" },
-        dataLimit: { value: "10", unit: "GB" },
-        usageLimit: { value: "24", unit: "Hours" },
-        bandwidthLimit: 0,
-        maxDevices: 1,
-        sessionTimeout: 86400,
-        idleTimeout: 300,
-        validityPeriod: { value: "30", unit: "Days" },
-        macBinding: false,
-        ipPool: "pppoe-pool-1",
-        serviceName: "",
-        mtu: 1492,
-      }
-    }
-  });
+  // ========================================================================
+  // EFFECTS
+  // ========================================================================
 
-  // Show toast notification
-  const showToast = (message, type = "success") => {
-    setToast({
-      visible: true,
-      message,
-      type
-    });
-    setTimeout(() => {
-      setToast({ visible: false, message: "", type: "success" });
-    }, 4000);
-  };
-
-  // Enhanced template fetching with error handling
-  const fetchTemplates = async () => {
-    setIsRefreshing(true);
-    try {
-      const response = await api.get("/api/internet_plans/templates/");
-      let templatesData;
-      
-      // Handle different response formats
-      if (response.data.results) {
-        templatesData = response.data.results;
-      } else if (Array.isArray(response.data)) {
-        templatesData = response.data;
-      } else {
-        templatesData = [];
-      }
-      
-      if (Array.isArray(templatesData)) {
-        setTemplates(templatesData);
-        showToast("Templates refreshed successfully");
-      } else {
-        throw new Error("Invalid templates data format");
-      }
-    } catch (error) {
-      console.error("Error fetching templates:", error);
-      const errorMessage = error.response?.data?.error || 
-                          error.response?.data?.detail || 
-                          "Failed to load templates";
-      showToast(errorMessage, "error");
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
-  // Load templates on component mount
+  // Check authentication on mount
   useEffect(() => {
-    if (!initialTemplates || initialTemplates.length === 0) {
-      fetchTemplates();
+    if (!isAuthenticated) {
+      setAuthError(true);
+      showToast("Please log in to access templates", "error");
+    } else {
+      setAuthError(false);
+    }
+  }, [isAuthenticated]);
+
+  // Sync with parent templates
+  useEffect(() => {
+    if (initialTemplates && initialTemplates.length > 0) {
+      setTemplates(initialTemplates);
     }
   }, [initialTemplates]);
 
-  // Enhanced template application with proper usage tracking
-  const handleApplyTemplate = async (template) => {
+  // ========================================================================
+  // HELPER FUNCTIONS
+  // ========================================================================
+
+  const showToast = useCallback((message, type = "success", suggestion = "") => {
+    setToast({
+      visible: true,
+      message,
+      type,
+      suggestion
+    });
+    setTimeout(() => {
+      setToast({ visible: false, message: "", type: "success", suggestion: "" });
+    }, 5000);
+  }, []);
+
+  const hideToast = useCallback(() => {
+    setToast({ visible: false, message: "", type: "success", suggestion: "" });
+  }, []);
+
+  const resetForm = useCallback(() => {
+    setTemplateForm(getInitialFormState(templateType));
+    setTimeVariantConfig(getInitialTimeVariantState());
+    setShowTimeVariant(false);
+    setFormErrors({});
+    setSelectedTemplate(null);
+  }, [templateType]);
+
+  const resetTimeVariant = useCallback(() => {
+    setTimeVariantConfig(getInitialTimeVariantState());
+    setShowTimeVariant(false);
+  }, []);
+
+  // ========================================================================
+  // API FUNCTIONS
+  // ========================================================================
+
+  const fetchTemplates = useCallback(async () => {
+    if (!isAuthenticated) {
+      showToast("Please log in to view templates", "error");
+      return;
+    }
+
+    if (isRefreshing) return;
+
+    setIsRefreshing(true);
+    try {
+      const response = await api.get("/api/internet_plans/templates/");
+      
+      let templatesData = [];
+      if (response.data?.results) {
+        templatesData = response.data.results;
+      } else if (Array.isArray(response.data)) {
+        templatesData = response.data;
+      } else if (response.data?.data) {
+        templatesData = response.data.data;
+      }
+      
+      if (Array.isArray(templatesData)) {
+        const normalizedTemplates = templatesData.map(template => ({
+          ...template,
+          access_methods: template.access_methods || {
+            hotspot: { enabled: false },
+            pppoe: { enabled: false }
+          },
+          has_time_variant: template.has_time_variant || !!template.time_variant
+        }));
+        
+        setTemplates(normalizedTemplates);
+        
+        if (onTemplatesChange) {
+          onTemplatesChange(normalizedTemplates);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      
+      if (error.response?.status === 401) {
+        setAuthError(true);
+        showToast("Authentication failed. Please log in again.", "error");
+      } else {
+        showToast("Failed to load templates", "error");
+      }
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [isAuthenticated, isRefreshing, onTemplatesChange, showToast]);
+
+  // ========================================================================
+  // DATA TRANSFORMATIONS
+  // ========================================================================
+
+  /**
+   * Transform form data to backend format with multiple category attempts
+   */
+  const transformFormToBackend = useCallback((categoryAttempt = 1) => {
+    // Normalize category with specified attempt
+    const category = normalizeCategory(templateForm.category, categoryAttempt);
+
+    const data = {
+      name: templateForm.name?.trim() || "",
+      description: templateForm.description?.trim() || "",
+      category: category,
+      base_price: parseFloat(templateForm.base_price) || 0,
+      is_public: templateForm.is_public === true,
+      is_active: templateForm.is_active === true,
+      priority_level: parseInt(templateForm.priority_level) || 4,
+      router_specific: templateForm.router_specific === true,
+      allowed_routers_ids: templateForm.allowed_routers_ids || [],
+      fup_policy: templateForm.fup_policy || "",
+      fup_threshold: parseInt(templateForm.fup_threshold) || 80,
+      access_methods: {
+        hotspot: {
+          enabled: templateForm.access_methods.hotspot.enabled === true,
+          download_speed: normalizeField(templateForm.access_methods.hotspot.download_speed),
+          upload_speed: normalizeField(templateForm.access_methods.hotspot.upload_speed),
+          data_limit: normalizeField(templateForm.access_methods.hotspot.data_limit),
+          usage_limit: normalizeField(templateForm.access_methods.hotspot.usage_limit),
+          bandwidth_limit: toEmptyString(templateForm.access_methods.hotspot.bandwidth_limit),
+          max_devices: toEmptyString(templateForm.access_methods.hotspot.max_devices),
+          session_timeout: toEmptyString(templateForm.access_methods.hotspot.session_timeout),
+          idle_timeout: toEmptyString(templateForm.access_methods.hotspot.idle_timeout),
+          validity_period: normalizeField(templateForm.access_methods.hotspot.validity_period),
+          mac_binding: templateForm.access_methods.hotspot.mac_binding === true
+        },
+        pppoe: {
+          enabled: templateForm.access_methods.pppoe.enabled === true,
+          download_speed: normalizeField(templateForm.access_methods.pppoe.download_speed),
+          upload_speed: normalizeField(templateForm.access_methods.pppoe.upload_speed),
+          data_limit: normalizeField(templateForm.access_methods.pppoe.data_limit),
+          usage_limit: normalizeField(templateForm.access_methods.pppoe.usage_limit),
+          bandwidth_limit: toEmptyString(templateForm.access_methods.pppoe.bandwidth_limit),
+          max_devices: toEmptyString(templateForm.access_methods.pppoe.max_devices),
+          session_timeout: toEmptyString(templateForm.access_methods.pppoe.session_timeout),
+          idle_timeout: toEmptyString(templateForm.access_methods.pppoe.idle_timeout),
+          validity_period: normalizeField(templateForm.access_methods.pppoe.validity_period),
+          mac_binding: templateForm.access_methods.pppoe.mac_binding === true,
+          ip_pool: toEmptyString(templateForm.access_methods.pppoe.ip_pool),
+          service_name: toEmptyString(templateForm.access_methods.pppoe.service_name),
+          mtu: toEmptyString(templateForm.access_methods.pppoe.mtu)
+        }
+      }
+    };
+
+    // Add time variant if configured
+    if (showTimeVariant && timeVariantConfig.is_active) {
+      data.time_variant = {
+        is_active: timeVariantConfig.is_active,
+        start_time: timeVariantConfig.start_time || null,
+        end_time: timeVariantConfig.end_time || null,
+        available_days: timeVariantConfig.available_days || [],
+        schedule_active: timeVariantConfig.schedule_active || false,
+        schedule_start_date: timeVariantConfig.schedule_start_date || null,
+        schedule_end_date: timeVariantConfig.schedule_end_date || null,
+        duration_active: timeVariantConfig.duration_active || false,
+        duration_value: timeVariantConfig.duration_value || 0,
+        duration_unit: timeVariantConfig.duration_unit || "days",
+        duration_start_date: timeVariantConfig.duration_start_date || null,
+        exclusion_dates: timeVariantConfig.exclusion_dates || [],
+        timezone: timeVariantConfig.timezone || "Africa/Nairobi",
+        force_available: timeVariantConfig.force_available || false
+      };
+    }
+
+    return data;
+  }, [templateForm, showTimeVariant, timeVariantConfig]);
+
+  /**
+   * Validate form before submission
+   */
+  const validateForm = useCallback(() => {
+    const errors = {};
+
+    if (!templateForm.name?.trim()) {
+      errors.name = "Template name is required";
+    }
+
+    if (!templateForm.category) {
+      errors.category = "Category is required";
+    } else {
+      // Check if category is valid
+      const category = String(templateForm.category).toLowerCase();
+      const validCategories = ['residential', 'business', 'promotional', 'enterprise'];
+      if (!validCategories.some(vc => category.includes(vc))) {
+        errors.category = "Category must be Residential, Business, Promotional, or Enterprise";
+      }
+    }
+
+    if (templateForm.base_price === "" || isNaN(parseFloat(templateForm.base_price))) {
+      errors.base_price = "Valid base price is required";
+    } else if (parseFloat(templateForm.base_price) < 0) {
+      errors.base_price = "Base price cannot be negative";
+    }
+
+    const hasEnabledMethod = 
+      templateForm.access_methods.hotspot.enabled || 
+      templateForm.access_methods.pppoe.enabled;
+    
+    if (!hasEnabledMethod) {
+      errors.access_methods = "At least one access method must be enabled";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  }, [templateForm]);
+
+  // ========================================================================
+  // CRUD OPERATIONS
+  // ========================================================================
+
+  /**
+   * Handle form submit with retry logic for category issues
+   */
+  const handleFormSubmit = useCallback(async () => {
+    if (!isAuthenticated) {
+      showToast("Please log in to save templates", "error");
+      return;
+    }
+
+    if (!validateForm()) {
+      showToast("Please fix validation errors", "error");
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    // Try with different category formats
+    let lastError = null;
+    let attempt = 1;
+    const maxAttempts = 2; // Try capitalized first, then lowercase
+
+    while (attempt <= maxAttempts) {
+      try {
+        const templateData = transformFormToBackend(attempt);
+        
+        console.log(`📤 Attempt ${attempt} - Submitting template with category:`, templateData.category);
+
+        let response;
+        if (viewMode === "create") {
+          response = await api.post("/api/internet_plans/templates/", templateData);
+          
+          const newTemplate = response.data?.template || response.data;
+          if (newTemplate) {
+            const normalizedTemplate = {
+              ...newTemplate,
+              access_methods: newTemplate.access_methods || templateData.access_methods,
+              has_time_variant: newTemplate.has_time_variant || !!newTemplate.time_variant
+            };
+            
+            setTemplates(prev => [normalizedTemplate, ...prev]);
+            
+            if (onTemplatesChange) {
+              onTemplatesChange([normalizedTemplate, ...templates]);
+            }
+          }
+          
+          showToast(`Template "${templateData.name}" created successfully!`);
+        } else if (viewMode === "edit" && selectedTemplate) {
+          response = await api.put(
+            `/api/internet_plans/templates/${selectedTemplate.id}/`, 
+            templateData
+          );
+          
+          const updatedTemplate = response.data?.template || response.data;
+          if (updatedTemplate) {
+            const normalizedTemplate = {
+              ...updatedTemplate,
+              access_methods: updatedTemplate.access_methods || templateData.access_methods,
+              has_time_variant: updatedTemplate.has_time_variant || !!updatedTemplate.time_variant
+            };
+            
+            setTemplates(prev => prev.map(t => 
+              t.id === selectedTemplate.id ? normalizedTemplate : t
+            ));
+            
+            if (onTemplatesChange) {
+              onTemplatesChange(templates.map(t => 
+                t.id === selectedTemplate.id ? normalizedTemplate : t
+              ));
+            }
+          }
+          
+          showToast(`Template "${templateData.name}" updated successfully!`);
+        }
+
+        // Success - exit the retry loop
+        setViewMode("browse");
+        resetForm();
+        
+        if (onRefresh) {
+          onRefresh();
+        }
+        
+        return; // Exit function on success
+        
+      } catch (error) {
+        console.error(`Attempt ${attempt} failed:`, error);
+        lastError = error;
+        
+        // Check if this is a category error and we should retry
+        const errorData = error.response?.data;
+        const isCategoryError = 
+          errorData?.details?.category || 
+          (typeof errorData?.details === 'string' && errorData.details.includes('category'));
+        
+        if (isCategoryError && attempt < maxAttempts) {
+          // Try next category format
+          attempt++;
+          continue;
+        }
+        
+        // If it's the last attempt or not a category error, break
+        break;
+      }
+    }
+
+    // If we get here, all attempts failed
+    console.error(`All ${maxAttempts} attempts failed:`, lastError);
+    
+    // Parse and show appropriate error
+    if (lastError) {
+      const parsedError = parseBackendError(lastError);
+      
+      if (parsedError.fieldErrors.category) {
+        showToast(
+          "Category validation failed",
+          "error",
+          parsedError.suggestion || 'Please select Residential, Business, Promotional, or Enterprise'
+        );
+      } else {
+        showToast(parsedError.message, "error", parsedError.suggestion);
+      }
+    } else {
+      showToast("Failed to save template", "error");
+    }
+    
+    setIsSubmitting(false);
+  }, [
+    isAuthenticated, viewMode, selectedTemplate, templates, 
+    validateForm, transformFormToBackend, resetForm, showToast, 
+    onTemplatesChange, onRefresh
+  ]);
+
+  /**
+   * Handle apply template
+   */
+  const handleApplyTemplate = useCallback(async (template) => {
+    if (!isAuthenticated) {
+      showToast("Please log in to apply templates", "error");
+      return;
+    }
+
     try {
       setIsLoading(true);
       
-      // Apply template to form immediately for user feedback
       if (onApplyTemplate) {
         onApplyTemplate(template);
       }
-      
-      // Update local state to reflect usage count
-      setTemplates(prev => prev.map(t => 
-        t.id === template.id 
-          ? { 
-              ...t, 
-              usageCount: (t.usageCount || 0) + 1,
-              usage_count: (t.usage_count || 0) + 1
-            }
-          : t
-      ));
       
       showToast(`Template "${template.name}" applied successfully!`);
     } catch (error) {
@@ -903,52 +867,48 @@ const PlanTemplates = ({ templates: initialTemplates, onApplyTemplate, onCreateF
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isAuthenticated, onApplyTemplate, showToast]);
 
-  // Enhanced template creation with proper plan creation and usage tracking
-  const handleCreateFromTemplate = async (template, planName = null) => {
+  /**
+   * Handle create plan from template
+   */
+  const handleCreateFromTemplate = useCallback(async (template, planName = null) => {
+    if (!isAuthenticated) {
+      showToast("Please log in to create plans", "error");
+      throw new Error("Authentication required");
+    }
+
     try {
       let finalPlanName = planName;
       
-      // If no plan name provided, return promise for modal to handle
       if (!finalPlanName) {
-        // Return a promise that will be resolved by the modal
         return new Promise((resolve, reject) => {
-          // This will be handled by the modal
           reject(new Error("Plan name required"));
         });
       }
 
       setIsLoading(true);
       
-      // Create plan from template via API
       const response = await api.post(`/api/internet_plans/templates/${template.id}/create-plan/`, {
         plan_name: finalPlanName.trim()
       });
 
-      // Update local usage count
-      setTemplates(prev => prev.map(t => 
-        t.id === template.id 
-          ? { 
-              ...t, 
-              usageCount: (t.usageCount || 0) + 1,
-              usage_count: (t.usage_count || 0) + 1
-            }
-          : t
-      ));
-
-      // Call the parent handler with the created plan data
       if (onCreateFromTemplate) {
         await onCreateFromTemplate(response.data);
       }
       
-      if (!planName) {
-        showToast(`Plan "${finalPlanName}" created successfully!`);
-      }
+      showToast(`Plan "${finalPlanName}" created successfully!`);
       
       return response.data;
     } catch (error) {
       console.error("Error creating plan from template:", error);
+      
+      if (error.response?.status === 401) {
+        setAuthError(true);
+        showToast("Authentication failed. Please log in again.", "error");
+        throw new Error("Authentication failed");
+      }
+      
       const errorMessage = error.response?.data?.error || 
                           error.response?.data?.details?.[0] || 
                           error.response?.data?.detail || 
@@ -958,131 +918,277 @@ const PlanTemplates = ({ templates: initialTemplates, onApplyTemplate, onCreateF
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isAuthenticated, onCreateFromTemplate, showToast]);
 
-  // Enhanced delete template with confirmation
-  const handleDeleteTemplate = (template) => {
+  /**
+   * Handle edit template
+   */
+  const handleEditTemplate = useCallback((template) => {
+    if (!isAuthenticated) {
+      showToast("Please log in to edit templates", "error");
+      return;
+    }
+
+    const isHotspotEnabled = template.access_methods?.hotspot?.enabled;
+    const isPPPoEEnabled = template.access_methods?.pppoe?.enabled;
+    
+    let type = 'hotspot';
+    if (isHotspotEnabled && isPPPoEEnabled) {
+      type = 'dual';
+    } else if (isPPPoEEnabled) {
+      type = 'pppoe';
+    }
+    
+    setTemplateType(type);
+    
+    setTemplateForm({
+      name: template.name || "",
+      description: template.description || "",
+      category: template.category || DEFAULT_CATEGORY,
+      base_price: template.base_price?.toString() || "0",
+      is_public: template.is_public === true,
+      is_active: template.is_active === true,
+      priority_level: template.priority_level || 4,
+      router_specific: template.router_specific || false,
+      allowed_routers_ids: template.allowed_routers_ids || [],
+      fup_policy: template.fup_policy || "",
+      fup_threshold: template.fup_threshold || 80,
+      access_methods: deepClone(template.access_methods || getInitialFormState(type).access_methods),
+      time_variant: template.time_variant || null,
+      time_variant_id: template.time_variant?.id || null
+    });
+
+    if (template.time_variant) {
+      setTimeVariantConfig(template.time_variant);
+      setShowTimeVariant(true);
+    } else {
+      resetTimeVariant();
+    }
+
+    setSelectedTemplate(template);
+    setViewMode("edit");
+    setFormErrors({});
+  }, [isAuthenticated, resetTimeVariant, showToast]);
+
+  /**
+   * Handle delete template
+   */
+  const handleDeleteTemplate = useCallback((template) => {
+    if (!isAuthenticated) {
+      showToast("Please log in to delete templates", "error");
+      return;
+    }
+    
     setDeleteModal({
       isOpen: true,
       template
     });
-  };
+  }, [isAuthenticated, showToast]);
 
-  const confirmDeleteTemplate = async () => {
+  /**
+   * Confirm delete template
+   */
+  const confirmDeleteTemplate = useCallback(async () => {
+    if (!isAuthenticated) {
+      showToast("Please log in to delete templates", "error");
+      setDeleteModal({ isOpen: false, template: null });
+      return;
+    }
+
     const { template } = deleteModal;
     
     setIsLoading(true);
     try {
-      await api.delete(`/api/internet_plans/templates/${template.id}/`);
+      await api.delete(`/api/internet_plans/templates/${template.id}/delete/`);
       
-      // Remove template from local state
       setTemplates(prev => prev.filter(t => t.id !== template.id));
       
-      // Clear selected template if it was deleted
+      if (onTemplatesChange) {
+        onTemplatesChange(templates.filter(t => t.id !== template.id));
+      }
+      
       if (selectedTemplate?.id === template.id) {
         setSelectedTemplate(null);
       }
       
       showToast(`Template "${template.name}" deleted successfully!`);
+      
+      if (onRefresh) {
+        onRefresh();
+      }
+      
     } catch (error) {
       console.error("Error deleting template:", error);
-      const errorMessage = error.response?.data?.detail || 
-                          error.response?.data?.error || 
-                          "Failed to delete template";
-      showToast(errorMessage, "error");
+      
+      if (error.response?.status === 401) {
+        setAuthError(true);
+        showToast("Authentication failed. Please log in again.", "error");
+      } else {
+        showToast("Failed to delete template", "error");
+      }
     } finally {
       setIsLoading(false);
       setDeleteModal({ isOpen: false, template: null });
     }
-  };
+  }, [isAuthenticated, deleteModal, selectedTemplate, templates, onTemplatesChange, onRefresh, showToast]);
 
-  // Enhanced template filtering with access type support
-  const filteredTemplates = templates.filter(template => {
-    const matchesSearch = template.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         template.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = filterCategory === "All" || template.category === filterCategory;
-    const matchesVisibility = filterVisibility === "All" || 
-                             (filterVisibility === "Public" && template.isPublic) ||
-                             (filterVisibility === "Private" && !template.isPublic);
-    
-    // Enhanced access type filtering
-    const accessMethods = template.accessMethods || template.access_methods || {};
-    const matchesAccessType = filterAccessType === "All" || 
-      (filterAccessType === "hotspot" && accessMethods.hotspot?.enabled) ||
-      (filterAccessType === "pppoe" && accessMethods.pppoe?.enabled) ||
-      (filterAccessType === "both" && accessMethods.hotspot?.enabled && accessMethods.pppoe?.enabled);
-    
-    return matchesSearch && matchesCategory && matchesVisibility && matchesAccessType;
-  });
+  /**
+   * Handle duplicate template
+   */
+  const handleDuplicateTemplate = useCallback(async (template) => {
+    if (!isAuthenticated) {
+      showToast("Please log in to duplicate templates", "error");
+      return;
+    }
 
-  // Get template statistics for display
-  const templateStats = {
+    try {
+      setIsLoading(true);
+      
+      const duplicateData = {
+        ...template,
+        name: `${template.name} (Copy)`,
+        id: undefined,
+        usage_count: 0,
+        created_at: undefined,
+        updated_at: undefined
+      };
+      
+      if (duplicateData.time_variant) {
+        duplicateData.time_variant = undefined;
+        duplicateData.time_variant_id = undefined;
+      }
+      
+      const response = await api.post("/api/internet_plans/templates/", duplicateData);
+      
+      const newTemplate = response.data?.template || response.data;
+      if (newTemplate) {
+        const normalizedTemplate = {
+          ...newTemplate,
+          access_methods: newTemplate.access_methods || template.access_methods,
+          has_time_variant: newTemplate.has_time_variant || false
+        };
+        
+        setTemplates(prev => [normalizedTemplate, ...prev]);
+        
+        if (onTemplatesChange) {
+          onTemplatesChange([normalizedTemplate, ...templates]);
+        }
+      }
+      
+      showToast(`Template "${newTemplate.name}" created successfully!`);
+      
+    } catch (error) {
+      console.error("Error duplicating template:", error);
+      
+      if (error.response?.status === 401) {
+        setAuthError(true);
+        showToast("Authentication failed. Please log in again.", "error");
+      } else {
+        showToast("Failed to duplicate template", "error");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isAuthenticated, templates, onTemplatesChange, showToast]);
+
+  // ========================================================================
+  // FILTERING AND SORTING
+  // ========================================================================
+
+  const filteredTemplates = useMemo(() => {
+    return templates
+      .filter(template => {
+        const matchesSearch = searchTerm === "" || 
+          template.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          template.description?.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        const matchesCategory = filterCategory === "all" || 
+          template.category?.toLowerCase() === filterCategory.toLowerCase();
+        
+        const matchesVisibility = filterVisibility === "all" || 
+          (filterVisibility === "public" && template.is_public === true) ||
+          (filterVisibility === "private" && template.is_public === false);
+        
+        const hotspotEnabled = template.access_methods?.hotspot?.enabled === true;
+        const pppoeEnabled = template.access_methods?.pppoe?.enabled === true;
+        
+        const matchesAccessType = filterAccessType === "all" ||
+          (filterAccessType === "hotspot" && hotspotEnabled && !pppoeEnabled) ||
+          (filterAccessType === "pppoe" && pppoeEnabled && !hotspotEnabled) ||
+          (filterAccessType === "dual" && hotspotEnabled && pppoeEnabled);
+        
+        const hasTimeVariant = template.has_time_variant === true || template.time_variant;
+        const matchesTimeVariant = filterTimeVariant === "all" ||
+          (filterTimeVariant === "has" && hasTimeVariant) ||
+          (filterTimeVariant === "none" && !hasTimeVariant);
+        
+        return matchesSearch && matchesCategory && matchesVisibility && 
+               matchesAccessType && matchesTimeVariant;
+      })
+      .sort((a, b) => {
+        let aValue = a[sortBy];
+        let bValue = b[sortBy];
+        
+        if (sortBy === 'base_price') {
+          aValue = parseFloat(a.base_price) || 0;
+          bValue = parseFloat(b.base_price) || 0;
+        } else if (sortBy === 'usage_count') {
+          aValue = parseInt(a.usage_count) || 0;
+          bValue = parseInt(b.usage_count) || 0;
+        } else if (sortBy === 'created_at' || sortBy === 'updated_at') {
+          aValue = new Date(a[sortBy] || 0).getTime();
+          bValue = new Date(b[sortBy] || 0).getTime();
+        } else if (typeof aValue === 'string') {
+          aValue = aValue.toLowerCase();
+          bValue = (bValue || '').toLowerCase();
+        }
+        
+        if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      });
+  }, [templates, searchTerm, filterCategory, filterVisibility, filterAccessType, filterTimeVariant, sortBy, sortOrder]);
+
+  const clearFilters = useCallback(() => {
+    setSearchTerm("");
+    setFilterCategory("all");
+    setFilterVisibility("all");
+    setFilterAccessType("all");
+    setFilterTimeVariant("all");
+  }, []);
+
+  const templateStats = useMemo(() => ({
     total: templates.length,
-    hotspot: templates.filter(t => (t.accessMethods || t.access_methods || {}).hotspot?.enabled).length,
-    pppoe: templates.filter(t => (t.accessMethods || t.access_methods || {}).pppoe?.enabled).length,
-    public: templates.filter(t => t.isPublic).length,
-    private: templates.filter(t => !t.isPublic).length
-  };
+    hotspot: templates.filter(t => t.access_methods?.hotspot?.enabled).length,
+    pppoe: templates.filter(t => t.access_methods?.pppoe?.enabled).length,
+    dual: templates.filter(t => t.access_methods?.hotspot?.enabled && t.access_methods?.pppoe?.enabled).length,
+    public: templates.filter(t => t.is_public).length,
+    private: templates.filter(t => !t.is_public).length,
+    timeVariant: templates.filter(t => t.has_time_variant || t.time_variant).length
+  }), [templates]);
 
-  // Toast Notification Component
-  const ToastNotification = () => {
-    if (!toast.visible) return null;
+  // ========================================================================
+  // RENDER HELPERS
+  // ========================================================================
 
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: -50, scale: 0.8 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -50, scale: 0.8 }}
-        className={`fixed top-4 right-4 z-50 max-w-sm w-full ${
-          toast.type === "success" 
-            ? "bg-green-500 border-green-600" 
-            : "bg-red-500 border-red-600"
-        } text-white p-4 rounded-lg shadow-lg border`}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            {toast.type === "success" ? (
-              <Check className="w-5 h-5 mr-2 flex-shrink-0" />
-            ) : (
-              <X className="w-5 h-5 mr-2 flex-shrink-0" />
-            )}
-            <span className="font-medium truncate">{toast.message}</span>
-          </div>
-          <button
-            onClick={() => setToast({ visible: false, message: "", type: "success" })}
-            className="ml-4 text-white hover:text-gray-200 transition-colors flex-shrink-0"
-            aria-label="Close notification"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      </motion.div>
-    );
-  };
-
-  if (isLoading && viewMode === "browse") {
+  if (authError) {
     return (
       <div className={`min-h-screen p-3 sm:p-6 lg:p-8 transition-colors duration-300 ${themeClasses.bg.primary}`}>
-        <main className="max-w-7xl mx-auto space-y-6 lg:space-y-8">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={onBack}
-              className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div>
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500">
-                Plan Templates
-              </h1>
-              <p className={`mt-1 lg:mt-2 text-sm lg:text-lg ${themeClasses.text.secondary}`}>
-                Loading templates...
-              </p>
+        <main className="max-w-7xl mx-auto">
+          <div className={`p-8 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light} text-center`}>
+            <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
             </div>
-          </div>
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            <h2 className="text-2xl font-bold mb-2">Authentication Required</h2>
+            <p className={`mb-6 ${themeClasses.text.secondary}`}>
+              Please log in to access plan templates.
+            </p>
+            <button
+              onClick={() => window.location.href = '/login'}
+              className={`px-6 py-3 rounded-lg font-medium ${themeClasses.button.primary}`}
+            >
+              Go to Login
+            </button>
           </div>
         </main>
       </div>
@@ -1090,394 +1196,377 @@ const PlanTemplates = ({ templates: initialTemplates, onApplyTemplate, onCreateF
   }
 
   return (
-    <div className={`min-h-screen p-3 sm:p-6 lg:p-8 transition-colors duration-300 ${themeClasses.bg.primary}`}>
-      <main className="max-w-7xl mx-auto space-y-6 lg:space-y-8">
-        {/* Toast Notification */}
-        <ToastNotification />
-
-        {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={onBack}
-              className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div className="min-w-0">
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500 truncate">
-                Plan Templates
-              </h1>
-              <p className={`mt-1 lg:mt-2 text-sm lg:text-lg ${themeClasses.text.secondary}`}>
-                {viewMode === "browse" ? "Quick start with pre-configured plan templates" : 
-                 viewMode === "create" ? "Create a new template" : 
-                 viewMode === "type-select" ? "Select template type" : "Edit template"}
-              </p>
-            </div>
-          </div>
+    <TemplateErrorBoundary>
+      <div className={`min-h-screen p-3 sm:p-6 lg:p-8 transition-colors duration-300 ${themeClasses.bg.primary}`}>
+        <main className="max-w-7xl mx-auto space-y-6 lg:space-y-8">
           
-          {viewMode === "browse" && (
-            <div className="flex items-center space-x-3 flex-wrap gap-2">
-              {/* Template Statistics */}
-              <div className="hidden md:flex items-center space-x-4 text-sm text-gray-500 flex-wrap gap-2">
-                <span>Total: {templateStats.total}</span>
-                <span>Hotspot: {templateStats.hotspot}</span>
-                <span>PPPoE: {templateStats.pppoe}</span>
-              </div>
-              
-              {/* Refresh Button */}
-              <motion.button
-                onClick={fetchTemplates}
-                disabled={isRefreshing}
+          <ToastNotification 
+            visible={toast.visible}
+            message={toast.message}
+            type={toast.type}
+            suggestion={toast.suggestion}
+            onClose={hideToast}
+          />
+
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={onBack}
                 className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                title="Refresh Templates"
-                aria-label="Refresh templates"
+                aria-label="Go back"
               >
-                <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
-              </motion.button>
-              
-              {/* New Template Button */}
-              <motion.button
-                onClick={() => setViewMode("type-select")}
-                className={`px-4 py-2 rounded-lg flex items-center ${themeClasses.button.success} flex-shrink-0`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                aria-label="Create new template"
-              >
-                <Plus className="w-4 h-4 mr-2 flex-shrink-0" />
-                <span className="truncate">New Template</span>
-              </motion.button>
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500 truncate">
+                  Plan Templates
+                </h1>
+                <p className={`mt-1 lg:mt-2 text-sm lg:text-lg ${themeClasses.text.secondary}`}>
+                  {viewMode === "browse" ? "Quick start with pre-configured plan templates" : 
+                   viewMode === "create" ? "Create a new template" : 
+                   viewMode === "type-select" ? "Select template type" : "Edit template"}
+                </p>
+              </div>
             </div>
-          )}
-        </div>
-
-        {/* Browse View */}
-        {viewMode === "browse" && (
-          <>
-            {/* Enhanced Filters */}
-            <div className={`p-4 lg:p-6 rounded-xl shadow-lg ${themeClasses.bg.card}`}>
-              <div className="flex flex-col lg:flex-row gap-4 items-end">
-                {/* Search */}
-                <div className="flex-1 min-w-0">
-                  <div className="relative">
-                    <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${themeClasses.text.tertiary}`} />
-                    <input
-                      type="text"
-                      placeholder="Search templates by name or description..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className={`w-full pl-10 pr-4 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
-                      aria-label="Search templates"
-                    />
-                  </div>
-                </div>
+            
+            {viewMode === "browse" && (
+              <div className="flex items-center space-x-3 flex-wrap gap-2">
+                <motion.button
+                  onClick={fetchTemplates}
+                  disabled={isRefreshing}
+                  className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Refresh Templates"
+                >
+                  <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                </motion.button>
                 
-                {/* Filter Group */}
-                <div className="flex flex-wrap gap-4 w-full lg:w-auto">
-                  <div className="flex-1 min-w-[140px] lg:w-40">
-                    <EnhancedSelect
-                      value={filterCategory}
-                      onChange={setFilterCategory}
-                      options={[
-                        { value: "All", label: "All Categories" },
-                        ...categories.map(cat => ({ value: cat, label: cat }))
-                      ]}
-                      theme={theme}
-                      aria-label="Filter by category"
-                    />
-                  </div>
-                  
-                  <div className="flex-1 min-w-[120px] lg:w-32">
-                    <EnhancedSelect
-                      value={filterVisibility}
-                      onChange={setFilterVisibility}
-                      options={[
-                        { value: "All", label: "All" },
-                        { value: "Public", label: "Public" },
-                        { value: "Private", label: "Private" }
-                      ]}
-                      theme={theme}
-                      aria-label="Filter by visibility"
-                    />
-                  </div>
-
-                  <div className="flex-1 min-w-[140px] lg:w-36">
-                    <EnhancedSelect
-                      value={filterAccessType}
-                      onChange={setFilterAccessType}
-                      options={[
-                        { value: "All", label: "All Types" },
-                        { value: "hotspot", label: "Hotspot Only" },
-                        { value: "pppoe", label: "PPPoE Only" },
-                        { value: "both", label: "Both Enabled" }
-                      ]}
-                      theme={theme}
-                      aria-label="Filter by access type"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Results Summary */}
-              <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                <p className={`text-sm ${themeClasses.text.secondary}`}>
-                  Showing {filteredTemplates.length} of {templates.length} templates
-                </p>
-                {(searchTerm || filterCategory !== "All" || filterVisibility !== "All" || filterAccessType !== "All") && (
-                  <button
-                    onClick={() => {
-                      setSearchTerm("");
-                      setFilterCategory("All");
-                      setFilterVisibility("All");
-                      setFilterAccessType("All");
-                    }}
-                    className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap"
-                    aria-label="Clear all filters"
-                  >
-                    Clear all filters
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Templates Grid */}
-            {filteredTemplates.length === 0 ? (
-              <div className={`rounded-xl shadow-lg p-8 sm:p-12 text-center ${themeClasses.bg.card}`}>
-                <Box className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg sm:text-xl font-semibold mb-2">
-                  {templates.length === 0 ? "No Templates Available" : "No Templates Found"}
-                </h3>
-                <p className={`mb-4 sm:mb-6 text-sm sm:text-base ${themeClasses.text.secondary}`}>
-                  {templates.length === 0 
-                    ? "Create your first template to get started!" 
-                    : "Try adjusting your search or filters"}
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <button
-                    onClick={() => setViewMode("type-select")}
-                    className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg ${themeClasses.button.primary} text-sm sm:text-base`}
-                    aria-label="Create first template"
-                  >
-                    <Plus className="w-4 h-4 mr-2 inline" />
-                    Create First Template
-                  </button>
-                  <button
-                    onClick={onBack}
-                    className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg ${themeClasses.button.secondary} text-sm sm:text-base`}
-                    aria-label="Back to plans"
-                  >
-                    Back to Plans
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-                <AnimatePresence>
-                  {filteredTemplates.map((template) => (
-                    <TemplateCard 
-                      key={template.id} 
-                      template={template}
-                      onSelect={setSelectedTemplate}
-                      onApplyTemplate={handleApplyTemplate}
-                      onCreateFromTemplate={handleCreateFromTemplate}
-                      onEditTemplate={(template) => {
-                        const formData = deepClone({
-                          name: template.name,
-                          description: template.description,
-                          category: template.category,
-                          basePrice: template.basePrice?.toString() || template.base_price?.toString() || "0",
-                          isPublic: template.isPublic !== false,
-                          isActive: template.isActive !== false,
-                          priority_level: template.priority_level || 4,
-                          router_specific: template.router_specific || false,
-                          allowed_routers_ids: template.allowed_routers_ids || [],
-                          FUP_policy: template.FUP_policy || "",
-                          FUP_threshold: template.FUP_threshold || 80,
-                          accessMethods: template.accessMethods || template.access_methods
-                        });
-                        
-                        setTemplateForm(formData);
-                        setTemplateType(formData.accessMethods?.hotspot?.enabled ? "hotspot" : "pppoe");
-                        setSelectedTemplate(template);
-                        setViewMode("edit");
-                      }}
-                      onDeleteTemplate={handleDeleteTemplate}
-                      theme={theme}
-                    />
-                  ))}
-                </AnimatePresence>
+                <motion.button
+                  onClick={() => {
+                    resetForm();
+                    setViewMode("type-select");
+                  }}
+                  className={`px-4 py-2 rounded-lg flex items-center ${themeClasses.button.success} flex-shrink-0`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Plus className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span className="truncate">New Template</span>
+                </motion.button>
               </div>
             )}
-          </>
-        )}
+          </div>
 
-        {/* Other view modes */}
-        {viewMode === "type-select" && (
-          <TemplateTypeSelection
-            templateType={templateType}
-            onTemplateTypeSelect={setTemplateType}
-            onContinue={() => setViewMode("create")}
-            theme={theme}
-          />
-        )}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={viewMode}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              {viewMode === "browse" && (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <div className={`p-4 rounded-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+                      <div className="text-2xl font-bold">{templateStats.total}</div>
+                      <div className={`text-sm ${themeClasses.text.secondary}`}>Total Templates</div>
+                    </div>
+                    <div className={`p-4 rounded-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+                      <div className="text-2xl font-bold text-blue-600">{templateStats.hotspot}</div>
+                      <div className={`text-sm ${themeClasses.text.secondary}`}>Hotspot</div>
+                    </div>
+                    <div className={`p-4 rounded-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+                      <div className="text-2xl font-bold text-green-600">{templateStats.pppoe}</div>
+                      <div className={`text-sm ${themeClasses.text.secondary}`}>PPPoE</div>
+                    </div>
+                    <div className={`p-4 rounded-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+                      <div className="text-2xl font-bold text-purple-600">{templateStats.dual}</div>
+                      <div className={`text-sm ${themeClasses.text.secondary}`}>Dual Access</div>
+                    </div>
+                    <div className={`p-4 rounded-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+                      <div className="text-2xl font-bold text-indigo-600">{templateStats.public}</div>
+                      <div className={`text-sm ${themeClasses.text.secondary}`}>Public</div>
+                    </div>
+                    <div className={`p-4 rounded-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+                      <div className="text-2xl font-bold text-orange-600">{templateStats.timeVariant}</div>
+                      <div className={`text-sm ${themeClasses.text.secondary}`}>Time Restricted</div>
+                    </div>
+                  </div>
 
-        {(viewMode === "create" || viewMode === "edit") && (
-          <TemplateForm
-            templateForm={templateForm}
-            templateType={templateType}
-            viewMode={viewMode}
-            isLoading={isLoading}
-            onFormChange={(field, value) => setTemplateForm(prev => ({ ...prev, [field]: value }))}
-            onAccessMethodChange={(method, field, value) => {
-              setTemplateForm(prev => ({
-                ...prev,
-                accessMethods: {
-                  ...prev.accessMethods,
-                  [method]: {
-                    ...prev.accessMethods[method],
-                    [field]: value
-                  }
-                }
-              }));
-            }}
-            onAccessMethodNestedChange={(method, parent, key, value) => {
-              setTemplateForm(prev => ({
-                ...prev,
-                accessMethods: {
-                  ...prev.accessMethods,
-                  [method]: {
-                    ...prev.accessMethods[method],
-                    [parent]: {
-                      ...prev.accessMethods[method][parent],
-                      [key]: value
+                  <div className={`p-4 lg:p-6 rounded-xl shadow-lg ${themeClasses.bg.card}`}>
+                    <div className="flex flex-col lg:flex-row gap-4 items-end">
+                      <div className="flex-1 min-w-0">
+                        <div className="relative">
+                          <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${themeClasses.text.tertiary}`} />
+                          <input
+                            type="text"
+                            placeholder="Search templates..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className={`w-full pl-10 pr-4 py-2 rounded-lg shadow-sm text-sm ${themeClasses.input}`}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-4 w-full lg:w-auto">
+                        <div className="flex-1 min-w-[140px] lg:w-40">
+                          <EnhancedSelect
+                            value={filterCategory}
+                            onChange={setFilterCategory}
+                            options={[
+                              { value: "all", label: "All Categories" },
+                              { value: "Residential", label: "Residential" },
+                              { value: "Business", label: "Business" },
+                              { value: "Promotional", label: "Promotional" },
+                              { value: "Enterprise", label: "Enterprise" }
+                            ]}
+                            theme={theme}
+                          />
+                        </div>
+                        
+                        <div className="flex-1 min-w-[120px] lg:w-32">
+                          <EnhancedSelect
+                            value={filterVisibility}
+                            onChange={setFilterVisibility}
+                            options={VISIBILITY_OPTIONS}
+                            theme={theme}
+                          />
+                        </div>
+
+                        <div className="flex-1 min-w-[140px] lg:w-36">
+                          <EnhancedSelect
+                            value={filterAccessType}
+                            onChange={setFilterAccessType}
+                            options={ACCESS_TYPES}
+                            theme={theme}
+                          />
+                        </div>
+
+                        <div className="flex-1 min-w-[140px] lg:w-36">
+                          <EnhancedSelect
+                            value={filterTimeVariant}
+                            onChange={setFilterTimeVariant}
+                            options={TIME_VARIANT_OPTIONS}
+                            theme={theme}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                      <div className="flex items-center gap-4">
+                        <p className={`text-sm ${themeClasses.text.secondary}`}>
+                          Showing {filteredTemplates.length} of {templates.length} templates
+                        </p>
+                        
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setViewType("grid")}
+                            className={`p-2 rounded-lg transition-colors ${
+                              viewType === "grid" 
+                                ? "bg-indigo-600 text-white" 
+                                : themeClasses.text.secondary
+                            }`}
+                            title="Grid view"
+                          >
+                            <Grid className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setViewType("list")}
+                            className={`p-2 rounded-lg transition-colors ${
+                              viewType === "list" 
+                                ? "bg-indigo-600 text-white" 
+                                : themeClasses.text.secondary
+                            }`}
+                            title="List view"
+                          >
+                            <List className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-sm ${themeClasses.text.secondary}`}>Sort by:</span>
+                          <EnhancedSelect
+                            value={sortBy}
+                            onChange={setSortBy}
+                            options={SORT_OPTIONS}
+                            theme={theme}
+                            className="w-32"
+                          />
+                          <button
+                            onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                            className={`p-2 rounded-lg ${themeClasses.button.secondary}`}
+                          >
+                            {sortOrder === 'asc' ? '↑' : '↓'}
+                          </button>
+                        </div>
+                        
+                        {(searchTerm || filterCategory !== "all" || filterVisibility !== "all" || 
+                          filterAccessType !== "all" || filterTimeVariant !== "all") && (
+                          <button
+                            onClick={clearFilters}
+                            className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap"
+                          >
+                            Clear filters
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {filteredTemplates.length === 0 ? (
+                    <div className={`rounded-xl shadow-lg p-8 sm:p-12 text-center ${themeClasses.bg.card}`}>
+                      <HelpCircle className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg sm:text-xl font-semibold mb-2">
+                        {templates.length === 0 ? "No Templates Available" : "No Templates Found"}
+                      </h3>
+                      <p className={`mb-4 sm:mb-6 text-sm sm:text-base ${themeClasses.text.secondary}`}>
+                        {templates.length === 0 
+                          ? "Create your first template to get started!" 
+                          : "Try adjusting your search or filters"}
+                      </p>
+                      <button
+                        onClick={() => {
+                          resetForm();
+                          setViewMode("type-select");
+                        }}
+                        className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg ${themeClasses.button.primary} text-sm sm:text-base`}
+                      >
+                        <Plus className="w-4 h-4 mr-2 inline" />
+                        Create First Template
+                      </button>
+                    </div>
+                  ) : (
+                    <div className={
+                      viewType === "grid" 
+                        ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8"
+                        : "space-y-4"
+                    }>
+                      {filteredTemplates.map((template) => (
+                        <TemplateCard 
+                          key={String(template.id)}
+                          template={template}
+                          viewType={viewType}
+                          onSelect={setSelectedTemplate}
+                          onApplyTemplate={handleApplyTemplate}
+                          onCreateFromTemplate={handleCreateFromTemplate}
+                          onEditTemplate={handleEditTemplate}
+                          onDeleteTemplate={handleDeleteTemplate}
+                          onDuplicateTemplate={handleDuplicateTemplate}
+                          theme={theme}
+                          isAuthenticated={isAuthenticated}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {viewMode === "type-select" && (
+                <TemplateTypeSelection
+                  templateType={templateType}
+                  onTemplateTypeSelect={setTemplateType}
+                  onContinue={() => setViewMode("create")}
+                  onCancel={() => setViewMode("browse")}
+                  theme={theme}
+                />
+              )}
+
+              {(viewMode === "create" || viewMode === "edit") && (
+                <TemplateForm
+                  templateForm={templateForm}
+                  templateType={templateType}
+                  viewMode={viewMode}
+                  isLoading={isSubmitting}
+                  errors={formErrors}
+                  showTimeVariant={showTimeVariant}
+                  timeVariantConfig={timeVariantConfig}
+                  onFormChange={(field, value) => {
+                    setTemplateForm(prev => ({ ...prev, [field]: value }));
+                    if (formErrors[field]) {
+                      setFormErrors(prev => ({ ...prev, [field]: undefined }));
                     }
-                  }
-                }
-              }));
-            }}
-            onCancel={() => {
-              setViewMode("browse");
-              setTemplateForm({
-                name: "",
-                description: "",
-                category: "Residential",
-                basePrice: "0",
-                isPublic: true,
-                isActive: true,
-                priority_level: 4,
-                router_specific: false,
-                allowed_routers_ids: [],
-                FUP_policy: "",
-                FUP_threshold: 80,
-                accessMethods: {
-                  hotspot: {
-                    enabled: true,
-                    downloadSpeed: { value: "10", unit: "Mbps" },
-                    uploadSpeed: { value: "5", unit: "Mbps" },
-                    dataLimit: { value: "10", unit: "GB" },
-                    usageLimit: { value: "24", unit: "Hours" },
-                    bandwidthLimit: 0,
-                    maxDevices: 1,
-                    sessionTimeout: 86400,
-                    idleTimeout: 300,
-                    validityPeriod: { value: "30", unit: "Days" },
-                    macBinding: false,
-                  },
-                  pppoe: {
-                    enabled: false,
-                    downloadSpeed: { value: "10", unit: "Mbps" },
-                    uploadSpeed: { value: "5", unit: "Mbps" },
-                    dataLimit: { value: "10", unit: "GB" },
-                    usageLimit: { value: "24", unit: "Hours" },
-                    bandwidthLimit: 0,
-                    maxDevices: 1,
-                    sessionTimeout: 86400,
-                    idleTimeout: 300,
-                    validityPeriod: { value: "30", unit: "Days" },
-                    macBinding: false,
-                    ipPool: "pppoe-pool-1",
-                    serviceName: "",
-                    mtu: 1492,
-                  }
-                }
-              });
-              setSelectedTemplate(null);
-            }}
-            onSubmit={async () => {
-              setIsLoading(true);
-              try {
-                const templateData = {
-                  name: templateForm.name.trim(),
-                  description: templateForm.description.trim(),
-                  category: templateForm.category,
-                  basePrice: parseFloat(templateForm.basePrice) || 0,
-                  isPublic: templateForm.isPublic,
-                  isActive: templateForm.isActive,
-                  priority_level: templateForm.priority_level,
-                  router_specific: templateForm.router_specific,
-                  allowed_routers_ids: templateForm.allowed_routers_ids,
-                  FUP_policy: templateForm.FUP_policy,
-                  FUP_threshold: templateForm.FUP_threshold,
-                  accessMethods: templateForm.accessMethods
-                };
+                  }}
+                  onAccessMethodChange={(method, field, value) => {
+                    setTemplateForm(prev => ({
+                      ...prev,
+                      access_methods: {
+                        ...prev.access_methods,
+                        [method]: {
+                          ...prev.access_methods[method],
+                          [field]: value
+                        }
+                      }
+                    }));
+                  }}
+                  onAccessMethodNestedChange={(method, parent, key, value) => {
+                    setTemplateForm(prev => ({
+                      ...prev,
+                      access_methods: {
+                        ...prev.access_methods,
+                        [method]: {
+                          ...prev.access_methods[method],
+                          [parent]: {
+                            ...prev.access_methods[method][parent],
+                            [key]: value
+                          }
+                        }
+                      }
+                    }));
+                  }}
+                  onTimeVariantChange={(field, value) => {
+                    setTimeVariantConfig(prev => ({ ...prev, [field]: value }));
+                  }}
+                  onTimeVariantToggle={() => setShowTimeVariant(!showTimeVariant)}
+                  onCancel={() => {
+                    setViewMode("browse");
+                    resetForm();
+                  }}
+                  onSubmit={handleFormSubmit}
+                  theme={theme}
+                  isMobile={isMobile}
+                />
+              )}
 
-                let response;
-                if (viewMode === "create") {
-                  response = await api.post("/api/internet_plans/templates/", templateData);
-                  setTemplates(prev => [...prev, response.data]);
-                  showToast(`Template "${templateForm.name}" created successfully!`);
-                } else {
-                  response = await api.put(`/api/internet_plans/templates/${selectedTemplate.id}/`, templateData);
-                  setTemplates(prev => prev.map(t => t.id === selectedTemplate.id ? response.data : t));
-                  showToast(`Template "${templateForm.name}" updated successfully!`);
-                }
+              {selectedTemplate && viewMode === "browse" && (
+                <TemplatePreview
+                  template={selectedTemplate}
+                  onClose={() => setSelectedTemplate(null)}
+                  onApplyTemplate={handleApplyTemplate}
+                  onCreateFromTemplate={handleCreateFromTemplate}
+                  onEditTemplate={() => handleEditTemplate(selectedTemplate)}
+                  onDeleteTemplate={() => handleDeleteTemplate(selectedTemplate)}
+                  theme={theme}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
 
-                setViewMode("browse");
-                setSelectedTemplate(null);
-              } catch (error) {
-                console.error(`Error ${viewMode === "create" ? "creating" : "updating"} template:`, error);
-                const errorMessage = error.response?.data?.detail || 
-                                    error.response?.data?.error || 
-                                    error.response?.data?.details?.[0] ||
-                                    `Failed to ${viewMode === "create" ? "create" : "update"} template`;
-                showToast(errorMessage, "error");
-              } finally {
-                setIsLoading(false);
-              }
-            }}
+          <ConfirmationModal
+            isOpen={deleteModal.isOpen}
+            onClose={() => setDeleteModal({ isOpen: false, template: null })}
+            onConfirm={confirmDeleteTemplate}
+            title="Delete Template"
+            message={`Are you sure you want to delete template "${deleteModal.template?.name}"? This action cannot be undone.`}
+            confirmText="Delete Template"
+            cancelText="Cancel"
+            type="danger"
             theme={theme}
+            isLoading={isLoading}
           />
-        )}
-
-        {/* Selected Template Preview */}
-        {selectedTemplate && viewMode === "browse" && (
-          <TemplatePreview
-            template={selectedTemplate}
-            onClose={() => setSelectedTemplate(null)}
-            onApplyTemplate={handleApplyTemplate}
-            onCreateFromTemplate={handleCreateFromTemplate}
-            theme={theme}
-          />
-        )}
-
-        {/* Delete Confirmation Modal */}
-        <ConfirmationModal
-          isOpen={deleteModal.isOpen}
-          onClose={() => setDeleteModal({ isOpen: false, template: null })}
-          onConfirm={confirmDeleteTemplate}
-          title="Delete Template"
-          message={`Are you sure you want to delete template "${deleteModal.template?.name}"? This action cannot be undone and will affect any plans using this template.`}
-          confirmText="Delete Template"
-          cancelText="Cancel"
-          type="danger"
-          theme={theme}
-        />
-      </main>
-    </div>
+        </main>
+      </div>
+    </TemplateErrorBoundary>
   );
 };
 
 export default PlanTemplates;
+
+
+
+
+
