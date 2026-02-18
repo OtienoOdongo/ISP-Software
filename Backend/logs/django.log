@@ -4517,3 +4517,166 @@ WARNING 2026-02-16 17:02:22,507 log 27193 136880329844416 Unauthorized: /api/aut
 WARNING 2026-02-16 17:02:22,633 log 27193 136880329844416 Unauthorized: /api/auth/users/me/
 WARNING 2026-02-16 17:15:23,122 log 27193 136880329844416 Unauthorized: /api/auth/jwt/refresh/
 WARNING 2026-02-16 17:15:23,185 log 27193 136880329844416 Unauthorized: /api/auth/users/me/
+WARNING 2026-02-17 11:29:20,858 log 2146 133808288425664 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-02-17 11:29:21,814 log 2146 133808280032960 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-02-17 11:29:28,397 log 2146 133808658560704 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-02-17 11:29:28,434 log 2146 133808658560704 Unauthorized: /api/auth/users/me/
+WARNING 2026-02-17 11:29:41,649 log 2146 133808687933120 Unauthorized: /api/internet_plans/templates/
+WARNING 2026-02-17 11:29:41,672 log 2146 133808658560704 Unauthorized: /api/internet_plans/plans/
+ERROR 2026-02-17 11:29:41,674 log 2146 133808650168000 Internal Server Error: /api/internet_plans/pricing/rules/
+ERROR 2026-02-17 11:29:41,692 log 2146 133808296818368 Internal Server Error: /api/internet_plans/pricing/matrices/
+WARNING 2026-02-17 11:29:41,711 log 2146 133808288425664 Unauthorized: /api/internet_plans/plans/statistics/
+WARNING 2026-02-17 11:29:41,762 log 2146 133808280032960 Unauthorized: /api/network_management/routers/
+ERROR 2026-02-17 11:33:41,528 log 2146 133808666953408 Internal Server Error: /api/internet_plans/pricing/rules/
+WARNING 2026-02-17 11:33:41,660 log 2146 133808296818368 Unauthorized: /api/internet_plans/templates/
+WARNING 2026-02-17 11:33:41,442 log 2146 133808675346112 Unauthorized: /api/internet_plans/plans/statistics/
+WARNING 2026-02-17 11:33:41,669 log 2146 133808658560704 Unauthorized: /api/internet_plans/plans/
+ERROR 2026-02-17 11:33:42,208 log 2146 133808687933120 Internal Server Error: /api/internet_plans/pricing/matrices/
+WARNING 2026-02-17 11:33:42,211 log 2146 133808280032960 Unauthorized: /api/network_management/routers/
+WARNING 2026-02-17 12:23:59,560 log 5093 133648795813568 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-02-17 12:24:00,078 log 5093 133648795813568 Unauthorized: /api/auth/users/me/
+WARNING 2026-02-17 14:30:29,435 log 10381 123569765873344 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-02-17 15:30:01,629 log 18994 131155096479424 Not Found: /api/service_operations/health/
+WARNING 2026-02-17 15:30:01,650 log 18994 131154745226944 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-17 15:30:01,762 log 18994 131155114313408 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-02-17 15:30:01,993 log 18994 131154745226944 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-17 15:30:02,055 log 18994 131155096479424 Not Found: /api/service_operations/health/
+WARNING 2026-02-17 15:30:02,076 log 18994 131155114313408 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-02-17 15:39:41,931 log 18994 131154745226944 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-02-17 15:39:41,992 log 18994 131154745226944 Unauthorized: /api/auth/users/me/
+WARNING 2026-02-17 15:45:45,095 log 18994 131154745226944 Unauthorized: /api/network_management/routers/
+WARNING 2026-02-17 15:45:45,137 log 18994 131155114313408 Unauthorized: /api/internet_plans/plans/
+WARNING 2026-02-17 15:45:45,149 log 18994 131155141588672 Unauthorized: /api/internet_plans/templates/
+WARNING 2026-02-17 15:45:45,197 log 18994 131155105920704 Unauthorized: /api/internet_plans/plans/statistics/
+ERROR 2026-02-17 15:45:45,214 log 18994 131155096479424 Internal Server Error: /api/internet_plans/pricing/rules/
+ERROR 2026-02-17 15:45:45,225 log 18994 131155122706112 Internal Server Error: /api/internet_plans/pricing/matrices/
+WARNING 2026-02-17 15:52:43,378 log 18994 131155122706112 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-02-17 15:52:43,406 log 18994 131155122706112 Unauthorized: /api/auth/users/me/
+WARNING 2026-02-17 16:29:37,245 log 18994 131154745226944 Bad Request: /api/internet_plans/templates/
+WARNING 2026-02-17 16:35:12,135 log 18994 131154745226944 Bad Request: /api/internet_plans/templates/
+WARNING 2026-02-17 16:50:30,101 log 18994 131154745226944 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-02-17 16:50:30,147 log 18994 131154745226944 Unauthorized: /api/auth/users/me/
+WARNING 2026-02-17 16:56:18,831 log 18994 131154745226944 Unauthorized: /api/internet_plans/templates/
+WARNING 2026-02-17 16:58:24,804 log 18994 131154745226944 Unauthorized: /api/internet_plans/templates/
+WARNING 2026-02-17 17:01:40,852 log 18994 131154745226944 Unauthorized: /api/internet_plans/templates/
+WARNING 2026-02-17 17:01:40,886 log 18994 131155114313408 Unauthorized: /api/internet_plans/plans/
+WARNING 2026-02-17 17:01:40,904 log 18994 131154745226944 Unauthorized: /api/network_management/routers/
+ERROR 2026-02-17 17:01:40,921 log 18994 131155114313408 Internal Server Error: /api/internet_plans/pricing/matrices/
+ERROR 2026-02-17 17:01:40,986 log 18994 131154745226944 Internal Server Error: /api/internet_plans/pricing/rules/
+WARNING 2026-02-17 17:01:41,006 log 18994 131155114313408 Unauthorized: /api/internet_plans/plans/statistics/
+WARNING 2026-02-17 17:01:41,055 log 18994 131154745226944 Unauthorized: /api/internet_plans/templates/
+WARNING 2026-02-17 17:01:41,121 log 18994 131154745226944 Unauthorized: /api/internet_plans/templates/
+WARNING 2026-02-17 17:01:41,191 log 18994 131154745226944 Unauthorized: /api/internet_plans/templates/
+WARNING 2026-02-17 17:03:30,897 log 18994 131154745226944 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-02-17 17:03:30,921 log 18994 131154745226944 Unauthorized: /api/auth/users/me/
+WARNING 2026-02-17 17:15:13,149 log 18994 131154745226944 Unauthorized: /api/internet_plans/templates/
+WARNING 2026-02-17 17:18:40,388 log 18994 131155096479424 Bad Request: /api/internet_plans/templates/
+ERROR 2026-02-17 17:35:50,904 log 18994 131155105920704 Internal Server Error: /api/internet_plans/templates/
+ERROR 2026-02-17 17:42:02,962 log 18994 131155105920704 Internal Server Error: /api/internet_plans/templates/
+WARNING 2026-02-17 17:42:49,066 log 18994 131155141588672 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-02-17 17:42:49,141 log 18994 131155141588672 Unauthorized: /api/auth/users/me/
+WARNING 2026-02-17 17:47:33,034 log 18994 131155141588672 Unauthorized: /api/internet_plans/templates/
+WARNING 2026-02-17 17:47:33,090 log 18994 131155141588672 Unauthorized: /api/internet_plans/templates/
+WARNING 2026-02-17 17:48:46,896 log 18994 131155141588672 Unauthorized: /api/internet_plans/templates/
+WARNING 2026-02-17 17:49:52,171 log 18994 131155141588672 Unauthorized: /api/internet_plans/templates/
+WARNING 2026-02-17 17:49:52,193 log 18994 131155141588672 Unauthorized: /api/internet_plans/templates/
+ERROR 2026-02-18 07:51:33,195 log 3676 133443534964416 Internal Server Error: /api/internet_plans/templates/
+WARNING 2026-02-18 08:14:55,001 log 3676 133443543357120 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-02-18 08:14:55,024 log 3676 133443543357120 Unauthorized: /api/auth/users/me/
+ERROR 2026-02-18 08:18:49,626 log 3676 133443551749824 Internal Server Error: /api/internet_plans/templates/
+ERROR 2026-02-18 08:27:46,375 log 3676 133443551749824 Internal Server Error: /api/internet_plans/templates/
+ERROR 2026-02-18 08:29:31,538 log 3676 133443534964416 Internal Server Error: /api/internet_plans/templates/
+ERROR 2026-02-18 08:45:06,343 log 3676 133443543357120 Internal Server Error: /api/internet_plans/templates/
+WARNING 2026-02-18 08:51:29,095 log 3676 133443560142528 Bad Request: /api/internet_plans/templates/
+WARNING 2026-02-18 08:59:34,148 log 3676 133443551749824 Bad Request: /api/internet_plans/templates/
+WARNING 2026-02-18 09:06:19,502 log 3676 133443560142528 Bad Request: /api/internet_plans/templates/
+ERROR 2026-02-18 09:14:21,027 log 3676 133443791152832 Internal Server Error: /api/internet_plans/templates/
+ERROR 2026-02-18 09:34:04,819 log 3676 133443560142528 Internal Server Error: /api/internet_plans/templates/
+ERROR 2026-02-18 09:34:07,152 log 3676 133443560142528 Internal Server Error: /api/internet_plans/templates/
+WARNING 2026-02-18 09:43:15,657 log 3676 133443791152832 Bad Request: /api/internet_plans/templates/
+WARNING 2026-02-18 09:56:56,295 log 3676 133443791152832 Bad Request: /api/internet_plans/templates/
+WARNING 2026-02-18 09:57:55,208 log 3676 133443791152832 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-02-18 09:57:55,276 log 3676 133443525523136 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 09:57:55,380 log 3676 133443534964416 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 09:57:56,979 log 3676 133443551749824 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-02-18 09:57:57,021 log 3676 133443525523136 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 09:57:57,546 log 3676 133443534964416 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 10:02:54,135 log 3676 133443543357120 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 10:02:54,239 log 3676 133443791152832 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-02-18 10:02:54,274 log 3676 133443534964416 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 10:02:54,608 log 3676 133443791152832 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-02-18 10:02:54,617 log 3676 133443534964416 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 10:02:54,630 log 3676 133443543357120 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 10:04:06,978 log 3676 133443791152832 Bad Request: /api/internet_plans/plans/eb27b245-d2fb-4951-a244-fcc228ce8138/
+WARNING 2026-02-18 10:14:58,028 log 3676 133443791152832 Bad Request: /api/internet_plans/templates/
+WARNING 2026-02-18 10:21:44,492 log 3676 133443791152832 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-02-18 10:21:44,531 log 3676 133443791152832 Unauthorized: /api/auth/users/me/
+WARNING 2026-02-18 10:29:34,760 log 3676 133443791152832 Unauthorized: /api/internet_plans/templates/
+WARNING 2026-02-18 10:34:46,285 log 3676 133443791152832 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-02-18 10:34:46,307 log 3676 133443791152832 Unauthorized: /api/auth/users/me/
+WARNING 2026-02-18 10:45:27,504 log 3676 133443791152832 Unauthorized: /api/auth/jwt/create/
+WARNING 2026-02-18 10:45:27,583 log 3676 133443791152832 Unauthorized: /api/auth/users/me/
+WARNING 2026-02-18 10:45:27,781 log 3676 133443791152832 Unauthorized: /api/auth/users/me/
+ERROR 2026-02-18 10:47:03,477 log 3676 133443560142528 Internal Server Error: /api/internet_plans/templates/
+ERROR 2026-02-18 11:01:34,327 log 3676 133443791152832 Internal Server Error: /api/internet_plans/templates/
+WARNING 2026-02-18 11:26:34,625 log 3676 133443791152832 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-02-18 11:26:34,659 log 3676 133443791152832 Unauthorized: /api/auth/users/me/
+WARNING 2026-02-18 11:39:36,342 log 3676 133443791152832 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-02-18 11:39:36,367 log 3676 133443791152832 Unauthorized: /api/auth/users/me/
+WARNING 2026-02-18 13:52:16,248 log 3676 133443791152832 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-02-18 13:52:21,720 log 3676 133443791152832 Unauthorized: /api/auth/users/me/
+ERROR 2026-02-18 14:11:21,076 log 48666 137084189787840 Internal Server Error: /api/internet_plans/templates/
+WARNING 2026-02-18 14:33:32,498 log 49399 133413776377536 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 14:33:32,855 log 49399 133413909558976 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 14:33:32,905 log 49399 133413486978752 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-02-18 14:33:32,927 log 49399 133413776377536 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 14:33:33,187 log 49399 133413776377536 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-02-18 14:33:33,236 log 49399 133413909558976 Not Found: /api/service_operations/activations/statistics/
+ERROR 2026-02-18 14:36:20,837 log 49399 133413495371456 Internal Server Error: /api/internet_plans/templates/e97fe1c4-a470-4ea8-bb15-42f93f3be039/
+WARNING 2026-02-18 14:43:05,669 log 49399 133413909558976 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 14:43:05,683 log 49399 133413495371456 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 14:43:05,717 log 49399 133413776377536 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-02-18 14:43:05,945 log 49399 133413495371456 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 14:43:06,074 log 49399 133413776377536 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-02-18 14:43:06,111 log 49399 133413909558976 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 15:13:00,520 log 50851 133710653421248 Not Found: /api/internet_plans/time-variant/analytics/
+WARNING 2026-02-18 15:48:10,592 log 50851 133710641882816 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 15:48:10,818 log 50851 133711019374272 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 15:48:10,986 log 50851 133710641882816 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-02-18 15:48:11,012 log 50851 133711019374272 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 15:48:11,076 log 50851 133711009932992 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 15:48:11,228 log 50851 133710641882816 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-02-18 15:48:41,069 log 50851 133710641882816 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 15:48:41,095 log 50851 133711174944448 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 15:49:11,047 log 50851 133711174944448 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 15:49:11,067 log 50851 133710641882816 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 15:49:41,468 log 50851 133710641882816 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 15:49:41,521 log 50851 133711174944448 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 15:50:11,284 log 50851 133711174944448 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 15:50:11,299 log 50851 133710641882816 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 15:50:41,423 log 50851 133711174944448 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 15:50:41,444 log 50851 133710641882816 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 16:13:03,803 log 53447 130569472038592 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 16:13:03,846 log 53447 130569714263744 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 16:13:03,947 log 53447 130569701676736 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-02-18 16:13:04,225 log 53447 130569714263744 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 16:13:04,243 log 53447 130569472038592 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 16:13:04,271 log 53447 130569701676736 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-02-18 16:13:32,950 log 53447 130569462597312 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 16:13:32,960 log 53447 130569488824000 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 16:15:18,117 log 53447 130569480431296 Not Found: /api/internet_plans/
+WARNING 2026-02-18 16:15:18,303 log 53447 130569480431296 Not Found: /api/internet_plans/
+WARNING 2026-02-18 16:15:30,233 log 53447 130569472038592 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 16:15:30,276 log 53447 130569714263744 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 16:15:30,300 log 53447 130569480431296 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-02-18 16:15:30,638 log 53447 130569714263744 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 16:15:30,650 log 53447 130569480431296 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-02-18 16:15:30,658 log 53447 130569472038592 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 16:15:39,099 log 53447 130569480431296 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 16:15:39,164 log 53447 130569462597312 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-02-18 16:15:39,181 log 53447 130569488824000 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 16:15:39,573 log 53447 130569480431296 Not Found: /api/service_operations/activations/statistics/
+WARNING 2026-02-18 16:15:39,604 log 53447 130569462597312 Not Found: /api/service_operations/operations/statistics/
+WARNING 2026-02-18 16:15:39,630 log 53447 130569488824000 Not Found: /api/service_operations/health/
+WARNING 2026-02-18 16:16:06,369 log 53447 130569488824000 Not Found: /api/service_operations/client_operations/
+WARNING 2026-02-18 16:16:06,467 log 53447 130569714263744 Not Found: /api/service_operations/client_operations/
