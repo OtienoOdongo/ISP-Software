@@ -1,706 +1,1094 @@
-/**
- * Performance Monitoring Hook
- * Tracks frontend performance metrics including FPS, memory usage, API response times, and render performance
- */
+// /**
+//  * Performance Monitoring Hook
+//  * Tracks frontend performance metrics including FPS, memory usage, API response times, and render performance
+//  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+// import { useState, useEffect, useRef, useCallback } from 'react';
 
-// Performance measurement types
-const METRIC_TYPES = {
-  FPS: 'fps',               // Frames per second
-  MEMORY: 'memory',         // Memory usage
-  API_RESPONSE: 'apiResponse', // API response times
-  RENDER: 'render',         // Component render times
-  NETWORK: 'network',       // Network requests
-  USER_INTERACTION: 'userInteraction' // User interaction timings
-};
+// // Performance measurement types
+// const METRIC_TYPES = {
+//   FPS: 'fps',               // Frames per second
+//   MEMORY: 'memory',         // Memory usage
+//   API_RESPONSE: 'apiResponse', // API response times
+//   RENDER: 'render',         // Component render times
+//   NETWORK: 'network',       // Network requests
+//   USER_INTERACTION: 'userInteraction' // User interaction timings
+// };
 
-// Default configuration
-const DEFAULT_CONFIG = {
-  enabled: true,
-  collectMetrics: ['fps', 'memory', 'apiResponse'],
-  sampleInterval: 1000, // 1 second
-  maxSamples: 60, // Keep 60 samples (1 minute at 1 sample/sec)
-  reportThresholds: {
-    fps: 30, // Warn if FPS drops below 30
-    memory: 80, // Warn if memory usage > 80%
-    apiResponse: 3000, // Warn if API response > 3s
-    render: 100 // Warn if render > 100ms
-  },
-  autoReport: false,
-  reportUrl: '/api/performance/metrics',
-  onThresholdExceeded: null
-};
+// // Default configuration
+// const DEFAULT_CONFIG = {
+//   enabled: true,
+//   collectMetrics: ['fps', 'memory', 'apiResponse'],
+//   sampleInterval: 1000, // 1 second
+//   maxSamples: 60, // Keep 60 samples (1 minute at 1 sample/sec)
+//   reportThresholds: {
+//     fps: 30, // Warn if FPS drops below 30
+//     memory: 80, // Warn if memory usage > 80%
+//     apiResponse: 3000, // Warn if API response > 3s
+//     render: 100 // Warn if render > 100ms
+//   },
+//   autoReport: false,
+//   reportUrl: '/api/performance/metrics',
+//   onThresholdExceeded: null
+// };
 
-class PerformanceCollector {
-  constructor(config = {}) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
-    this.metrics = new Map();
-    this.samples = new Map();
-    this.frameCount = 0;
-    this.lastFrameTime = performance.now();
-    this.lastMemoryCheck = 0;
-    this.memoryCheckInterval = 10000; // Check memory every 10 seconds
-    this.interactionListeners = new Map();
-    this.apiInterceptors = new Set();
-    this.isCollecting = false;
+// class PerformanceCollector {
+//   constructor(config = {}) {
+//     this.config = { ...DEFAULT_CONFIG, ...config };
+//     this.metrics = new Map();
+//     this.samples = new Map();
+//     this.frameCount = 0;
+//     this.lastFrameTime = performance.now();
+//     this.lastMemoryCheck = 0;
+//     this.memoryCheckInterval = 10000; // Check memory every 10 seconds
+//     this.interactionListeners = new Map();
+//     this.apiInterceptors = new Set();
+//     this.isCollecting = false;
     
-    // Initialize metrics storage
-    Object.values(METRIC_TYPES).forEach(type => {
-      this.samples.set(type, []);
-    });
-  }
+//     // Initialize metrics storage
+//     Object.values(METRIC_TYPES).forEach(type => {
+//       this.samples.set(type, []);
+//     });
+//   }
 
-  start() {
-    if (this.isCollecting || !this.config.enabled) return;
+//   start() {
+//     if (this.isCollecting || !this.config.enabled) return;
     
-    this.isCollecting = true;
-    this.setupFPSMonitor();
-    this.setupMemoryMonitor();
-    this.setupAPIMonitor();
-    this.setupRenderMonitor();
-    this.setupNetworkMonitor();
-    this.setupInteractionMonitor();
+//     this.isCollecting = true;
+//     this.setupFPSMonitor();
+//     this.setupMemoryMonitor();
+//     this.setupAPIMonitor();
+//     this.setupRenderMonitor();
+//     this.setupNetworkMonitor();
+//     this.setupInteractionMonitor();
     
-    console.log('Performance monitoring started');
-  }
+//     console.log('Performance monitoring started');
+//   }
 
-  stop() {
-    this.isCollecting = false;
-    this.cleanupFPSMonitor();
-    this.cleanupAPIMonitor();
-    this.cleanupInteractionMonitor();
-    console.log('Performance monitoring stopped');
-  }
+//   stop() {
+//     this.isCollecting = false;
+//     this.cleanupFPSMonitor();
+//     this.cleanupAPIMonitor();
+//     this.cleanupInteractionMonitor();
+//     console.log('Performance monitoring stopped');
+//   }
 
-  setupFPSMonitor() {
-    if (!this.config.collectMetrics.includes(METRIC_TYPES.FPS)) return;
+//   setupFPSMonitor() {
+//     if (!this.config.collectMetrics.includes(METRIC_TYPES.FPS)) return;
     
-    const measureFPS = () => {
-      if (!this.isCollecting) return;
+//     const measureFPS = () => {
+//       if (!this.isCollecting) return;
       
-      this.frameCount++;
-      const currentTime = performance.now();
-      const elapsed = currentTime - this.lastFrameTime;
+//       this.frameCount++;
+//       const currentTime = performance.now();
+//       const elapsed = currentTime - this.lastFrameTime;
       
-      if (elapsed >= 1000) { // Calculate FPS every second
-        const fps = Math.round((this.frameCount * 1000) / elapsed);
-        this.recordMetric(METRIC_TYPES.FPS, fps, currentTime);
-        this.frameCount = 0;
-        this.lastFrameTime = currentTime;
+//       if (elapsed >= 1000) { // Calculate FPS every second
+//         const fps = Math.round((this.frameCount * 1000) / elapsed);
+//         this.recordMetric(METRIC_TYPES.FPS, fps, currentTime);
+//         this.frameCount = 0;
+//         this.lastFrameTime = currentTime;
         
-        // Check threshold
-        if (fps < this.config.reportThresholds.fps) {
-          this.handleThresholdExceeded(METRIC_TYPES.FPS, fps);
-        }
-      }
+//         // Check threshold
+//         if (fps < this.config.reportThresholds.fps) {
+//           this.handleThresholdExceeded(METRIC_TYPES.FPS, fps);
+//         }
+//       }
       
-      requestAnimationFrame(measureFPS);
-    };
+//       requestAnimationFrame(measureFPS);
+//     };
     
-    this.fpsAnimationId = requestAnimationFrame(measureFPS);
-  }
+//     this.fpsAnimationId = requestAnimationFrame(measureFPS);
+//   }
 
-  cleanupFPSMonitor() {
-    if (this.fpsAnimationId) {
-      cancelAnimationFrame(this.fpsAnimationId);
-    }
-  }
+//   cleanupFPSMonitor() {
+//     if (this.fpsAnimationId) {
+//       cancelAnimationFrame(this.fpsAnimationId);
+//     }
+//   }
 
-  setupMemoryMonitor() {
-    if (!this.config.collectMetrics.includes(METRIC_TYPES.MEMORY)) return;
+//   setupMemoryMonitor() {
+//     if (!this.config.collectMetrics.includes(METRIC_TYPES.MEMORY)) return;
     
-    // Memory monitoring only works in Chrome with flags
-    if (!performance.memory) {
-      console.warn('Memory API not available. Performance.memory only works in Chrome with appropriate flags.');
-      return;
-    }
+//     // Memory monitoring only works in Chrome with flags
+//     if (!performance.memory) {
+//       console.warn('Memory API not available. Performance.memory only works in Chrome with appropriate flags.');
+//       return;
+//     }
     
-    this.memoryInterval = setInterval(() => {
-      if (!this.isCollecting) return;
+//     this.memoryInterval = setInterval(() => {
+//       if (!this.isCollecting) return;
       
-      const now = performance.now();
-      if (now - this.lastMemoryCheck >= this.memoryCheckInterval) {
-        const memory = performance.memory;
-        const usedMB = Math.round(memory.usedJSHeapSize / 1048576);
-        const totalMB = Math.round(memory.totalJSHeapSize / 1048576);
-        const usagePercentage = Math.round((usedMB / totalMB) * 100);
+//       const now = performance.now();
+//       if (now - this.lastMemoryCheck >= this.memoryCheckInterval) {
+//         const memory = performance.memory;
+//         const usedMB = Math.round(memory.usedJSHeapSize / 1048576);
+//         const totalMB = Math.round(memory.totalJSHeapSize / 1048576);
+//         const usagePercentage = Math.round((usedMB / totalMB) * 100);
         
-        this.recordMetric(METRIC_TYPES.MEMORY, usagePercentage, now);
-        this.metrics.set('memory_details', { usedMB, totalMB, usagePercentage });
+//         this.recordMetric(METRIC_TYPES.MEMORY, usagePercentage, now);
+//         this.metrics.set('memory_details', { usedMB, totalMB, usagePercentage });
         
-        // Check threshold
-        if (usagePercentage > this.config.reportThresholds.memory) {
-          this.handleThresholdExceeded(METRIC_TYPES.MEMORY, usagePercentage);
-        }
+//         // Check threshold
+//         if (usagePercentage > this.config.reportThresholds.memory) {
+//           this.handleThresholdExceeded(METRIC_TYPES.MEMORY, usagePercentage);
+//         }
         
-        this.lastMemoryCheck = now;
-      }
-    }, 1000);
-  }
+//         this.lastMemoryCheck = now;
+//       }
+//     }, 1000);
+//   }
 
-  setupAPIMonitor() {
-    if (!this.config.collectMetrics.includes(METRIC_TYPES.API_RESPONSE)) return;
+//   setupAPIMonitor() {
+//     if (!this.config.collectMetrics.includes(METRIC_TYPES.API_RESPONSE)) return;
     
-    // Store original fetch
-    const originalFetch = window.fetch;
+//     // Store original fetch
+//     const originalFetch = window.fetch;
     
-    window.fetch = async (...args) => {
-      const startTime = performance.now();
-      const requestId = `api_${Date.now()}_${Math.random()}`;
+//     window.fetch = async (...args) => {
+//       const startTime = performance.now();
+//       const requestId = `api_${Date.now()}_${Math.random()}`;
       
-      try {
-        const response = await originalFetch(...args);
-        const endTime = performance.now();
-        const duration = endTime - startTime;
+//       try {
+//         const response = await originalFetch(...args);
+//         const endTime = performance.now();
+//         const duration = endTime - startTime;
         
-        // Record API response time
-        this.recordMetric(METRIC_TYPES.API_RESPONSE, duration, endTime, {
-          url: args[0],
-          method: 'GET',
-          status: response.status,
-          requestId
-        });
+//         // Record API response time
+//         this.recordMetric(METRIC_TYPES.API_RESPONSE, duration, endTime, {
+//           url: args[0],
+//           method: 'GET',
+//           status: response.status,
+//           requestId
+//         });
         
-        // Check threshold
-        if (duration > this.config.reportThresholds.apiResponse) {
-          this.handleThresholdExceeded(METRIC_TYPES.API_RESPONSE, duration, {
-            url: args[0],
-            duration
-          });
-        }
+//         // Check threshold
+//         if (duration > this.config.reportThresholds.apiResponse) {
+//           this.handleThresholdExceeded(METRIC_TYPES.API_RESPONSE, duration, {
+//             url: args[0],
+//             duration
+//           });
+//         }
         
-        return response;
-      } catch (error) {
-        const endTime = performance.now();
-        const duration = endTime - startTime;
+//         return response;
+//       } catch (error) {
+//         const endTime = performance.now();
+//         const duration = endTime - startTime;
         
-        this.recordMetric(METRIC_TYPES.API_RESPONSE, duration, endTime, {
-          url: args[0],
-          method: 'GET',
-          status: 'error',
-          error: error.message,
-          requestId
-        });
+//         this.recordMetric(METRIC_TYPES.API_RESPONSE, duration, endTime, {
+//           url: args[0],
+//           method: 'GET',
+//           status: 'error',
+//           error: error.message,
+//           requestId
+//         });
         
-        throw error;
-      }
-    };
+//         throw error;
+//       }
+//     };
     
-    // Store reference for cleanup
-    this.originalFetch = originalFetch;
-  }
+//     // Store reference for cleanup
+//     this.originalFetch = originalFetch;
+//   }
 
-  cleanupAPIMonitor() {
-    if (this.originalFetch) {
-      window.fetch = this.originalFetch;
-    }
-    if (this.memoryInterval) {
-      clearInterval(this.memoryInterval);
-    }
-  }
+//   cleanupAPIMonitor() {
+//     if (this.originalFetch) {
+//       window.fetch = this.originalFetch;
+//     }
+//     if (this.memoryInterval) {
+//       clearInterval(this.memoryInterval);
+//     }
+//   }
 
-  setupRenderMonitor() {
-    if (!this.config.collectMetrics.includes(METRIC_TYPES.RENDER)) return;
+//   setupRenderMonitor() {
+//     if (!this.config.collectMetrics.includes(METRIC_TYPES.RENDER)) return;
     
-    // We'll use a React-specific approach via the hook
-    this.renderMetrics = new Map();
-  }
+//     // We'll use a React-specific approach via the hook
+//     this.renderMetrics = new Map();
+//   }
 
-  setupNetworkMonitor() {
-    if (!this.config.collectMetrics.includes(METRIC_TYPES.NETWORK)) return;
+//   setupNetworkMonitor() {
+//     if (!this.config.collectMetrics.includes(METRIC_TYPES.NETWORK)) return;
     
-    // Use Performance API for network timing
-    const processResources = () => {
-      if (!this.isCollecting) return;
+//     // Use Performance API for network timing
+//     const processResources = () => {
+//       if (!this.isCollecting) return;
       
-      const resources = performance.getEntriesByType('resource');
-      resources.forEach(resource => {
-        if (resource.initiatorType === 'xmlhttprequest' || resource.initiatorType === 'fetch') {
-          const duration = resource.duration;
-          this.recordMetric(METRIC_TYPES.NETWORK, duration, performance.now(), {
-            name: resource.name,
-            initiatorType: resource.initiatorType,
-            transferSize: resource.transferSize,
-            decodedBodySize: resource.decodedBodySize
-          });
-        }
-      });
+//       const resources = performance.getEntriesByType('resource');
+//       resources.forEach(resource => {
+//         if (resource.initiatorType === 'xmlhttprequest' || resource.initiatorType === 'fetch') {
+//           const duration = resource.duration;
+//           this.recordMetric(METRIC_TYPES.NETWORK, duration, performance.now(), {
+//             name: resource.name,
+//             initiatorType: resource.initiatorType,
+//             transferSize: resource.transferSize,
+//             decodedBodySize: resource.decodedBodySize
+//           });
+//         }
+//       });
       
-      // Clear processed resources to avoid duplicates
-      performance.clearResourceTimings();
-    };
+//       // Clear processed resources to avoid duplicates
+//       performance.clearResourceTimings();
+//     };
     
-    this.networkObserver = new PerformanceObserver((list) => {
-      processResources();
-    });
+//     this.networkObserver = new PerformanceObserver((list) => {
+//       processResources();
+//     });
     
-    this.networkObserver.observe({ entryTypes: ['resource'] });
-  }
+//     this.networkObserver.observe({ entryTypes: ['resource'] });
+//   }
 
-  setupInteractionMonitor() {
-    if (!this.config.collectMetrics.includes(METRIC_TYPES.USER_INTERACTION)) return;
+//   setupInteractionMonitor() {
+//     if (!this.config.collectMetrics.includes(METRIC_TYPES.USER_INTERACTION)) return;
     
-    const interactionTypes = ['click', 'keydown', 'scroll', 'input'];
+//     const interactionTypes = ['click', 'keydown', 'scroll', 'input'];
     
-    interactionTypes.forEach(type => {
-      const handler = (event) => {
-        if (!this.isCollecting) return;
+//     interactionTypes.forEach(type => {
+//       const handler = (event) => {
+//         if (!this.isCollecting) return;
         
-        const now = performance.now();
-        this.recordMetric(METRIC_TYPES.USER_INTERACTION, 0, now, {
-          type,
-          target: event.target?.tagName || 'unknown',
-          x: event.clientX,
-          y: event.clientY
-        });
-      };
+//         const now = performance.now();
+//         this.recordMetric(METRIC_TYPES.USER_INTERACTION, 0, now, {
+//           type,
+//           target: event.target?.tagName || 'unknown',
+//           x: event.clientX,
+//           y: event.clientY
+//         });
+//       };
       
-      window.addEventListener(type, handler, { passive: true });
-      this.interactionListeners.set(type, handler);
-    });
-  }
+//       window.addEventListener(type, handler, { passive: true });
+//       this.interactionListeners.set(type, handler);
+//     });
+//   }
 
-  cleanupInteractionMonitor() {
-    this.interactionListeners.forEach((handler, type) => {
-      window.removeEventListener(type, handler);
-    });
-    this.interactionListeners.clear();
+//   cleanupInteractionMonitor() {
+//     this.interactionListeners.forEach((handler, type) => {
+//       window.removeEventListener(type, handler);
+//     });
+//     this.interactionListeners.clear();
     
-    if (this.networkObserver) {
-      this.networkObserver.disconnect();
-    }
-  }
+//     if (this.networkObserver) {
+//       this.networkObserver.disconnect();
+//     }
+//   }
 
-  recordMetric(type, value, timestamp, metadata = {}) {
-    const metric = {
-      type,
-      value,
-      timestamp,
-      metadata
-    };
+//   recordMetric(type, value, timestamp, metadata = {}) {
+//     const metric = {
+//       type,
+//       value,
+//       timestamp,
+//       metadata
+//     };
     
-    // Store in metrics
-    this.metrics.set(`${type}_latest`, value);
+//     // Store in metrics
+//     this.metrics.set(`${type}_latest`, value);
     
-    // Store in samples
-    const samples = this.samples.get(type) || [];
-    samples.push(metric);
+//     // Store in samples
+//     const samples = this.samples.get(type) || [];
+//     samples.push(metric);
     
-    // Keep only maxSamples
-    if (samples.length > this.config.maxSamples) {
-      samples.shift();
-    }
+//     // Keep only maxSamples
+//     if (samples.length > this.config.maxSamples) {
+//       samples.shift();
+//     }
     
-    this.samples.set(type, samples);
+//     this.samples.set(type, samples);
     
-    // Auto-report if enabled
-    if (this.config.autoReport && this.config.reportUrl) {
-      this.reportMetric(metric);
-    }
-  }
+//     // Auto-report if enabled
+//     if (this.config.autoReport && this.config.reportUrl) {
+//       this.reportMetric(metric);
+//     }
+//   }
 
-  recordRenderTime(componentName, renderTime) {
-    if (!this.config.collectMetrics.includes(METRIC_TYPES.RENDER)) return;
+//   recordRenderTime(componentName, renderTime) {
+//     if (!this.config.collectMetrics.includes(METRIC_TYPES.RENDER)) return;
     
-    this.recordMetric(METRIC_TYPES.RENDER, renderTime, performance.now(), {
-      component: componentName
-    });
+//     this.recordMetric(METRIC_TYPES.RENDER, renderTime, performance.now(), {
+//       component: componentName
+//     });
     
-    // Check threshold
-    if (renderTime > this.config.reportThresholds.render) {
-      this.handleThresholdExceeded(METRIC_TYPES.RENDER, renderTime, {
-        component: componentName
-      });
-    }
-  }
+//     // Check threshold
+//     if (renderTime > this.config.reportThresholds.render) {
+//       this.handleThresholdExceeded(METRIC_TYPES.RENDER, renderTime, {
+//         component: componentName
+//       });
+//     }
+//   }
 
-  handleThresholdExceeded(metricType, value, context = {}) {
-    const threshold = this.config.reportThresholds[metricType];
-    const warning = {
-      type: 'threshold_exceeded',
-      metric: metricType,
-      value,
-      threshold,
-      timestamp: Date.now(),
-      context
-    };
+//   handleThresholdExceeded(metricType, value, context = {}) {
+//     const threshold = this.config.reportThresholds[metricType];
+//     const warning = {
+//       type: 'threshold_exceeded',
+//       metric: metricType,
+//       value,
+//       threshold,
+//       timestamp: Date.now(),
+//       context
+//     };
     
-    // Call custom handler if provided
-    if (typeof this.config.onThresholdExceeded === 'function') {
-      this.config.onThresholdExceeded(warning);
-    }
+//     // Call custom handler if provided
+//     if (typeof this.config.onThresholdExceeded === 'function') {
+//       this.config.onThresholdExceeded(warning);
+//     }
     
-    // Log to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.warn(`Performance threshold exceeded: ${metricType} = ${value} (threshold: ${threshold})`, context);
-    }
+//     // Log to console in development
+//     if (process.env.NODE_ENV === 'development') {
+//       console.warn(`Performance threshold exceeded: ${metricType} = ${value} (threshold: ${threshold})`, context);
+//     }
     
-    // Store warning
-    const warnings = this.samples.get('warnings') || [];
-    warnings.push(warning);
-    if (warnings.length > 20) warnings.shift(); // Keep last 20 warnings
-    this.samples.set('warnings', warnings);
-  }
+//     // Store warning
+//     const warnings = this.samples.get('warnings') || [];
+//     warnings.push(warning);
+//     if (warnings.length > 20) warnings.shift(); // Keep last 20 warnings
+//     this.samples.set('warnings', warnings);
+//   }
 
-  async reportMetric(metric) {
-    try {
-      const response = await fetch(this.config.reportUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...metric,
-          userAgent: navigator.userAgent,
-          url: window.location.href,
-          timestamp: new Date().toISOString()
-        })
-      });
+//   async reportMetric(metric) {
+//     try {
+//       const response = await fetch(this.config.reportUrl, {
+//         method: 'POST',
+//         headers: {
+//           'Content-Type': 'application/json',
+//         },
+//         body: JSON.stringify({
+//           ...metric,
+//           userAgent: navigator.userAgent,
+//           url: window.location.href,
+//           timestamp: new Date().toISOString()
+//         })
+//       });
       
-      if (!response.ok) {
-        console.error('Failed to report performance metric:', response.status);
-      }
-    } catch (error) {
-      console.error('Error reporting performance metric:', error);
+//       if (!response.ok) {
+//         console.error('Failed to report performance metric:', response.status);
+//       }
+//     } catch (error) {
+//       console.error('Error reporting performance metric:', error);
+//     }
+//   }
+
+//   getMetrics() {
+//     const result = {};
+    
+//     // Get latest values
+//     for (const [key, value] of this.metrics.entries()) {
+//       result[key] = value;
+//     }
+    
+//     // Get averages
+//     for (const [type, samples] of this.samples.entries()) {
+//       if (samples.length > 0) {
+//         const values = samples.map(s => s.value);
+//         const sum = values.reduce((a, b) => a + b, 0);
+//         result[`${type}_avg`] = sum / values.length;
+//         result[`${type}_min`] = Math.min(...values);
+//         result[`${type}_max`] = Math.max(...values);
+//         result[`${type}_samples`] = samples.length;
+//       }
+//     }
+    
+//     return result;
+//   }
+
+//   getSamples(type, count = 10) {
+//     const samples = this.samples.get(type) || [];
+//     return samples.slice(-count);
+//   }
+
+//   getWarnings() {
+//     return this.samples.get('warnings') || [];
+//   }
+
+//   clear() {
+//     this.samples.clear();
+//     this.metrics.clear();
+//   }
+
+//   generateReport() {
+//     const metrics = this.getMetrics();
+//     const warnings = this.getWarnings();
+    
+//     return {
+//       timestamp: new Date().toISOString(),
+//       url: window.location.href,
+//       userAgent: navigator.userAgent,
+//       metrics,
+//       warnings,
+//       summary: {
+//         fps: metrics.fps_latest,
+//         memory: metrics.memory_latest,
+//         apiResponseAvg: metrics.apiResponse_avg,
+//         renderAvg: metrics.render_avg
+//       }
+//     };
+//   }
+// }
+
+// const usePerformanceMonitor = (config = {}) => {
+//   const collectorRef = useRef(null);
+//   const [metrics, setMetrics] = useState({});
+//   const [warnings, setWarnings] = useState([]);
+//   const [isActive, setIsActive] = useState(config.enabled !== false);
+//   const renderCountRef = useRef(0);
+//   const lastRenderTimeRef = useRef(0);
+
+//   // Initialize collector
+//   useEffect(() => {
+//     if (!collectorRef.current) {
+//       collectorRef.current = new PerformanceCollector(config);
+//     }
+    
+//     const collector = collectorRef.current;
+    
+//     if (isActive) {
+//       collector.start();
+//     } else {
+//       collector.stop();
+//     }
+    
+//     return () => {
+//       if (collector) {
+//         collector.stop();
+//       }
+//     };
+//   }, [isActive, config]);
+
+//   // Update metrics periodically
+//   useEffect(() => {
+//     if (!isActive) return;
+    
+//     const interval = setInterval(() => {
+//       if (collectorRef.current) {
+//         const newMetrics = collectorRef.current.getMetrics();
+//         const newWarnings = collectorRef.current.getWarnings();
+        
+//         setMetrics(prev => ({
+//           ...prev,
+//           ...newMetrics,
+//           timestamp: Date.now()
+//         }));
+        
+//         if (newWarnings.length !== warnings.length) {
+//           setWarnings(newWarnings);
+//         }
+//       }
+//     }, config.sampleInterval || 1000);
+    
+//     return () => clearInterval(interval);
+//   }, [isActive, config.sampleInterval, warnings.length]);
+
+//   // Record render performance
+//   const recordRender = useCallback((componentName, renderTime) => {
+//     if (collectorRef.current && isActive) {
+//       collectorRef.current.recordRenderTime(componentName, renderTime);
+//     }
+//   }, [isActive]);
+
+//   // Auto-record render times for the component using this hook
+//   useEffect(() => {
+//     if (!isActive || !config.collectMetrics?.includes(METRIC_TYPES.RENDER)) return;
+    
+//     const startTime = performance.now();
+    
+//     return () => {
+//       const endTime = performance.now();
+//       const renderTime = endTime - startTime;
+//       renderCountRef.current++;
+      
+//       recordRender('usePerformanceMonitor', renderTime);
+//     };
+//   }, [isActive, recordRender, config.collectMetrics]);
+
+//   // Performance measurement utilities
+//   const measure = useCallback((name, fn) => {
+//     if (!isActive) return fn();
+    
+//     const startTime = performance.now();
+//     const result = fn();
+//     const endTime = performance.now();
+//     const duration = endTime - startTime;
+    
+//     if (collectorRef.current) {
+//       collectorRef.current.recordMetric('custom_measurement', duration, endTime, {
+//         name,
+//         type: 'custom'
+//       });
+//     }
+    
+//     return result;
+//   }, [isActive]);
+
+//   const measureAsync = useCallback(async (name, fn) => {
+//     if (!isActive) return await fn();
+    
+//     const startTime = performance.now();
+//     const result = await fn();
+//     const endTime = performance.now();
+//     const duration = endTime - startTime;
+    
+//     if (collectorRef.current) {
+//       collectorRef.current.recordMetric('custom_measurement', duration, endTime, {
+//         name,
+//         type: 'async'
+//       });
+//     }
+    
+//     return result;
+//   }, [isActive]);
+
+//   // Toggle monitoring
+//   const toggleMonitoring = useCallback(() => {
+//     setIsActive(prev => !prev);
+//   }, []);
+
+//   // Get performance report
+//   const getReport = useCallback(() => {
+//     if (collectorRef.current) {
+//       return collectorRef.current.generateReport();
+//     }
+//     return null;
+//   }, []);
+
+//   // Clear metrics
+//   const clearMetrics = useCallback(() => {
+//     if (collectorRef.current) {
+//       collectorRef.current.clear();
+//       setMetrics({});
+//       setWarnings([]);
+//     }
+//   }, []);
+
+//   // Export metrics
+//   const exportMetrics = useCallback((format = 'json') => {
+//     const report = getReport();
+//     if (!report) return null;
+    
+//     switch (format) {
+//       case 'json':
+//         return JSON.stringify(report, null, 2);
+//       case 'csv':
+//         return convertToCSV(report);
+//       default:
+//         return report;
+//     }
+//   }, [getReport]);
+
+//   // Helper function to convert to CSV
+//   const convertToCSV = (data) => {
+//     const lines = [];
+    
+//     // Add headers
+//     lines.push('Metric,Value,Timestamp');
+    
+//     // Add metrics
+//     Object.entries(data.metrics).forEach(([key, value]) => {
+//       lines.push(`${key},${value},${data.timestamp}`);
+//     });
+    
+//     return lines.join('\n');
+//   };
+
+//   // Get performance score (0-100)
+//   const getPerformanceScore = useCallback(() => {
+//     const { fps_latest, memory_latest, apiResponse_avg, render_avg } = metrics;
+//     let score = 100;
+    
+//     // Deduct points based on performance
+//     if (fps_latest < 30) score -= 30;
+//     else if (fps_latest < 45) score -= 15;
+//     else if (fps_latest < 55) score -= 5;
+    
+//     if (memory_latest > 80) score -= 30;
+//     else if (memory_latest > 60) score -= 15;
+//     else if (memory_latest > 40) score -= 5;
+    
+//     if (apiResponse_avg > 3000) score -= 30;
+//     else if (apiResponse_avg > 1000) score -= 15;
+//     else if (apiResponse_avg > 500) score -= 5;
+    
+//     if (render_avg > 100) score -= 30;
+//     else if (render_avg > 50) score -= 15;
+//     else if (render_avg > 25) score -= 5;
+    
+//     return Math.max(0, Math.min(100, score));
+//   }, [metrics]);
+
+//   return {
+//     // State
+//     metrics,
+//     warnings,
+//     isActive,
+    
+//     // Controls
+//     toggleMonitoring,
+//     startMonitoring: () => setIsActive(true),
+//     stopMonitoring: () => setIsActive(false),
+    
+//     // Measurement utilities
+//     measure,
+//     measureAsync,
+//     recordRender,
+    
+//     // Data access
+//     getReport,
+//     getPerformanceScore,
+//     clearMetrics,
+//     exportMetrics,
+    
+//     // Real-time values (convenience accessors)
+//     fps: metrics.fps_latest || 0,
+//     memory: metrics.memory_latest || 0,
+//     apiResponseTime: metrics.apiResponse_avg || 0,
+//     renderTime: metrics.render_avg || 0,
+//     performanceScore: getPerformanceScore(),
+    
+//     // Detailed metrics
+//     memoryDetails: metrics.memory_details || {},
+    
+//     // Samples
+//     getSamples: (type, count) => {
+//       if (collectorRef.current) {
+//         return collectorRef.current.getSamples(type, count);
+//       }
+//       return [];
+//     },
+    
+//     // Collector reference (advanced usage)
+//     collector: collectorRef.current
+//   };
+// };
+
+// // Hook for measuring component render performance
+// export const useRenderPerformance = (componentName, options = {}) => {
+//   const { enabled = true, threshold = 100 } = options;
+//   const renderCountRef = useRef(0);
+//   const mountTimeRef = useRef(0);
+//   const lastRenderTimeRef = useRef(0);
+  
+//   const { recordRender } = usePerformanceMonitor({
+//     enabled,
+//     collectMetrics: ['render']
+//   });
+  
+//   useEffect(() => {
+//     if (!enabled) return;
+    
+//     const startTime = performance.now();
+//     renderCountRef.current++;
+    
+//     // Record initial mount
+//     if (renderCountRef.current === 1) {
+//       mountTimeRef.current = startTime;
+//     }
+    
+//     return () => {
+//       const endTime = performance.now();
+//       const renderTime = endTime - startTime;
+//       lastRenderTimeRef.current = renderTime;
+      
+//       if (recordRender) {
+//         recordRender(componentName, renderTime);
+        
+//         // Log slow renders in development
+//         if (renderTime > threshold && process.env.NODE_ENV === 'development') {
+//           console.warn(`Slow render detected in ${componentName}: ${renderTime.toFixed(2)}ms`);
+//         }
+//       }
+//     };
+//   }, [componentName, enabled, threshold, recordRender]);
+  
+//   return {
+//     renderCount: renderCountRef.current,
+//     lastRenderTime: lastRenderTimeRef.current,
+//     mountTime: mountTimeRef.current
+//   };
+// };
+
+// export default usePerformanceMonitor;
+
+
+
+
+
+
+
+
+
+
+import { useState, useEffect, useCallback, useRef } from 'react';
+
+export const usePerformanceMonitor = (options = {}) => {
+  const {
+    enabled = true,
+    sampleInterval = 5000,
+    maxSamples = 60,
+    warnThreshold = {
+      fps: 30,
+      memory: 150,
+      renderTime: 100,
+      apiLatency: 1000
     }
-  }
+  } = options;
 
-  getMetrics() {
-    const result = {};
-    
-    // Get latest values
-    for (const [key, value] of this.metrics.entries()) {
-      result[key] = value;
-    }
-    
-    // Get averages
-    for (const [type, samples] of this.samples.entries()) {
-      if (samples.length > 0) {
-        const values = samples.map(s => s.value);
-        const sum = values.reduce((a, b) => a + b, 0);
-        result[`${type}_avg`] = sum / values.length;
-        result[`${type}_min`] = Math.min(...values);
-        result[`${type}_max`] = Math.max(...values);
-        result[`${type}_samples`] = samples.length;
-      }
-    }
-    
-    return result;
-  }
-
-  getSamples(type, count = 10) {
-    const samples = this.samples.get(type) || [];
-    return samples.slice(-count);
-  }
-
-  getWarnings() {
-    return this.samples.get('warnings') || [];
-  }
-
-  clear() {
-    this.samples.clear();
-    this.metrics.clear();
-  }
-
-  generateReport() {
-    const metrics = this.getMetrics();
-    const warnings = this.getWarnings();
-    
-    return {
-      timestamp: new Date().toISOString(),
-      url: window.location.href,
-      userAgent: navigator.userAgent,
-      metrics,
-      warnings,
-      summary: {
-        fps: metrics.fps_latest,
-        memory: metrics.memory_latest,
-        apiResponseAvg: metrics.apiResponse_avg,
-        renderAvg: metrics.render_avg
-      }
-    };
-  }
-}
-
-const usePerformanceMonitor = (config = {}) => {
-  const collectorRef = useRef(null);
-  const [metrics, setMetrics] = useState({});
+  const [metrics, setMetrics] = useState({
+    fps: 0,
+    memory: 0,
+    apiCalls: 0,
+    apiLatency: 0,
+    renderTime: 0,
+    timestamp: Date.now()
+  });
+  
+  const [isActive, setIsActive] = useState(enabled);
+  const [samples, setSamples] = useState([]);
   const [warnings, setWarnings] = useState([]);
-  const [isActive, setIsActive] = useState(config.enabled !== false);
-  const renderCountRef = useRef(0);
-  const lastRenderTimeRef = useRef(0);
+  
+  const frameCountRef = useRef(0);
+  const lastFrameTimeRef = useRef(performance.now());
+  const apiCallsRef = useRef([]);
+  const mountedRef = useRef(true);
+  const animationFrameRef = useRef();
+  const memoryIntervalRef = useRef();
+  const warningTimeoutRef = useRef();
 
-  // Initialize collector
+  // Measure FPS
   useEffect(() => {
-    if (!collectorRef.current) {
-      collectorRef.current = new PerformanceCollector(config);
-    }
-    
-    const collector = collectorRef.current;
-    
-    if (isActive) {
-      collector.start();
-    } else {
-      collector.stop();
-    }
-    
+    if (!isActive) return;
+
+    const measureFPS = () => {
+      if (!mountedRef.current) return;
+
+      frameCountRef.current++;
+      const now = performance.now();
+      const elapsed = now - lastFrameTimeRef.current;
+
+      if (elapsed >= 1000) {
+        const fps = Math.round((frameCountRef.current * 1000) / elapsed);
+        
+        if (mountedRef.current) {
+          setMetrics(prev => ({
+            ...prev,
+            fps,
+            timestamp: now
+          }));
+
+          // Check warning threshold
+          if (fps < warnThreshold.fps) {
+            addWarning({
+              type: 'fps',
+              message: `Low FPS: ${fps}`,
+              timestamp: now,
+              value: fps,
+              threshold: warnThreshold.fps
+            });
+          }
+
+          // Add to samples
+          setSamples(prev => {
+            const newSamples = [...prev, {
+              timestamp: now,
+              fps,
+              memory: metrics.memory
+            }];
+            return newSamples.slice(-maxSamples);
+          });
+        }
+
+        frameCountRef.current = 0;
+        lastFrameTimeRef.current = now;
+      }
+
+      animationFrameRef.current = requestAnimationFrame(measureFPS);
+    };
+
+    animationFrameRef.current = requestAnimationFrame(measureFPS);
+
     return () => {
-      if (collector) {
-        collector.stop();
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [isActive, config]);
+  }, [isActive, warnThreshold.fps, maxSamples, metrics.memory]);
 
-  // Update metrics periodically
+  // Helper to add warning with timeout cleanup
+  const addWarning = useCallback((warning) => {
+    if (warningTimeoutRef.current) {
+      clearTimeout(warningTimeoutRef.current);
+    }
+
+    setWarnings(prev => {
+      const newWarnings = [...prev, warning];
+      // Keep only last 10 warnings
+      return newWarnings.slice(-10);
+    });
+
+    // Auto-clear warnings after 5 seconds
+    warningTimeoutRef.current = setTimeout(() => {
+      if (mountedRef.current) {
+        setWarnings(prev => {
+          const index = prev.indexOf(warning);
+          if (index > -1) {
+            const newWarnings = [...prev];
+            newWarnings.splice(index, 1);
+            return newWarnings;
+          }
+          return prev;
+        });
+      }
+    }, 5000);
+  }, []);
+
+  // Measure memory usage
   useEffect(() => {
     if (!isActive) return;
     
-    const interval = setInterval(() => {
-      if (collectorRef.current) {
-        const newMetrics = collectorRef.current.getMetrics();
-        const newWarnings = collectorRef.current.getWarnings();
-        
-        setMetrics(prev => ({
-          ...prev,
-          ...newMetrics,
-          timestamp: Date.now()
-        }));
-        
-        if (newWarnings.length !== warnings.length) {
-          setWarnings(newWarnings);
+    memoryIntervalRef.current = setInterval(() => {
+      if (!mountedRef.current) return;
+      
+      // Check if performance.memory is available (Chrome only)
+      if (performance.memory) {
+        try {
+          const usedMB = Math.round(performance.memory.usedJSHeapSize / 1048576);
+          const totalMB = Math.round(performance.memory.totalJSHeapSize / 1048576);
+          const limitMB = Math.round(performance.memory.jsHeapSizeLimit / 1048576);
+          
+          setMetrics(prev => ({
+            ...prev,
+            memory: usedMB,
+            memoryDetails: {
+              used: usedMB,
+              total: totalMB,
+              limit: limitMB,
+              percentage: limitMB > 0 ? Math.round((usedMB / limitMB) * 100) : 0
+            }
+          }));
+
+          // Check warning threshold
+          if (usedMB > warnThreshold.memory) {
+            addWarning({
+              type: 'memory',
+              message: `High memory usage: ${usedMB}MB`,
+              timestamp: Date.now(),
+              value: usedMB,
+              threshold: warnThreshold.memory
+            });
+          }
+        } catch (err) {
+          console.error('Error measuring memory:', err);
         }
       }
-    }, config.sampleInterval || 1000);
+    }, sampleInterval);
+
+    return () => {
+      if (memoryIntervalRef.current) {
+        clearInterval(memoryIntervalRef.current);
+      }
+    };
+  }, [isActive, sampleInterval, warnThreshold.memory, addWarning]);
+
+  // Track API calls
+  const trackApiCall = useCallback((url, method, duration, status) => {
+    if (!isActive) return;
     
-    return () => clearInterval(interval);
-  }, [isActive, config.sampleInterval, warnings.length]);
+    const now = Date.now();
+    
+    apiCallsRef.current.push({
+      url,
+      method,
+      duration,
+      status,
+      timestamp: now
+    });
 
-  // Record render performance
-  const recordRender = useCallback((componentName, renderTime) => {
-    if (collectorRef.current && isActive) {
-      collectorRef.current.recordRenderTime(componentName, renderTime);
+    // Keep only last 100 API calls
+    if (apiCallsRef.current.length > 100) {
+      apiCallsRef.current.shift();
     }
-  }, [isActive]);
 
-  // Auto-record render times for the component using this hook
-  useEffect(() => {
-    if (!isActive || !config.collectMetrics?.includes(METRIC_TYPES.RENDER)) return;
+    // Calculate average latency (only successful calls)
+    const successfulCalls = apiCallsRef.current
+      .filter(call => call.status >= 200 && call.status < 300)
+      .slice(-20); // Last 20 successful calls
+    
+    let avgLatency = 0;
+    if (successfulCalls.length > 0) {
+      avgLatency = successfulCalls.reduce((sum, call) => sum + call.duration, 0) / successfulCalls.length;
+    }
+
+    setMetrics(prev => ({
+      ...prev,
+      apiCalls: apiCallsRef.current.length,
+      apiLatency: Math.round(avgLatency)
+    }));
+
+    // Check warning threshold
+    if (duration > warnThreshold.apiLatency) {
+      addWarning({
+        type: 'api',
+        message: `Slow API call: ${method} ${url} (${duration}ms)`,
+        timestamp: now,
+        value: duration,
+        threshold: warnThreshold.apiLatency,
+        metadata: { url, method }
+      });
+    }
+  }, [isActive, warnThreshold.apiLatency, addWarning]);
+
+  // Measure render time
+  const measureRender = useCallback((componentName) => {
+    if (!isActive) return () => {};
     
     const startTime = performance.now();
     
     return () => {
+      if (!mountedRef.current) return;
+      
       const endTime = performance.now();
       const renderTime = endTime - startTime;
-      renderCountRef.current++;
       
-      recordRender('usePerformanceMonitor', renderTime);
+      setMetrics(prev => ({
+        ...prev,
+        renderTime: Math.round(renderTime)
+      }));
+      
+      // Check warning threshold
+      if (renderTime > warnThreshold.renderTime) {
+        addWarning({
+          type: 'render',
+          message: `Slow render in ${componentName}: ${renderTime.toFixed(2)}ms`,
+          timestamp: Date.now(),
+          value: renderTime,
+          threshold: warnThreshold.renderTime,
+          metadata: { component: componentName }
+        });
+      }
     };
-  }, [isActive, recordRender, config.collectMetrics]);
+  }, [isActive, warnThreshold.renderTime, addWarning]);
 
-  // Performance measurement utilities
-  const measure = useCallback((name, fn) => {
-    if (!isActive) return fn();
+  // Get performance score (0-100)
+  const getPerformanceScore = useCallback(() => {
+    let score = 100;
     
-    const startTime = performance.now();
-    const result = fn();
-    const endTime = performance.now();
-    const duration = endTime - startTime;
+    // FPS score (40% weight)
+    if (metrics.fps < 30) score -= 40;
+    else if (metrics.fps < 45) score -= 25;
+    else if (metrics.fps < 55) score -= 10;
     
-    if (collectorRef.current) {
-      collectorRef.current.recordMetric('custom_measurement', duration, endTime, {
-        name,
-        type: 'custom'
-      });
-    }
+    // Memory score (30% weight)
+    if (metrics.memory > 200) score -= 30;
+    else if (metrics.memory > 150) score -= 20;
+    else if (metrics.memory > 100) score -= 10;
     
-    return result;
-  }, [isActive]);
+    // Render time score (30% weight)
+    if (metrics.renderTime > 100) score -= 30;
+    else if (metrics.renderTime > 50) score -= 20;
+    else if (metrics.renderTime > 25) score -= 10;
+    
+    return Math.max(0, Math.min(100, score));
+  }, [metrics]);
 
-  const measureAsync = useCallback(async (name, fn) => {
-    if (!isActive) return await fn();
+  // Get performance summary
+  const getPerformanceSummary = useCallback(() => {
+    const avgFps = samples.length > 0 
+      ? Math.round(samples.reduce((sum, s) => sum + s.fps, 0) / samples.length)
+      : 0;
     
-    const startTime = performance.now();
-    const result = await fn();
-    const endTime = performance.now();
-    const duration = endTime - startTime;
+    const avgMemory = samples.length > 0
+      ? Math.round(samples.reduce((sum, s) => sum + (s.memory || 0), 0) / samples.length)
+      : 0;
     
-    if (collectorRef.current) {
-      collectorRef.current.recordMetric('custom_measurement', duration, endTime, {
-        name,
-        type: 'async'
-      });
-    }
-    
-    return result;
-  }, [isActive]);
+    return {
+      current: {
+        score: getPerformanceScore(),
+        fps: metrics.fps,
+        memory: metrics.memory,
+        renderTime: metrics.renderTime,
+        apiLatency: metrics.apiLatency,
+        apiCalls: metrics.apiCalls
+      },
+      averages: {
+        fps: avgFps,
+        memory: avgMemory
+      },
+      warnings: {
+        count: warnings.length,
+        list: warnings
+      },
+      samples: samples.length
+    };
+  }, [metrics, warnings, samples.length, getPerformanceScore]);
+
+  // Reset metrics
+  const resetMetrics = useCallback(() => {
+    setMetrics({
+      fps: 0,
+      memory: 0,
+      apiCalls: 0,
+      apiLatency: 0,
+      renderTime: 0,
+      timestamp: Date.now()
+    });
+    setSamples([]);
+    setWarnings([]);
+    apiCallsRef.current = [];
+  }, []);
 
   // Toggle monitoring
   const toggleMonitoring = useCallback(() => {
     setIsActive(prev => !prev);
   }, []);
 
-  // Get performance report
-  const getReport = useCallback(() => {
-    if (collectorRef.current) {
-      return collectorRef.current.generateReport();
-    }
-    return null;
-  }, []);
-
-  // Clear metrics
-  const clearMetrics = useCallback(() => {
-    if (collectorRef.current) {
-      collectorRef.current.clear();
-      setMetrics({});
-      setWarnings([]);
-    }
-  }, []);
-
   // Export metrics
   const exportMetrics = useCallback((format = 'json') => {
-    const report = getReport();
-    if (!report) return null;
+    const data = {
+      metrics,
+      samples,
+      warnings,
+      summary: getPerformanceSummary(),
+      timestamp: Date.now()
+    };
     
-    switch (format) {
-      case 'json':
-        return JSON.stringify(report, null, 2);
-      case 'csv':
-        return convertToCSV(report);
-      default:
-        return report;
+    if (format === 'json') {
+      return JSON.stringify(data, null, 2);
+    } else if (format === 'csv') {
+      const headers = 'timestamp,fps,memory,apiCalls,apiLatency,renderTime';
+      const rows = samples.map(s => 
+        `${s.timestamp},${s.fps},${s.memory || 0},${metrics.apiCalls},${metrics.apiLatency},${metrics.renderTime}`
+      );
+      return [headers, ...rows].join('\n');
     }
-  }, [getReport]);
+    
+    return data;
+  }, [metrics, samples, warnings, getPerformanceSummary]);
 
-  // Helper function to convert to CSV
-  const convertToCSV = (data) => {
-    const lines = [];
-    
-    // Add headers
-    lines.push('Metric,Value,Timestamp');
-    
-    // Add metrics
-    Object.entries(data.metrics).forEach(([key, value]) => {
-      lines.push(`${key},${value},${data.timestamp}`);
-    });
-    
-    return lines.join('\n');
-  };
-
-  // Get performance score (0-100)
-  const getPerformanceScore = useCallback(() => {
-    const { fps_latest, memory_latest, apiResponse_avg, render_avg } = metrics;
-    let score = 100;
-    
-    // Deduct points based on performance
-    if (fps_latest < 30) score -= 30;
-    else if (fps_latest < 45) score -= 15;
-    else if (fps_latest < 55) score -= 5;
-    
-    if (memory_latest > 80) score -= 30;
-    else if (memory_latest > 60) score -= 15;
-    else if (memory_latest > 40) score -= 5;
-    
-    if (apiResponse_avg > 3000) score -= 30;
-    else if (apiResponse_avg > 1000) score -= 15;
-    else if (apiResponse_avg > 500) score -= 5;
-    
-    if (render_avg > 100) score -= 30;
-    else if (render_avg > 50) score -= 15;
-    else if (render_avg > 25) score -= 5;
-    
-    return Math.max(0, Math.min(100, score));
-  }, [metrics]);
-
-  return {
-    // State
-    metrics,
-    warnings,
-    isActive,
-    
-    // Controls
-    toggleMonitoring,
-    startMonitoring: () => setIsActive(true),
-    stopMonitoring: () => setIsActive(false),
-    
-    // Measurement utilities
-    measure,
-    measureAsync,
-    recordRender,
-    
-    // Data access
-    getReport,
-    getPerformanceScore,
-    clearMetrics,
-    exportMetrics,
-    
-    // Real-time values (convenience accessors)
-    fps: metrics.fps_latest || 0,
-    memory: metrics.memory_latest || 0,
-    apiResponseTime: metrics.apiResponse_avg || 0,
-    renderTime: metrics.render_avg || 0,
-    performanceScore: getPerformanceScore(),
-    
-    // Detailed metrics
-    memoryDetails: metrics.memory_details || {},
-    
-    // Samples
-    getSamples: (type, count) => {
-      if (collectorRef.current) {
-        return collectorRef.current.getSamples(type, count);
-      }
-      return [];
-    },
-    
-    // Collector reference (advanced usage)
-    collector: collectorRef.current
-  };
-};
-
-// Hook for measuring component render performance
-export const useRenderPerformance = (componentName, options = {}) => {
-  const { enabled = true, threshold = 100 } = options;
-  const renderCountRef = useRef(0);
-  const mountTimeRef = useRef(0);
-  const lastRenderTimeRef = useRef(0);
-  
-  const { recordRender } = usePerformanceMonitor({
-    enabled,
-    collectMetrics: ['render']
-  });
-  
+  // Cleanup
   useEffect(() => {
-    if (!enabled) return;
-    
-    const startTime = performance.now();
-    renderCountRef.current++;
-    
-    // Record initial mount
-    if (renderCountRef.current === 1) {
-      mountTimeRef.current = startTime;
-    }
+    mountedRef.current = true;
     
     return () => {
-      const endTime = performance.now();
-      const renderTime = endTime - startTime;
-      lastRenderTimeRef.current = renderTime;
-      
-      if (recordRender) {
-        recordRender(componentName, renderTime);
-        
-        // Log slow renders in development
-        if (renderTime > threshold && process.env.NODE_ENV === 'development') {
-          console.warn(`Slow render detected in ${componentName}: ${renderTime.toFixed(2)}ms`);
-        }
+      mountedRef.current = false;
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (memoryIntervalRef.current) {
+        clearInterval(memoryIntervalRef.current);
+      }
+      if (warningTimeoutRef.current) {
+        clearTimeout(warningTimeoutRef.current);
       }
     };
-  }, [componentName, enabled, threshold, recordRender]);
-  
+  }, []);
+
   return {
-    renderCount: renderCountRef.current,
-    lastRenderTime: lastRenderTimeRef.current,
-    mountTime: mountTimeRef.current
+    metrics,
+    isActive,
+    samples,
+    warnings,
+    trackApiCall,
+    measureRender,
+    getPerformanceScore,
+    getPerformanceSummary,
+    toggleMonitoring,
+    resetMetrics,
+    exportMetrics
   };
 };
-
-export default usePerformanceMonitor;

@@ -1,574 +1,638 @@
-
-
-
-
-
-
-
-
-
-// import React, { useState, useMemo, useCallback } from "react";
-// import { motion, AnimatePresence } from "framer-motion";
+// // src/components/ServiceOperations/RouterCompatibility.jsx
+// import React, { useState, useMemo, useCallback } from 'react';
+// import { motion } from 'framer-motion';
 // import {
-//   Network, Server, Check, X, AlertTriangle, Filter,
-//   Wifi, Cable, Search, Download, Upload, Settings, Info, BarChart3
-// } from "lucide-react";
-// import { getThemeClasses, EnhancedSelect } from "../../../components/ServiceManagement/Shared/components";
-// import api from "../../../api";
+//   Wifi, Cable, Check, X, AlertTriangle, Search, Filter,
+//   Server, Globe, MapPin, Tag, RefreshCw, Download,
+//   ChevronDown, ChevronUp, Info, Zap, Clock
+// } from 'lucide-react';
+// import { API_ENDPOINTS } from './constants';
+// import { useApi } from './hooks/useApi';
+// import { useDebounce } from './hooks/useDebounce';
+// import { getThemeClasses } from '../../../components/ServiceManagement/Shared/components';
+// import { TableSkeleton } from './common/TableSkeleton';
+// import { ErrorBoundary } from './common/ErrorBoundary';
 
-// const RouterCompatibility = ({ plans, routers, theme }) => {
+// const RouterCompatibility = ({ plans = [], routers = [], theme, addNotification }) => {
 //   const themeClasses = getThemeClasses(theme);
-//   const [selectedPlan, setSelectedPlan] = useState(null);
+  
+//   // State
+//   const [searchTerm, setSearchTerm] = useState('');
+//   const [filterAccess, setFilterAccess] = useState('all');
+//   const [filterCategory, setFilterCategory] = useState('all');
+//   const [filterRouterSpecific, setFilterRouterSpecific] = useState('all');
+//   const [expandedPlan, setExpandedPlan] = useState(null);
 //   const [selectedRouter, setSelectedRouter] = useState(null);
-//   const [viewMode, setViewMode] = useState("plan-view");
-//   const [searchTerm, setSearchTerm] = useState("");
-
-//   // Enhanced compatibility check with better error handling
-//   const checkCompatibility = useCallback((plan, router) => {
-//     if (!plan || !router) return false;
+//   const [viewMode, setViewMode] = useState('matrix'); // 'matrix', 'grid', 'list'
+  
+//   // Debounced search
+//   const debouncedSearch = useDebounce(searchTerm, 300);
+  
+//   // Fetch data if not provided as props
+//   const { data: fetchedPlans, loading: plansLoading } = useApi(
+//     API_ENDPOINTS.INTERNET_PLANS,
+//     { cacheKey: 'plans', cache: true }
+//   );
+  
+//   const { data: fetchedRouters, loading: routersLoading } = useApi(
+//     API_ENDPOINTS.NETWORK_ROUTERS,
+//     { cacheKey: 'routers', cache: true }
+//   );
+  
+//   // Use props if provided, otherwise use fetched data
+//   const effectivePlans = plans.length > 0 ? plans : (fetchedPlans || []);
+//   const effectiveRouters = routers.length > 0 ? routers : (fetchedRouters || []);
+  
+//   // Get unique categories
+//   const categories = useMemo(() => {
+//     const cats = new Set(effectivePlans.map(p => p.category).filter(Boolean));
+//     return Array.from(cats).sort();
+//   }, [effectivePlans]);
+  
+//   // Filter plans
+//   const filteredPlans = useMemo(() => {
+//     return effectivePlans.filter(plan => {
+//       // Search filter
+//       const matchesSearch = debouncedSearch === '' ||
+//         plan.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+//         plan.category?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+//         plan.description?.toLowerCase().includes(debouncedSearch.toLowerCase());
+      
+//       // Access method filter
+//       const matchesAccess = filterAccess === 'all' ||
+//         (filterAccess === 'hotspot' && plan.accessType === 'hotspot') ||
+//         (filterAccess === 'pppoe' && plan.accessType === 'pppoe') ||
+//         (filterAccess === 'dual' && plan.accessType === 'dual');
+      
+//       // Category filter
+//       const matchesCategory = filterCategory === 'all' || plan.category === filterCategory;
+      
+//       // Router-specific filter
+//       const matchesRouterSpecific = filterRouterSpecific === 'all' ||
+//         (filterRouterSpecific === 'specific' && plan.router_specific) ||
+//         (filterRouterSpecific === 'global' && !plan.router_specific);
+      
+//       return matchesSearch && matchesAccess && matchesCategory && matchesRouterSpecific;
+//     });
+//   }, [effectivePlans, debouncedSearch, filterAccess, filterCategory, filterRouterSpecific]);
+  
+//   // Calculate compatibility matrix
+//   const compatibilityMatrix = useMemo(() => {
+//     const matrix = {};
     
-//     // If plan is not router-specific, it's compatible with all routers
-//     if (!plan.router_specific) return true;
+//     filteredPlans.forEach(plan => {
+//       matrix[plan.id] = {};
+//       effectiveRouters.forEach(router => {
+//         const isHotspot = plan.accessType === 'hotspot' || plan.accessType === 'dual';
+//         const isPPPoE = plan.accessType === 'pppoe' || plan.accessType === 'dual';
+//         const routerSpecific = plan.router_specific;
+//         const allowedIds = plan.allowed_routers_ids || [];
+        
+//         // Check compatibility
+//         let compatible = true;
+//         let reasons = [];
+        
+//         if (routerSpecific && !allowedIds.includes(router.id)) {
+//           compatible = false;
+//           reasons.push('Router not in allowed list');
+//         }
+        
+//         if (router.type === 'hotspot' && !isHotspot) {
+//           compatible = false;
+//           reasons.push('Router only supports hotspot');
+//         }
+        
+//         if (router.type === 'pppoe' && !isPPPoE) {
+//           compatible = false;
+//           reasons.push('Router only supports PPPoE');
+//         }
+        
+//         matrix[plan.id][router.id] = {
+//           compatible,
+//           reasons,
+//           allowed: allowedIds.includes(router.id),
+//         };
+//       });
+//     });
     
-//     // Check if router is in allowed routers list
-//     const allowedRouters = plan.allowed_routers_ids || 
-//                           plan.allowed_routers?.map(r => r.id) || 
-//                           [];
-//     return allowedRouters.includes(router.id);
+//     return matrix;
+//   }, [filteredPlans, effectiveRouters]);
+  
+//   // Get router status color
+//   const getRouterStatusColor = useCallback((status) => {
+//     const statusMap = {
+//       connected: 'bg-green-500',
+//       disconnected: 'bg-red-500',
+//       connecting: 'bg-yellow-500',
+//       error: 'bg-orange-500',
+//       maintenance: 'bg-purple-500',
+//     };
+//     return statusMap[status] || 'bg-gray-500';
 //   }, []);
-
-//   // Filter routers based on search term
-//   const filteredRouters = useMemo(() => {
-//     if (!searchTerm) return routers;
-//     return routers.filter(router => 
-//       router.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//       router.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//       router.ip_address?.includes(searchTerm)
+  
+//   // Export compatibility report
+//   const exportReport = useCallback(() => {
+//     const headers = ['Plan', 'Category', 'Access Type', 'Router Specific', ...effectiveRouters.map(r => r.name)];
+//     const rows = filteredPlans.map(plan => [
+//       plan.name,
+//       plan.category || 'N/A',
+//       plan.accessType || 'N/A',
+//       plan.router_specific ? 'Yes' : 'No',
+//       ...effectiveRouters.map(router => {
+//         const compatible = compatibilityMatrix[plan.id]?.[router.id]?.compatible;
+//         return compatible ? 'Compatible' : 'Incompatible';
+//       }),
+//     ]);
+    
+//     const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+//     const blob = new Blob([csvContent], { type: 'text/csv' });
+//     const url = window.URL.createObjectURL(blob);
+//     const a = document.createElement('a');
+//     a.href = url;
+//     a.download = `compatibility-matrix-${new Date().toISOString().split('T')[0]}.csv`;
+//     a.click();
+//     window.URL.revokeObjectURL(url);
+    
+//     addNotification({ type: 'success', message: 'Compatibility report exported successfully' });
+//   }, [filteredPlans, effectiveRouters, compatibilityMatrix, addNotification]);
+  
+//   if (plansLoading || routersLoading) {
+//     return <TableSkeleton rows={10} columns={effectiveRouters.length + 4} />;
+//   }
+  
+//   if (effectivePlans.length === 0 || effectiveRouters.length === 0) {
+//     return (
+//       <div className={`p-12 text-center rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+//         <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+//         <h3 className="text-xl font-bold mb-2">No Data Available</h3>
+//         <p className="text-gray-600 mb-4">
+//           {effectivePlans.length === 0 ? 'No plans configured' : 'No routers configured'}
+//         </p>
+//         <button
+//           onClick={() => window.location.reload()}
+//           className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+//         >
+//           Refresh
+//         </button>
+//       </div>
 //     );
-//   }, [routers, searchTerm]);
-
-//   // Get compatibility data for plan view
-//   const planCompatibility = useMemo(() => {
-//     if (!selectedPlan) return [];
-    
-//     return filteredRouters.map(router => ({
-//       router,
-//       compatible: checkCompatibility(selectedPlan, router),
-//       enabledMethods: selectedPlan.enabled_access_methods || 
-//                      selectedPlan.get_enabled_access_methods?.() || 
-//                      []
-//     }));
-//   }, [selectedPlan, filteredRouters, checkCompatibility]);
-
-//   // Get compatibility data for router view
-//   const routerCompatibility = useMemo(() => {
-//     if (!selectedRouter) return [];
-    
-//     return plans.map(plan => ({
-//       plan,
-//       compatible: checkCompatibility(plan, selectedRouter),
-//       enabledMethods: plan.enabled_access_methods || 
-//                      plan.get_enabled_access_methods?.() || 
-//                      []
-//     }));
-//   }, [selectedRouter, plans, checkCompatibility]);
-
-//   // Statistics for the selected view
-//   const stats = useMemo(() => {
-//     if (viewMode === "plan-view" && selectedPlan) {
-//       const compatible = planCompatibility.filter(c => c.compatible).length;
-//       const incompatible = planCompatibility.filter(c => !c.compatible).length;
-//       return { compatible, incompatible, total: planCompatibility.length };
-//     } else if (viewMode === "router-view" && selectedRouter) {
-//       const compatible = routerCompatibility.filter(c => c.compatible).length;
-//       const incompatible = routerCompatibility.filter(c => !c.compatible && c.plan.router_specific).length;
-//       return { compatible, incompatible, total: routerCompatibility.length };
-//     }
-//     return { compatible: 0, incompatible: 0, total: 0 };
-//   }, [viewMode, selectedPlan, selectedRouter, planCompatibility, routerCompatibility]);
-
-//   const handlePlanSelect = useCallback((planId) => {
-//     const plan = plans.find(p => p.id.toString() === planId);
-//     setSelectedPlan(plan || null);
-//   }, [plans]);
-
-//   const handleRouterSelect = useCallback((routerId) => {
-//     const router = routers.find(r => r.id.toString() === routerId);
-//     setSelectedRouter(router || null);
-//   }, [routers]);
-
+//   }
+  
 //   return (
-//     <div className="space-y-6">
-//       {/* View Mode and Selection */}
-//       <SelectionHeader
-//         viewMode={viewMode}
-//         selectedPlan={selectedPlan}
-//         selectedRouter={selectedRouter}
-//         plans={plans}
-//         routers={routers}
-//         searchTerm={searchTerm}
-//         onViewModeChange={setViewMode}
-//         onPlanSelect={handlePlanSelect}
-//         onRouterSelect={handleRouterSelect}
-//         onSearchChange={setSearchTerm}
-//         theme={theme}
-//       />
-
-//       {/* Statistics */}
-//       {(selectedPlan || selectedRouter) && (
-//         <CompatibilityStats stats={stats} viewMode={viewMode} theme={theme} />
-//       )}
-
-//       {/* Compatibility Results */}
-//       <AnimatePresence mode="wait">
-//         {viewMode === "plan-view" && selectedPlan && (
-//           <PlanCompatibilityView 
-//             key={`plan-${selectedPlan.id}`}
-//             plan={selectedPlan}
-//             compatibility={planCompatibility}
-//             theme={theme}
-//           />
-//         )}
-
-//         {viewMode === "router-view" && selectedRouter && (
-//           <RouterCompatibilityView
-//             key={`router-${selectedRouter.id}`}
-//             router={selectedRouter}
-//             compatibility={routerCompatibility}
-//             theme={theme}
-//           />
-//         )}
-
-//         {(!selectedPlan && viewMode === "plan-view") || (!selectedRouter && viewMode === "router-view") && (
-//           <EmptyState viewMode={viewMode} theme={theme} />
-//         )}
-//       </AnimatePresence>
-//     </div>
-//   );
-// };
-
-// // Selection Header Component
-// const SelectionHeader = ({
-//   viewMode,
-//   selectedPlan,
-//   selectedRouter,
-//   plans,
-//   routers,
-//   searchTerm,
-//   onViewModeChange,
-//   onPlanSelect,
-//   onRouterSelect,
-//   onSearchChange,
-//   theme
-// }) => {
-//   const themeClasses = getThemeClasses(theme);
-
-//   return (
-//     <div className={`p-4 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-//       <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
-//         {/* View Mode Toggle */}
-//         <div className="flex gap-2">
-//           <button
-//             onClick={() => onViewModeChange("plan-view")}
-//             className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all ${
-//               viewMode === "plan-view" 
-//                 ? "bg-indigo-600 text-white shadow-md" 
-//                 : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-//             }`}
-//           >
-//             <BarChart3 className="w-4 h-4" />
-//             Plan View
-//           </button>
-//           <button
-//             onClick={() => onViewModeChange("router-view")}
-//             className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all ${
-//               viewMode === "router-view" 
-//                 ? "bg-indigo-600 text-white shadow-md" 
-//                 : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-//             }`}
-//           >
-//             <Server className="w-4 h-4" />
-//             Router View
-//           </button>
+//     <ErrorBoundary>
+//       <div className={`space-y-6 ${themeClasses.bg.primary}`}>
+//         {/* Header */}
+//         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+//           <div>
+//             <h2 className="text-2xl font-bold">Router & Plan Compatibility Matrix</h2>
+//             <p className="text-sm text-gray-600 mt-1">
+//               Check which plans work with which routers
+//             </p>
+//           </div>
+          
+//           <div className="flex gap-3">
+//             {/* View Toggle */}
+//             <div className="flex border rounded-lg overflow-hidden">
+//               <button
+//                 onClick={() => setViewMode('matrix')}
+//                 className={`px-4 py-2 text-sm font-medium ${
+//                   viewMode === 'matrix'
+//                     ? 'bg-indigo-600 text-white'
+//                     : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200'
+//                 }`}
+//               >
+//                 Matrix
+//               </button>
+//               <button
+//                 onClick={() => setViewMode('grid')}
+//                 className={`px-4 py-2 text-sm font-medium ${
+//                   viewMode === 'grid'
+//                     ? 'bg-indigo-600 text-white'
+//                     : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200'
+//                 }`}
+//               >
+//                 Grid
+//               </button>
+//               <button
+//                 onClick={() => setViewMode('list')}
+//                 className={`px-4 py-2 text-sm font-medium ${
+//                   viewMode === 'list'
+//                     ? 'bg-indigo-600 text-white'
+//                     : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200'
+//                 }`}
+//               >
+//                 List
+//               </button>
+//             </div>
+            
+//             <button
+//               onClick={exportReport}
+//               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+//             >
+//               <Download className="w-4 h-4" />
+//               Export
+//             </button>
+//           </div>
 //         </div>
         
-//         {/* Selection Dropdown */}
-//         <div className="flex-1 min-w-0">
-//           {viewMode === "plan-view" ? (
-//             <EnhancedSelect
-//               value={selectedPlan?.id?.toString() || ""}
-//               onChange={onPlanSelect}
-//               options={[
-//                 { value: "", label: "Select a plan...", disabled: true },
-//                 ...plans.map(plan => ({ 
-//                   value: plan.id.toString(), 
-//                   label: plan.name,
-//                   description: `${plan.plan_type} - Ksh ${plan.price}`
-//                 }))
-//               ]}
-//               theme={theme}
+//         {/* Summary Stats */}
+//         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+//           <div className={`p-4 rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+//             <div className="text-2xl font-bold text-blue-600">{effectivePlans.length}</div>
+//             <div className="text-sm text-gray-600">Total Plans</div>
+//           </div>
+//           <div className={`p-4 rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+//             <div className="text-2xl font-bold text-green-600">
+//               {effectivePlans.filter(p => !p.router_specific).length}
+//             </div>
+//             <div className="text-sm text-gray-600">Global Plans</div>
+//           </div>
+//           <div className={`p-4 rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+//             <div className="text-2xl font-bold text-purple-600">
+//               {effectivePlans.filter(p => p.router_specific).length}
+//             </div>
+//             <div className="text-sm text-gray-600">Router-Specific</div>
+//           </div>
+//           <div className={`p-4 rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+//             <div className="text-2xl font-bold text-orange-600">{effectiveRouters.length}</div>
+//             <div className="text-sm text-gray-600">Routers</div>
+//           </div>
+//         </div>
+        
+//         {/* Filters */}
+//         <div className="flex flex-col lg:flex-row gap-4">
+//           {/* Search */}
+//           <div className="relative flex-1">
+//             <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+//             <input
+//               type="text"
+//               placeholder="Search plans by name or category..."
+//               value={searchTerm}
+//               onChange={(e) => setSearchTerm(e.target.value)}
+//               className={`pl-10 pr-4 py-3 rounded-lg border ${themeClasses.input} w-full`}
 //             />
-//           ) : (
-//             <EnhancedSelect
-//               value={selectedRouter?.id?.toString() || ""}
-//               onChange={onRouterSelect}
-//               options={[
-//                 { value: "", label: "Select a router...", disabled: true },
-//                 ...routers.map(router => ({ 
-//                   value: router.id.toString(), 
-//                   label: router.name,
-//                   description: `${router.location || 'No location'} - ${router.status}`
-//                 }))
-//               ]}
-//               theme={theme}
-//             />
-//           )}
+//           </div>
+          
+//           {/* Access Method Filter */}
+//           <select
+//             value={filterAccess}
+//             onChange={(e) => setFilterAccess(e.target.value)}
+//             className={`px-4 py-3 rounded-lg border ${themeClasses.input} min-w-40`}
+//           >
+//             <option value="all">All Access Methods</option>
+//             <option value="hotspot">Hotspot Only</option>
+//             <option value="pppoe">PPPoE Only</option>
+//             <option value="dual">Dual Access</option>
+//           </select>
+          
+//           {/* Category Filter */}
+//           <select
+//             value={filterCategory}
+//             onChange={(e) => setFilterCategory(e.target.value)}
+//             className={`px-4 py-3 rounded-lg border ${themeClasses.input} min-w-40`}
+//           >
+//             <option value="all">All Categories</option>
+//             {categories.map(cat => (
+//               <option key={cat} value={cat}>{cat}</option>
+//             ))}
+//           </select>
+          
+//           {/* Router-Specific Filter */}
+//           <select
+//             value={filterRouterSpecific}
+//             onChange={(e) => setFilterRouterSpecific(e.target.value)}
+//             className={`px-4 py-3 rounded-lg border ${themeClasses.input} min-w-40`}
+//           >
+//             <option value="all">All Plans</option>
+//             <option value="specific">Router-Specific Only</option>
+//             <option value="global">Global Plans Only</option>
+//           </select>
 //         </div>
-
-//         {/* Search for Router View */}
-//         {viewMode === "plan-view" && (
-//           <div className="w-full lg:w-64">
-//             <div className="relative">
-//               <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${themeClasses.text.tertiary}`} />
-//               <input
-//                 type="text"
-//                 placeholder="Search routers..."
-//                 value={searchTerm}
-//                 onChange={(e) => onSearchChange(e.target.value)}
-//                 className={`w-full pl-10 pr-4 py-2 rounded-lg border ${themeClasses.input}`}
-//               />
+        
+//         {/* Results count */}
+//         <div className="text-sm text-gray-600">
+//           Showing {filteredPlans.length} of {effectivePlans.length} plans across {effectiveRouters.length} routers
+//         </div>
+        
+//         {/* Compatibility Display */}
+//         {viewMode === 'matrix' && (
+//           <div className={`rounded-xl overflow-hidden shadow-lg ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+//             <div className="overflow-x-auto">
+//               <table className="w-full min-w-max">
+//                 <thead className={`${themeClasses.bg.secondary}`}>
+//                   <tr>
+//                     <th className="p-4 text-left sticky left-0 bg-inherit z-10">Plan</th>
+//                     <th className="p-4 text-left">Category</th>
+//                     <th className="p-4 text-center">Access</th>
+//                     <th className="p-4 text-center">Type</th>
+//                     {effectiveRouters.map(router => (
+//                       <th key={router.id} className="p-4 text-center min-w-32">
+//                         <div className="flex flex-col items-center">
+//                           <div className="flex items-center gap-1">
+//                             <Server className="w-4 h-4" />
+//                             <span>{router.name || router.hostname}</span>
+//                           </div>
+//                           <div className={`w-2 h-2 rounded-full ${getRouterStatusColor(router.status)} mt-1`} />
+//                           <div className="text-xs text-gray-500 mt-1">{router.ip_address}</div>
+//                           {router.location && (
+//                             <div className="text-xs text-gray-500 flex items-center gap-1">
+//                               <MapPin className="w-3 h-3" />
+//                               {router.location}
+//                             </div>
+//                           )}
+//                         </div>
+//                       </th>
+//                     ))}
+//                   </tr>
+//                 </thead>
+//                 <tbody>
+//                   {filteredPlans.map((plan, index) => (
+//                     <React.Fragment key={plan.id}>
+//                       <tr className={`border-t hover:bg-gray-50 dark:hover:bg-gray-800 ${index % 2 === 0 ? themeClasses.bg.card : ''}`}>
+//                         <td className={`p-4 font-medium sticky left-0 bg-inherit`}>
+//                           <div>
+//                             <div>{plan.name}</div>
+//                             <div className="text-xs text-gray-500 mt-1">{plan.id}</div>
+//                           </div>
+//                         </td>
+//                         <td className="p-4">
+//                           <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs">
+//                             {plan.category || 'N/A'}
+//                           </span>
+//                         </td>
+//                         <td className="p-4 text-center">
+//                           <div className="flex items-center justify-center gap-1">
+//                             {plan.accessType === 'hotspot' && <Wifi className="w-5 h-5 text-blue-600" />}
+//                             {plan.accessType === 'pppoe' && <Cable className="w-5 h-5 text-green-600" />}
+//                             {plan.accessType === 'dual' && (
+//                               <>
+//                                 <Wifi className="w-5 h-5 text-blue-600" />
+//                                 <Cable className="w-5 h-5 text-green-600" />
+//                               </>
+//                             )}
+//                           </div>
+//                         </td>
+//                         <td className="p-4 text-center">
+//                           {plan.router_specific ? (
+//                             <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">
+//                               Specific
+//                             </span>
+//                           ) : (
+//                             <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+//                               Global
+//                             </span>
+//                           )}
+//                         </td>
+//                         {effectiveRouters.map(router => {
+//                           const compatibility = compatibilityMatrix[plan.id]?.[router.id];
+//                           return (
+//                             <td key={router.id} className="p-4 text-center">
+//                               {compatibility?.compatible ? (
+//                                 <motion.div
+//                                   whileHover={{ scale: 1.2 }}
+//                                   className="inline-block cursor-help"
+//                                   title={compatibility.reasons.join(', ') || 'Compatible'}
+//                                 >
+//                                   <Check className="w-6 h-6 text-green-500 mx-auto" />
+//                                 </motion.div>
+//                               ) : (
+//                                 <motion.div
+//                                   whileHover={{ scale: 1.2 }}
+//                                   className="inline-block cursor-help"
+//                                   title={compatibility?.reasons.join(', ') || 'Incompatible'}
+//                                 >
+//                                   <X className="w-6 h-6 text-red-500 mx-auto" />
+//                                 </motion.div>
+//                               )}
+//                             </td>
+//                           );
+//                         })}
+//                       </tr>
+                      
+//                       {/* Expanded row for additional plan details */}
+//                       {expandedPlan === plan.id && (
+//                         <tr>
+//                           <td colSpan={effectiveRouters.length + 4} className="p-4 bg-gray-50 dark:bg-gray-900">
+//                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+//                               <div>
+//                                 <h4 className="font-medium text-sm mb-2">Description</h4>
+//                                 <p className="text-sm text-gray-600">{plan.description || 'No description'}</p>
+//                               </div>
+//                               <div>
+//                                 <h4 className="font-medium text-sm mb-2">Price</h4>
+//                                 <p className="text-sm font-bold">KSH {plan.base_price || plan.price}</p>
+//                               </div>
+//                               <div>
+//                                 <h4 className="font-medium text-sm mb-2">Allowed Routers</h4>
+//                                 {plan.router_specific ? (
+//                                   <div className="space-y-1">
+//                                     {plan.allowed_routers_ids?.length > 0 ? (
+//                                       plan.allowed_routers_ids.map(id => {
+//                                         const router = effectiveRouters.find(r => r.id === id);
+//                                         return (
+//                                           <div key={id} className="text-sm flex items-center gap-2">
+//                                             <Server className="w-3 h-3" />
+//                                             {router?.name || id}
+//                                           </div>
+//                                         );
+//                                       })
+//                                     ) : (
+//                                       <p className="text-sm text-gray-600">None specified</p>
+//                                     )}
+//                                   </div>
+//                                 ) : (
+//                                   <p className="text-sm text-gray-600">Global - All routers</p>
+//                                 )}
+//                               </div>
+//                               <div>
+//                                 <h4 className="font-medium text-sm mb-2">Technical Specs</h4>
+//                                 <div className="text-sm space-y-1">
+//                                   <div>Speed: {plan.download_speed}/{plan.upload_speed} Mbps</div>
+//                                   <div>Data: {plan.data_limit}</div>
+//                                   <div>Validity: {plan.validity_period}</div>
+//                                 </div>
+//                               </div>
+//                             </div>
+//                           </td>
+//                         </tr>
+//                       )}
+//                     </React.Fragment>
+//                   ))}
+//                 </tbody>
+//               </table>
 //             </div>
 //           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// };
-
-// // Compatibility Statistics Component
-// const CompatibilityStats = ({ stats, viewMode, theme }) => {
-//   const themeClasses = getThemeClasses(theme);
-
-//   return (
-//     <div className={`p-4 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-//       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-//         <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-//           <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
-//           <div className="text-sm text-blue-600">Total {viewMode === "plan-view" ? "Routers" : "Plans"}</div>
-//         </div>
-//         <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-//           <div className="text-2xl font-bold text-green-600">{stats.compatible}</div>
-//           <div className="text-sm text-green-600">Compatible</div>
-//         </div>
-//         <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-//           <div className="text-2xl font-bold text-red-600">{stats.incompatible}</div>
-//           <div className="text-sm text-red-600">Incompatible</div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// // Plan Compatibility View Component
-// const PlanCompatibilityView = ({ plan, compatibility, theme }) => {
-//   const themeClasses = getThemeClasses(theme);
-//   const compatibleRouters = compatibility.filter(c => c.compatible);
-//   const incompatibleRouters = compatibility.filter(c => !c.compatible);
-
-//   return (
-//     <div className="space-y-6">
-//       {/* Plan Summary */}
-//       <div className={`p-4 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-//         <div className="flex items-center justify-between">
-//           <div className="flex items-center space-x-4">
-//             <div className={`p-3 rounded-lg ${
-//               plan.router_specific ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'
-//             }`}>
-//               <Settings className="w-6 h-6" />
-//             </div>
-//             <div>
-//               <h4 className="font-semibold text-gray-900 dark:text-white">{plan.name}</h4>
-//               <p className="text-sm text-gray-600 dark:text-gray-400">
-//                 {plan.router_specific 
-//                   ? `Router-specific plan • ${compatibleRouters.length} compatible routers`
-//                   : 'Available on all routers'
-//                 }
-//               </p>
-//               <div className="flex items-center gap-4 mt-2 text-xs">
-//                 <span className="flex items-center gap-1">
-//                   <Wifi className="w-3 h-3" />
-//                   {plan.enabled_access_methods?.includes('hotspot') ? 'Hotspot' : 'No Hotspot'}
-//                 </span>
-//                 <span className="flex items-center gap-1">
-//                   <Cable className="w-3 h-3" />
-//                   {plan.enabled_access_methods?.includes('pppoe') ? 'PPPoE' : 'No PPPoE'}
-//                 </span>
-//                 <span>Ksh {plan.price}</span>
-//               </div>
-//             </div>
-//           </div>
-//           <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-//             plan.router_specific 
-//               ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-//               : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-//           }`}>
-//             {plan.router_specific ? 'Router Specific' : 'Universal'}
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Compatible Routers */}
-//       {compatibleRouters.length > 0 && (
-//         <CompatibleSection
-//           title={`Compatible Routers (${compatibleRouters.length})`}
-//           items={compatibleRouters}
-//           type="router"
-//           theme={theme}
-//         />
-//       )}
-
-//       {/* Incompatible Routers */}
-//       {incompatibleRouters.length > 0 && plan.router_specific && (
-//         <IncompatibleSection
-//           title={`Incompatible Routers (${incompatibleRouters.length})`}
-//           items={incompatibleRouters}
-//           type="router"
-//           theme={theme}
-//         />
-//       )}
-//     </div>
-//   );
-// };
-
-// // Router Compatibility View Component
-// const RouterCompatibilityView = ({ router, compatibility, theme }) => {
-//   const themeClasses = getThemeClasses(theme);
-//   const compatiblePlans = compatibility.filter(c => c.compatible);
-//   const incompatiblePlans = compatibility.filter(c => !c.compatible && c.plan.router_specific);
-
-//   return (
-//     <div className="space-y-6">
-//       {/* Router Summary */}
-//       <div className={`p-4 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-//         <div className="flex items-center justify-between">
-//           <div className="flex items-center space-x-4">
-//             <div className={`p-3 rounded-lg ${
-//               router.status === 'connected' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-//             }`}>
-//               <Server className="w-6 h-6" />
-//             </div>
-//             <div>
-//               <h4 className="font-semibold text-gray-900 dark:text-white">{router.name}</h4>
-//               <p className="text-sm text-gray-600 dark:text-gray-400">
-//                 Status: <span className={
-//                   router.status === 'connected' ? 'text-green-600' : 'text-red-600'
-//                 }>{router.status}</span>
-//                 {router.location && ` • Location: ${router.location}`}
-//                 {router.ip_address && ` • IP: ${router.ip_address}`}
-//               </p>
-//               <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-//                 <span>Model: {router.model || 'Unknown'}</span>
-//                 <span>Firmware: {router.firmware_version || 'Unknown'}</span>
-//               </div>
-//             </div>
-//           </div>
-//           <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-//             router.status === 'connected' 
-//               ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-//               : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-//           }`}>
-//             {router.status}
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Compatible Plans */}
-//       {compatiblePlans.length > 0 && (
-//         <CompatibleSection
-//           title={`Compatible Plans (${compatiblePlans.length})`}
-//           items={compatiblePlans}
-//           type="plan"
-//           theme={theme}
-//         />
-//       )}
-
-//       {/* Incompatible Plans */}
-//       {incompatiblePlans.length > 0 && (
-//         <IncompatibleSection
-//           title={`Incompatible Plans (${incompatiblePlans.length})`}
-//           items={incompatiblePlans}
-//           type="plan"
-//           theme={theme}
-//         />
-//       )}
-//     </div>
-//   );
-// };
-
-// // Reusable Compatible Section Component
-// const CompatibleSection = ({ title, items, type, theme }) => {
-//   const themeClasses = getThemeClasses(theme);
-
-//   return (
-//     <div>
-//       <h5 className="font-semibold mb-3 flex items-center text-green-600">
-//         <Check className="w-4 h-4 mr-2" />
-//         {title}
-//       </h5>
-//       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-//         {items.map((item, index) => (
-//           <CompatibleItem
-//             key={type === 'router' ? item.router.id : item.plan.id}
-//             item={item}
-//             type={type}
-//             index={index}
-//             theme={theme}
-//           />
-//         ))}
-//       </div>
-//     </div>
-//   );
-// };
-
-// // Reusable Incompatible Section Component
-// const IncompatibleSection = ({ title, items, type, theme }) => {
-//   return (
-//     <div>
-//       <h5 className="font-semibold mb-3 flex items-center text-red-600">
-//         <X className="w-4 h-4 mr-2" />
-//         {title}
-//       </h5>
-//       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-//         {items.map((item, index) => (
-//           <IncompatibleItem
-//             key={type === 'router' ? item.router.id : item.plan.id}
-//             item={item}
-//             type={type}
-//             index={index}
-//             theme={theme}
-//           />
-//         ))}
-//       </div>
-//     </div>
-//   );
-// };
-
-// // Compatible Item Component
-// const CompatibleItem = ({ item, type, index, theme }) => {
-//   const themeClasses = getThemeClasses(theme);
-//   const data = type === 'router' ? item.router : item.plan;
-//   const enabledMethods = item.enabledMethods || [];
-
-//   return (
-//     <motion.div
-//       initial={{ opacity: 0, y: 20 }}
-//       animate={{ opacity: 1, y: 0 }}
-//       transition={{ delay: index * 0.1 }}
-//       className={`p-4 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 hover:shadow-md transition-shadow`}
-//     >
-//       <div className="flex items-center justify-between mb-2">
-//         <h6 className="font-semibold text-green-800 dark:text-green-200 truncate">
-//           {data.name}
-//         </h6>
-//         <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
-//       </div>
-      
-//       <div className="text-sm text-green-700 dark:text-green-300 space-y-1">
-//         {type === 'router' ? (
-//           <>
-//             <div className="flex justify-between">
-//               <span>Status:</span>
-//               <span className={data.status === 'connected' ? 'text-green-600' : 'text-red-600'}>
-//                 {data.status}
-//               </span>
-//             </div>
-//             {data.location && (
-//               <div className="truncate" title={data.location}>
-//                 Location: {data.location}
-//               </div>
-//             )}
-//           </>
-//         ) : (
-//           <>
-//             <div className="flex justify-between">
-//               <span>Type:</span>
-//               <span>{data.plan_type}</span>
-//             </div>
-//             <div className="flex justify-between">
-//               <span>Price:</span>
-//               <span>Ksh {data.price}</span>
-//             </div>
-//           </>
 //         )}
         
-//         <div className="flex items-center gap-2 mt-2 pt-2 border-t border-green-200 dark:border-green-700">
-//           <span className="text-xs">Access:</span>
-//           {enabledMethods.includes('hotspot') && (
-//             <Wifi className="w-3 h-3 text-blue-500" title="Hotspot" />
-//           )}
-//           {enabledMethods.includes('pppoe') && (
-//             <Cable className="w-3 h-3 text-green-500" title="PPPoE" />
-//           )}
-//         </div>
-//       </div>
-//     </motion.div>
-//   );
-// };
-
-// // Incompatible Item Component
-// const IncompatibleItem = ({ item, type, index, theme }) => {
-//   const themeClasses = getThemeClasses(theme);
-//   const data = type === 'router' ? item.router : item.plan;
-
-//   return (
-//     <motion.div
-//       initial={{ opacity: 0, y: 20 }}
-//       animate={{ opacity: 1, y: 0 }}
-//       transition={{ delay: index * 0.1 }}
-//       className={`p-4 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 hover:shadow-md transition-shadow`}
-//     >
-//       <div className="flex items-center justify-between mb-2">
-//         <h6 className="font-semibold text-red-800 dark:text-red-200 truncate">
-//           {data.name}
-//         </h6>
-//         <X className="w-4 h-4 text-red-600 flex-shrink-0" />
-//       </div>
-      
-//       <div className="text-sm text-red-700 dark:text-red-300">
-//         {type === 'router' ? (
-//           <>
-//             <div>Status: {data.status}</div>
-//             {data.location && <div>Location: {data.location}</div>}
-//           </>
-//         ) : (
-//           <>
-//             <div>Router-specific plan</div>
-//             <div>Not authorized for this router</div>
-//           </>
+//         {viewMode === 'grid' && (
+//           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+//             {filteredPlans.map(plan => {
+//               const compatibleCount = effectiveRouters.filter(r => 
+//                 compatibilityMatrix[plan.id]?.[r.id]?.compatible
+//               ).length;
+              
+//               const incompatibleCount = effectiveRouters.length - compatibleCount;
+              
+//               return (
+//                 <motion.div
+//                   key={plan.id}
+//                   whileHover={{ scale: 1.02 }}
+//                   className={`p-4 rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light} hover:shadow-lg transition-all`}
+//                 >
+//                   <div className="flex justify-between items-start mb-3">
+//                     <div>
+//                       <h3 className="font-bold">{plan.name}</h3>
+//                       <p className="text-sm text-gray-600">{plan.category}</p>
+//                     </div>
+//                     <div className="flex gap-1">
+//                       {plan.accessType === 'hotspot' && <Wifi className="w-5 h-5 text-blue-600" />}
+//                       {plan.accessType === 'pppoe' && <Cable className="w-5 h-5 text-green-600" />}
+//                       {plan.accessType === 'dual' && (
+//                         <>
+//                           <Wifi className="w-5 h-5 text-blue-600" />
+//                           <Cable className="w-5 h-5 text-green-600" />
+//                         </>
+//                       )}
+//                     </div>
+//                   </div>
+                  
+//                   <div className="space-y-2 mb-4">
+//                     <div className="flex justify-between text-sm">
+//                       <span className="text-gray-600">Compatible Routers:</span>
+//                       <span className="font-medium text-green-600">{compatibleCount}</span>
+//                     </div>
+//                     <div className="flex justify-between text-sm">
+//                       <span className="text-gray-600">Incompatible:</span>
+//                       <span className="font-medium text-red-600">{incompatibleCount}</span>
+//                     </div>
+//                     <div className="flex justify-between text-sm">
+//                       <span className="text-gray-600">Type:</span>
+//                       <span className="font-medium">
+//                         {plan.router_specific ? 'Router-Specific' : 'Global'}
+//                       </span>
+//                     </div>
+//                   </div>
+                  
+//                   <div className="w-full bg-gray-200 rounded-full h-2">
+//                     <div
+//                       className="bg-green-500 h-2 rounded-full"
+//                       style={{ width: `${(compatibleCount / effectiveRouters.length) * 100}%` }}
+//                     />
+//                   </div>
+                  
+//                   <div className="mt-3 flex flex-wrap gap-1">
+//                     {effectiveRouters.slice(0, 5).map(router => (
+//                       <div
+//                         key={router.id}
+//                         className={`w-6 h-6 rounded-full flex items-center justify-center text-xs
+//                           ${compatibilityMatrix[plan.id]?.[router.id]?.compatible
+//                             ? 'bg-green-100 text-green-800'
+//                             : 'bg-red-100 text-red-800'
+//                           }`}
+//                         title={router.name}
+//                       >
+//                         {router.name?.[0] || 'R'}
+//                       </div>
+//                     ))}
+//                     {effectiveRouters.length > 5 && (
+//                       <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs">
+//                         +{effectiveRouters.length - 5}
+//                       </div>
+//                     )}
+//                   </div>
+//                 </motion.div>
+//               );
+//             })}
+//           </div>
+//         )}
+        
+//         {viewMode === 'list' && (
+//           <div className={`rounded-xl overflow-hidden shadow-lg ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+//             <div className="divide-y">
+//               {filteredPlans.map(plan => {
+//                 const compatibleCount = effectiveRouters.filter(r => 
+//                   compatibilityMatrix[plan.id]?.[r.id]?.compatible
+//                 ).length;
+                
+//                 return (
+//                   <div key={plan.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800">
+//                     <div className="flex items-center gap-4">
+//                       <div className="flex-1">
+//                         <div className="font-medium">{plan.name}</div>
+//                         <div className="text-sm text-gray-600">{plan.category}</div>
+//                       </div>
+//                       <div className="w-32">
+//                         <div className="text-sm font-medium">{compatibleCount}/{effectiveRouters.length}</div>
+//                         <div className="text-xs text-gray-600">routers</div>
+//                       </div>
+//                       <div className="w-32">
+//                         <div className="flex gap-1">
+//                           {plan.accessType === 'hotspot' && <Wifi className="w-4 h-4 text-blue-600" />}
+//                           {plan.accessType === 'pppoe' && <Cable className="w-4 h-4 text-green-600" />}
+//                           {plan.accessType === 'dual' && (
+//                             <>
+//                               <Wifi className="w-4 h-4 text-blue-600" />
+//                               <Cable className="w-4 h-4 text-green-600" />
+//                             </>
+//                           )}
+//                         </div>
+//                       </div>
+//                       <div className="w-32">
+//                         {plan.router_specific ? (
+//                           <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">
+//                             Specific
+//                           </span>
+//                         ) : (
+//                           <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+//                             Global
+//                           </span>
+//                         )}
+//                       </div>
+//                       <button
+//                         onClick={() => setExpandedPlan(expandedPlan === plan.id ? null : plan.id)}
+//                         className="p-2 hover:bg-gray-200 rounded-lg"
+//                       >
+//                         {expandedPlan === plan.id ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+//                       </button>
+//                     </div>
+                    
+//                     <AnimatePresence>
+//                       {expandedPlan === plan.id && (
+//                         <motion.div
+//                           initial={{ opacity: 0, height: 0 }}
+//                           animate={{ opacity: 1, height: 'auto' }}
+//                           exit={{ opacity: 0, height: 0 }}
+//                           className="mt-4 pt-4 border-t"
+//                         >
+//                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+//                             {effectiveRouters.map(router => {
+//                               const compatibility = compatibilityMatrix[plan.id]?.[router.id];
+//                               return (
+//                                 <div key={router.id} className="flex items-center gap-2">
+//                                   {compatibility?.compatible ? (
+//                                     <Check className="w-4 h-4 text-green-500" />
+//                                   ) : (
+//                                     <X className="w-4 h-4 text-red-500" />
+//                                   )}
+//                                   <div>
+//                                     <div className="text-sm font-medium">{router.name}</div>
+//                                     <div className="text-xs text-gray-600">{router.ip_address}</div>
+//                                   </div>
+//                                 </div>
+//                               );
+//                             })}
+//                           </div>
+//                         </motion.div>
+//                       )}
+//                     </AnimatePresence>
+//                   </div>
+//                 );
+//               })}
+//             </div>
+//           </div>
 //         )}
 //       </div>
-//     </motion.div>
-//   );
-// };
-
-// // Empty State Component
-// const EmptyState = ({ viewMode, theme }) => {
-//   const themeClasses = getThemeClasses(theme);
-
-//   return (
-//     <motion.div
-//       initial={{ opacity: 0, scale: 0.9 }}
-//       animate={{ opacity: 1, scale: 1 }}
-//       className={`p-8 text-center rounded-xl ${themeClasses.bg.card}`}
-//     >
-//       <Network className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-//       <h4 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">
-//         Select a {viewMode === "plan-view" ? "Plan" : "Router"}
-//       </h4>
-//       <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-//         Choose a {viewMode === "plan-view" ? "plan" : "router"} from the dropdown above to view compatibility information and see which {viewMode === "plan-view" ? "routers" : "plans"} are compatible.
-//       </p>
-//     </motion.div>
+//     </ErrorBoundary>
 //   );
 // };
 
@@ -578,79 +642,682 @@
 
 
 
+// src/Pages/ServiceManagement/components/RouterCompatibility.jsx
+import React, { useState, useMemo, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Wifi, Cable, Check, X, AlertTriangle, Search, Filter,
+  Server, Globe, MapPin, Tag, RefreshCw, Download,
+  ChevronDown, ChevronUp, Info, Zap, Clock
+} from 'lucide-react';
+import { API_ENDPOINTS } from './constants';
+import { useApi } from './hooks/useApi';
+import { useDebounce } from './hooks/useDebounce';
+import { getThemeClasses, EnhancedSelect } from '../../../components/ServiceManagement/Shared/components';
+import { TableSkeleton } from './common/TableSkeleton';
+import { ErrorBoundary } from './common/ErrorBoundary';
 
-// src/pages/ServiceOperations/components/RouterCompatibility.jsx
-import React from "react";
-import { Wifi, Cable, Check, X } from "lucide-react";
-import { getThemeClasses } from "../../../components/ServiceManagement/Shared/components"
-const RouterCompatibility = ({ plans = [], routers = [], theme }) => {
+const RouterCompatibility = ({ plans = [], routers = [], theme, addNotification }) => {
   const themeClasses = getThemeClasses(theme);
-
+  
+  // State
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterAccess, setFilterAccess] = useState('all');
+  const [filterCategory, setFilterCategory] = useState('all');
+  const [filterRouterSpecific, setFilterRouterSpecific] = useState('all');
+  const [expandedPlan, setExpandedPlan] = useState(null);
+  const [viewMode, setViewMode] = useState('matrix'); // 'matrix', 'grid', 'list'
+  
+  // Debounced search
+  const debouncedSearch = useDebounce(searchTerm, 300);
+  
+  // Fetch data if not provided as props
+  const { data: fetchedPlans, loading: plansLoading } = useApi(
+    API_ENDPOINTS.INTERNET_PLANS,
+    { cacheKey: 'plans', cache: true }
+  );
+  
+  const { data: fetchedRouters, loading: routersLoading } = useApi(
+    API_ENDPOINTS.NETWORK_ROUTERS,
+    { cacheKey: 'routers', cache: true }
+  );
+  
+  // Use props if provided, otherwise use fetched data
+  const effectivePlans = plans.length > 0 ? plans : (fetchedPlans || []);
+  const effectiveRouters = routers.length > 0 ? routers : (fetchedRouters || []);
+  
+  // Get unique categories
+  const categories = useMemo(() => {
+    const cats = new Set(effectivePlans.map(p => p.category).filter(Boolean));
+    return Array.from(cats).sort();
+  }, [effectivePlans]);
+  
+  // Filter plans
+  const filteredPlans = useMemo(() => {
+    return effectivePlans.filter(plan => {
+      // Search filter
+      const matchesSearch = debouncedSearch === '' ||
+        plan.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        plan.category?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        plan.description?.toLowerCase().includes(debouncedSearch.toLowerCase());
+      
+      // Access method filter
+      const matchesAccess = filterAccess === 'all' ||
+        (filterAccess === 'hotspot' && plan.accessType === 'hotspot') ||
+        (filterAccess === 'pppoe' && plan.accessType === 'pppoe') ||
+        (filterAccess === 'dual' && plan.accessType === 'dual');
+      
+      // Category filter
+      const matchesCategory = filterCategory === 'all' || plan.category === filterCategory;
+      
+      // Router-specific filter
+      const matchesRouterSpecific = filterRouterSpecific === 'all' ||
+        (filterRouterSpecific === 'specific' && plan.router_specific) ||
+        (filterRouterSpecific === 'global' && !plan.router_specific);
+      
+      return matchesSearch && matchesAccess && matchesCategory && matchesRouterSpecific;
+    });
+  }, [effectivePlans, debouncedSearch, filterAccess, filterCategory, filterRouterSpecific]);
+  
+  // Calculate compatibility matrix
+  const compatibilityMatrix = useMemo(() => {
+    const matrix = {};
+    
+    filteredPlans.forEach(plan => {
+      matrix[plan.id] = {};
+      effectiveRouters.forEach(router => {
+        const isHotspot = plan.accessType === 'hotspot' || plan.accessType === 'dual';
+        const isPPPoE = plan.accessType === 'pppoe' || plan.accessType === 'dual';
+        const routerSpecific = plan.router_specific;
+        const allowedIds = plan.allowed_routers_ids || [];
+        
+        // Check compatibility
+        let compatible = true;
+        let reasons = [];
+        
+        if (routerSpecific && !allowedIds.includes(router.id)) {
+          compatible = false;
+          reasons.push('Router not in allowed list');
+        }
+        
+        if (router.type === 'hotspot' && !isHotspot) {
+          compatible = false;
+          reasons.push('Router only supports hotspot');
+        }
+        
+        if (router.type === 'pppoe' && !isPPPoE) {
+          compatible = false;
+          reasons.push('Router only supports PPPoE');
+        }
+        
+        matrix[plan.id][router.id] = {
+          compatible,
+          reasons,
+          allowed: allowedIds.includes(router.id),
+        };
+      });
+    });
+    
+    return matrix;
+  }, [filteredPlans, effectiveRouters]);
+  
+  // Get router status color
+  const getRouterStatusColor = useCallback((status) => {
+    const statusMap = {
+      connected: 'bg-green-500',
+      disconnected: 'bg-red-500',
+      connecting: 'bg-yellow-500',
+      error: 'bg-orange-500',
+      maintenance: 'bg-purple-500',
+    };
+    return statusMap[status] || 'bg-gray-500';
+  }, []);
+  
+  // Export compatibility report
+  const exportReport = useCallback(() => {
+    const headers = ['Plan', 'Category', 'Access Type', 'Router Specific', ...effectiveRouters.map(r => r.name)];
+    const rows = filteredPlans.map(plan => [
+      plan.name,
+      plan.category || 'N/A',
+      plan.accessType || 'N/A',
+      plan.router_specific ? 'Yes' : 'No',
+      ...effectiveRouters.map(router => {
+        const compatible = compatibilityMatrix[plan.id]?.[router.id]?.compatible;
+        return compatible ? 'Compatible' : 'Incompatible';
+      }),
+    ]);
+    
+    const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `compatibility-matrix-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    addNotification({ type: 'success', message: 'Compatibility report exported successfully' });
+  }, [filteredPlans, effectiveRouters, compatibilityMatrix, addNotification]);
+  
+  // Options for EnhancedSelect
+  const accessOptions = [
+    { value: 'all', label: 'All Access Methods' },
+    { value: 'hotspot', label: 'Hotspot Only' },
+    { value: 'pppoe', label: 'PPPoE Only' },
+    { value: 'dual', label: 'Dual Access' }
+  ];
+  
+  const categoryOptions = [
+    { value: 'all', label: 'All Categories' },
+    ...categories.map(cat => ({
+      value: cat,
+      label: cat
+    }))
+  ];
+  
+  const routerSpecificOptions = [
+    { value: 'all', label: 'All Plans' },
+    { value: 'specific', label: 'Router-Specific Only' },
+    { value: 'global', label: 'Global Plans Only' }
+  ];
+  
+  const viewModeOptions = [
+    { value: 'matrix', label: 'Matrix View' },
+    { value: 'grid', label: 'Grid View' },
+    { value: 'list', label: 'List View' }
+  ];
+  
+  if (plansLoading || routersLoading) {
+    return <TableSkeleton rows={10} columns={effectiveRouters.length + 4} theme={theme} />;
+  }
+  
+  if (effectivePlans.length === 0 || effectiveRouters.length === 0) {
+    return (
+      <div className={`p-12 text-center rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+        <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+        <h3 className={`text-xl font-bold mb-2 ${themeClasses.text.primary}`}>No Data Available</h3>
+        <p className={`text-sm ${themeClasses.text.secondary} mb-4`}>
+          {effectivePlans.length === 0 ? 'No plans configured' : 'No routers configured'}
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+        >
+          Refresh
+        </button>
+      </div>
+    );
+  }
+  
   return (
-    <div className={`space-y-6 ${themeClasses.bg.primary}`}>
-      <h2 className="text-2xl font-bold">Router & Plan Compatibility Matrix</h2>
-
-      {routers.length === 0 || plans.length === 0 ? (
-        <div className={`p-12 text-center rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
-          <p className="text-lg text-gray-600">
-            {routers.length === 0 ? "No routers configured" : "No plans available"}
-          </p>
-        </div>
-      ) : (
-        <div className={`rounded-xl overflow-hidden shadow-lg ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-max">
-              <thead className={`${themeClasses.bg.secondary}`}>
-                <tr>
-                  <th className={`p-4 text-left sticky left-0 ${themeClasses.bg.card}`}>Plan</th>
-                  <th className="p-4 text-center">Access Type</th>
-                  <th className="p-4 text-center">Category</th>
-                  {routers.map(router => (
-                    <th key={router.id} className="p-4 text-center min-w-32">
-                      {router.name || router.hostname}
-                      <div className="text-xs text-gray-500 mt-1">{router.ip_address}</div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {plans.map(plan => {
-                  const isHotspot = plan.accessType === "hotspot";
-                  const isPPPoE = plan.accessType === "pppoe";
-                  const routerSpecific = plan.router_specific;
-                  const allowedIds = plan.allowed_routers_ids || [];
-
-                  return (
-                    <tr key={plan.id} className="border-t hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <td className={`p-4 font-medium sticky left-0 ${themeClasses.bg.card}`}>
-                        {plan.name}
-                      </td>
-                      <td className="p-4 text-center">
-                        {isHotspot && <Wifi className="w-5 h-5 text-blue-600 inline" />}
-                        {isPPPoE && <Cable className="w-5 h-5 text-green-600 inline ml-2" />}
-                      </td>
-                      <td className="p-4 text-center text-sm">{plan.category || "N/A"}</td>
-                      {routers.map(router => {
-                        const compatible = !routerSpecific || allowedIds.includes(router.id);
-                        return (
-                          <td key={router.id} className="p-4 text-center">
-                            {compatible ? (
-                              <Check className="w-6 h-6 text-green-500 mx-auto" />
-                            ) : (
-                              <X className="w-6 h-6 text-red-500 mx-auto" />
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+    <ErrorBoundary>
+      <div className={`space-y-6`}>
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h2 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Router & Plan Compatibility Matrix</h2>
+            <p className={`text-sm ${themeClasses.text.secondary} mt-1`}>
+              Check which plans work with which routers
+            </p>
+          </div>
+          
+          <div className="flex gap-3">
+            {/* View Toggle - Desktop */}
+            <div className="hidden sm:flex border rounded-lg overflow-hidden">
+              <button
+                onClick={() => setViewMode('matrix')}
+                className={`px-4 py-2 text-sm font-medium ${
+                  viewMode === 'matrix'
+                    ? 'bg-indigo-600 text-white'
+                    : `${themeClasses.bg.secondary} hover:bg-gray-200 dark:hover:bg-gray-700`
+                }`}
+              >
+                Matrix
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`px-4 py-2 text-sm font-medium ${
+                  viewMode === 'grid'
+                    ? 'bg-indigo-600 text-white'
+                    : `${themeClasses.bg.secondary} hover:bg-gray-200 dark:hover:bg-gray-700`
+                }`}
+              >
+                Grid
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`px-4 py-2 text-sm font-medium ${
+                  viewMode === 'list'
+                    ? 'bg-indigo-600 text-white'
+                    : `${themeClasses.bg.secondary} hover:bg-gray-200 dark:hover:bg-gray-700`
+                }`}
+              >
+                List
+              </button>
+            </div>
+            
+            {/* View Toggle - Mobile with EnhancedSelect */}
+            <div className="sm:hidden min-w-32">
+              <EnhancedSelect
+                value={viewMode}
+                onChange={setViewMode}
+                options={viewModeOptions}
+                placeholder="View mode"
+                theme={theme}
+              />
+            </div>
+            
+            <button
+              onClick={exportReport}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Export</span>
+            </button>
           </div>
         </div>
-      )}
-    </div>
+        
+        {/* Summary Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className={`p-4 rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+            <div className="text-2xl font-bold text-blue-600">{effectivePlans.length}</div>
+            <div className={`text-sm ${themeClasses.text.secondary}`}>Total Plans</div>
+          </div>
+          <div className={`p-4 rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+            <div className="text-2xl font-bold text-green-600">
+              {effectivePlans.filter(p => !p.router_specific).length}
+            </div>
+            <div className={`text-sm ${themeClasses.text.secondary}`}>Global Plans</div>
+          </div>
+          <div className={`p-4 rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+            <div className="text-2xl font-bold text-purple-600">
+              {effectivePlans.filter(p => p.router_specific).length}
+            </div>
+            <div className={`text-sm ${themeClasses.text.secondary}`}>Router-Specific</div>
+          </div>
+          <div className={`p-4 rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+            <div className="text-2xl font-bold text-orange-600">{effectiveRouters.length}</div>
+            <div className={`text-sm ${themeClasses.text.secondary}`}>Routers</div>
+          </div>
+        </div>
+        
+        {/* Filters */}
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Search */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search plans by name or category..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`pl-10 pr-4 py-3 rounded-lg border ${themeClasses.input} w-full`}
+            />
+          </div>
+          
+          {/* Access Method Filter - EnhancedSelect */}
+          <div className="min-w-40">
+            <EnhancedSelect
+              value={filterAccess}
+              onChange={setFilterAccess}
+              options={accessOptions}
+              placeholder="Filter by access"
+              theme={theme}
+            />
+          </div>
+          
+          {/* Category Filter - EnhancedSelect */}
+          <div className="min-w-40">
+            <EnhancedSelect
+              value={filterCategory}
+              onChange={setFilterCategory}
+              options={categoryOptions}
+              placeholder="Filter by category"
+              theme={theme}
+            />
+          </div>
+          
+          {/* Router-Specific Filter - EnhancedSelect */}
+          <div className="min-w-40">
+            <EnhancedSelect
+              value={filterRouterSpecific}
+              onChange={setFilterRouterSpecific}
+              options={routerSpecificOptions}
+              placeholder="Filter by type"
+              theme={theme}
+            />
+          </div>
+        </div>
+        
+        {/* Results count */}
+        <div className={`text-sm ${themeClasses.text.tertiary}`}>
+          Showing {filteredPlans.length} of {effectivePlans.length} plans across {effectiveRouters.length} routers
+        </div>
+        
+        {/* Compatibility Display */}
+        {viewMode === 'matrix' && (
+          <div className={`rounded-xl overflow-hidden shadow-lg ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-max">
+                <thead className={`${themeClasses.bg.secondary}`}>
+                  <tr>
+                    <th className="p-4 text-left sticky left-0 bg-inherit z-10">Plan</th>
+                    <th className="p-4 text-left">Category</th>
+                    <th className="p-4 text-center">Access</th>
+                    <th className="p-4 text-center">Type</th>
+                    {effectiveRouters.map(router => (
+                      <th key={router.id} className="p-4 text-center min-w-32">
+                        <div className="flex flex-col items-center">
+                          <div className="flex items-center gap-1">
+                            <Server className="w-4 h-4" />
+                            <span className={themeClasses.text.primary}>{router.name || router.hostname}</span>
+                          </div>
+                          <div className={`w-2 h-2 rounded-full ${getRouterStatusColor(router.status)} mt-1`} />
+                          <div className={`text-xs ${themeClasses.text.tertiary} mt-1`}>{router.ip_address}</div>
+                          {router.location && (
+                            <div className={`text-xs ${themeClasses.text.tertiary} flex items-center gap-1`}>
+                              <MapPin className="w-3 h-3" />
+                              {router.location}
+                            </div>
+                          )}
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredPlans.map((plan, index) => (
+                    <React.Fragment key={plan.id}>
+                      <tr className={`border-t hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${themeClasses.border.light}`}>
+                        <td className={`p-4 font-medium sticky left-0 bg-inherit ${themeClasses.text.primary}`}>
+                          <div>
+                            <div>{plan.name}</div>
+                            <div className={`text-xs ${themeClasses.text.tertiary} mt-1`}>{plan.id}</div>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <span className={`px-3 py-1 ${themeClasses.bg.secondary} rounded-full text-xs`}>
+                            {plan.category || 'N/A'}
+                          </span>
+                        </td>
+                        <td className="p-4 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            {plan.accessType === 'hotspot' && <Wifi className="w-5 h-5 text-blue-600" title="Hotspot" />}
+                            {plan.accessType === 'pppoe' && <Cable className="w-5 h-5 text-green-600" title="PPPoE" />}
+                            {plan.accessType === 'dual' && (
+                              <>
+                                <Wifi className="w-5 h-5 text-blue-600" title="Hotspot" />
+                                <Cable className="w-5 h-5 text-green-600" title="PPPoE" />
+                              </>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-4 text-center">
+                          {plan.router_specific ? (
+                            <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">
+                              Specific
+                            </span>
+                          ) : (
+                            <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                              Global
+                            </span>
+                          )}
+                        </td>
+                        {effectiveRouters.map(router => {
+                          const compatibility = compatibilityMatrix[plan.id]?.[router.id];
+                          return (
+                            <td key={router.id} className="p-4 text-center">
+                              {compatibility?.compatible ? (
+                                <motion.div
+                                  whileHover={{ scale: 1.2 }}
+                                  className="inline-block cursor-help"
+                                  title={compatibility.reasons.join(', ') || 'Compatible'}
+                                >
+                                  <Check className="w-6 h-6 text-green-500 mx-auto" />
+                                </motion.div>
+                              ) : (
+                                <motion.div
+                                  whileHover={{ scale: 1.2 }}
+                                  className="inline-block cursor-help"
+                                  title={compatibility?.reasons.join(', ') || 'Incompatible'}
+                                >
+                                  <X className="w-6 h-6 text-red-500 mx-auto" />
+                                </motion.div>
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                      
+                      {/* Expanded row for additional plan details */}
+                      {expandedPlan === plan.id && (
+                        <tr>
+                          <td colSpan={effectiveRouters.length + 4} className={`p-4 ${themeClasses.bg.secondary}`}>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <div>
+                                <h4 className={`font-medium text-sm mb-2 ${themeClasses.text.primary}`}>Description</h4>
+                                <p className={`text-sm ${themeClasses.text.secondary}`}>{plan.description || 'No description'}</p>
+                              </div>
+                              <div>
+                                <h4 className={`font-medium text-sm mb-2 ${themeClasses.text.primary}`}>Price</h4>
+                                <p className={`text-sm font-bold ${themeClasses.text.primary}`}>
+                                  KSH {plan.base_price || plan.price}
+                                </p>
+                              </div>
+                              <div>
+                                <h4 className={`font-medium text-sm mb-2 ${themeClasses.text.primary}`}>Allowed Routers</h4>
+                                {plan.router_specific ? (
+                                  <div className="space-y-1">
+                                    {plan.allowed_routers_ids?.length > 0 ? (
+                                      plan.allowed_routers_ids.map(id => {
+                                        const router = effectiveRouters.find(r => r.id === id);
+                                        return (
+                                          <div key={id} className={`text-sm flex items-center gap-2 ${themeClasses.text.secondary}`}>
+                                            <Server className="w-3 h-3" />
+                                            {router?.name || id}
+                                          </div>
+                                        );
+                                      })
+                                    ) : (
+                                      <p className={`text-sm ${themeClasses.text.secondary}`}>None specified</p>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <p className={`text-sm ${themeClasses.text.secondary}`}>Global - All routers</p>
+                                )}
+                              </div>
+                              <div>
+                                <h4 className={`font-medium text-sm mb-2 ${themeClasses.text.primary}`}>Technical Specs</h4>
+                                <div className={`text-sm space-y-1 ${themeClasses.text.secondary}`}>
+                                  <div>Speed: {plan.download_speed}/{plan.upload_speed} Mbps</div>
+                                  <div>Data: {plan.data_limit || 'Unlimited'}</div>
+                                  <div>Validity: {plan.validity_period || 'N/A'}</div>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+        
+        {viewMode === 'grid' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredPlans.map(plan => {
+              const compatibleCount = effectiveRouters.filter(r => 
+                compatibilityMatrix[plan.id]?.[r.id]?.compatible
+              ).length;
+              
+              const incompatibleCount = effectiveRouters.length - compatibleCount;
+              
+              return (
+                <motion.div
+                  key={plan.id}
+                  whileHover={{ scale: 1.02 }}
+                  className={`p-4 rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light} hover:shadow-lg transition-all cursor-pointer`}
+                  onClick={() => setExpandedPlan(expandedPlan === plan.id ? null : plan.id)}
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h3 className={`font-bold ${themeClasses.text.primary}`}>{plan.name}</h3>
+                      <p className={`text-sm ${themeClasses.text.secondary}`}>{plan.category}</p>
+                    </div>
+                    <div className="flex gap-1">
+                      {plan.accessType === 'hotspot' && <Wifi className="w-5 h-5 text-blue-600" />}
+                      {plan.accessType === 'pppoe' && <Cable className="w-5 h-5 text-green-600" />}
+                      {plan.accessType === 'dual' && (
+                        <>
+                          <Wifi className="w-5 h-5 text-blue-600" />
+                          <Cable className="w-5 h-5 text-green-600" />
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between text-sm">
+                      <span className={themeClasses.text.secondary}>Compatible Routers:</span>
+                      <span className="font-medium text-green-600">{compatibleCount}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className={themeClasses.text.secondary}>Incompatible:</span>
+                      <span className="font-medium text-red-600">{incompatibleCount}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className={themeClasses.text.secondary}>Type:</span>
+                      <span className="font-medium">
+                        {plan.router_specific ? 'Router-Specific' : 'Global'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-green-500 h-2 rounded-full"
+                      style={{ width: `${(compatibleCount / effectiveRouters.length) * 100}%` }}
+                    />
+                  </div>
+                  
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {effectiveRouters.slice(0, 5).map(router => (
+                      <div
+                        key={router.id}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs
+                          ${compatibilityMatrix[plan.id]?.[router.id]?.compatible
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                          }`}
+                        title={router.name}
+                      >
+                        {router.name?.[0] || 'R'}
+                      </div>
+                    ))}
+                    {effectiveRouters.length > 5 && (
+                      <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs">
+                        +{effectiveRouters.length - 5}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+        
+        {viewMode === 'list' && (
+          <div className={`rounded-xl overflow-hidden shadow-lg ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+            <div className="divide-y divide-gray-200 dark:divide-gray-700">
+              {filteredPlans.map(plan => {
+                const compatibleCount = effectiveRouters.filter(r => 
+                  compatibilityMatrix[plan.id]?.[r.id]?.compatible
+                ).length;
+                
+                return (
+                  <div key={plan.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <div className={`font-medium ${themeClasses.text.primary}`}>{plan.name}</div>
+                        <div className={`text-sm ${themeClasses.text.secondary}`}>{plan.category}</div>
+                      </div>
+                      <div className="w-32">
+                        <div className={`text-sm font-medium ${themeClasses.text.primary}`}>
+                          {compatibleCount}/{effectiveRouters.length}
+                        </div>
+                        <div className={`text-xs ${themeClasses.text.tertiary}`}>routers</div>
+                      </div>
+                      <div className="w-32">
+                        <div className="flex gap-1">
+                          {plan.accessType === 'hotspot' && <Wifi className="w-4 h-4 text-blue-600" />}
+                          {plan.accessType === 'pppoe' && <Cable className="w-4 h-4 text-green-600" />}
+                          {plan.accessType === 'dual' && (
+                            <>
+                              <Wifi className="w-4 h-4 text-blue-600" />
+                              <Cable className="w-4 h-4 text-green-600" />
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <div className="w-32">
+                        {plan.router_specific ? (
+                          <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">
+                            Specific
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                            Global
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setExpandedPlan(expandedPlan === plan.id ? null : plan.id)}
+                        className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg"
+                      >
+                        {expandedPlan === plan.id ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                      </button>
+                    </div>
+                    
+                    <AnimatePresence>
+                      {expandedPlan === plan.id && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mt-4 pt-4 border-t"
+                        >
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {effectiveRouters.map(router => {
+                              const compatibility = compatibilityMatrix[plan.id]?.[router.id];
+                              return (
+                                <div key={router.id} className="flex items-center gap-2">
+                                  {compatibility?.compatible ? (
+                                    <Check className="w-4 h-4 text-green-500" />
+                                  ) : (
+                                    <X className="w-4 h-4 text-red-500" />
+                                  )}
+                                  <div>
+                                    <div className={`text-sm font-medium ${themeClasses.text.primary}`}>{router.name}</div>
+                                    <div className={`text-xs ${themeClasses.text.tertiary}`}>{router.ip_address}</div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </ErrorBoundary>
   );
 };
 

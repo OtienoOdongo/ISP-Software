@@ -1,346 +1,288 @@
+// // src/components/ServiceOperations/ActivationService.jsx
+// import React, { useState, useCallback, useMemo } from 'react';
+// import { motion } from 'framer-motion';
+// import { Play, RefreshCw, CheckCircle, AlertCircle, Clock, Zap } from 'lucide-react';
+// import { API_ENDPOINTS } from './constants'
+// import { useApi } from './hooks/useApi'
+// import { getThemeClasses } from '../../../components/ServiceManagement/Shared/components';
+// import { ConfirmDialog } from './common/ConfirmDialog'
 
-
-
-
-
-
-// import React, { useState, useMemo, useCallback } from "react";
-// import { motion, AnimatePresence } from "framer-motion";
-// import {
-//   Play, RefreshCw, Check, X, AlertTriangle, Filter,
-//   Wifi, Cable, Server, Clock, Users, Download, Upload, Info
-// } from "lucide-react";
-// import { getThemeClasses, EnhancedSelect } from "../../../components/ServiceManagement/Shared/components";
-// import api from "../../../api";
-
-// const ActivationService = ({ subscriptions, onRefresh, theme }) => {
+// const ActivationService = ({ subscriptions, onRefresh, theme, addNotification }) => {
 //   const themeClasses = getThemeClasses(theme);
-//   const [filterStatus, setFilterStatus] = useState("pending");
-//   const [actionLoading, setActionLoading] = useState(new Set());
-//   const [bulkAction, setBulkAction] = useState(null);
-//   const [selectedItems, setSelectedItems] = useState(new Set());
-
-//   const { pendingSubscriptions, failedSubscriptions } = useMemo(() => {
-//     const pending = subscriptions.filter(sub => 
-//       sub.status === 'active' && 
-//       !sub.activation_requested &&
-//       !sub.activation_successful
-//     );
+//   const [activating, setActivating] = useState(new Set());
+//   const [bulkActivating, setBulkActivating] = useState(false);
+//   const [confirmDialog, setConfirmDialog] = useState({ open: false, id: null });
+  
+//   // Pending subscriptions with memoization
+//   const pending = useMemo(() => 
+//     subscriptions.filter(sub => 
+//       sub.status === "pending" || 
+//       sub.activation_failed || 
+//       !sub.activated
+//     ).sort((a, b) => {
+//       // Priority: failed first, then by creation date
+//       if (a.activation_failed && !b.activation_failed) return -1;
+//       if (!a.activation_failed && b.activation_failed) return 1;
+//       return new Date(b.created_at) - new Date(a.created_at);
+//     }), [subscriptions]);
+  
+//   // Group by status
+//   const grouped = useMemo(() => ({
+//     failed: pending.filter(p => p.activation_failed),
+//     pending: pending.filter(p => !p.activation_failed && p.status === 'pending'),
+//     processing: pending.filter(p => p.status === 'processing'),
+//   }), [pending]);
+  
+//   const handleActivate = useCallback(async (id) => {
+//     setActivating(prev => new Set(prev).add(id));
     
-//     const failed = subscriptions.filter(sub => 
-//       sub.activation_error && 
-//       !sub.activation_successful
-//     );
-
-//     return { pendingSubscriptions: pending, failedSubscriptions: failed };
-//   }, [subscriptions]);
-
-//   const displaySubscriptions = filterStatus === 'pending' ? pendingSubscriptions : failedSubscriptions;
-
-//   const handleActivation = useCallback(async (subscriptionId) => {
-//     setActionLoading(prev => new Set(prev).add(subscriptionId));
 //     try {
-//       await api.post(`/api/internet_plans/subscriptions/${subscriptionId}/activate/`);
+//       const { fetchData } = useApi(API_ENDPOINTS.SUBSCRIPTION_ACTIVATE(id));
+//       await fetchData({}, 'POST');
+//       addNotification({ type: 'success', message: 'Activation requested successfully' });
 //       onRefresh();
-//     } catch (error) {
-//       console.error("Activation failed:", error);
+//     } catch (err) {
+//       addNotification({ type: 'error', message: 'Failed to request activation' });
 //     } finally {
-//       setActionLoading(prev => {
-//         const newSet = new Set(prev);
-//         newSet.delete(subscriptionId);
-//         return newSet;
+//       setActivating(prev => {
+//         const next = new Set(prev);
+//         next.delete(id);
+//         return next;
 //       });
 //     }
-//   }, [onRefresh]);
-
-//   const handleBulkActivation = useCallback(async (subscriptionIds) => {
-//     setBulkAction('activating');
+//   }, [onRefresh, addNotification]);
+  
+//   const handleBulkActivate = useCallback(async () => {
+//     if (pending.length === 0) return;
+//     setBulkActivating(true);
+    
 //     try {
-//       const activationPromises = subscriptionIds.map(id => 
-//         api.post(`/api/internet_plans/subscriptions/${id}/activate/`)
-//       );
-//       await Promise.all(activationPromises);
-//       setSelectedItems(new Set());
-//       onRefresh();
-//     } catch (error) {
-//       console.error("Bulk activation failed:", error);
-//     } finally {
-//       setBulkAction(null);
-//     }
-//   }, [onRefresh]);
-
-//   const handleSelectAll = useCallback(() => {
-//     if (selectedItems.size === displaySubscriptions.length) {
-//       setSelectedItems(new Set());
-//     } else {
-//       setSelectedItems(new Set(displaySubscriptions.map(sub => sub.id)));
-//     }
-//   }, [displaySubscriptions, selectedItems.size]);
-
-//   const handleSelectItem = useCallback((subscriptionId) => {
-//     setSelectedItems(prev => {
-//       const newSet = new Set(prev);
-//       if (newSet.has(subscriptionId)) {
-//         newSet.delete(subscriptionId);
-//       } else {
-//         newSet.add(subscriptionId);
+//       // Process in batches of 5 to avoid overwhelming the server
+//       const batchSize = 5;
+//       const batches = [];
+      
+//       for (let i = 0; i < pending.length; i += batchSize) {
+//         batches.push(pending.slice(i, i + batchSize));
 //       }
-//       return newSet;
-//     });
-//   }, []);
-
-//   const handleBulkActionClick = useCallback(() => {
-//     if (selectedItems.size > 0) {
-//       handleBulkActivation(Array.from(selectedItems));
+      
+//       let successCount = 0;
+//       let failCount = 0;
+      
+//       for (const batch of batches) {
+//         await Promise.all(
+//           batch.map(async (sub) => {
+//             try {
+//               const { fetchData } = useApi(API_ENDPOINTS.SUBSCRIPTION_ACTIVATE(sub.id));
+//               await fetchData({}, 'POST');
+//               successCount++;
+//             } catch {
+//               failCount++;
+//             }
+//           })
+//         );
+//       }
+      
+//       addNotification({ 
+//         type: successCount > 0 ? 'success' : 'error',
+//         message: `Bulk activation: ${successCount} successful, ${failCount} failed`,
+//       });
+      
+//       onRefresh();
+//     } catch (err) {
+//       addNotification({ type: 'error', message: 'Bulk activation failed' });
+//     } finally {
+//       setBulkActivating(false);
 //     }
-//   }, [selectedItems, handleBulkActivation]);
-
+//   }, [pending, onRefresh, addNotification]);
+  
 //   return (
-//     <div className="space-y-6">
-//       {/* Bulk Actions */}
-//       <BulkActions 
-//         pendingCount={pendingSubscriptions.length}
-//         failedCount={failedSubscriptions.length}
-//         selectedCount={selectedItems.size}
-//         bulkAction={bulkAction}
-//         onBulkActivate={handleBulkActionClick}
-//         onSelectAll={handleSelectAll}
-//         isAllSelected={selectedItems.size === displaySubscriptions.length && displaySubscriptions.length > 0}
-//         theme={theme}
+//     <div className={`space-y-6 ${themeClasses.bg.primary}`}>
+//       {/* Confirm Dialog */}
+//       <ConfirmDialog
+//         isOpen={confirmDialog.open}
+//         onClose={() => setConfirmDialog({ open: false, id: null })}
+//         onConfirm={() => {
+//           handleActivate(confirmDialog.id);
+//           setConfirmDialog({ open: false, id: null });
+//         }}
+//         title="Confirm Activation"
+//         message="Are you sure you want to activate this subscription?"
+//         confirmText="Activate"
+//         cancelText="Cancel"
 //       />
-
-//       {/* Filters */}
-//       <div className={`p-4 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-//         <div className="flex flex-wrap gap-4 items-center">
-//           <div className="w-48">
-//             <EnhancedSelect
-//               value={filterStatus}
-//               onChange={setFilterStatus}
-//               options={[
-//                 { value: "pending", label: `Pending Activation (${pendingSubscriptions.length})` },
-//                 { value: "failed", label: `Failed Activation (${failedSubscriptions.length})` },
-//               ]}
-//               theme={theme}
-//             />
-//           </div>
-          
-//           <div className="flex-1">
-//             <p className="text-sm text-gray-600 dark:text-gray-400">
-//               {filterStatus === 'pending' 
-//                 ? 'Subscriptions that are active but not yet activated on the network'
-//                 : 'Subscriptions with failed activation attempts'
-//               }
-//             </p>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Subscriptions List */}
-//       <AnimatePresence mode="wait">
-//         <motion.div key={filterStatus} className="space-y-4">
-//           {displaySubscriptions.map((subscription) => (
-//             <SubscriptionActivationCard
-//               key={subscription.id}
-//               subscription={subscription}
-//               isSelected={selectedItems.has(subscription.id)}
-//               isLoading={actionLoading.has(subscription.id)}
-//               filterStatus={filterStatus}
-//               onSelect={() => handleSelectItem(subscription.id)}
-//               onActivate={() => handleActivation(subscription.id)}
-//               theme={theme}
-//             />
-//           ))}
-          
-//           {displaySubscriptions.length === 0 && (
-//             <EmptyState filterStatus={filterStatus} theme={theme} />
-//           )}
-//         </motion.div>
-//       </AnimatePresence>
-//     </div>
-//   );
-// };
-
-// // Bulk Actions Component
-// const BulkActions = ({ 
-//   pendingCount, 
-//   failedCount, 
-//   selectedCount, 
-//   bulkAction, 
-//   onBulkActivate, 
-//   onSelectAll, 
-//   isAllSelected,
-//   theme 
-// }) => {
-//   const themeClasses = getThemeClasses(theme);
-
-//   if (pendingCount === 0 && failedCount === 0) return null;
-
-//   return (
-//     <div className={`p-4 rounded-xl shadow-lg border ${themeClasses.bg.card} ${themeClasses.border.light}`}>
-//       <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-//         <div className="flex items-center gap-4">
-//           <div>
-//             <h4 className="font-semibold text-gray-900 dark:text-white">Bulk Operations</h4>
-//             <p className="text-sm text-gray-600 dark:text-gray-400">
-//               {selectedCount > 0 
-//                 ? `${selectedCount} subscription(s) selected`
-//                 : 'Perform actions on multiple subscriptions'
-//               }
-//             </p>
-//           </div>
-          
-//           {selectedCount > 0 && (
-//             <motion.button
-//               onClick={onSelectAll}
-//               className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
-//               whileHover={{ scale: 1.05 }}
-//               whileTap={{ scale: 0.95 }}
-//             >
-//               {isAllSelected ? 'Deselect All' : 'Select All'}
-//             </motion.button>
-//           )}
+      
+//       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+//         <div>
+//           <h2 className="text-2xl font-bold">Activation Service</h2>
+//           <p className="text-sm text-gray-600 mt-1">
+//             {pending.length} subscription(s) awaiting activation
+//           </p>
 //         </div>
         
-//         <div className="flex gap-3">
-//           {selectedCount > 0 && (
+//         {pending.length > 0 && (
+//           <div className="flex gap-3 w-full sm:w-auto">
 //             <motion.button
-//               onClick={onBulkActivate}
-//               disabled={bulkAction === 'activating'}
-//               className={`px-4 py-2 rounded-lg flex items-center ${
-//                 bulkAction === 'activating' 
+//               onClick={handleBulkActivate}
+//               disabled={bulkActivating}
+//               className={`flex-1 sm:flex-none px-6 py-3 rounded-lg flex items-center justify-center gap-3 font-medium
+//                 ${bulkActivating 
 //                   ? 'bg-gray-400 cursor-not-allowed' 
-//                   : 'bg-green-600 hover:bg-green-700 text-white'
-//               }`}
-//               whileHover={{ scale: bulkAction === 'activating' ? 1 : 1.05 }}
-//               whileTap={{ scale: bulkAction === 'activating' ? 1 : 0.95 }}
+//                   : 'bg-green-600 hover:bg-green-700 text-white'}`}
+//               whileHover={!bulkActivating ? { scale: 1.05 } : {}}
+//               whileTap={!bulkActivating ? { scale: 0.95 } : {}}
 //             >
-//               <Play className="w-4 h-4 mr-2" />
-//               {bulkAction === 'activating' 
-//                 ? `Activating ${selectedCount}...` 
-//                 : `Activate Selected (${selectedCount})`
-//               }
+//               {bulkActivating ? (
+//                 <RefreshCw className="w-5 h-5 animate-spin" />
+//               ) : (
+//                 <Zap className="w-5 h-5" />
+//               )}
+//               {bulkActivating ? 'Activating...' : `Activate All (${pending.length})`}
 //             </motion.button>
-//           )}
-//         </div>
+//           </div>
+//         )}
 //       </div>
-//     </div>
-//   );
-// };
-
-// // Subscription Activation Card Component
-// const SubscriptionActivationCard = ({ 
-//   subscription, 
-//   isSelected, 
-//   isLoading, 
-//   filterStatus, 
-//   onSelect, 
-//   onActivate,
-//   theme 
-// }) => {
-//   const themeClasses = getThemeClasses(theme);
-
-//   return (
-//     <motion.div
-//       initial={{ opacity: 0, y: 20 }}
-//       animate={{ opacity: 1, y: 0 }}
-//       exit={{ opacity: 0, y: -20 }}
-//       className={`p-4 rounded-xl shadow-lg border transition-all ${
-//         isSelected 
-//           ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' 
-//           : `${themeClasses.bg.card} ${themeClasses.border.light}`
-//       }`}
-//     >
-//       <div className="flex items-center justify-between">
-//         <div className="flex items-center space-x-4 flex-1">
-//           <input
-//             type="checkbox"
-//             checked={isSelected}
-//             onChange={onSelect}
-//             className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
-//           />
-          
-//           {subscription.access_method === 'hotspot' ? (
-//             <Wifi className="w-8 h-8 text-blue-600" />
-//           ) : (
-//             <Cable className="w-8 h-8 text-green-600" />
-//           )}
-          
-//           <div className="flex-1">
-//             <h5 className="font-semibold text-gray-900 dark:text-white">
-//               {subscription.client?.user?.username || 'Unknown Client'}
-//             </h5>
-//             <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1 mt-1">
-//               <div className="flex flex-wrap gap-4">
-//                 <span>Plan: {subscription.internet_plan?.name || 'No Plan'}</span>
-//                 <span>Router: {subscription.router?.name || 'Not assigned'}</span>
-//                 {subscription.mac_address && (
-//                   <span>MAC: {subscription.mac_address}</span>
-//                 )}
+      
+//       {pending.length === 0 ? (
+//         <div className={`p-12 text-center rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+//           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+//           <p className="text-lg font-medium">All Subscriptions Activated</p>
+//           <p className="text-sm text-gray-600 mt-2">No pending activations at this time</p>
+//         </div>
+//       ) : (
+//         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+//           {/* Failed Section */}
+//           {grouped.failed.length > 0 && (
+//             <div className={`p-4 rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+//               <h3 className="font-semibold flex items-center gap-2 text-red-600 mb-4">
+//                 <AlertCircle className="w-5 h-5" />
+//                 Failed ({grouped.failed.length})
+//               </h3>
+//               <div className="space-y-3 max-h-96 overflow-y-auto">
+//                 {grouped.failed.map(sub => (
+//                   <motion.div
+//                     key={sub.id}
+//                     initial={{ opacity: 0, x: -20 }}
+//                     animate={{ opacity: 1, x: 0 }}
+//                     className="p-3 border rounded-lg hover:shadow-md transition-shadow"
+//                   >
+//                     <div className="flex justify-between items-start">
+//                       <div>
+//                         <div className="font-medium">{sub.client_name || 'N/A'}</div>
+//                         <div className="text-sm text-gray-600">{sub.plan_name}</div>
+//                         <div className="text-xs text-red-600 mt-1">{sub.activation_error}</div>
+//                       </div>
+//                       <motion.button
+//                         whileHover={{ scale: 1.1 }}
+//                         whileTap={{ scale: 0.9 }}
+//                         onClick={() => setConfirmDialog({ open: true, id: sub.id })}
+//                         disabled={activating.has(sub.id)}
+//                         className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 disabled:opacity-50"
+//                       >
+//                         {activating.has(sub.id) ? (
+//                           <RefreshCw className="w-4 h-4 animate-spin" />
+//                         ) : (
+//                           <Play className="w-4 h-4" />
+//                         )}
+//                       </motion.button>
+//                     </div>
+//                   </motion.div>
+//                 ))}
 //               </div>
 //             </div>
-            
-//             {filterStatus === 'failed' && subscription.activation_error && (
-//               <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
-//                 <p className="text-sm text-red-600 flex items-center gap-2">
-//                   <AlertTriangle className="w-4 h-4" />
-//                   {subscription.activation_error}
-//                 </p>
+//           )}
+          
+//           {/* Pending Section */}
+//           {grouped.pending.length > 0 && (
+//             <div className={`p-4 rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+//               <h3 className="font-semibold flex items-center gap-2 text-yellow-600 mb-4">
+//                 <Clock className="w-5 h-5" />
+//                 Pending ({grouped.pending.length})
+//               </h3>
+//               <div className="space-y-3 max-h-96 overflow-y-auto">
+//                 {grouped.pending.map(sub => (
+//                   <motion.div
+//                     key={sub.id}
+//                     initial={{ opacity: 0, x: -20 }}
+//                     animate={{ opacity: 1, x: 0 }}
+//                     className="p-3 border rounded-lg hover:shadow-md transition-shadow"
+//                   >
+//                     <div className="flex justify-between items-start">
+//                       <div>
+//                         <div className="font-medium">{sub.client_name || 'N/A'}</div>
+//                         <div className="text-sm text-gray-600">{sub.plan_name}</div>
+//                         <div className="text-xs text-gray-500 mt-1">
+//                           Created: {new Date(sub.created_at).toLocaleString()}
+//                         </div>
+//                       </div>
+//                       <motion.button
+//                         whileHover={{ scale: 1.1 }}
+//                         whileTap={{ scale: 0.9 }}
+//                         onClick={() => setConfirmDialog({ open: true, id: sub.id })}
+//                         disabled={activating.has(sub.id)}
+//                         className="p-2 bg-yellow-100 text-yellow-600 rounded-lg hover:bg-yellow-200 disabled:opacity-50"
+//                       >
+//                         {activating.has(sub.id) ? (
+//                           <RefreshCw className="w-4 h-4 animate-spin" />
+//                         ) : (
+//                           <Play className="w-4 h-4" />
+//                         )}
+//                       </motion.button>
+//                     </div>
+//                   </motion.div>
+//                 ))}
 //               </div>
-//             )}
+//             </div>
+//           )}
+          
+//           {/* Processing Section */}
+//           {grouped.processing.length > 0 && (
+//             <div className={`p-4 rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+//               <h3 className="font-semibold flex items-center gap-2 text-blue-600 mb-4">
+//                 <RefreshCw className="w-5 h-5 animate-spin" />
+//                 Processing ({grouped.processing.length})
+//               </h3>
+//               <div className="space-y-3 max-h-96 overflow-y-auto">
+//                 {grouped.processing.map(sub => (
+//                   <div
+//                     key={sub.id}
+//                     className="p-3 border rounded-lg opacity-75"
+//                   >
+//                     <div className="font-medium">{sub.client_name || 'N/A'}</div>
+//                     <div className="text-sm text-gray-600">{sub.plan_name}</div>
+//                     <div className="flex items-center gap-2 mt-2 text-xs text-blue-600">
+//                       <RefreshCw className="w-3 h-3 animate-spin" />
+//                       Activation in progress...
+//                     </div>
+//                   </div>
+//                 ))}
+//               </div>
+//             </div>
+//           )}
+//         </div>
+//       )}
+      
+//       {/* Summary Stats */}
+//       {pending.length > 0 && (
+//         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
+//           <div className={`p-4 rounded-lg ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+//             <div className="text-2xl font-bold text-red-600">{grouped.failed.length}</div>
+//             <div className="text-sm text-gray-600">Failed</div>
+//           </div>
+//           <div className={`p-4 rounded-lg ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+//             <div className="text-2xl font-bold text-yellow-600">{grouped.pending.length}</div>
+//             <div className="text-sm text-gray-600">Pending</div>
+//           </div>
+//           <div className={`p-4 rounded-lg ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+//             <div className="text-2xl font-bold text-blue-600">{grouped.processing.length}</div>
+//             <div className="text-sm text-gray-600">Processing</div>
+//           </div>
+//           <div className={`p-4 rounded-lg ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+//             <div className="text-2xl font-bold">{pending.length}</div>
+//             <div className="text-sm text-gray-600">Total</div>
 //           </div>
 //         </div>
-        
-//         <div className="flex items-center space-x-3">
-//           <motion.button
-//             onClick={onActivate}
-//             disabled={isLoading}
-//             className={`px-4 py-2 rounded-lg flex items-center ${
-//               isLoading 
-//                 ? 'bg-gray-400 cursor-not-allowed' 
-//                 : filterStatus === 'failed' 
-//                   ? 'bg-yellow-600 hover:bg-yellow-700' 
-//                   : 'bg-green-600 hover:bg-green-700'
-//             } text-white`}
-//             whileHover={{ scale: isLoading ? 1 : 1.05 }}
-//             whileTap={{ scale: isLoading ? 1 : 0.95 }}
-//           >
-//             {isLoading ? (
-//               <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-//             ) : filterStatus === 'failed' ? (
-//               <RefreshCw className="w-4 h-4 mr-2" />
-//             ) : (
-//               <Play className="w-4 h-4 mr-2" />
-//             )}
-//             {isLoading ? 'Activating...' : 
-//              filterStatus === 'failed' ? 'Retry' : 'Activate'}
-//           </motion.button>
-//         </div>
-//       </div>
-//     </motion.div>
-//   );
-// };
-
-// // Empty State Component
-// const EmptyState = ({ filterStatus, theme }) => {
-//   const themeClasses = getThemeClasses(theme);
-
-//   return (
-//     <motion.div
-//       initial={{ opacity: 0, scale: 0.9 }}
-//       animate={{ opacity: 1, scale: 1 }}
-//       className={`p-8 text-center rounded-xl ${themeClasses.bg.card}`}
-//     >
-//       <Check className="w-12 h-12 text-green-600 mx-auto mb-3" />
-//       <h4 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">
-//         {filterStatus === 'pending' ? 'No Pending Activations' : 'No Failed Activations'}
-//       </h4>
-//       <p className="text-gray-600 dark:text-gray-400">
-//         {filterStatus === 'pending' 
-//           ? 'All active subscriptions have been activated successfully.'
-//           : 'There are no subscriptions with failed activation attempts.'
-//         }
-//       </p>
-//     </motion.div>
+//       )}
+//     </div>
 //   );
 // };
 
@@ -352,29 +294,73 @@
 
 
 
-// src/pages/ServiceOperations/components/ActivationService.jsx
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Play, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
-import api from "../../../api";
-import { getThemeClasses } from "../../../components/ServiceManagement/Shared/components"
 
-const ActivationService = ({ subscriptions, onRefresh, theme }) => {
+
+
+// src/Pages/ServiceManagement/components/ActivationService.jsx
+import React, { useState, useCallback, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { Play, RefreshCw, CheckCircle, AlertCircle, Clock, Zap, Filter } from 'lucide-react';
+import { API_ENDPOINTS } from './constants';
+import { useApi } from './hooks/useApi';
+import { getThemeClasses, EnhancedSelect } from '../../../components/ServiceManagement/Shared/components';
+import { ConfirmDialog } from './common/ConfirmDialog';
+import { LoadingSpinner } from './common/LoadingSpinner';
+
+const ActivationService = ({ subscriptions, onRefresh, theme, addNotification }) => {
   const themeClasses = getThemeClasses(theme);
   const [activating, setActivating] = useState(new Set());
   const [bulkActivating, setBulkActivating] = useState(false);
-
-  const pending = subscriptions.filter(sub => 
-    sub.status === "pending" || sub.activation_failed || !sub.activated
-  );
-
-  const handleActivate = async (id) => {
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, id: null });
+  const [filterType, setFilterType] = useState('all');
+  
+  // Filter options for EnhancedSelect
+  const filterOptions = [
+    { value: 'all', label: 'All Pending' },
+    { value: 'failed', label: 'Failed Only' },
+    { value: 'pending', label: 'Pending Only' },
+    { value: 'processing', label: 'Processing Only' }
+  ];
+  
+  // Pending subscriptions with memoization
+  const pending = useMemo(() => 
+    subscriptions.filter(sub => 
+      sub.status === "pending" || 
+      sub.activation_failed || 
+      !sub.activated
+    ).sort((a, b) => {
+      // Priority: failed first, then by creation date
+      if (a.activation_failed && !b.activation_failed) return -1;
+      if (!a.activation_failed && b.activation_failed) return 1;
+      return new Date(b.created_at) - new Date(a.created_at);
+    }), [subscriptions]);
+  
+  // Filter pending by type
+  const filteredPending = useMemo(() => {
+    if (filterType === 'all') return pending;
+    if (filterType === 'failed') return pending.filter(p => p.activation_failed);
+    if (filterType === 'pending') return pending.filter(p => !p.activation_failed && p.status === 'pending');
+    if (filterType === 'processing') return pending.filter(p => p.status === 'processing');
+    return pending;
+  }, [pending, filterType]);
+  
+  // Group by status
+  const grouped = useMemo(() => ({
+    failed: filteredPending.filter(p => p.activation_failed),
+    pending: filteredPending.filter(p => !p.activation_failed && p.status === 'pending'),
+    processing: filteredPending.filter(p => p.status === 'processing'),
+  }), [filteredPending]);
+  
+  const handleActivate = useCallback(async (id) => {
     setActivating(prev => new Set(prev).add(id));
+    
     try {
-      await api.post(`/api/service_operations/subscriptions/${id}/activate/`);
+      const { fetchData } = useApi(API_ENDPOINTS.SUBSCRIPTION_ACTIVATE(id));
+      await fetchData({}, 'POST');
+      addNotification({ type: 'success', message: 'Activation requested successfully' });
       onRefresh();
     } catch (err) {
-      console.error(err);
+      addNotification({ type: 'error', message: 'Failed to request activation' });
     } finally {
       setActivating(prev => {
         const next = new Set(prev);
@@ -382,102 +368,261 @@ const ActivationService = ({ subscriptions, onRefresh, theme }) => {
         return next;
       });
     }
-  };
-
-  const handleBulkActivate = async () => {
-    if (pending.length === 0) return;
+  }, [onRefresh, addNotification]);
+  
+  const handleBulkActivate = useCallback(async () => {
+    if (filteredPending.length === 0) return;
     setBulkActivating(true);
+    
     try {
-      await Promise.all(
-        pending.map(sub => api.post(`/api/service_operations/subscriptions/${sub.id}/activate/`))
-      );
+      // Process in batches of 5 to avoid overwhelming the server
+      const batchSize = 5;
+      const batches = [];
+      
+      for (let i = 0; i < filteredPending.length; i += batchSize) {
+        batches.push(filteredPending.slice(i, i + batchSize));
+      }
+      
+      let successCount = 0;
+      let failCount = 0;
+      
+      for (const batch of batches) {
+        await Promise.all(
+          batch.map(async (sub) => {
+            try {
+              const { fetchData } = useApi(API_ENDPOINTS.SUBSCRIPTION_ACTIVATE(sub.id));
+              await fetchData({}, 'POST');
+              successCount++;
+            } catch {
+              failCount++;
+            }
+          })
+        );
+      }
+      
+      addNotification({ 
+        type: successCount > 0 ? 'success' : 'error',
+        message: `Bulk activation: ${successCount} successful, ${failCount} failed`,
+      });
+      
       onRefresh();
     } catch (err) {
-      console.error(err);
+      addNotification({ type: 'error', message: 'Bulk activation failed' });
     } finally {
       setBulkActivating(false);
     }
-  };
-
+  }, [filteredPending, onRefresh, addNotification]);
+  
   return (
     <div className={`space-y-6 ${themeClasses.bg.primary}`}>
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Activation Service</h2>
-        <div className="text-sm text-gray-500">
-          {pending.length} pending activation(s)
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.open}
+        onClose={() => setConfirmDialog({ open: false, id: null })}
+        onConfirm={() => {
+          handleActivate(confirmDialog.id);
+          setConfirmDialog({ open: false, id: null });
+        }}
+        title="Confirm Activation"
+        message="Are you sure you want to activate this subscription?"
+        confirmText="Activate"
+        cancelText="Cancel"
+        theme={theme}
+      />
+      
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Activation Service</h2>
+          <p className={`text-sm ${themeClasses.text.secondary} mt-1`}>
+            {filteredPending.length} of {pending.length} subscription(s) awaiting activation
+          </p>
         </div>
-      </div>
-
-      {pending.length === 0 ? (
-        <div className={`p-12 text-center rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <p className="text-lg">All subscriptions are activated!</p>
-        </div>
-      ) : (
-        <>
-          <div className="flex justify-end">
+        
+        <div className="flex gap-3 w-full sm:w-auto">
+          {/* Filter Dropdown - Using EnhancedSelect */}
+          <div className="w-40">
+            <EnhancedSelect
+              value={filterType}
+              onChange={setFilterType}
+              options={filterOptions}
+              placeholder="Filter by"
+              theme={theme}
+            />
+          </div>
+          
+          {filteredPending.length > 0 && (
             <motion.button
               onClick={handleBulkActivate}
               disabled={bulkActivating}
-              className={`px-6 py-3 rounded-lg flex items-center gap-3 font-medium ${
-                bulkActivating ? "bg-gray-400" : "bg-green-600 hover:bg-green-700 text-white"
-              }`}
+              className={`flex-1 sm:flex-none px-6 py-2 rounded-lg flex items-center justify-center gap-2 font-medium
+                ${bulkActivating 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-green-600 hover:bg-green-700 text-white'}`}
               whileHover={!bulkActivating ? { scale: 1.05 } : {}}
+              whileTap={!bulkActivating ? { scale: 0.95 } : {}}
             >
-              <Play className="w-5 h-5" />
-              {bulkActivating ? "Activating..." : `Activate All (${pending.length})`}
+              {bulkActivating ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <Zap className="w-4 h-4" />
+              )}
+              <span className="hidden sm:inline">
+                {bulkActivating ? 'Activating...' : `Activate (${filteredPending.length})`}
+              </span>
             </motion.button>
-          </div>
-
-          <div className={`rounded-xl overflow-hidden shadow-lg ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
-            <table className="w-full">
-              <thead className={`${themeClasses.bg.secondary}`}>
-                <tr>
-                  <th className="p-4 text-left">Client</th>
-                  <th className="p-4 text-left">Plan</th>
-                  <th className="p-4 text-left">Status</th>
-                  <th className="p-4 text-left">Error</th>
-                  <th className="p-4 text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pending.map(sub => (
-                  <tr key={sub.id} className="border-t">
-                    <td className="p-4">{sub.client_name || "N/A"}</td>
-                    <td className="p-4 font-medium">{sub.plan_name}</td>
-                    <td className="p-4">
-                      <span className={`px-3 py-1 rounded-full text-xs ${
-                        sub.activation_failed ? "bg-red-100 text-red-800" : "bg-yellow-100 text-yellow-800"
-                      }`}>
-                        {sub.activation_failed ? "Failed" : "Pending"}
-                      </span>
-                    </td>
-                    <td className="p-4 text-sm text-gray-600">
-                      {sub.activation_error || "Awaiting activation"}
-                    </td>
-                    <td className="p-4 text-center">
+          )}
+        </div>
+      </div>
+      
+      {filteredPending.length === 0 ? (
+        <div className={`p-12 text-center rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+          <p className={`text-lg font-medium ${themeClasses.text.primary}`}>No Pending Activations</p>
+          <p className={`text-sm ${themeClasses.text.secondary} mt-2`}>
+            {filterType === 'all' 
+              ? 'All subscriptions are activated' 
+              : `No ${filterType} subscriptions found`}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Failed Section */}
+          {grouped.failed.length > 0 && (
+            <div className={`p-4 rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+              <h3 className={`font-semibold flex items-center gap-2 text-red-600 mb-4`}>
+                <AlertCircle className="w-5 h-5" />
+                Failed ({grouped.failed.length})
+              </h3>
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {grouped.failed.map(sub => (
+                  <motion.div
+                    key={sub.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className={`p-3 border rounded-lg hover:shadow-md transition-shadow ${themeClasses.border.light}`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className={`font-medium ${themeClasses.text.primary}`}>
+                          {sub.client_name || 'N/A'}
+                        </div>
+                        <div className={`text-sm ${themeClasses.text.secondary}`}>{sub.plan_name}</div>
+                        <div className="text-xs text-red-600 mt-1">{sub.activation_error || 'Unknown error'}</div>
+                      </div>
                       <motion.button
-                        onClick={() => handleActivate(sub.id)}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setConfirmDialog({ open: true, id: sub.id })}
                         disabled={activating.has(sub.id)}
-                        className={`px-4 py-2 rounded-lg flex items-center gap-2 mx-auto ${
-                          activating.has(sub.id) ? "bg-gray-400" : "bg-indigo-600 hover:bg-indigo-700 text-white"
-                        }`}
-                        whileHover={!activating.has(sub.id) ? { scale: 1.05 } : {}}
+                        className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 disabled:opacity-50 ml-2"
                       >
                         {activating.has(sub.id) ? (
                           <RefreshCw className="w-4 h-4 animate-spin" />
                         ) : (
                           <Play className="w-4 h-4" />
                         )}
-                        {activating.has(sub.id) ? "Activating..." : "Activate"}
                       </motion.button>
-                    </td>
-                  </tr>
+                    </div>
+                  </motion.div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </div>
+          )}
+          
+          {/* Pending Section */}
+          {grouped.pending.length > 0 && (
+            <div className={`p-4 rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+              <h3 className={`font-semibold flex items-center gap-2 text-yellow-600 mb-4`}>
+                <Clock className="w-5 h-5" />
+                Pending ({grouped.pending.length})
+              </h3>
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {grouped.pending.map(sub => (
+                  <motion.div
+                    key={sub.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className={`p-3 border rounded-lg hover:shadow-md transition-shadow ${themeClasses.border.light}`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className={`font-medium ${themeClasses.text.primary}`}>
+                          {sub.client_name || 'N/A'}
+                        </div>
+                        <div className={`text-sm ${themeClasses.text.secondary}`}>{sub.plan_name}</div>
+                        <div className={`text-xs ${themeClasses.text.tertiary} mt-1`}>
+                          Created: {new Date(sub.created_at).toLocaleString()}
+                        </div>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setConfirmDialog({ open: true, id: sub.id })}
+                        disabled={activating.has(sub.id)}
+                        className="p-2 bg-yellow-100 text-yellow-600 rounded-lg hover:bg-yellow-200 disabled:opacity-50 ml-2"
+                      >
+                        {activating.has(sub.id) ? (
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Play className="w-4 h-4" />
+                        )}
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Processing Section */}
+          {grouped.processing.length > 0 && (
+            <div className={`p-4 rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+              <h3 className={`font-semibold flex items-center gap-2 text-blue-600 mb-4`}>
+                <RefreshCw className="w-5 h-5 animate-spin" />
+                Processing ({grouped.processing.length})
+              </h3>
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {grouped.processing.map(sub => (
+                  <div
+                    key={sub.id}
+                    className={`p-3 border rounded-lg opacity-75 ${themeClasses.border.light}`}
+                  >
+                    <div className={`font-medium ${themeClasses.text.primary}`}>
+                      {sub.client_name || 'N/A'}
+                    </div>
+                    <div className={`text-sm ${themeClasses.text.secondary}`}>{sub.plan_name}</div>
+                    <div className="flex items-center gap-2 mt-2 text-xs text-blue-600">
+                      <RefreshCw className="w-3 h-3 animate-spin" />
+                      Activation in progress...
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Summary Stats */}
+      {filteredPending.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
+          <div className={`p-4 rounded-lg ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+            <div className="text-2xl font-bold text-red-600">{grouped.failed.length}</div>
+            <div className={`text-sm ${themeClasses.text.secondary}`}>Failed</div>
           </div>
-        </>
+          <div className={`p-4 rounded-lg ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+            <div className="text-2xl font-bold text-yellow-600">{grouped.pending.length}</div>
+            <div className={`text-sm ${themeClasses.text.secondary}`}>Pending</div>
+          </div>
+          <div className={`p-4 rounded-lg ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+            <div className="text-2xl font-bold text-blue-600">{grouped.processing.length}</div>
+            <div className={`text-sm ${themeClasses.text.secondary}`}>Processing</div>
+          </div>
+          <div className={`p-4 rounded-lg ${themeClasses.bg.card} border ${themeClasses.border.light}`}>
+            <div className="text-2xl font-bold">{filteredPending.length}</div>
+            <div className={`text-sm ${themeClasses.text.secondary}`}>Total</div>
+          </div>
+        </div>
       )}
     </div>
   );

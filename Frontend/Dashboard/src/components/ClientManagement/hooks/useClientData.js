@@ -1,15 +1,15 @@
 
 
-// import { useState, useEffect, useCallback, useMemo } from 'react';
+
+
+// import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 // import ClientService from '../services/ClientService'
 // import AnalyticsService from '../services/AnalyticsService';
-// import { formatClientData } from '../utils/dataTransformers'
-// import { debounce } from '../utils/filters';
+// import { formatClientData } from '../utils/dataTransformers';
 
 // const useClientData = (initialFilters = {}) => {
 //   // State management
 //   const [clients, setClients] = useState([]);
-//   const [filteredClients, setFilteredClients] = useState([]);
 //   const [selectedClient, setSelectedClient] = useState(null);
 //   const [dashboardData, setDashboardData] = useState(null);
 //   const [analytics, setAnalytics] = useState(null);
@@ -39,67 +39,130 @@
 //   });
 
 //   const [pagination, setPagination] = useState({
-//     current_page: 1,
-//     page_size: 20,
-//     total_count: 0,
-//     total_pages: 0
+//     currentPage: 1,
+//     pageSize: 20,
+//     totalCount: 0,
+//     totalPages: 0
 //   });
+
+//   // Refs for aborting requests
+//   const abortControllerRef = useRef(null);
+
+//   // Cleanup function for aborting requests
+//   const abortPreviousRequest = useCallback(() => {
+//     if (abortControllerRef.current) {
+//       abortControllerRef.current.abort();
+//     }
+//     abortControllerRef.current = new AbortController();
+//     return abortControllerRef.current.signal;
+//   }, []);
+
+//   // Fetch clients data
+//   const fetchClients = useCallback(async () => {
+//     const signal = abortPreviousRequest();
+    
+//     try {
+//       const response = await ClientService.getClients(
+//         filters, 
+//         {
+//           page: pagination.currentPage,
+//           pageSize: pagination.pageSize
+//         },
+//         signal
+//       );
+      
+//       const data = response.data;
+//       const clientList = data.results || data;
+      
+//       const formattedClients = clientList.map(formatClientData);
+//       setClients(formattedClients);
+      
+//       // Update pagination if backend provides pagination info
+//       if (data.count !== undefined) {
+//         const totalPages = Math.ceil(data.count / pagination.pageSize);
+//         setPagination(prev => ({
+//           ...prev,
+//           totalCount: data.count,
+//           totalPages
+//         }));
+//       }
+      
+//       return formattedClients;
+//     } catch (err) {
+//       if (err.name !== 'AbortError' && err.name !== 'CanceledError') {
+//         console.error('Error fetching clients:', err);
+//         throw err;
+//       }
+//     }
+//   }, [filters, pagination.currentPage, pagination.pageSize, abortPreviousRequest]);
+
+//   // Fetch dashboard data
+//   const fetchDashboardData = useCallback(async () => {
+//     const signal = abortControllerRef.current?.signal;
+    
+//     try {
+//       const response = await AnalyticsService.getDashboardData(undefined, undefined, false, signal);
+//       setDashboardData(response.data);
+//     } catch (err) {
+//       if (err.name !== 'AbortError' && err.name !== 'CanceledError') {
+//         console.error('Error fetching dashboard:', err);
+//       }
+//     }
+//   }, []);
+
+//   // Fetch analytics data
+//   const fetchAnalytics = useCallback(async () => {
+//     const signal = abortControllerRef.current?.signal;
+    
+//     try {
+//       const [financial, usage] = await Promise.allSettled([
+//         AnalyticsService.getFinancialAnalytics(undefined, undefined, 'day', signal),
+//         AnalyticsService.getUsageAnalytics(undefined, undefined, 'day', signal)
+//       ]);
+      
+//       setAnalytics({
+//         financial: financial.status === 'fulfilled' ? financial.value.data : null,
+//         usage: usage.status === 'fulfilled' ? usage.value.data : null
+//       });
+//     } catch (err) {
+//       if (err.name !== 'AbortError' && err.name !== 'CanceledError') {
+//         console.error('Error fetching analytics:', err);
+//       }
+//     }
+//   }, []);
 
 //   // Fetch all data
 //   const fetchAllData = useCallback(async () => {
 //     try {
 //       setIsLoading(true);
 //       setError(null);
-
-//       // Fetch data in parallel
-//       const [clientsResponse, dashboardResponse, analyticsResponse] = await Promise.all([
-//         ClientService.getClients(filters, pagination),
-//         AnalyticsService.getDashboardData(),
-//         AnalyticsService.getClientAnalytics()
+      
+//       await Promise.all([
+//         fetchClients(),
+//         fetchDashboardData(),
+//         fetchAnalytics()
 //       ]);
-
-//       // Transform and set data
-//       const formattedClients = clientsResponse.data.results.map(formatClientData);
-//       setClients(formattedClients);
-//       setFilteredClients(formattedClients);
       
-//       if (dashboardResponse?.data) {
-//         setDashboardData(dashboardResponse.data);
-//       }
-      
-//       if (analyticsResponse?.data) {
-//         setAnalytics(analyticsResponse.data);
-//       }
-      
-//       // Set pagination
-//       setPagination(prev => ({
-//         ...prev,
-//         total_count: clientsResponse.data.count,
-//         total_pages: Math.ceil(clientsResponse.data.count / prev.page_size)
-//       }));
-
-//       // Calculate stats
-//       const stats = calculateStats(formattedClients);
-//       setStats(stats);
-
 //     } catch (err) {
-//       console.error('Error fetching data:', err);
-//       setError(err.response?.data?.error || 'Failed to load client data. Please try again.');
+//       if (err.name !== 'AbortError' && err.name !== 'CanceledError') {
+//         console.error('Error fetching all data:', err);
+//         setError(err.message || 'Failed to load data');
+//       }
 //     } finally {
 //       setIsLoading(false);
 //       setIsRefreshing(false);
 //     }
-//   }, [filters, pagination]);
-
-//   // Debounced data fetching
-//   const debouncedFetchAllData = useMemo(
-//     () => debounce(fetchAllData, 500),
-//     [fetchAllData]
-//   );
+//   }, [fetchClients, fetchDashboardData, fetchAnalytics]);
 
 //   // Initial load
 //   useEffect(() => {
 //     fetchAllData();
+    
+//     return () => {
+//       if (abortControllerRef.current) {
+//         abortControllerRef.current.abort();
+//       }
+//     };
 //   }, [fetchAllData]);
 
 //   // Handle filter changes
@@ -108,17 +171,17 @@
 //       ...prev,
 //       [filterName]: value
 //     }));
-//     setPagination(prev => ({ ...prev, current_page: 1 }));
+//     setPagination(prev => ({ ...prev, currentPage: 1 }));
 //   }, []);
 
 //   // Handle pagination
 //   const handlePageChange = useCallback((page) => {
-//     setPagination(prev => ({ ...prev, current_page: page }));
+//     setPagination(prev => ({ ...prev, currentPage: page }));
 //   }, []);
 
-//   // Handle page size change
 //   const handlePageSizeChange = useCallback((size) => {
-//     setPagination(prev => ({ ...prev, page_size: size, current_page: 1 }));
+//     const pageSize = parseInt(size, 10);
+//     setPagination(prev => ({ ...prev, pageSize, currentPage: 1 }));
 //   }, []);
 
 //   // Handle client selection
@@ -128,10 +191,9 @@
 //       const response = await ClientService.getClientById(client.id);
 //       const detailedClient = formatClientData(response.data);
 //       setSelectedClient(detailedClient);
-//       setError(null);
 //     } catch (err) {
-//       setError('Failed to load client details');
 //       console.error('Error loading client details:', err);
+//       setError('Failed to load client details');
 //     } finally {
 //       setIsLoading(false);
 //     }
@@ -162,11 +224,12 @@
 //       max_revenue: '',
 //       sort_by: '-created_at'
 //     });
+//     setPagination(prev => ({ ...prev, currentPage: 1 }));
 //   }, []);
 
-//   // Update client data
+//   // Update client data locally
 //   const updateClient = useCallback((clientId, updates) => {
-//     setClients(prev => prev.map(client => 
+//     setClients(prev => prev.map(client =>
 //       client.id === clientId ? { ...client, ...updates } : client
 //     ));
     
@@ -179,6 +242,7 @@
 //   const createClient = useCallback(async (clientData, type = 'pppoe') => {
 //     try {
 //       setIsLoading(true);
+//       setError(null);
       
 //       let response;
 //       if (type === 'pppoe') {
@@ -187,13 +251,13 @@
 //         response = await ClientService.createHotspotClient(clientData);
 //       }
       
-//       const newClient = formatClientData(response.data.client);
+//       const newClient = formatClientData(response.data);
 //       setClients(prev => [newClient, ...prev]);
 //       setSelectedClient(newClient);
       
 //       return { success: true, client: newClient };
 //     } catch (err) {
-//       const errorMsg = err.response?.data?.error || 'Failed to create client';
+//       const errorMsg = err.response?.data?.error || err.message || 'Failed to create client';
 //       setError(errorMsg);
 //       return { success: false, error: errorMsg };
 //     } finally {
@@ -213,27 +277,30 @@
 //         setSelectedClient(null);
 //       }
       
-//       // Refresh data
-//       await fetchAllData();
-      
 //       return { success: true };
 //     } catch (err) {
-//       const errorMsg = err.response?.data?.error || 'Failed to delete client';
+//       const errorMsg = err.response?.data?.error || err.message || 'Failed to delete client';
 //       setError(errorMsg);
 //       return { success: false, error: errorMsg };
 //     } finally {
 //       setIsLoading(false);
 //     }
-//   }, [selectedClient, fetchAllData]);
+//   }, [selectedClient]);
 
 //   // Export clients
 //   const exportClients = useCallback(async (format = 'csv') => {
 //     try {
 //       setIsLoading(true);
-//       await ClientService.exportClients(filters, format);
-//       return { success: true };
+      
+//       if (format === 'json') {
+//         const response = await ClientService.exportClients(filters, 'json');
+//         return response.data;
+//       } else {
+//         await ClientService.exportClients(filters, 'csv');
+//         return { success: true };
+//       }
 //     } catch (err) {
-//       const errorMsg = err.response?.data?.error || 'Failed to export clients';
+//       const errorMsg = err.response?.data?.error || err.message || 'Failed to export clients';
 //       setError(errorMsg);
 //       return { success: false, error: errorMsg };
 //     } finally {
@@ -257,55 +324,129 @@
 //         segments: {}
 //       };
 //     }
-
-//     const stats = {
-//       total: clientList.length,
-//       active: clientList.filter(c => c.status === 'active').length,
-//       atRisk: clientList.filter(c => c.is_at_risk).length,
-//       totalRevenue: clientList.reduce((sum, c) => sum + (c.lifetime_value || 0), 0),
-//       avgRevenue: 0,
-//       avgChurnRisk: 0,
-//       avgEngagement: 0,
-//       connectionTypes: {},
-//       tiers: {},
-//       segments: {}
-//     };
-
-//     // Calculate averages
-//     const totalChurnRisk = clientList.reduce((sum, c) => sum + (c.churn_risk_score || 0), 0);
-//     const totalEngagement = clientList.reduce((sum, c) => sum + (c.engagement_score || 0), 0);
     
-//     stats.avgRevenue = stats.totalRevenue / stats.total;
-//     stats.avgChurnRisk = totalChurnRisk / stats.total;
-//     stats.avgEngagement = totalEngagement / stats.total;
+//     let totalRevenue = 0;
+//     let totalChurnRisk = 0;
+//     let totalEngagement = 0;
+//     const connectionTypes = {};
+//     const tiers = {};
+//     const segments = {};
+//     let active = 0;
+//     let atRisk = 0;
 
-//     // Calculate distributions
 //     clientList.forEach(client => {
+//       totalRevenue += client.lifetime_value || 0;
+//       totalChurnRisk += client.churn_risk_score || 0;
+//       totalEngagement += client.engagement_score || 0;
+
+//       if (client.status === 'active') active++;
+//       if (client.churn_risk_score >= 7) atRisk++;
+
 //       const connType = client.connection_type || 'unknown';
-//       stats.connectionTypes[connType] = (stats.connectionTypes[connType] || 0) + 1;
+//       connectionTypes[connType] = (connectionTypes[connType] || 0) + 1;
 
 //       const tier = client.tier || 'unknown';
-//       stats.tiers[tier] = (stats.tiers[tier] || 0) + 1;
+//       tiers[tier] = (tiers[tier] || 0) + 1;
 
 //       const segment = client.revenue_segment || 'unknown';
-//       stats.segments[segment] = (stats.segments[segment] || 0) + 1;
+//       segments[segment] = (segments[segment] || 0) + 1;
 //     });
 
-//     return stats;
+//     const total = clientList.length;
+//     return {
+//       total,
+//       active,
+//       atRisk,
+//       totalRevenue,
+//       avgRevenue: totalRevenue / total,
+//       avgChurnRisk: totalChurnRisk / total,
+//       avgEngagement: totalEngagement / total,
+//       connectionTypes,
+//       tiers,
+//       segments
+//     };
 //   }, []);
+
+//   // Update stats whenever clients change
+//   useEffect(() => {
+//     if (clients.length > 0) {
+//       const calculatedStats = calculateStats(clients);
+//       setStats(calculatedStats);
+//     }
+//   }, [clients, calculateStats]);
+
+//   // Memoized filtered clients
+//   const filteredClients = useMemo(() => {
+//     if (!clients.length) return [];
+    
+//     let filtered = [...clients];
+    
+//     // Apply search filter
+//     if (filters.search) {
+//       const searchLower = filters.search.toLowerCase();
+//       filtered = filtered.filter(client => 
+//         client.username?.toLowerCase().includes(searchLower) ||
+//         client.phone_number?.includes(filters.search)
+//       );
+//     }
+    
+//     // Apply connection type filter
+//     if (filters.connection_type && filters.connection_type !== 'all') {
+//       filtered = filtered.filter(client => client.connection_type === filters.connection_type);
+//     }
+    
+//     // Apply status filter
+//     if (filters.status && filters.status !== 'all') {
+//       filtered = filtered.filter(client => client.status === filters.status);
+//     }
+    
+//     // Apply tier filter
+//     if (filters.tier && filters.tier !== 'all') {
+//       filtered = filtered.filter(client => client.tier === filters.tier);
+//     }
+    
+//     // Apply at risk filter
+//     if (filters.at_risk && filters.at_risk !== 'all') {
+//       const atRisk = filters.at_risk === 'true';
+//       filtered = filtered.filter(client => (client.churn_risk_score >= 7) === atRisk);
+//     }
+    
+//     // Apply sorting
+//     const sortField = filters.sort_by.startsWith('-') ? filters.sort_by.slice(1) : filters.sort_by;
+//     const sortDirection = filters.sort_by.startsWith('-') ? 'desc' : 'asc';
+    
+//     filtered.sort((a, b) => {
+//       let aVal = a[sortField] || 0;
+//       let bVal = b[sortField] || 0;
+      
+//       if (sortField.includes('date') || sortField.includes('_at')) {
+//         aVal = aVal ? new Date(aVal).getTime() : 0;
+//         bVal = bVal ? new Date(bVal).getTime() : 0;
+//       }
+      
+//       if (typeof aVal === 'string' && typeof bVal === 'string') {
+//         return sortDirection === 'asc' 
+//           ? aVal.localeCompare(bVal)
+//           : bVal.localeCompare(aVal);
+//       }
+      
+//       return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+//     });
+    
+//     return filtered;
+//   }, [clients, filters]);
 
 //   // Check if any filters are active
 //   const hasActiveFilters = useMemo(() => {
-//     const filterValues = Object.values(filters);
-//     return filterValues.some(value => 
-//       value !== 'all' && 
-//       value !== '' && 
-//       value !== '-created_at'
-//     );
+//     return Object.entries(filters).some(([key, value]) => {
+//       if (key === 'sort_by' && value === '-created_at') return false;
+//       if (value === 'all' || value === '' || value === null || value === undefined) return false;
+//       return true;
+//     });
 //   }, [filters]);
 
 //   return {
-//     // State
+//     // Data
 //     clients,
 //     filteredClients,
 //     selectedClient,
@@ -329,12 +470,11 @@
 //     createClient,
 //     deleteClient,
 //     exportClients,
-//     fetchAllData: debouncedFetchAllData,
     
-//     // Helpers
+//     // Derived state
 //     hasActiveFilters,
-//     totalClients: filteredClients.length,
-//     totalPages: pagination.total_pages
+//     totalClients: clients.length,
+//     filteredCount: filteredClients.length
 //   };
 // };
 
@@ -347,25 +487,19 @@
 
 
 
-
-
-// hooks/useClientData.jsx
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import ClientService from '../services/ClientService';
 import AnalyticsService from '../services/AnalyticsService';
-import { formatClientData } from '../utils/dataTransformers';
+import { formatClientData } from '../utils/formatters';
 
 const useClientData = (initialFilters = {}) => {
   // State management
   const [clients, setClients] = useState([]);
-  const [filteredClients, setFilteredClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
-  const [analytics, setAnalytics] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState(null);
-  const [stats, setStats] = useState(null);
 
   // Filter and pagination state
   const [filters, setFilters] = useState({
@@ -388,70 +522,73 @@ const useClientData = (initialFilters = {}) => {
   });
 
   const [pagination, setPagination] = useState({
-    current_page: 1,
-    page_size: 20,
-    total_count: 0,
-    total_pages: 0
+    currentPage: 1,
+    pageSize: 20,
+    totalCount: 0,
+    totalPages: 0
   });
+
+  // Refs for aborting requests
+  const abortControllerRef = useRef(null);
+
+  // Cleanup function
+  const abortPreviousRequest = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+    return abortControllerRef.current.signal;
+  }, []);
 
   // Fetch clients data
   const fetchClients = useCallback(async () => {
+    const signal = abortPreviousRequest();
+    
     try {
-      const response = await ClientService.getClients(filters, {
-        current_page: pagination.current_page,
-        page_size: pagination.page_size
-      });
+      const response = await ClientService.getClients(
+        filters, 
+        {
+          page: pagination.currentPage,
+          pageSize: pagination.pageSize
+        },
+        signal
+      );
       
-      const data = response.data;
+      const data = response.data || response;
       const clientList = data.results || data;
       
       const formattedClients = clientList.map(formatClientData);
       setClients(formattedClients);
-      setFilteredClients(formattedClients);
       
-      // Update pagination if backend provides pagination info
       if (data.count !== undefined) {
+        const totalPages = Math.ceil(data.count / pagination.pageSize);
         setPagination(prev => ({
           ...prev,
-          total_count: data.count,
-          total_pages: Math.ceil(data.count / prev.page_size)
+          totalCount: data.count,
+          totalPages
         }));
       }
       
       return formattedClients;
     } catch (err) {
-      console.error('Error fetching clients:', err);
-      setError(err.message || 'Failed to load clients');
-      throw err;
+      if (err.name !== 'AbortError' && err.name !== 'CanceledError') {
+        console.error('Error fetching clients:', err);
+        throw err;
+      }
     }
-  }, [filters, pagination.current_page, pagination.page_size]);
+  }, [filters, pagination.currentPage, pagination.pageSize, abortPreviousRequest]);
 
   // Fetch dashboard data
   const fetchDashboardData = useCallback(async () => {
+    const signal = abortControllerRef.current?.signal;
+    
     try {
-      const response = await AnalyticsService.getDashboardData();
-      setDashboardData(response.data);
+      const response = await AnalyticsService.getDashboardData('30d', 'all', false, signal);
+      setDashboardData(response.data || response);
     } catch (err) {
-      console.error('Error fetching dashboard:', err);
-      // Don't set error for dashboard - it's optional
-    }
-  }, []);
-
-  // Fetch analytics data
-  const fetchAnalytics = useCallback(async () => {
-    try {
-      const [financial, usage] = await Promise.all([
-        AnalyticsService.getFinancialAnalytics(),
-        AnalyticsService.getUsageAnalytics()
-      ]);
-      
-      setAnalytics({
-        financial: financial.data,
-        usage: usage.data
-      });
-    } catch (err) {
-      console.error('Error fetching analytics:', err);
-      // Analytics are optional
+      if (err.name !== 'AbortError' && err.name !== 'CanceledError') {
+        console.error('Error fetching dashboard:', err);
+      }
     }
   }, []);
 
@@ -463,22 +600,29 @@ const useClientData = (initialFilters = {}) => {
       
       await Promise.all([
         fetchClients(),
-        fetchDashboardData(),
-        fetchAnalytics()
+        fetchDashboardData()
       ]);
       
     } catch (err) {
-      console.error('Error fetching all data:', err);
-      setError(err.message || 'Failed to load data');
+      if (err.name !== 'AbortError' && err.name !== 'CanceledError') {
+        console.error('Error fetching all data:', err);
+        setError(err.message || 'Failed to load data');
+      }
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [fetchClients, fetchDashboardData, fetchAnalytics]);
+  }, [fetchClients, fetchDashboardData]);
 
   // Initial load
   useEffect(() => {
     fetchAllData();
+    
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [fetchAllData]);
 
   // Handle filter changes
@@ -487,17 +631,17 @@ const useClientData = (initialFilters = {}) => {
       ...prev,
       [filterName]: value
     }));
-    setPagination(prev => ({ ...prev, current_page: 1 }));
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
   }, []);
 
   // Handle pagination
   const handlePageChange = useCallback((page) => {
-    setPagination(prev => ({ ...prev, current_page: page }));
+    setPagination(prev => ({ ...prev, currentPage: page }));
   }, []);
 
-  // Handle page size change
   const handlePageSizeChange = useCallback((size) => {
-    setPagination(prev => ({ ...prev, page_size: size, current_page: 1 }));
+    const pageSize = parseInt(size, 10);
+    setPagination(prev => ({ ...prev, pageSize, currentPage: 1 }));
   }, []);
 
   // Handle client selection
@@ -505,7 +649,7 @@ const useClientData = (initialFilters = {}) => {
     try {
       setIsLoading(true);
       const response = await ClientService.getClientById(client.id);
-      const detailedClient = formatClientData(response.data);
+      const detailedClient = formatClientData(response.data || response);
       setSelectedClient(detailedClient);
     } catch (err) {
       console.error('Error loading client details:', err);
@@ -540,7 +684,7 @@ const useClientData = (initialFilters = {}) => {
       max_revenue: '',
       sort_by: '-created_at'
     });
-    setPagination(prev => ({ ...prev, current_page: 1 }));
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
   }, []);
 
   // Update client data locally
@@ -567,7 +711,7 @@ const useClientData = (initialFilters = {}) => {
         response = await ClientService.createHotspotClient(clientData);
       }
       
-      const newClient = formatClientData(response.data);
+      const newClient = formatClientData(response.data || response);
       setClients(prev => [newClient, ...prev]);
       setSelectedClient(newClient);
       
@@ -606,21 +750,18 @@ const useClientData = (initialFilters = {}) => {
   // Export clients
   const exportClients = useCallback(async (format = 'csv') => {
     try {
-      setIsLoading(true);
       await ClientService.exportClients(filters, format);
       return { success: true };
     } catch (err) {
       const errorMsg = err.response?.data?.error || err.message || 'Failed to export clients';
       setError(errorMsg);
       return { success: false, error: errorMsg };
-    } finally {
-      setIsLoading(false);
     }
   }, [filters]);
 
   // Calculate statistics
-  const calculateStats = useCallback((clientList) => {
-    if (!clientList || clientList.length === 0) {
+  const stats = useMemo(() => {
+    if (!clients || clients.length === 0) {
       return {
         total: 0,
         active: 0,
@@ -628,41 +769,26 @@ const useClientData = (initialFilters = {}) => {
         totalRevenue: 0,
         avgRevenue: 0,
         avgChurnRisk: 0,
-        avgEngagement: 0,
-        connectionTypes: {},
-        tiers: {},
-        segments: {}
+        avgEngagement: 0
       };
     }
     
     let totalRevenue = 0;
     let totalChurnRisk = 0;
     let totalEngagement = 0;
-    const connectionTypes = {};
-    const tiers = {};
-    const segments = {};
     let active = 0;
     let atRisk = 0;
 
-    clientList.forEach(client => {
+    clients.forEach(client => {
       totalRevenue += client.lifetime_value || 0;
       totalChurnRisk += client.churn_risk_score || 0;
       totalEngagement += client.engagement_score || 0;
 
       if (client.status === 'active') active++;
       if (client.churn_risk_score >= 7) atRisk++;
-
-      const connType = client.connection_type || 'unknown';
-      connectionTypes[connType] = (connectionTypes[connType] || 0) + 1;
-
-      const tier = client.tier || 'unknown';
-      tiers[tier] = (tiers[tier] || 0) + 1;
-
-      const segment = client.revenue_segment || 'unknown';
-      segments[segment] = (segments[segment] || 0) + 1;
     });
 
-    const total = clientList.length;
+    const total = clients.length;
     return {
       total,
       active,
@@ -670,49 +796,84 @@ const useClientData = (initialFilters = {}) => {
       totalRevenue,
       avgRevenue: totalRevenue / total,
       avgChurnRisk: totalChurnRisk / total,
-      avgEngagement: totalEngagement / total,
-      connectionTypes,
-      tiers,
-      segments
+      avgEngagement: totalEngagement / total
     };
-  }, []);
+  }, [clients]);
 
-  // Update stats whenever clients change
-  useEffect(() => {
-    if (clients.length > 0) {
-      const calculatedStats = calculateStats(clients);
-      setStats(calculatedStats);
+  // Memoized filtered clients
+  const filteredClients = useMemo(() => {
+    if (!clients.length) return [];
+    
+    let filtered = [...clients];
+    
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(client => 
+        client.username?.toLowerCase().includes(searchLower) ||
+        client.phone_number?.includes(filters.search)
+      );
     }
-  }, [clients, calculateStats]);
+    
+    if (filters.connection_type && filters.connection_type !== 'all') {
+      filtered = filtered.filter(client => client.connection_type === filters.connection_type);
+    }
+    
+    if (filters.status && filters.status !== 'all') {
+      filtered = filtered.filter(client => client.status === filters.status);
+    }
+    
+    if (filters.tier && filters.tier !== 'all') {
+      filtered = filtered.filter(client => client.tier === filters.tier);
+    }
+    
+    if (filters.at_risk && filters.at_risk !== 'all') {
+      const atRisk = filters.at_risk === 'true';
+      filtered = filtered.filter(client => (client.churn_risk_score >= 7) === atRisk);
+    }
+    
+    const sortField = filters.sort_by.startsWith('-') ? filters.sort_by.slice(1) : filters.sort_by;
+    const sortDirection = filters.sort_by.startsWith('-') ? 'desc' : 'asc';
+    
+    filtered.sort((a, b) => {
+      let aVal = a[sortField] || 0;
+      let bVal = b[sortField] || 0;
+      
+      if (sortField.includes('date') || sortField.includes('_at')) {
+        aVal = aVal ? new Date(aVal).getTime() : 0;
+        bVal = bVal ? new Date(bVal).getTime() : 0;
+      }
+      
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return sortDirection === 'asc' 
+          ? aVal.localeCompare(bVal)
+          : bVal.localeCompare(aVal);
+      }
+      
+      return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+    });
+    
+    return filtered;
+  }, [clients, filters]);
 
-  // Check if any filters are active
   const hasActiveFilters = useMemo(() => {
-    const filterValues = Object.values(filters);
-    return filterValues.some(value =>
-      value !== 'all' &&
-      value !== '' &&
-      value !== '-created_at' &&
-      value !== false &&
-      value !== null &&
-      value !== undefined
-    );
+    return Object.entries(filters).some(([key, value]) => {
+      if (key === 'sort_by' && value === '-created_at') return false;
+      if (value === 'all' || value === '' || value === null || value === undefined) return false;
+      return true;
+    });
   }, [filters]);
 
   return {
-    // Data
     clients,
     filteredClients,
     selectedClient,
     dashboardData,
-    analytics,
     isLoading,
     isRefreshing,
     error,
     stats,
     filters,
     pagination,
-    
-    // Actions
     handleFilterChange,
     handlePageChange,
     handlePageSizeChange,
@@ -723,13 +884,9 @@ const useClientData = (initialFilters = {}) => {
     createClient,
     deleteClient,
     exportClients,
-    
-    // Derived state
     hasActiveFilters,
     totalClients: clients.length,
-    filteredCount: filteredClients.length,
-    totalPages: pagination.total_pages,
-    currentPage: pagination.current_page
+    filteredCount: filteredClients.length
   };
 };
 

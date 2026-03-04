@@ -1,374 +1,880 @@
-import React, { useState, useMemo, useCallback } from 'react';
+
+
+
+// import React, { useState, useMemo } from 'react';
+// import { motion, AnimatePresence } from 'framer-motion';
+// import {
+//   MessageSquare, Search, Filter, Download, RefreshCw,
+//   ChevronDown, ChevronUp, User, Clock, CheckCircle,
+//   XCircle, AlertCircle, Loader, Eye, Trash2,
+//   Send, Calendar, Phone, DollarSign, Activity,
+//   Archive, Flag, Grid, List, Copy, Edit,
+//   ChevronLeft, ChevronRight
+// } from 'lucide-react';
+// import { EnhancedSelect, ConfirmationModal, EmptyState, getThemeClasses } from '../../../components/ServiceManagement/Shared/components';
+// import {
+//   formatPhoneNumber, formatDate, formatTimeAgo,
+//   formatCurrency, getStatusBadge, getPriorityBadge,
+//   formatMessagePreview, formatMessageParts
+// } from '../utils/formatters';
+
+// const MessageManager = ({
+//   messages = [],
+//   gateways = [],
+//   templates = [],
+//   pagination = {},
+//   loading,
+//   theme,
+//   themeClasses,
+//   onRefresh,
+//   onLoadMore,
+//   onSendMessage,
+//   onRetry,
+//   onCancel,
+//   onDelete,
+//   viewMode = 'grid',
+//   searchTerm = '',
+//   statusFilter = 'all',
+//   dateRange = { start: null, end: null }
+// }) => {
+//   const [expandedMessage, setExpandedMessage] = useState(null);
+//   const [showDeleteModal, setShowDeleteModal] = useState(false);
+//   const [messageToDelete, setMessageToDelete] = useState(null);
+//   const [selectedMessages, setSelectedMessages] = useState(new Set());
+//   const [retrying, setRetrying] = useState(new Set());
+//   const [currentPage, setCurrentPage] = useState(1);
+
+//   // Filter messages
+//   const filteredMessages = useMemo(() => {
+//     let filtered = messages;
+
+//     if (searchTerm) {
+//       const term = searchTerm.toLowerCase();
+//       filtered = filtered.filter(msg =>
+//         msg.phone_number?.toLowerCase().includes(term) ||
+//         msg.recipient_name?.toLowerCase().includes(term) ||
+//         msg.message?.toLowerCase().includes(term)
+//       );
+//     }
+
+//     if (statusFilter !== 'all') {
+//       filtered = filtered.filter(msg => msg.status === statusFilter);
+//     }
+
+//     if (dateRange.start) {
+//       const start = new Date(dateRange.start);
+//       filtered = filtered.filter(msg => new Date(msg.created_at) >= start);
+//     }
+//     if (dateRange.end) {
+//       const end = new Date(dateRange.end);
+//       end.setHours(23, 59, 59);
+//       filtered = filtered.filter(msg => new Date(msg.created_at) <= end);
+//     }
+
+//     return filtered;
+//   }, [messages, searchTerm, statusFilter, dateRange]);
+
+//   // Statistics
+//   const stats = useMemo(() => {
+//     const total = filteredMessages.length;
+//     const delivered = filteredMessages.filter(m => m.status === 'delivered').length;
+//     const failed = filteredMessages.filter(m => m.status === 'failed').length;
+//     const pending = filteredMessages.filter(m => ['pending', 'queued', 'sending'].includes(m.status)).length;
+//     const totalCost = filteredMessages.reduce((sum, m) => sum + (parseFloat(m.cost) || 0), 0);
+    
+//     return { total, delivered, failed, pending, totalCost };
+//   }, [filteredMessages]);
+
+//   // Pagination
+//   const paginatedMessages = useMemo(() => {
+//     const pageSize = pagination.pageSize || 50;
+//     const start = (currentPage - 1) * pageSize;
+//     return filteredMessages.slice(start, start + pageSize);
+//   }, [filteredMessages, currentPage, pagination.pageSize]);
+
+//   const totalPages = Math.ceil(filteredMessages.length / (pagination.pageSize || 50));
+
+//   const handleRetry = async (messageId) => {
+//     setRetrying(prev => new Set(prev).add(messageId));
+//     try {
+//       await onRetry(messageId);
+//       onRefresh();
+//     } catch (error) {
+//       console.error('Retry failed:', error);
+//     } finally {
+//       setRetrying(prev => {
+//         const newSet = new Set(prev);
+//         newSet.delete(messageId);
+//         return newSet;
+//       });
+//     }
+//   };
+
+//   const handleCancel = async (messageId) => {
+//     try {
+//       await onCancel(messageId);
+//       onRefresh();
+//     } catch (error) {
+//       console.error('Cancel failed:', error);
+//     }
+//   };
+
+//   const handleDelete = async () => {
+//     if (!messageToDelete) return;
+//     try {
+//       await onDelete(messageToDelete);
+//       onRefresh();
+//       setShowDeleteModal(false);
+//       setMessageToDelete(null);
+//     } catch (error) {
+//       console.error('Delete failed:', error);
+//     }
+//   };
+
+//   const handleSelectAll = () => {
+//     if (selectedMessages.size === paginatedMessages.length) {
+//       setSelectedMessages(new Set());
+//     } else {
+//       setSelectedMessages(new Set(paginatedMessages.map(m => m.id)));
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <div className="flex items-center justify-center py-12">
+//         <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+//         <span className={`ml-3 ${themeClasses.text.secondary}`}>Loading messages...</span>
+//       </div>
+//     );
+//   }
+
+//   if (filteredMessages.length === 0) {
+//     return (
+//       <EmptyState
+//         icon={MessageSquare}
+//         title="No messages found"
+//         description={searchTerm || statusFilter !== 'all' || dateRange.start
+//           ? "No messages match your filters"
+//           : "Send your first SMS message to get started"
+//         }
+//         actionLabel="Send Message"
+//         onAction={() => { }}
+//         theme={theme}
+//       />
+//     );
+//   }
+
+//   return (
+//     <div className="space-y-4">
+//       {/* Statistics */}
+//       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+//         <div className={`p-3 rounded-lg ${themeClasses.bg.secondary}`}>
+//           <p className={`text-xs ${themeClasses.text.secondary}`}>Total</p>
+//           <p className={`text-xl font-bold ${themeClasses.text.primary}`}>{stats.total}</p>
+//         </div>
+//         <div className={`p-3 rounded-lg ${themeClasses.bg.secondary}`}>
+//           <p className={`text-xs ${themeClasses.text.secondary}`}>Delivered</p>
+//           <p className={`text-xl font-bold text-green-500`}>{stats.delivered}</p>
+//         </div>
+//         <div className={`p-3 rounded-lg ${themeClasses.bg.secondary}`}>
+//           <p className={`text-xs ${themeClasses.text.secondary}`}>Failed</p>
+//           <p className={`text-xl font-bold text-red-500`}>{stats.failed}</p>
+//         </div>
+//         <div className={`p-3 rounded-lg ${themeClasses.bg.secondary}`}>
+//           <p className={`text-xs ${themeClasses.text.secondary}`}>Cost</p>
+//           <p className={`text-xl font-bold ${themeClasses.text.primary}`}>{formatCurrency(stats.totalCost)}</p>
+//         </div>
+//       </div>
+
+//       {/* Bulk Actions */}
+//       {selectedMessages.size > 0 && (
+//         <div className={`p-4 rounded-lg border ${themeClasses.bg.info} ${themeClasses.border.info}`}>
+//           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+//             <span className={themeClasses.text.primary}>
+//               {selectedMessages.size} messages selected
+//             </span>
+//             <div className="flex flex-wrap gap-2">
+//               <button
+//                 onClick={() => Promise.all(Array.from(selectedMessages).map(id => handleRetry(id)))}
+//                 className={`px-3 py-1.5 text-sm rounded flex items-center gap-1 ${themeClasses.button.primary}`}
+//               >
+//                 <RefreshCw className="w-3 h-3" />
+//                 Retry Selected
+//               </button>
+//               <button
+//                 onClick={() => {
+//                   Array.from(selectedMessages).forEach(id => handleCancel(id));
+//                   setSelectedMessages(new Set());
+//                 }}
+//                 className={`px-3 py-1.5 text-sm rounded flex items-center gap-1 ${themeClasses.button.warning}`}
+//               >
+//                 <XCircle className="w-3 h-3" />
+//                 Cancel Selected
+//               </button>
+//               <button
+//                 onClick={() => setSelectedMessages(new Set())}
+//                 className={`px-3 py-1.5 text-sm rounded ${themeClasses.button.secondary}`}
+//               >
+//                 Clear Selection
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+
+//       {/* Messages Grid/List */}
+//       {viewMode === 'grid' ? (
+//         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//           {paginatedMessages.map((message) => {
+//             const statusBadge = getStatusBadge(message.status, theme);
+//             const priorityBadge = getPriorityBadge(message.priority, theme);
+//             const StatusIcon = statusBadge.icon;
+//             const PriorityIcon = priorityBadge.icon;
+
+//             return (
+//               <motion.div
+//                 key={message.id}
+//                 layout
+//                 initial={{ opacity: 0 }}
+//                 animate={{ opacity: 1 }}
+//                 exit={{ opacity: 0 }}
+//                 className={`p-4 rounded-lg border transition-all hover:shadow-lg ${
+//                   themeClasses.bg.card
+//                 } ${themeClasses.border.light} ${
+//                   expandedMessage === message.id ? 'ring-2 ring-indigo-500' : ''
+//                 } ${selectedMessages.has(message.id) ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''}`}
+//               >
+//                 <div className="flex items-start justify-between mb-3">
+//                   <div className="flex items-center gap-2">
+//                     <input
+//                       type="checkbox"
+//                       checked={selectedMessages.has(message.id)}
+//                       onChange={(e) => {
+//                         const newSelected = new Set(selectedMessages);
+//                         if (e.target.checked) {
+//                           newSelected.add(message.id);
+//                         } else {
+//                           newSelected.delete(message.id);
+//                         }
+//                         setSelectedMessages(newSelected);
+//                       }}
+//                       className="rounded border-gray-300"
+//                     />
+//                     <div className={`p-2 rounded-lg ${themeClasses.bg.secondary}`}>
+//                       <User className="w-4 h-4" />
+//                     </div>
+//                     <div>
+//                       <h3 className={`font-medium ${themeClasses.text.primary}`}>
+//                         {message.recipient_name || 'Unknown'}
+//                       </h3>
+//                       <p className={`text-xs ${themeClasses.text.secondary}`}>
+//                         {formatPhoneNumber(message.phone_number)}
+//                       </p>
+//                     </div>
+//                   </div>
+
+//                   <div className="flex items-center gap-1">
+//                     <button
+//                       onClick={() => setExpandedMessage(expandedMessage === message.id ? null : message.id)}
+//                       className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+//                     >
+//                       {expandedMessage === message.id ? (
+//                         <ChevronUp className="w-4 h-4" />
+//                       ) : (
+//                         <ChevronDown className="w-4 h-4" />
+//                       )}
+//                     </button>
+//                   </div>
+//                 </div>
+
+//                 <div className={`mb-3 p-2 rounded text-sm ${themeClasses.bg.secondary}`}>
+//                   <p className="line-clamp-2">{message.message}</p>
+//                 </div>
+
+//                 <div className="flex items-center justify-between text-xs mb-2">
+//                   <div className="flex items-center gap-2">
+//                     <StatusIcon className={`w-3 h-3 ${statusBadge.color}`} />
+//                     <span className={statusBadge.color}>{statusBadge.label}</span>
+//                   </div>
+//                   <div className="flex items-center gap-2">
+//                     <PriorityIcon className={`w-3 h-3 ${priorityBadge.color}`} />
+//                     <span className={priorityBadge.color}>{priorityBadge.label}</span>
+//                   </div>
+//                 </div>
+
+//                 <div className="flex items-center justify-between text-xs">
+//                   <span className={themeClasses.text.secondary}>
+//                     {formatTimeAgo(message.created_at)}
+//                   </span>
+//                   {message.cost && (
+//                     <span className={`font-mono ${themeClasses.text.primary}`}>
+//                       {formatCurrency(message.cost)}
+//                     </span>
+//                   )}
+//                 </div>
+
+//                 {expandedMessage === message.id && (
+//                   <motion.div
+//                     initial={{ opacity: 0, height: 0 }}
+//                     animate={{ opacity: 1, height: 'auto' }}
+//                     exit={{ opacity: 0, height: 0 }}
+//                     className={`mt-4 pt-4 border-t ${themeClasses.border.light}`}
+//                   >
+//                     <div className="space-y-2 text-sm">
+//                       {message.gateway_name && (
+//                         <div className="flex justify-between">
+//                           <span className={themeClasses.text.secondary}>Gateway:</span>
+//                           <span className={themeClasses.text.primary}>{message.gateway_name}</span>
+//                         </div>
+//                       )}
+
+//                       {message.template_name && (
+//                         <div className="flex justify-between">
+//                           <span className={themeClasses.text.secondary}>Template:</span>
+//                           <span className={themeClasses.text.primary}>{message.template_name}</span>
+//                         </div>
+//                       )}
+
+//                       <div className="flex justify-between">
+//                         <span className={themeClasses.text.secondary}>Parts:</span>
+//                         <span className={themeClasses.text.primary}>
+//                           {formatMessageParts(message.message_parts, message.character_count)}
+//                         </span>
+//                       </div>
+
+//                       {message.sent_at && (
+//                         <div className="flex justify-between">
+//                           <span className={themeClasses.text.secondary}>Sent:</span>
+//                           <span className={themeClasses.text.primary}>{formatDate(message.sent_at)}</span>
+//                         </div>
+//                       )}
+
+//                       {message.delivered_at && (
+//                         <div className="flex justify-between">
+//                           <span className={themeClasses.text.secondary}>Delivered:</span>
+//                           <span className={themeClasses.text.primary}>{formatDate(message.delivered_at)}</span>
+//                         </div>
+//                       )}
+
+//                       {message.reference_id && (
+//                         <div className="flex justify-between">
+//                           <span className={themeClasses.text.secondary}>Reference:</span>
+//                           <span className={`font-mono text-xs ${themeClasses.text.primary}`}>
+//                             {message.reference_id}
+//                           </span>
+//                         </div>
+//                       )}
+
+//                       <div className="flex gap-2 pt-2">
+//                         {message.status === 'failed' && (
+//                           <button
+//                             onClick={() => handleRetry(message.id)}
+//                             disabled={retrying.has(message.id)}
+//                             className={`flex-1 px-2 py-1.5 text-xs rounded flex items-center justify-center gap-1 ${
+//                               themeClasses.button.primary
+//                             }`}
+//                           >
+//                             {retrying.has(message.id) ? (
+//                               <Loader className="w-3 h-3 animate-spin" />
+//                             ) : (
+//                               <RefreshCw className="w-3 h-3" />
+//                             )}
+//                             Retry
+//                           </button>
+//                         )}
+
+//                         {['pending', 'queued', 'scheduled'].includes(message.status) && (
+//                           <button
+//                             onClick={() => handleCancel(message.id)}
+//                             className={`flex-1 px-2 py-1.5 text-xs rounded flex items-center justify-center gap-1 ${
+//                               themeClasses.button.warning
+//                             }`}
+//                           >
+//                             <XCircle className="w-3 h-3" />
+//                             Cancel
+//                           </button>
+//                         )}
+
+//                         <button
+//                           onClick={() => {
+//                             setMessageToDelete(message.id);
+//                             setShowDeleteModal(true);
+//                           }}
+//                           className={`flex-1 px-2 py-1.5 text-xs rounded flex items-center justify-center gap-1 ${
+//                             themeClasses.button.danger
+//                           }`}
+//                         >
+//                           <Trash2 className="w-3 h-3" />
+//                           Delete
+//                         </button>
+//                       </div>
+//                     </div>
+//                   </motion.div>
+//                 )}
+//               </motion.div>
+//             );
+//           })}
+//         </div>
+//       ) : (
+//         <div className={`rounded-lg border overflow-hidden ${themeClasses.border.light}`}>
+//           <table className="w-full">
+//             <thead className={themeClasses.bg.secondary}>
+//               <tr>
+//                 <th className="p-3 text-left">
+//                   <input
+//                     type="checkbox"
+//                     checked={selectedMessages.size === paginatedMessages.length && paginatedMessages.length > 0}
+//                     onChange={handleSelectAll}
+//                     className="rounded border-gray-300"
+//                   />
+//                 </th>
+//                 <th className="p-3 text-left text-xs font-medium">Recipient</th>
+//                 <th className="p-3 text-left text-xs font-medium">Message</th>
+//                 <th className="p-3 text-left text-xs font-medium">Status</th>
+//                 <th className="p-3 text-left text-xs font-medium">Priority</th>
+//                 <th className="p-3 text-left text-xs font-medium">Created</th>
+//                 <th className="p-3 text-right text-xs font-medium">Cost</th>
+//                 <th className="p-3 text-center text-xs font-medium">Actions</th>
+//               </tr>
+//             </thead>
+//             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+//               {paginatedMessages.map((message) => {
+//                 const statusBadge = getStatusBadge(message.status, theme);
+//                 const priorityBadge = getPriorityBadge(message.priority, theme);
+//                 const StatusIcon = statusBadge.icon;
+//                 const PriorityIcon = priorityBadge.icon;
+
+//                 return (
+//                   <tr
+//                     key={message.id}
+//                     className={`hover:${themeClasses.bg.secondary} ${
+//                       selectedMessages.has(message.id) ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''
+//                     }`}
+//                   >
+//                     <td className="p-3">
+//                       <input
+//                         type="checkbox"
+//                         checked={selectedMessages.has(message.id)}
+//                         onChange={(e) => {
+//                           const newSelected = new Set(selectedMessages);
+//                           if (e.target.checked) {
+//                             newSelected.add(message.id);
+//                           } else {
+//                             newSelected.delete(message.id);
+//                           }
+//                           setSelectedMessages(newSelected);
+//                         }}
+//                         className="rounded border-gray-300"
+//                       />
+//                     </td>
+//                     <td className="p-3">
+//                       <div className="flex items-center gap-2">
+//                         <div className={`p-1.5 rounded-full ${themeClasses.bg.secondary}`}>
+//                           <User className="w-3 h-3" />
+//                         </div>
+//                         <div>
+//                           <div className={`text-sm font-medium ${themeClasses.text.primary}`}>
+//                             {message.recipient_name || 'Unknown'}
+//                           </div>
+//                           <div className={`text-xs ${themeClasses.text.secondary}`}>
+//                             {formatPhoneNumber(message.phone_number)}
+//                           </div>
+//                         </div>
+//                       </div>
+//                     </td>
+//                     <td className="p-3 max-w-xs">
+//                       <p className="text-sm truncate">{formatMessagePreview(message.message)}</p>
+//                     </td>
+//                     <td className="p-3">
+//                       <div className="flex items-center gap-1">
+//                         <StatusIcon className={`w-3 h-3 ${statusBadge.color}`} />
+//                         <span className={`text-xs ${statusBadge.color}`}>
+//                           {statusBadge.label}
+//                         </span>
+//                       </div>
+//                     </td>
+//                     <td className="p-3">
+//                       <div className="flex items-center gap-1">
+//                         <PriorityIcon className={`w-3 h-3 ${priorityBadge.color}`} />
+//                         <span className={`text-xs ${priorityBadge.color}`}>
+//                           {priorityBadge.label}
+//                         </span>
+//                       </div>
+//                     </td>
+//                     <td className="p-3 whitespace-nowrap">
+//                       <div className="text-sm">{formatDate(message.created_at, { dateStyle: 'short' })}</div>
+//                       <div className={`text-xs ${themeClasses.text.secondary}`}>
+//                         {formatTimeAgo(message.created_at)}
+//                       </div>
+//                     </td>
+//                     <td className="p-3 text-right text-sm font-mono">
+//                       {message.cost ? formatCurrency(message.cost) : '-'}
+//                     </td>
+//                     <td className="p-3">
+//                       <div className="flex items-center justify-center gap-1">
+//                         {message.status === 'failed' && (
+//                           <button
+//                             onClick={() => handleRetry(message.id)}
+//                             className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+//                           >
+//                             <RefreshCw className="w-3 h-3" />
+//                           </button>
+//                         )}
+//                         {['pending', 'queued', 'scheduled'].includes(message.status) && (
+//                           <button
+//                             onClick={() => handleCancel(message.id)}
+//                             className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+//                           >
+//                             <XCircle className="w-3 h-3" />
+//                           </button>
+//                         )}
+//                         <button
+//                           onClick={() => {
+//                             setMessageToDelete(message.id);
+//                             setShowDeleteModal(true);
+//                           }}
+//                           className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500"
+//                         >
+//                           <Trash2 className="w-3 h-3" />
+//                         </button>
+//                       </div>
+//                     </td>
+//                   </tr>
+//                 );
+//               })}
+//             </tbody>
+//           </table>
+//         </div>
+//       )}
+
+//       {/* Pagination */}
+//       {totalPages > 1 && (
+//         <div className="flex items-center justify-between">
+//           <p className={`text-sm ${themeClasses.text.secondary}`}>
+//             Page {currentPage} of {totalPages}
+//           </p>
+//           <div className="flex gap-2">
+//             <button
+//               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+//               disabled={currentPage === 1}
+//               className={`px-3 py-1 rounded ${
+//                 currentPage === 1 ? 'opacity-50 cursor-not-allowed' : themeClasses.button.secondary
+//               }`}
+//             >
+//               <ChevronLeft className="w-4 h-4" />
+//             </button>
+//             <button
+//               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+//               disabled={currentPage === totalPages}
+//               className={`px-3 py-1 rounded ${
+//                 currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : themeClasses.button.secondary
+//               }`}
+//             >
+//               <ChevronRight className="w-4 h-4" />
+//             </button>
+//           </div>
+//         </div>
+//       )}
+
+//       {/* Load More */}
+//       {pagination.next && (
+//         <button
+//           onClick={onLoadMore}
+//           className={`w-full py-2 rounded-lg border ${themeClasses.button.secondary}`}
+//         >
+//           Load More
+//         </button>
+//       )}
+
+//       {/* Delete Confirmation Modal */}
+//       <AnimatePresence>
+//         {showDeleteModal && (
+//           <ConfirmationModal
+//             isOpen={showDeleteModal}
+//             onClose={() => {
+//               setShowDeleteModal(false);
+//               setMessageToDelete(null);
+//             }}
+//             onConfirm={handleDelete}
+//             title="Delete Message"
+//             message="Are you sure you want to delete this message? This action cannot be undone."
+//             type="danger"
+//             theme={theme}
+//           />
+//         )}
+//       </AnimatePresence>
+//     </div>
+//   );
+// };
+
+// export default MessageManager;
+
+
+
+
+
+
+
+
+
+
+import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  MessageSquare, Send, Clock, CheckCircle, XCircle,
-  AlertCircle, Filter, Search, Download, Trash2,
-  RefreshCw, Eye, Calendar, Phone, User, Loader,
-  ChevronDown, ChevronUp, BarChart3, Mail
+  MessageSquare, Search, Filter, Download, RefreshCw,
+  ChevronDown, ChevronUp, User, Clock, CheckCircle,
+  XCircle, AlertCircle, Loader, Eye, Trash2,
+  Send, Calendar, Phone, DollarSign, Activity,
+  Archive, Flag, Grid, List, Copy, Edit,
+  ChevronLeft, ChevronRight, FileText
 } from 'lucide-react';
-import api from '../../../api';
-import { EnhancedSelect, DateRangePicker, ConfirmationModal } from '../../ServiceManagement/Shared/components'
+import { EnhancedSelect, ConfirmationModal, EmptyState, getThemeClasses } from '../../../components/ServiceManagement/Shared/components';
+import {
+  formatPhoneNumber, formatDate, formatTimeAgo,
+  formatCurrency, getStatusBadge, getPriorityBadge,
+  formatMessagePreview, formatMessageParts
+} from '../utils/formatters';
 
-
-const MessageManager = ({ messages, loading, theme, refreshData }) => {
-  const [selectedMessage, setSelectedMessage] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null });
+const MessageManager = ({
+  messages = [],
+  gateways = [],
+  templates = [],
+  pagination = {},
+  loading,
+  theme,
+  themeClasses,
+  onRefresh,
+  onLoadMore,
+  onSendMessage,
+  onRetry,
+  onCancel,
+  onDelete,
+  viewMode = 'grid',
+  searchTerm = '',
+  statusFilter = 'all',
+  dateRange = { start: null, end: null }
+}) => {
   const [expandedMessage, setExpandedMessage] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState(null);
-  const [bulkAction, setBulkAction] = useState(null);
   const [selectedMessages, setSelectedMessages] = useState(new Set());
+  const [retrying, setRetrying] = useState(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Available statuses
-  const statusOptions = useMemo(() => [
-    { value: 'all', label: 'All Statuses', color: 'gray' },
-    { value: 'pending', label: 'Pending', color: 'yellow' },
-    { value: 'sent', label: 'Sent', color: 'blue' },
-    { value: 'delivered', label: 'Delivered', color: 'green' },
-    { value: 'failed', label: 'Failed', color: 'red' },
-    { value: 'cancelled', label: 'Cancelled', color: 'gray' }
-  ], []);
-
-  // Filter messages with optimized algorithm
+  // Filter messages
   const filteredMessages = useMemo(() => {
-    const startTime = performance.now();
-    
-    let result = messages;
-    
-    // Apply date filter first (most selective)
-    if (dateRange.startDate || dateRange.endDate) {
-      const start = dateRange.startDate ? new Date(dateRange.startDate) : null;
-      const end = dateRange.endDate ? new Date(dateRange.endDate) : null;
-      
-      result = result.filter(message => {
-        const messageDate = new Date(message.created_at);
-        if (start && messageDate < start) return false;
-        if (end && messageDate > end) return false;
-        return true;
-      });
-    }
-    
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      result = result.filter(message => message.status === statusFilter);
-    }
-    
-    // Apply search filter (least selective, applied last)
-    if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase();
-      result = result.filter(message => 
-        message.phone_number.toLowerCase().includes(searchLower) ||
-        message.recipient_name?.toLowerCase().includes(searchLower) ||
-        message.message.toLowerCase().includes(searchLower)
+    const messagesArray = Array.isArray(messages) ? messages : [];
+    let filtered = messagesArray;
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(msg =>
+        msg?.phone_number?.toLowerCase().includes(term) ||
+        msg?.recipient_name?.toLowerCase().includes(term) ||
+        msg?.message?.toLowerCase().includes(term)
       );
     }
-    
-    const endTime = performance.now();
-    console.log(`Filtered ${messages.length} messages in ${endTime - startTime}ms`);
-    
-    return result;
+
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(msg => msg?.status === statusFilter);
+    }
+
+    if (dateRange.start) {
+      const start = new Date(dateRange.start);
+      filtered = filtered.filter(msg => msg?.created_at && new Date(msg.created_at) >= start);
+    }
+    if (dateRange.end) {
+      const end = new Date(dateRange.end);
+      end.setHours(23, 59, 59);
+      filtered = filtered.filter(msg => msg?.created_at && new Date(msg.created_at) <= end);
+    }
+
+    return filtered;
   }, [messages, searchTerm, statusFilter, dateRange]);
 
-  // Get status badge
-  const getStatusBadge = useCallback((status) => {
-    const config = statusOptions.find(s => s.value === status) || statusOptions[0];
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs bg-${config.color}-100 text-${config.color}-800`}>
-        {config.label}
-      </span>
-    );
-  }, [statusOptions]);
-
-  // Format phone number
-  const formatPhone = useCallback((phone) => {
-    if (!phone) return 'N/A';
-    // Format Kenyan numbers
-    if (phone.startsWith('254')) {
-      return `+${phone}`;
-    }
-    return phone;
-  }, []);
-
-  // Format date
-  const formatDate = useCallback((dateString) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-  }, []);
-
-  // Handle bulk actions
-  const handleBulkAction = useCallback(async (action) => {
-    if (selectedMessages.size === 0) return;
+  // Statistics
+  const stats = useMemo(() => {
+    const messagesArray = Array.isArray(filteredMessages) ? filteredMessages : [];
+    const total = messagesArray.length;
+    const delivered = messagesArray.filter(m => m?.status === 'delivered').length;
+    const failed = messagesArray.filter(m => m?.status === 'failed').length;
+    const pending = messagesArray.filter(m => ['pending', 'queued', 'sending'].includes(m?.status)).length;
+    const totalCost = messagesArray.reduce((sum, m) => sum + (parseFloat(m?.cost) || 0), 0);
     
-    try {
-      const messageIds = Array.from(selectedMessages);
-      
-      switch (action) {
-        case 'retry':
-          await Promise.all(
-            messageIds.map(id => 
-              api.post(`/api/sms/messages/${id}/retry/`)
-            )
-          );
-          break;
-          
-        case 'cancel':
-          await Promise.all(
-            messageIds.map(id => 
-              api.post(`/api/sms/messages/${id}/cancel/`)
-            )
-          );
-          break;
-          
-        case 'delete':
-          await Promise.all(
-            messageIds.map(id => 
-              api.delete(`/api/sms/messages/${id}/`)
-            )
-          );
-          break;
-      }
-      
-      setSelectedMessages(new Set());
-      refreshData();
-    } catch (error) {
-      console.error('Bulk action failed:', error);
-    }
-  }, [selectedMessages, refreshData]);
+    return { total, delivered, failed, pending, totalCost };
+  }, [filteredMessages]);
 
-  // Export messages
-  const exportMessages = useCallback(async () => {
+  // Pagination
+  const paginatedMessages = useMemo(() => {
+    const messagesArray = Array.isArray(filteredMessages) ? filteredMessages : [];
+    const pageSize = pagination?.pageSize || 50;
+    const start = (currentPage - 1) * pageSize;
+    return messagesArray.slice(start, start + pageSize);
+  }, [filteredMessages, currentPage, pagination?.pageSize]);
+
+  const totalPages = Math.ceil((filteredMessages?.length || 0) / (pagination?.pageSize || 50));
+
+  const handleRetry = async (messageId) => {
+    if (!messageId) return;
+    setRetrying(prev => new Set(prev).add(messageId));
     try {
-      const response = await api.get('/api/sms/messages/export/', {
-        responseType: 'blob'
-      });
-      
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `sms_messages_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      await onRetry(messageId);
+      onRefresh();
     } catch (error) {
-      console.error('Export failed:', error);
+      console.error('Retry failed:', error);
+    } finally {
+      setRetrying(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(messageId);
+        return newSet;
+      });
     }
-  }, []);
+  };
+
+  const handleCancel = async (messageId) => {
+    if (!messageId) return;
+    try {
+      await onCancel(messageId);
+      onRefresh();
+    } catch (error) {
+      console.error('Cancel failed:', error);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!messageToDelete) return;
+    try {
+      await onDelete(messageToDelete);
+      onRefresh();
+      setShowDeleteModal(false);
+      setMessageToDelete(null);
+    } catch (error) {
+      console.error('Delete failed:', error);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedMessages.size === paginatedMessages.length) {
+      setSelectedMessages(new Set());
+    } else {
+      setSelectedMessages(new Set(paginatedMessages.map(m => m?.id).filter(Boolean)));
+    }
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader className="w-8 h-8 animate-spin text-indigo-500" />
+        <span className={`ml-3 ${themeClasses.text.secondary}`}>Loading messages...</span>
       </div>
     );
   }
 
+  if (!filteredMessages || filteredMessages.length === 0) {
+    return (
+      <EmptyState
+        icon={MessageSquare}
+        title="No messages found"
+        description={searchTerm || statusFilter !== 'all' || dateRange.start
+          ? "No messages match your filters"
+          : "Send your first SMS message to get started"
+        }
+        actionLabel="Send Message"
+        onAction={() => { }}
+        theme={theme}
+      />
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-xl font-semibold flex items-center gap-2">
-            <MessageSquare className="w-6 h-6 text-green-500" />
-            SMS Message Management
-          </h2>
-          <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-            View and manage all sent SMS messages
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <button
-            onClick={exportMessages}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-              theme === 'dark' 
-                ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' 
-                : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300'
-            }`}
-          >
-            <Download className="w-4 h-4" />
-            Export CSV
-          </button>
-          
-          <button
-            onClick={refreshData}
-            disabled={loading}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-              theme === 'dark' 
-                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                : 'bg-blue-500 hover:bg-blue-600 text-white'
-            }`}
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      {/* Filters and Bulk Actions */}
-      <div className={`p-4 rounded-lg border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="relative">
-            <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-              theme === 'dark' ? 'text-gray-400' : 'text-gray-400'
-            }`} size={16} />
-            <input
-              type="text"
-              placeholder="Search messages..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`pl-10 pr-4 py-2 border rounded-lg w-full ${
-                theme === 'dark' 
-                  ? 'bg-gray-700 border-gray-600 text-white' 
-                  : 'bg-white border-gray-300 text-gray-800'
-              }`}
-            />
-          </div>
-          
-          <EnhancedSelect
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={statusOptions}
-            theme={theme}
-          />
-          
-          <DateRangePicker
-            startDate={dateRange.startDate}
-            endDate={dateRange.endDate}
-            onChange={setDateRange}
-            theme={theme}
-            placeholder="Date range"
-          />
-          
-          {selectedMessages.size > 0 && (
-            <EnhancedSelect
-              value={bulkAction}
-              onChange={(value) => {
-                setBulkAction(value);
-                handleBulkAction(value);
-              }}
-              options={[
-                { value: 'retry', label: `Retry (${selectedMessages.size})` },
-                { value: 'cancel', label: `Cancel (${selectedMessages.size})` },
-                { value: 'delete', label: `Delete (${selectedMessages.size})` }
-              ]}
-              theme={theme}
-              placeholder="Bulk actions..."
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Stats Bar */}
+    <div className="space-y-4">
+      {/* Statistics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className={`p-3 rounded-lg text-center ${
-          theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <div className="text-2xl font-bold">{filteredMessages.length}</div>
-          <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-            Total Messages
-          </div>
+        <div className={`p-3 rounded-lg ${themeClasses.bg.secondary}`}>
+          <p className={`text-xs ${themeClasses.text.secondary}`}>Total</p>
+          <p className={`text-xl font-bold ${themeClasses.text.primary}`}>{stats.total}</p>
         </div>
-        
-        <div className={`p-3 rounded-lg text-center ${
-          theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <div className="text-2xl font-bold text-green-500">
-            {filteredMessages.filter(m => m.status === 'delivered').length}
-          </div>
-          <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-            Delivered
-          </div>
+        <div className={`p-3 rounded-lg ${themeClasses.bg.secondary}`}>
+          <p className={`text-xs ${themeClasses.text.secondary}`}>Delivered</p>
+          <p className={`text-xl font-bold text-green-500`}>{stats.delivered}</p>
         </div>
-        
-        <div className={`p-3 rounded-lg text-center ${
-          theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <div className="text-2xl font-bold text-red-500">
-            {filteredMessages.filter(m => m.status === 'failed').length}
-          </div>
-          <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-            Failed
-          </div>
+        <div className={`p-3 rounded-lg ${themeClasses.bg.secondary}`}>
+          <p className={`text-xs ${themeClasses.text.secondary}`}>Failed</p>
+          <p className={`text-xl font-bold text-red-500`}>{stats.failed}</p>
         </div>
-        
-        <div className={`p-3 rounded-lg text-center ${
-          theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <div className="text-2xl font-bold text-yellow-500">
-            {filteredMessages.filter(m => m.status === 'pending').length}
-          </div>
-          <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-            Pending
-          </div>
+        <div className={`p-3 rounded-lg ${themeClasses.bg.secondary}`}>
+          <p className={`text-xs ${themeClasses.text.secondary}`}>Cost</p>
+          <p className={`text-xl font-bold ${themeClasses.text.primary}`}>{formatCurrency(stats.totalCost)}</p>
         </div>
       </div>
 
-      {/* Messages Table */}
-      <div className={`rounded-lg border overflow-hidden ${
-        theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
-      }`}>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y">
-            <thead className={`${
-              theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
-            }`}>
-              <tr>
-                <th className="px-4 py-3 text-left">
-                  <input
-                    type="checkbox"
-                    checked={selectedMessages.size === filteredMessages.length && filteredMessages.length > 0}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedMessages(new Set(filteredMessages.map(m => m.id)));
-                      } else {
-                        setSelectedMessages(new Set());
-                      }
-                    }}
-                    className={`rounded ${
-                      theme === 'dark' 
-                        ? 'bg-gray-700 border-gray-600' 
-                        : 'bg-white border-gray-300'
-                    }`}
-                  />
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Recipient
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Message
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Created
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Cost
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
+      {/* Bulk Actions */}
+      {selectedMessages.size > 0 && (
+        <div className={`p-4 rounded-lg border ${themeClasses.bg.info} ${themeClasses.border.info}`}>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <span className={themeClasses.text.primary}>
+              {selectedMessages.size} messages selected
+            </span>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => Promise.all(Array.from(selectedMessages).map(id => handleRetry(id)))}
+                className={`px-3 py-1.5 text-sm rounded flex items-center gap-1 ${themeClasses.button.primary}`}
+              >
+                <RefreshCw className="w-3 h-3" />
+                Retry Selected
+              </button>
+              <button
+                onClick={() => {
+                  Array.from(selectedMessages).forEach(id => handleCancel(id));
+                  setSelectedMessages(new Set());
+                }}
+                className={`px-3 py-1.5 text-sm rounded flex items-center gap-1 ${themeClasses.button.warning}`}
+              >
+                <XCircle className="w-3 h-3" />
+                Cancel Selected
+              </button>
+              <button
+                onClick={() => setSelectedMessages(new Set())}
+                className={`px-3 py-1.5 text-sm rounded ${themeClasses.button.secondary}`}
+              >
+                Clear Selection
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Messages Grid/List */}
+      {viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {paginatedMessages.map((message) => {
+            if (!message) return null;
             
-            <tbody className={`divide-y ${
-              theme === 'dark' ? 'divide-gray-700' : 'divide-gray-200'
-            }`}>
-              {filteredMessages.slice(0, 50).map((message) => (
-                <tr 
-                  key={message.id}
-                  className={`hover:${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} ${
-                    selectedMessages.has(message.id) ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                  }`}
-                >
-                  <td className="px-4 py-3">
+            const statusBadge = getStatusBadge(message.status, theme);
+            const priorityBadge = getPriorityBadge(message.priority, theme);
+            const StatusIcon = statusBadge.icon;
+            const PriorityIcon = priorityBadge.icon;
+
+            return (
+              <motion.div
+                key={message.id || Math.random()}
+                layout
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className={`p-4 rounded-lg border transition-all hover:shadow-lg ${
+                  themeClasses.bg.card
+                } ${themeClasses.border.light} ${
+                  expandedMessage === message.id ? 'ring-2 ring-indigo-500' : ''
+                } ${selectedMessages.has(message.id) ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''}`}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2">
                     <input
                       type="checkbox"
                       checked={selectedMessages.has(message.id)}
                       onChange={(e) => {
+                        if (!message.id) return;
                         const newSelected = new Set(selectedMessages);
                         if (e.target.checked) {
                           newSelected.add(message.id);
@@ -377,221 +883,354 @@ const MessageManager = ({ messages, loading, theme, refreshData }) => {
                         }
                         setSelectedMessages(newSelected);
                       }}
-                      className={`rounded ${
-                        theme === 'dark' 
-                          ? 'bg-gray-700 border-gray-600' 
-                          : 'bg-white border-gray-300'
-                      }`}
+                      className="rounded border-gray-300"
                     />
-                  </td>
-                  
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-gray-400" />
-                      <div>
-                        <div className="font-medium">{message.recipient_name || 'Unknown'}</div>
-                        <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                          {formatPhone(message.phone_number)}
-                        </div>
-                      </div>
+                    <div className={`p-2 rounded-lg ${themeClasses.bg.secondary}`}>
+                      <User className="w-4 h-4" />
                     </div>
-                  </td>
-                  
-                  <td className="px-4 py-3 max-w-xs">
-                    <div className="truncate">{message.message}</div>
-                    <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {message.message_parts} part(s) • {message.character_count} chars
+                    <div>
+                      <h3 className={`font-medium ${themeClasses.text.primary}`}>
+                        {message.recipient_name || 'Unknown'}
+                      </h3>
+                      <p className={`text-xs ${themeClasses.text.secondary}`}>
+                        {formatPhoneNumber(message.phone_number)}
+                      </p>
                     </div>
-                  </td>
-                  
-                  <td className="px-4 py-3">
-                    {getStatusBadge(message.status)}
-                    {message.gateway_name && (
-                      <div className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                        via {message.gateway_name}
-                      </div>
-                    )}
-                  </td>
-                  
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <div>{formatDate(message.created_at)}</div>
-                    {message.sent_at && (
-                      <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                        Sent: {formatDate(message.sent_at)}
-                      </div>
-                    )}
-                  </td>
-                  
-                  <td className="px-4 py-3">
-                    {message.cost ? (
-                      <div>
-                        <div>{message.currency} {parseFloat(message.cost).toFixed(4)}</div>
-                        <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                          Est: {message.currency} {message.estimated_cost?.toFixed(4)}
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setExpandedMessage(expandedMessage === message.id ? null : message.id)}
+                      className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      {expandedMessage === message.id ? (
+                        <ChevronUp className="w-4 h-4" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div className={`mb-3 p-2 rounded text-sm ${themeClasses.bg.secondary}`}>
+                  <p className="line-clamp-2">{message.message || ''}</p>
+                </div>
+
+                <div className="flex items-center justify-between text-xs mb-2">
+                  <div className="flex items-center gap-2">
+                    <StatusIcon className={`w-3 h-3 ${statusBadge.color}`} />
+                    <span className={statusBadge.color}>{statusBadge.label}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <PriorityIcon className={`w-3 h-3 ${priorityBadge.color}`} />
+                    <span className={priorityBadge.color}>{priorityBadge.label}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-xs">
+                  <span className={themeClasses.text.secondary}>
+                    {message.created_at ? formatTimeAgo(message.created_at) : 'Unknown'}
+                  </span>
+                  {message.cost && (
+                    <span className={`font-mono ${themeClasses.text.primary}`}>
+                      {formatCurrency(message.cost)}
+                    </span>
+                  )}
+                </div>
+
+                {expandedMessage === message.id && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className={`mt-4 pt-4 border-t ${themeClasses.border.light}`}
+                  >
+                    <div className="space-y-2 text-sm">
+                      {message.gateway_name && (
+                        <div className="flex justify-between">
+                          <span className={themeClasses.text.secondary}>Gateway:</span>
+                          <span className={themeClasses.text.primary}>{message.gateway_name}</span>
                         </div>
+                      )}
+
+                      {message.template_name && (
+                        <div className="flex justify-between">
+                          <span className={themeClasses.text.secondary}>Template:</span>
+                          <span className={themeClasses.text.primary}>{message.template_name}</span>
+                        </div>
+                      )}
+
+                      <div className="flex justify-between">
+                        <span className={themeClasses.text.secondary}>Parts:</span>
+                        <span className={themeClasses.text.primary}>
+                          {formatMessageParts(message.message_parts, message.character_count)}
+                        </span>
                       </div>
-                    ) : (
-                      <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                        Not calculated
-                      </span>
-                    )}
-                  </td>
-                  
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => {
-                          setExpandedMessage(expandedMessage === message.id ? null : message.id);
-                        }}
-                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-                        title="View details"
-                      >
-                        {expandedMessage === message.id ? (
-                          <ChevronUp className="w-4 h-4" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4" />
+
+                      {message.sent_at && (
+                        <div className="flex justify-between">
+                          <span className={themeClasses.text.secondary}>Sent:</span>
+                          <span className={themeClasses.text.primary}>{formatDate(message.sent_at)}</span>
+                        </div>
+                      )}
+
+                      {message.delivered_at && (
+                        <div className="flex justify-between">
+                          <span className={themeClasses.text.secondary}>Delivered:</span>
+                          <span className={themeClasses.text.primary}>{formatDate(message.delivered_at)}</span>
+                        </div>
+                      )}
+
+                      {message.reference_id && (
+                        <div className="flex justify-between">
+                          <span className={themeClasses.text.secondary}>Reference:</span>
+                          <span className={`font-mono text-xs ${themeClasses.text.primary}`}>
+                            {message.reference_id}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex gap-2 pt-2">
+                        {message.status === 'failed' && (
+                          <button
+                            onClick={() => handleRetry(message.id)}
+                            disabled={retrying.has(message.id)}
+                            className={`flex-1 px-2 py-1.5 text-xs rounded flex items-center justify-center gap-1 ${
+                              themeClasses.button.primary
+                            }`}
+                          >
+                            {retrying.has(message.id) ? (
+                              <Loader className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <RefreshCw className="w-3 h-3" />
+                            )}
+                            Retry
+                          </button>
                         )}
-                      </button>
-                      
-                      {message.status === 'failed' && (
+
+                        {['pending', 'queued', 'scheduled'].includes(message.status) && (
+                          <button
+                            onClick={() => handleCancel(message.id)}
+                            className={`flex-1 px-2 py-1.5 text-xs rounded flex items-center justify-center gap-1 ${
+                              themeClasses.button.warning
+                            }`}
+                          >
+                            <XCircle className="w-3 h-3" />
+                            Cancel
+                          </button>
+                        )}
+
                         <button
-                          onClick={() => api.post(`/api/sms/messages/${message.id}/retry/`)}
-                          className="p-1 hover:bg-green-100 dark:hover:bg-green-900 rounded text-green-600"
-                          title="Retry"
+                          onClick={() => {
+                            setMessageToDelete(message.id);
+                            setShowDeleteModal(true);
+                          }}
+                          className={`flex-1 px-2 py-1.5 text-xs rounded flex items-center justify-center gap-1 ${
+                            themeClasses.button.danger
+                          }`}
                         >
-                          <RefreshCw className="w-4 h-4" />
+                          <Trash2 className="w-3 h-3" />
+                          Delete
                         </button>
-                      )}
-                      
-                      {message.status === 'pending' && (
-                        <button
-                          onClick={() => api.post(`/api/sms/messages/${message.id}/cancel/`)}
-                          className="p-1 hover:bg-red-100 dark:hover:bg-red-900 rounded text-red-600"
-                          title="Cancel"
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </button>
-                      )}
+                      </div>
                     </div>
-                  </td>
-                </tr>
-              ))}
+                  </motion.div>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className={`rounded-lg border overflow-hidden ${themeClasses.border.light}`}>
+          <table className="w-full">
+            <thead className={themeClasses.bg.secondary}>
+              <tr>
+                <th className="p-3 text-left">
+                  <input
+                    type="checkbox"
+                    checked={selectedMessages.size === paginatedMessages.length && paginatedMessages.length > 0}
+                    onChange={handleSelectAll}
+                    className="rounded border-gray-300"
+                  />
+                </th>
+                <th className="p-3 text-left text-xs font-medium">Recipient</th>
+                <th className="p-3 text-left text-xs font-medium">Message</th>
+                <th className="p-3 text-left text-xs font-medium">Status</th>
+                <th className="p-3 text-left text-xs font-medium">Priority</th>
+                <th className="p-3 text-left text-xs font-medium">Created</th>
+                <th className="p-3 text-right text-xs font-medium">Cost</th>
+                <th className="p-3 text-center text-xs font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              {paginatedMessages.map((message) => {
+                if (!message) return null;
+                
+                const statusBadge = getStatusBadge(message.status, theme);
+                const priorityBadge = getPriorityBadge(message.priority, theme);
+                const StatusIcon = statusBadge.icon;
+                const PriorityIcon = priorityBadge.icon;
+
+                return (
+                  <tr
+                    key={message.id || Math.random()}
+                    className={`hover:${themeClasses.bg.secondary} ${
+                      selectedMessages.has(message.id) ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''
+                    }`}
+                  >
+                    <td className="p-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedMessages.has(message.id)}
+                        onChange={(e) => {
+                          if (!message.id) return;
+                          const newSelected = new Set(selectedMessages);
+                          if (e.target.checked) {
+                            newSelected.add(message.id);
+                          } else {
+                            newSelected.delete(message.id);
+                          }
+                          setSelectedMessages(newSelected);
+                        }}
+                        className="rounded border-gray-300"
+                      />
+                    </td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        <div className={`p-1.5 rounded-full ${themeClasses.bg.secondary}`}>
+                          <User className="w-3 h-3" />
+                        </div>
+                        <div>
+                          <div className={`text-sm font-medium ${themeClasses.text.primary}`}>
+                            {message.recipient_name || 'Unknown'}
+                          </div>
+                          <div className={`text-xs ${themeClasses.text.secondary}`}>
+                            {formatPhoneNumber(message.phone_number)}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-3 max-w-xs">
+                      <p className="text-sm truncate">{formatMessagePreview(message.message)}</p>
+                    </td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-1">
+                        <StatusIcon className={`w-3 h-3 ${statusBadge.color}`} />
+                        <span className={`text-xs ${statusBadge.color}`}>
+                          {statusBadge.label}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-1">
+                        <PriorityIcon className={`w-3 h-3 ${priorityBadge.color}`} />
+                        <span className={`text-xs ${priorityBadge.color}`}>
+                          {priorityBadge.label}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-3 whitespace-nowrap">
+                      <div className="text-sm">{message.created_at ? formatDate(message.created_at, { dateStyle: 'short' }) : 'Unknown'}</div>
+                      <div className={`text-xs ${themeClasses.text.secondary}`}>
+                        {message.created_at ? formatTimeAgo(message.created_at) : ''}
+                      </div>
+                    </td>
+                    <td className="p-3 text-right text-sm font-mono">
+                      {message.cost ? formatCurrency(message.cost) : '-'}
+                    </td>
+                    <td className="p-3">
+                      <div className="flex items-center justify-center gap-1">
+                        {message.status === 'failed' && (
+                          <button
+                            onClick={() => handleRetry(message.id)}
+                            className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            <RefreshCw className="w-3 h-3" />
+                          </button>
+                        )}
+                        {['pending', 'queued', 'scheduled'].includes(message.status) && (
+                          <button
+                            onClick={() => handleCancel(message.id)}
+                            className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            <XCircle className="w-3 h-3" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => {
+                            setMessageToDelete(message.id);
+                            setShowDeleteModal(true);
+                          }}
+                          className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
-        
-        {/* Expanded Message Details */}
-        {expandedMessage && (
-          <div className={`p-4 border-t ${
-            theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
-          }`}>
-            {(() => {
-              const message = filteredMessages.find(m => m.id === expandedMessage);
-              if (!message) return null;
-              
-              return (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="font-medium mb-2">Message Details</h4>
-                      <pre className={`text-sm p-3 rounded whitespace-pre-wrap ${
-                        theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
-                      }`}>
-                        {message.message}
-                      </pre>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-medium mb-2">Delivery Information</h4>
-                      <div className="space-y-2">
-                        {message.gateway_response && (
-                          <div>
-                            <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                              Gateway Response:
-                            </span>
-                            <pre className={`text-xs p-2 rounded mt-1 ${
-                              theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
-                            }`}>
-                              {JSON.stringify(message.gateway_response, null, 2)}
-                            </pre>
-                          </div>
-                        )}
-                        
-                        {message.status_history && message.status_history.length > 0 && (
-                          <div>
-                            <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                              Status History:
-                            </span>
-                            <div className="space-y-1 mt-1">
-                              {message.status_history.slice(-5).map((history, idx) => (
-                                <div key={idx} className="flex items-center gap-2 text-xs">
-                                  <div className={`w-2 h-2 rounded-full ${
-                                    history.new_status === 'delivered' ? 'bg-green-500' :
-                                    history.new_status === 'failed' ? 'bg-red-500' :
-                                    'bg-yellow-500'
-                                  }`} />
-                                  <span>{history.new_status}</span>
-                                  <span className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}>
-                                    at {new Date(history.timestamp).toLocaleTimeString()}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-          Showing {Math.min(filteredMessages.length, 50)} of {filteredMessages.length} messages
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className={`text-sm ${themeClasses.text.secondary}`}>
+            Page {currentPage} of {totalPages}
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 rounded ${
+                currentPage === 1 ? 'opacity-50 cursor-not-allowed' : themeClasses.button.secondary
+              }`}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className={`px-3 py-1 rounded ${
+                currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : themeClasses.button.secondary
+              }`}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-        
-        <div className="flex items-center gap-2">
-          <button className={`px-3 py-1 rounded ${
-            theme === 'dark' 
-              ? 'bg-gray-700 hover:bg-gray-600' 
-              : 'bg-gray-100 hover:bg-gray-200'
-          }`}>
-            Previous
-          </button>
-          <span className="px-3 py-1">1</span>
-          <button className={`px-3 py-1 rounded ${
-            theme === 'dark' 
-              ? 'bg-gray-700 hover:bg-gray-600' 
-              : 'bg-gray-100 hover:bg-gray-200'
-          }`}>
-            Next
-          </button>
-        </div>
-      </div>
+      )}
+
+      {/* Load More */}
+      {pagination?.next && (
+        <button
+          onClick={onLoadMore}
+          className={`w-full py-2 rounded-lg border ${themeClasses.button.secondary}`}
+        >
+          Load More
+        </button>
+      )}
 
       {/* Delete Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={showDeleteModal}
-        onClose={() => {
-          setShowDeleteModal(false);
-          setMessageToDelete(null);
-        }}
-        onConfirm={() => {
-          // Handle delete
-          setShowDeleteModal(false);
-        }}
-        title="Delete Message"
-        message="Are you sure you want to delete this message? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-        type="danger"
-        theme={theme}
-      />
+      <AnimatePresence>
+        {showDeleteModal && (
+          <ConfirmationModal
+            isOpen={showDeleteModal}
+            onClose={() => {
+              setShowDeleteModal(false);
+              setMessageToDelete(null);
+            }}
+            onConfirm={handleDelete}
+            title="Delete Message"
+            message="Are you sure you want to delete this message? This action cannot be undone."
+            type="danger"
+            theme={theme}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

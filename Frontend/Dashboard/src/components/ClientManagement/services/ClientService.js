@@ -1,136 +1,285 @@
 
+
+// /**
+//  * Client API Service
+//  * Handles all client-related API calls to /api/user_management/
+//  */
 // import api from "../../../api"
 
 // class ClientService {
-//   // Get all clients with filters
-//   async getClients(filters, pagination) {
-//     const params = this.buildQueryParams(filters, pagination);
-//     return await api.get('/api/user_management/clients/', { params });
+//   constructor() {
+//     this.baseURL = '/api/user_management';
 //   }
 
-//   // Get single client by ID
+//   /**
+//    * Build query parameters from filters
+//    */
+//   buildQueryParams(filters = {}, pagination = {}) {
+//     const params = { ...filters, ...pagination };
+    
+//     // Clean up filter values
+//     Object.keys(params).forEach(key => {
+//       const value = params[key];
+      
+//       // Remove 'all' values, empty strings, null, undefined
+//       if (value === 'all' || value === '' || value == null) {
+//         delete params[key];
+//         return;
+//       }
+      
+//       // Convert boolean strings
+//       if (value === 'true') params[key] = true;
+//       if (value === 'false') params[key] = false;
+      
+//       // Handle date formatting
+//       if (value instanceof Date) {
+//         params[key] = value.toISOString().split('T')[0];
+//       }
+//     });
+    
+//     return params;
+//   }
+
+//   /**
+//    * Get all clients with filters and pagination
+//    */
+//   async getClients(filters = {}, pagination = {}) {
+//     const params = this.buildQueryParams(filters, {
+//       page: pagination.page || 1,
+//       page_size: pagination.pageSize || 20
+//     });
+    
+//     const response = await api.get(`${this.baseURL}/clients/`, { params });
+//     return response.data;
+//   }
+
+//   /**
+//    * Get single client by ID
+//    */
 //   async getClientById(id) {
-//     return await api.get(`/api/user_management/clients/${id}/`);
+//     const response = await api.get(`${this.baseURL}/clients/${id}/`);
+//     return response.data;
 //   }
 
-//   // Get client analytics
-//   async getClientAnalytics(id) {
-//     return await api.get(`/api/user_management/clients/${id}/analytics/`);
+//   /**
+//    * Get client analytics
+//    */
+//   async getClientAnalytics(id, days = 30) {
+//     const response = await api.get(`${this.baseURL}/clients/${id}/analytics/`, {
+//       params: { days }
+//     });
+//     return response.data;
 //   }
 
-//   // Create PPPoE client
+//   /**
+//    * Create PPPoE client
+//    */
 //   async createPPPoEClient(data) {
-//     return await api.post('/api/user_management/clients/pppoe/create/', data);
+//     const response = await api.post(`${this.baseURL}/clients/pppoe/create/`, {
+//       name: data.name,
+//       phone_number: data.phone_number,
+//       client_type: data.client_type || 'residential',
+//       location: data.location,
+//       send_sms: data.send_sms !== false,
+//       assign_marketer: data.assign_marketer || false,
+//       referral_code: data.referral_code
+//     });
+//     return response.data;
 //   }
 
-//   // Create Hotspot client
+//   /**
+//    * Create Hotspot client
+//    */
 //   async createHotspotClient(data) {
-//     return await api.post('/api/user_management/clients/hotspot/create/', data);
+//     const response = await api.post(`${this.baseURL}/clients/hotspot/create/`, {
+//       phone_number: data.phone_number,
+//       client_type: data.client_type || 'residential',
+//       send_welcome_sms: data.send_welcome_sms !== false
+//     });
+//     return response.data;
 //   }
 
-//   // Update client tier
-//   async updateClientTier(id, data) {
-//     return await api.post(`/api/user_management/clients/${id}/update-tier/`, data);
+//   /**
+//    * Update client tier
+//    */
+//   async updateClientTier(id, tier, reason = '', sendNotification = true) {
+//     const response = await api.post(`${this.baseURL}/clients/${id}/update-tier/`, {
+//       tier,
+//       reason,
+//       send_notification: sendNotification
+//     });
+//     return response.data;
 //   }
 
-//   // Update client metrics
-//   async updateClientMetrics(id, metricsData) {
-//     return await api.post(`/api/user_management/clients/${id}/update-metrics/`, metricsData);
+//   /**
+//    * Update client metrics (force recalculation)
+//    */
+//   async updateClientMetrics(id) {
+//     const response = await api.post(`${this.baseURL}/clients/${id}/update-metrics/`);
+//     return response.data;
 //   }
 
-//   // Update client status
+//   /**
+//    * Update client status
+//    */
 //   async updateClientStatus(id, status, reason = '') {
-//     return await api.post(`/api/user_management/clients/${id}/update-status/`, {
+//     const response = await api.post(`${this.baseURL}/clients/${id}/update-status/`, {
 //       status,
 //       reason
 //     });
+//     return response.data;
 //   }
 
-//   // Send message to client
-//   async sendClientMessage(id, message) {
-//     return await api.post(`/api/user_management/clients/${id}/send-message/`, {
-//       message,
-//       channel: 'sms'
+//   /**
+//    * Send message to client
+//    */
+//   async sendClientMessage(id, messageData) {
+//     const response = await api.post(`${this.baseURL}/clients/${id}/send-message/`, {
+//       message: messageData.message,
+//       channel: messageData.channel || 'sms',
+//       priority: messageData.priority || 'normal'
 //     });
+//     return response.data;
 //   }
 
-//   // Delete client
+//   /**
+//    * Delete client
+//    */
 //   async deleteClient(id) {
-//     return await api.delete(`/api/user_management/clients/${id}/`);
+//     const response = await api.delete(`${this.baseURL}/clients/${id}/`);
+//     return response.data;
 //   }
 
-//   // Search by phone
+//   /**
+//    * Search client by phone
+//    */
 //   async searchByPhone(phone) {
-//     return await api.get('/api/user_management/clients/search_by_phone/', {
+//     const response = await api.get(`${this.baseURL}/clients/search/phone/`, {
 //       params: { phone }
 //     });
+//     return response.data;
 //   }
 
-//   // Get commission dashboard
-//   async getCommissionDashboard(marketerId = null) {
-//     const params = marketerId ? { marketer_id: marketerId } : {};
-//     return await api.get('/api/user_management/commissions/dashboard/', { params });
+//   /**
+//    * Get quick stats
+//    */
+//   async getQuickStats() {
+//     const response = await api.get(`${this.baseURL}/clients/quick-stats/`);
+//     return response.data;
 //   }
 
-//   // Export clients data
-//   async exportClients(filters, format = 'csv') {
-//     const params = this.buildQueryParams(filters, { page_size: 10000 });
-//     const response = await api.get('/api/user_management/clients/export/', { 
+//   /**
+//    * Get client activity logs
+//    */
+//   async getClientActivity(id, limit = 50) {
+//     const response = await api.get(`${this.baseURL}/clients/${id}/activity/`, {
+//       params: { limit }
+//     });
+//     return response.data;
+//   }
+
+//   /**
+//    * Resend client credentials
+//    */
+//   async resendCredentials(id) {
+//     const response = await api.post(`${this.baseURL}/clients/${id}/resend-credentials/`);
+//     return response.data;
+//   }
+
+//   /**
+//    * Assign plan to client
+//    */
+//   async assignPlan(clientId, planData) {
+//     const response = await api.post(`${this.baseURL}/clients/${clientId}/assign_plan/`, {
+//       plan_id: planData.plan_id,
+//       auto_renew: planData.auto_renew !== false,
+//       duration_hours: planData.duration_hours || 720,
+//       router_id: planData.router_id,
+//       hotspot_mac_address: planData.hotspot_mac_address
+//     });
+//     return response.data;
+//   }
+
+//   /**
+//    * Change client plan
+//    */
+//   async changePlan(clientId, planData) {
+//     const response = await api.post(`${this.baseURL}/clients/${clientId}/change_plan/`, {
+//       plan_id: planData.plan_id,
+//       subscription_id: planData.subscription_id,
+//       immediate: planData.immediate || false,
+//       prorate: planData.prorate !== false,
+//       notes: planData.notes
+//     });
+//     return response.data;
+//   }
+
+//   /**
+//    * Renew client plan
+//    */
+//   async renewPlan(clientId, planData) {
+//     const response = await api.post(`${this.baseURL}/clients/${clientId}/renew_plan/`, {
+//       subscription_id: planData.subscription_id,
+//       duration_hours: planData.duration_hours || 720,
+//       auto_renew: planData.auto_renew !== false,
+//       payment_method: planData.payment_method || 'mpesa',
+//       notes: planData.notes
+//     });
+//     return response.data;
+//   }
+
+//   /**
+//    * Export clients data
+//    */
+//   async exportClients(filters = {}, format = 'csv') {
+//     const params = this.buildQueryParams(filters);
+    
+//     const response = await api.get(`${this.baseURL}/clients/export/`, {
 //       params: { ...params, format },
 //       responseType: 'blob'
 //     });
     
-//     // Create download link
-//     const url = window.URL.createObjectURL(new Blob([response.data]));
-//     const link = document.createElement('a');
-//     link.href = url;
-//     link.setAttribute('download', `clients_export_${new Date().toISOString().split('T')[0]}.${format}`);
-//     document.body.appendChild(link);
-//     link.click();
-//     link.remove();
-    
-//     return response;
+//     return response.data;
 //   }
 
-//   // Get client statistics
-//   async getClientStats(timeRange = '30d') {
-//     return await api.get('/api/user_management/clients/stats/', {
-//       params: { time_range: timeRange }
-//     });
+//   /**
+//    * Get client stats (dashboard)
+//    */
+//   async getClientStats() {
+//     const response = await api.get(`${this.baseURL}/clients/stats/`);
+//     return response.data;
 //   }
 
-//   // Get client activity logs
-//   async getClientActivity(id, limit = 50) {
-//     return await api.get(`/api/user_management/clients/${id}/activity/`, {
-//       params: { limit }
-//     });
+//   /**
+//    * Update client profile
+//    */
+//   async updateClient(id, updates) {
+//     const response = await api.patch(`${this.baseURL}/clients/${id}/`, updates);
+//     return response.data;
 //   }
 
-//   // Resend client credentials
-//   async resendCredentials(id) {
-//     return await api.post(`/api/user_management/clients/${id}/resend-credentials/`);
+//   /**
+//    * Get client plan management
+//    */
+//   async getClientPlanManagement(clientId) {
+//     const response = await api.get(`${this.baseURL}/clients/${clientId}/plans/`);
+//     return response.data;
 //   }
 
-//   // Helper: Build query parameters
-//   buildQueryParams(filters, pagination) {
-//     const params = { ...filters, ...pagination };
-    
-//     // Remove 'all' values and empty strings
-//     Object.keys(params).forEach(key => {
-//       if (params[key] === 'all' || params[key] === '' || params[key] == null) {
-//         delete params[key];
-//       }
-//     });
+//   /**
+//    * Get client plan history
+//    */
+//   async getClientPlanHistory(clientId) {
+//     const response = await api.get(`${this.baseURL}/clients/${clientId}/plans/history/`);
+//     return response.data;
+//   }
 
-//     // Convert boolean strings to actual booleans
-//     if (params.at_risk === 'true') params.at_risk = true;
-//     if (params.at_risk === 'false') params.at_risk = false;
-//     if (params.needs_attention === 'true') params.needs_attention = true;
-//     if (params.needs_attention === 'false') params.needs_attention = false;
-//     if (params.is_marketer === 'true') params.is_marketer = true;
-//     if (params.is_marketer === 'false') params.is_marketer = false;
-
-//     return params;
+//   /**
+//    * Get client plan recommendations
+//    */
+//   async getClientPlanRecommendations(clientId) {
+//     const response = await api.get(`${this.baseURL}/clients/${clientId}/plans/recommendations/`);
+//     return response.data;
 //   }
 // }
 
@@ -143,32 +292,35 @@
 
 
 
-// services/ClientService.js
- import api from "../../../api"
+
+/**
+ * Client API Service
+ * Handles all client-related API calls to /api/user_management/
+ */
+import api from '../../../api';
 
 class ClientService {
-  // Base URL for user management endpoints
-  baseUrl = '/api/user_management';
-  
-  // Build query parameters from filters
+  constructor() {
+    this.baseURL = '/api/user_management';
+  }
+
+  /**
+   * Build query parameters from filters
+   */
   buildQueryParams(filters = {}, pagination = {}) {
     const params = { ...filters, ...pagination };
     
-    // Clean up filter values
     Object.keys(params).forEach(key => {
       const value = params[key];
       
-      // Remove 'all' values, empty strings, null, undefined
       if (value === 'all' || value === '' || value == null) {
         delete params[key];
         return;
       }
       
-      // Convert boolean strings to actual booleans
       if (value === 'true') params[key] = true;
       if (value === 'false') params[key] = false;
       
-      // Handle date formatting
       if (value instanceof Date) {
         params[key] = value.toISOString().split('T')[0];
       }
@@ -177,144 +329,192 @@ class ClientService {
     return params;
   }
 
-  // Get all clients with filters and pagination
+  /**
+   * Get all clients with filters and pagination
+   * Endpoint: /api/user_management/clients/
+   */
   async getClients(filters = {}, pagination = {}) {
     const params = this.buildQueryParams(filters, {
-      page: pagination.current_page || 1,
-      page_size: pagination.page_size || 20
+      page: pagination.page || 1,
+      page_size: pagination.pageSize || 20
     });
     
-    return await api.get(`${this.baseUrl}/clients/`, { params });
+    const response = await api.get(`${this.baseURL}/clients/`, { params });
+    return response.data;
   }
 
-  // Get single client by ID
+  /**
+   * Get single client by ID
+   * Endpoint: /api/user_management/clients/{id}/
+   */
   async getClientById(id) {
-    return await api.get(`${this.baseUrl}/clients/${id}/`);
+    const response = await api.get(`${this.baseURL}/clients/${id}/`);
+    return response.data;
   }
 
-  // Get client analytics
+  /**
+   * Get client analytics
+   * Endpoint: /api/user_management/clients/{id}/analytics/
+   */
   async getClientAnalytics(id, days = 30) {
-    return await api.get(`${this.baseUrl}/clients/${id}/analytics/`, {
+    const response = await api.get(`${this.baseURL}/clients/${id}/analytics/`, {
       params: { days }
     });
+    return response.data;
   }
 
-  // Create PPPoE client
+  /**
+   * Get client activity logs
+   * Endpoint: /api/user_management/clients/{id}/activity/
+   */
+  async getClientActivity(id, limit = 50) {
+    const response = await api.get(`${this.baseURL}/clients/${id}/activity/`, {
+      params: { limit }
+    });
+    return response.data;
+  }
+
+  /**
+   * Create PPPoE client
+   * Endpoint: /api/user_management/clients/pppoe/create/
+   */
   async createPPPoEClient(data) {
-    return await api.post(`${this.baseUrl}/clients/pppoe/create/`, data);
+    const response = await api.post(`${this.baseURL}/clients/pppoe/create/`, {
+      name: data.name,
+      phone_number: data.phone_number,
+      client_type: data.client_type || 'residential',
+      location: data.location,
+      send_sms: data.send_sms !== false,
+      assign_marketer: data.assign_marketer || false,
+      referral_code: data.referral_code
+    });
+    return response.data;
   }
 
-  // Create Hotspot client
+  /**
+   * Create Hotspot client
+   * Endpoint: /api/user_management/clients/hotspot/create/
+   */
   async createHotspotClient(data) {
-    return await api.post(`${this.baseUrl}/clients/hotspot/create/`, data);
+    const response = await api.post(`${this.baseURL}/clients/hotspot/create/`, {
+      phone_number: data.phone_number,
+      client_type: data.client_type || 'residential',
+      send_welcome_sms: data.send_welcome_sms !== false
+    });
+    return response.data;
   }
 
-  // Update client tier
+  /**
+   * Update client (PATCH)
+   * Endpoint: /api/user_management/clients/{id}/
+   */
+  async updateClient(id, updates) {
+    const response = await api.patch(`${this.baseURL}/clients/${id}/`, updates);
+    return response.data;
+  }
+
+  /**
+   * Delete client
+   * Endpoint: /api/user_management/clients/{id}/
+   */
+  async deleteClient(id) {
+    const response = await api.delete(`${this.baseURL}/clients/${id}/`);
+    return response.data;
+  }
+
+  /**
+   * Update client tier
+   * Endpoint: /api/user_management/clients/{id}/update-tier/
+   */
   async updateClientTier(id, tier, reason = '', sendNotification = true) {
-    return await api.post(`${this.baseUrl}/clients/${id}/update-tier/`, {
+    const response = await api.post(`${this.baseURL}/clients/${id}/update-tier/`, {
       tier,
       reason,
       send_notification: sendNotification
     });
+    return response.data;
   }
 
-  // Update client metrics (force recalculation)
+  /**
+   * Update client metrics (force recalculation)
+   * Endpoint: /api/user_management/clients/{id}/update-metrics/
+   */
   async updateClientMetrics(id) {
-    return await api.post(`${this.baseUrl}/clients/${id}/update-metrics/`, {});
+    const response = await api.post(`${this.baseURL}/clients/${id}/update-metrics/`);
+    return response.data;
   }
 
-  // Update client status
-  async updateClientStatus(id, status, reason = '') {
-    return await api.post(`${this.baseUrl}/clients/${id}/update-status/`, {
-      status,
-      reason
-    });
-  }
-
-  // Send message to client
+  /**
+   * Send message to client
+   * Endpoint: /api/user_management/clients/{id}/send-message/
+   */
   async sendClientMessage(id, messageData) {
-    return await api.post(`${this.baseUrl}/clients/${id}/send-message/`, messageData);
-  }
-
-  // Delete client
-  async deleteClient(id) {
-    return await api.delete(`${this.baseUrl}/clients/${id}/`);
-  }
-
-  // Search client by phone
-  async searchByPhone(phone) {
-    return await api.get(`${this.baseUrl}/clients/search/phone/`, {
-      params: { phone_number: phone }
+    const response = await api.post(`${this.baseURL}/clients/${id}/send-message/`, {
+      message: messageData.message,
+      channel: messageData.channel || 'sms',
+      priority: messageData.priority || 'normal'
     });
+    return response.data;
   }
 
-  // Get quick stats
-  async getQuickStats(timeRange = '30d', connectionType = 'all') {
-    return await api.get(`${this.baseUrl}/clients/quick-stats/`, {
-      params: { time_range: timeRange, connection_type: connectionType }
-    });
-  }
-
-  // Get client activity logs
-  async getClientActivity(id, limit = 50) {
-    return await api.get(`${this.baseUrl}/clients/${id}/activity/`, {
-      params: { limit }
-    });
-  }
-
-  // Resend client credentials
+  /**
+   * Resend client credentials
+   * Endpoint: /api/user_management/clients/{id}/resend-credentials/
+   */
   async resendCredentials(id) {
-    return await api.post(`${this.baseUrl}/clients/${id}/resend-credentials/`, {});
+    const response = await api.post(`${this.baseURL}/clients/${id}/resend-credentials/`);
+    return response.data;
   }
 
-  // Assign plan to client
-  async assignPlan(clientId, planData) {
-    return await api.post(`${this.baseUrl}/clients/${clientId}/assign_plan/`, planData);
-  }
-
-  // Change client plan
-  async changePlan(clientId, planData) {
-    return await api.post(`${this.baseUrl}/clients/${clientId}/change_plan/`, planData);
-  }
-
-  // Export clients data
-  async exportClients(filters = {}, format = 'csv') {
-    try {
-      const params = this.buildQueryParams(filters);
-      
-      const response = await api.get(`${this.baseUrl}/clients/export/`, {
-        params: { ...params, format },
-        responseType: 'blob'
-      });
-      
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `clients_export_${new Date().toISOString().split('T')[0]}.${format}`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Export failed:', error);
-      throw error;
-    }
-  }
-
-  // Get client stats (dashboard)
-  async getClientStats(timeRange = '30d', connectionType = 'all') {
-    return await api.get(`${this.baseUrl}/clients/stats/`, {
-      params: { time_range: timeRange, connection_type: connectionType }
+  /**
+   * Search client by phone
+   * Endpoint: /api/user_management/clients/search/phone/
+   */
+  async searchByPhone(phone) {
+    const response = await api.get(`${this.baseURL}/clients/search/phone/`, {
+      params: { phone }
     });
+    return response.data;
   }
 
-  // Update client profile
-  async updateClient(id, updates) {
-    return await api.patch(`${this.baseUrl}/clients/${id}/`, updates);
+  /**
+   * Get quick stats
+   * Endpoint: /api/user_management/clients/quick-stats/
+   */
+  async getQuickStats() {
+    const response = await api.get(`${this.baseURL}/clients/quick-stats/`);
+    return response.data;
+  }
+
+  /**
+   * Export clients
+   * Endpoint: /api/user_management/clients/export/
+   */
+  async exportClients(filters = {}, format = 'csv') {
+    const params = this.buildQueryParams({ ...filters, format });
+    
+    const response = await api.get(`${this.baseURL}/clients/export/`, {
+      params,
+      responseType: 'blob'
+    });
+    
+    return response.data;
   }
 }
 
 export default new ClientService();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

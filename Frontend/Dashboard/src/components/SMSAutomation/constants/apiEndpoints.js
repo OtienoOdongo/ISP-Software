@@ -1,11 +1,16 @@
-// /**
+
+
+
+
+
+/**
 //  * API endpoints configuration for SMS automation
 //  */
 
 // export const SMS_API_ENDPOINTS = {
 //   // Gateway endpoints
 //   GATEWAYS: {
-//     LIST: '/api/sms/gateways/',
+//     LIST: '/sms/gateways/',
 //     DETAIL: (id) => `/api/sms/gateways/${id}/`,
 //     TEST_CONNECTION: (id) => `/api/sms/gateways/${id}/test_connection/`,
 //     SET_DEFAULT: (id) => `/api/sms/gateways/${id}/set_default/`,
@@ -51,19 +56,22 @@
 //   // Queue endpoints
 //   QUEUE: {
 //     LIST: '/api/sms/queue/',
+//     DETAIL: (id) => `/api/sms/queue/${id}/`,
 //     PROCESS_BATCH: '/api/sms/queue/process_batch/',
 //     CLEAR_FAILED: '/api/sms/queue/clear_failed/'
 //   },
   
 //   // Delivery log endpoints
 //   DELIVERY_LOGS: {
-//     LIST: '/api/sms/delivery-logs/'
+//     LIST: '/api/sms/delivery-logs/',
+//     DETAIL: (id) => `/api/sms/delivery-logs/${id}/`
 //   },
   
 //   // Analytics endpoints
 //   ANALYTICS: {
 //     DASHBOARD: '/api/sms/dashboard/',
-//     DETAILED: '/api/sms/analytics/'
+//     DETAILED: '/api/sms/analytics/',
+//     EXPORT: '/api/sms/analytics/export/'
 //   },
   
 //   // Processing endpoints
@@ -82,55 +90,42 @@
 //   HEALTH: '/api/sms/health/'
 // };
 
+// // API Configuration
 // export const API_CONFIG = {
-//   // Request timeout (milliseconds)
 //   TIMEOUT: 30000,
-  
-//   // Retry configuration
 //   RETRY: {
 //     MAX_RETRIES: 3,
 //     RETRY_DELAY: 1000,
 //     RETRY_ON: [408, 429, 500, 502, 503, 504]
 //   },
-  
-//   // Cache configuration
 //   CACHE: {
 //     ENABLED: true,
-//     DEFAULT_TTL: 300000, // 5 minutes
+//     DEFAULT_TTL: 300000,
 //     MAX_ITEMS: 100
 //   },
-  
-//   // Rate limiting
-//   RATE_LIMIT: {
-//     ENABLED: true,
-//     MAX_REQUESTS: 100,
-//     WINDOW_MS: 60000 // 1 minute
+//   PAGINATION: {
+//     DEFAULT_PAGE_SIZE: 50,
+//     MAX_PAGE_SIZE: 1000,
+//     PAGE_SIZES: [10, 25, 50, 100, 250, 500]
 //   }
 // };
 
-// // WebSocket configuration
+// // WebSocket Configuration
 // export const WEBSOCKET_CONFIG = {
-//   URL: process.env.REACT_APP_WS_URL || 'ws://localhost:8000/ws/sms/',
+//   get URL() {
+//     // Get WebSocket URL based on current location
+//     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+//     const host = process.env.NODE_ENV === 'production' 
+//       ? window.location.host
+//       : 'localhost:8000';
+//     return `${protocol}//${host}/ws/sms/`;
+//   },
 //   RECONNECT_INTERVAL: 5000,
 //   MAX_RECONNECT_ATTEMPTS: 10,
 //   HEARTBEAT_INTERVAL: 30000
 // };
 
-// // Export formats
-// export const EXPORT_FORMATS = {
-//   CSV: 'csv',
-//   JSON: 'json',
-//   EXCEL: 'xlsx'
-// };
-
-// // Pagination defaults
-// export const PAGINATION = {
-//   DEFAULT_PAGE_SIZE: 50,
-//   MAX_PAGE_SIZE: 1000,
-//   PAGE_SIZES: [10, 25, 50, 100, 250, 500]
-// };
-
-// // SMS constants
+// // SMS Constants
 // export const SMS_CONSTANTS = {
 //   MAX_MESSAGE_LENGTH: 160,
 //   MAX_PARTS: 10,
@@ -146,18 +141,55 @@
 //   },
 //   STATUSES: {
 //     PENDING: 'pending',
+//     QUEUED: 'queued',
+//     SENDING: 'sending',
 //     SENT: 'sent',
 //     DELIVERED: 'delivered',
 //     FAILED: 'failed',
-//     CANCELLED: 'cancelled'
+//     CANCELLED: 'cancelled',
+//     EXPIRED: 'expired',
+//     REJECTED: 'rejected'
 //   },
 //   GATEWAY_TYPES: {
-//     AFRICASTALKING: 'africas_talking',
+//     AFRICAS_TALKING: 'africas_talking',
 //     TWILIO: 'twilio',
 //     SMPP: 'smpp',
 //     CUSTOM: 'custom'
+//   },
+//   TEMPLATE_TYPES: {
+//     PPPOE_CREDENTIALS: 'pppoe_credentials',
+//     WELCOME: 'welcome',
+//     PAYMENT_REMINDER: 'payment_reminder',
+//     PLAN_EXPIRY: 'plan_expiry',
+//     PROMOTIONAL: 'promotional',
+//     SYSTEM: 'system',
+//     CUSTOM: 'custom',
+//     HOTSPOT_WELCOME: 'hotspot_welcome',
+//     CREDENTIALS_RESEND: 'credentials_resend',
+//     TIER_UPGRADE: 'tier_upgrade',
+//     COMMISSION_PAYOUT: 'commission_payout'
 //   }
 // };
+
+// // Export formats
+// export const EXPORT_FORMATS = [
+//   { value: 'csv', label: 'CSV', extension: '.csv', mimeType: 'text/csv' },
+//   { value: 'json', label: 'JSON', extension: '.json', mimeType: 'application/json' },
+//   { value: 'xlsx', label: 'Excel', extension: '.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
+//   { value: 'pdf', label: 'PDF', extension: '.pdf', mimeType: 'application/pdf' }
+// ];
+
+// // Date formats
+// export const DATE_FORMATS = {
+//   DISPLAY: 'MMM DD, YYYY HH:mm',
+//   FILENAME: 'YYYY-MM-DD_HHmmss',
+//   API: 'YYYY-MM-DD',
+//   SHORT: 'MMM DD, YYYY',
+//   TIME: 'HH:mm:ss'
+// };
+
+
+
 
 
 
@@ -167,12 +199,15 @@
 
 /**
  * API endpoints configuration for SMS automation
+ * 
+ * IMPORTANT: These endpoints assume your Django DRF API is mounted at /api/
+ * and the SMS app is mounted at /api/sms/ (as per your urls.py)
  */
 
 export const SMS_API_ENDPOINTS = {
   // Gateway endpoints
   GATEWAYS: {
-    LIST: '/api/sms/gateways/',
+    LIST: '/api/sms/gateways/',  // Will become /api/sms/gateways/
     DETAIL: (id) => `/api/sms/gateways/${id}/`,
     TEST_CONNECTION: (id) => `/api/sms/gateways/${id}/test_connection/`,
     SET_DEFAULT: (id) => `/api/sms/gateways/${id}/set_default/`,
@@ -218,19 +253,22 @@ export const SMS_API_ENDPOINTS = {
   // Queue endpoints
   QUEUE: {
     LIST: '/api/sms/queue/',
+    DETAIL: (id) => `/api/sms/queue/${id}/`,
     PROCESS_BATCH: '/api/sms/queue/process_batch/',
     CLEAR_FAILED: '/api/sms/queue/clear_failed/'
   },
   
   // Delivery log endpoints
   DELIVERY_LOGS: {
-    LIST: '/api/sms/delivery-logs/'
+    LIST: '/api/sms/delivery-logs/',
+    DETAIL: (id) => `/api/sms/delivery-logs/${id}/`
   },
   
   // Analytics endpoints
   ANALYTICS: {
     DASHBOARD: '/api/sms/dashboard/',
-    DETAILED: '/api/sms/analytics/'
+    DETAILED: '/api/sms/analytics/',
+    EXPORT: '/api/sms/analytics/export/'
   },
   
   // Processing endpoints
@@ -249,110 +287,143 @@ export const SMS_API_ENDPOINTS = {
   HEALTH: '/api/sms/health/'
 };
 
+// API Configuration
 export const API_CONFIG = {
-  // Request timeout (milliseconds)
+  // Base URL will be added by your api interceptor
+  // Typically set in your api.js file: baseURL: '/api'
   TIMEOUT: 30000,
-  
-  // Retry configuration
   RETRY: {
     MAX_RETRIES: 3,
     RETRY_DELAY: 1000,
     RETRY_ON: [408, 429, 500, 502, 503, 504]
   },
-  
-  // Cache configuration
   CACHE: {
     ENABLED: true,
     DEFAULT_TTL: 300000, // 5 minutes
     MAX_ITEMS: 100
   },
-  
-  // Rate limiting
-  RATE_LIMIT: {
-    ENABLED: true,
-    MAX_REQUESTS: 100,
-    WINDOW_MS: 60000 // 1 minute
+  PAGINATION: {
+    DEFAULT_PAGE_SIZE: 50,
+    MAX_PAGE_SIZE: 1000,
+    PAGE_SIZES: [10, 25, 50, 100, 250, 500]
   }
 };
 
-// Helper function to safely get WebSocket URL
-const getWebSocketUrl = () => {
-  // First, check if we're in a browser environment
-  if (typeof window === 'undefined') {
-    return 'ws://localhost:8000/ws/sms/';
-  }
-  
-  // Try to get from process.env (for build-time environment variables)
-  try {
-    if (typeof process !== 'undefined' && process.env && process.env.REACT_APP_WS_URL) {
-      return process.env.REACT_APP_WS_URL;
-    }
-  } catch (error) {
-    // process is not defined in browser, continue to other methods
-  }
-  
-  // Try to get from window.AppConfig (for runtime configuration)
-  if (window.AppConfig && window.AppConfig.WS_URL) {
-    return window.AppConfig.WS_URL;
-  }
-  
-  // Try to get from window.APP_CONFIG (alternative naming)
-  if (window.APP_CONFIG && window.APP_CONFIG.WS_URL) {
-    return window.APP_CONFIG.WS_URL;
-  }
-  
-  // Default: Use relative URL based on current host
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${protocol}//${window.location.host}/ws/sms/`;
-};
-
-// WebSocket configuration
+// WebSocket Configuration
 export const WEBSOCKET_CONFIG = {
-  URL: getWebSocketUrl(),
+  get URL() {
+    // Get WebSocket URL based on current location
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = process.env.NODE_ENV === 'production' 
+      ? window.location.host
+      : 'localhost:8000';
+    
+    // WebSocket endpoints as defined in your routing.py
+    return {
+      STATUS: `${protocol}//${host}/ws/sms/status/`,
+      BROADCAST: `${protocol}//${host}/ws/sms/broadcast/`,
+      ROOT: `${protocol}//${host}/ws/sms/`
+    };
+  },
   RECONNECT_INTERVAL: 5000,
   MAX_RECONNECT_ATTEMPTS: 10,
   HEARTBEAT_INTERVAL: 30000
 };
 
-// Export formats
-export const EXPORT_FORMATS = {
-  CSV: 'csv',
-  JSON: 'json',
-  EXCEL: 'xlsx'
-};
-
-// Pagination defaults
-export const PAGINATION = {
-  DEFAULT_PAGE_SIZE: 50,
-  MAX_PAGE_SIZE: 1000,
-  PAGE_SIZES: [10, 25, 50, 100, 250, 500]
-};
-
-// SMS constants
+// SMS Constants (matching your backend enums)
 export const SMS_CONSTANTS = {
+  // Message length limits
   MAX_MESSAGE_LENGTH: 160,
   MAX_PARTS: 10,
   CHARACTER_ENCODINGS: {
     GSM: 'GSM',
     UNICODE: 'UNICODE'
   },
+  
+  // Message priorities (matches MessagePriority enum)
   PRIORITIES: {
     URGENT: 'urgent',
     HIGH: 'high',
     NORMAL: 'normal',
     LOW: 'low'
   },
+  
+  // Message statuses (matches MessageStatus enum)
   STATUSES: {
     PENDING: 'pending',
+    QUEUED: 'queued',
+    SENDING: 'sending',
     SENT: 'sent',
     DELIVERED: 'delivered',
     FAILED: 'failed',
-    CANCELLED: 'cancelled'
+    CANCELLED: 'cancelled',
+    EXPIRED: 'expired',
+    REJECTED: 'rejected'
   },
+  
+  // Gateway types (matches GatewayType enum)
   GATEWAY_TYPES: {
-    AFRICASTALKING: 'africas_talking',
+    AFRICAS_TALKING: 'africas_talking',
     TWILIO: 'twilio',
     SMPP: 'smpp',
     CUSTOM: 'custom'
+  },
+  
+  // Template types (matches TemplateType enum)
+  TEMPLATE_TYPES: {
+    PPPOE_CREDENTIALS: 'pppoe_credentials',
+    WELCOME: 'welcome',
+    PAYMENT_REMINDER: 'payment_reminder',
+    PLAN_EXPIRY: 'plan_expiry',
+    PROMOTIONAL: 'promotional',
+    SYSTEM: 'system',
+    CUSTOM: 'custom',
+    HOTSPOT_WELCOME: 'hotspot_welcome',
+    CREDENTIALS_RESEND: 'credentials_resend',
+    TIER_UPGRADE: 'tier_upgrade',
+    COMMISSION_PAYOUT: 'commission_payout'
+  },
+  
+  // Automation rule types (matches AutomationRuleType enum)
+  RULE_TYPES: {
+    PPPOE_CREATION: 'pppoe_creation',
+    HOTSPOT_CREATION: 'hotspot_creation',
+    PAYMENT_REMINDER: 'payment_reminder',
+    PLAN_EXPIRY: 'plan_expiry',
+    WELCOME: 'welcome',
+    PROMOTION: 'promotion',
+    SYSTEM_ALERT: 'system_alert',
+    TIER_CHANGE: 'tier_change',
+    COMMISSION_EARNED: 'commission_earned'
   }
+};
+
+// Export formats
+export const EXPORT_FORMATS = [
+  { value: 'csv', label: 'CSV', extension: '.csv', mimeType: 'text/csv' },
+  { value: 'json', label: 'JSON', extension: '.json', mimeType: 'application/json' },
+  { value: 'xlsx', label: 'Excel', extension: '.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
+  { value: 'pdf', label: 'PDF', extension: '.pdf', mimeType: 'application/pdf' }
+];
+
+// Date formats
+export const DATE_FORMATS = {
+  DISPLAY: 'MMM DD, YYYY HH:mm',
+  FILENAME: 'YYYY-MM-DD_HHmmss',
+  API: 'YYYY-MM-DD',
+  SHORT: 'MMM DD, YYYY',
+  TIME: 'HH:mm:ss'
+};
+
+// Helper function to build full API URL (if needed)
+export const buildApiUrl = (endpoint) => {
+  // Remove leading slash if present
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+  return `/api/${cleanEndpoint}`;
+};
+
+// Helper function to get WebSocket URL
+export const getWebSocketUrl = (type = 'status') => {
+  const config = WEBSOCKET_CONFIG.URL;
+  return config[type.toUpperCase()] || config.STATUS;
 };

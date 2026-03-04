@@ -1,86 +1,187 @@
-// import api from '../../../api'
+
+
+// /**
+//  * Commission API Service
+//  * Handles all commission-related API calls to /api/user_management/
+//  */
+// import api from '../../../api';
 
 // class CommissionService {
-//   // Get all commission transactions
-//   async getTransactions(filters = {}, pagination = { page: 1, page_size: 20 }) {
-//     const params = { ...filters, ...pagination };
-//     return await api.get('/api/user_management/commissions/transactions/', { params });
+//   constructor() {
+//     this.baseURL = '/api/user_management';
 //   }
 
-//   // Get transaction by ID
-//   async getTransactionById(id) {
-//     return await api.get(`/api/user_management/commissions/transactions/${id}/`);
+//   /**
+//    * Get all commission transactions
+//    */
+//   async getTransactions(filters = {}, pagination = {}, signal) {
+//     const params = { 
+//       ...filters,
+//       page: pagination.page || 1,
+//       page_size: pagination.pageSize || 20
+//     };
+    
+//     // Clean up params
+//     Object.keys(params).forEach(key => {
+//       if (params[key] === 'all' || params[key] === '' || params[key] == null) {
+//         delete params[key];
+//       }
+//     });
+    
+//     const response = await api.get(`${this.baseURL}/commissions/`, { 
+//       params,
+//       signal 
+//     });
+//     return response.data;
 //   }
 
-//   // Create commission transaction
-//   async createTransaction(data) {
-//     return await api.post('/api/user_management/commissions/transactions/', data);
+//   /**
+//    * Get transaction by ID
+//    */
+//   async getTransactionById(id, signal) {
+//     const response = await api.get(`${this.baseURL}/commissions/${id}/`, { signal });
+//     return response.data;
 //   }
 
-//   // Approve commission transaction
-//   async approveTransaction(id, notes = '') {
-//     return await api.post(`/api/user_management/commissions/transactions/${id}/approve/`, { notes });
+//   /**
+//    * Create commission transaction
+//    */
+//   async createTransaction(data, signal) {
+//     const response = await api.post(`${this.baseURL}/commissions/`, data, { signal });
+//     return response.data;
 //   }
 
-//   // Mark transaction as paid
-//   async markAsPaid(id, paymentData) {
-//     return await api.post(`/api/user_management/commissions/transactions/${id}/mark-paid/`, paymentData);
+//   /**
+//    * Approve commission transaction
+//    */
+//   async approveTransaction(id, notes = '', signal) {
+//     const response = await api.post(`${this.baseURL}/commissions/${id}/approve/`, 
+//       { notes }, 
+//       { signal }
+//     );
+//     return response.data;
 //   }
 
-//   // Reject transaction
-//   async rejectTransaction(id, reason) {
-//     return await api.post(`/api/user_management/commissions/transactions/${id}/reject/`, { reason });
+//   /**
+//    * Mark transaction as paid
+//    */
+//   async markAsPaid(id, paymentData, signal) {
+//     const response = await api.post(`${this.baseURL}/commissions/${id}/mark-paid/`, {
+//       payment_method: paymentData.payment_method,
+//       payment_reference: paymentData.payment_reference,
+//       notes: paymentData.notes
+//     }, { signal });
+//     return response.data;
 //   }
 
-//   // Get marketer performance
-//   async getMarketerPerformance(marketerId, startDate, endDate) {
+//   /**
+//    * Reject transaction
+//    */
+//   async rejectTransaction(id, reason, signal) {
+//     const response = await api.post(`${this.baseURL}/commissions/${id}/reject/`, 
+//       { reason }, 
+//       { signal }
+//     );
+//     return response.data;
+//   }
+
+//   /**
+//    * Cancel transaction
+//    */
+//   async cancelTransaction(id, reason, signal) {
+//     const response = await api.post(`${this.baseURL}/commissions/${id}/cancel/`, 
+//       { reason }, 
+//       { signal }
+//     );
+//     return response.data;
+//   }
+
+//   /**
+//    * Get marketer performance
+//    */
+//   async getMarketerPerformance(marketerId, startDate, endDate, signal) {
 //     const params = {};
 //     if (startDate) params.start_date = startDate;
 //     if (endDate) params.end_date = endDate;
     
-//     return await api.get(`/api/user_management/commissions/marketers/${marketerId}/performance/`, { params });
+//     if (marketerId) {
+//       const response = await api.get(`${this.baseURL}/marketers/performance/${marketerId}/`, { 
+//         params,
+//         signal 
+//       });
+//       return response.data;
+//     } else {
+//       const response = await api.get(`${this.baseURL}/marketers/performance/`, { 
+//         params,
+//         signal 
+//       });
+//       return response.data;
+//     }
 //   }
 
-//   // Get commission summary
-//   async getCommissionSummary(period = 'month') {
-//     return await api.get('/api/user_management/commissions/summary/', {
-//       params: { period }
+//   /**
+//    * Get commission summary
+//    */
+//   async getCommissionSummary(period = 'month', signal) {
+//     const response = await api.get(`${this.baseURL}/commissions/summary/`, {
+//       params: { period },
+//       signal
 //     });
+//     return response.data;
 //   }
 
-//   // Process commission payout
-//   async processPayout(payoutData) {
-//     return await api.post('/api/user_management/commissions/payouts/', payoutData);
+//   /**
+//    * Process commission payout
+//    */
+//   async processPayout(payoutData, signal) {
+//     const response = await api.post(`${this.baseURL}/commissions/payout/`, {
+//       marketer_ids: payoutData.marketer_ids,
+//       payment_method: payoutData.payment_method,
+//       payment_reference: payoutData.payment_reference,
+//       notes: payoutData.notes
+//     }, { signal });
+//     return response.data;
 //   }
 
-//   // Get payout history
-//   async getPayoutHistory(filters = {}) {
-//     return await api.get('/api/user_management/commissions/payouts/', { params: filters });
-//   }
-
-//   // Export commission report
-//   async exportCommissionReport(format = 'csv', filters = {}) {
-//     const response = await api.get('/api/user_management/commissions/export/', {
-//       params: { format, ...filters },
-//       responseType: 'blob'
+//   /**
+//    * Get payout history
+//    */
+//   async getPayoutHistory(filters = {}, signal) {
+//     const params = { ...filters };
+//     Object.keys(params).forEach(key => {
+//       if (params[key] === '' || params[key] == null) {
+//         delete params[key];
+//       }
 //     });
     
-//     const url = window.URL.createObjectURL(new Blob([response.data]));
-//     const link = document.createElement('a');
-//     link.href = url;
-//     link.setAttribute('download', `commission_report_${new Date().toISOString().split('T')[0]}.${format}`);
-//     document.body.appendChild(link);
-//     link.click();
-//     link.remove();
+//     const response = await api.get(`${this.baseURL}/commissions/payout/`, { 
+//       params,
+//       signal 
+//     });
+//     return response.data;
 //   }
 
-//   // Calculate commission for a referral
-//   async calculateCommission(amount, marketerTier, transactionType = 'referral') {
-//     return await api.post('/api/user_management/commissions/calculate/', {
-//       amount,
+//   /**
+//    * Bulk approve transactions
+//    */
+//   async bulkApprove(transactionIds, notes = '', signal) {
+//     const response = await api.post(`${this.baseURL}/commissions/bulk_approve/`, {
+//       transaction_ids: transactionIds,
+//       notes
+//     }, { signal });
+//     return response.data;
+//   }
+
+//   /**
+//    * Calculate commission for a transaction
+//    */
+//   async calculateCommission(amount, marketerTier, transactionType = 'referral', signal) {
+//     const response = await api.post(`${this.baseURL}/commissions/calculate/`, {
+//       amount: parseFloat(amount),
 //       marketer_tier: marketerTier,
 //       transaction_type: transactionType
-//     });
+//     }, { signal });
+//     return response.data;
 //   }
 // }
 
@@ -91,90 +192,123 @@
 
 
 
-
-
-// services/CommissionService.js
-import api from '../../../api'
-
+/**
+ * Commission API Service
+ * Handles all commission-related API calls to /api/user_management/
+ */
+import api from '../../../api';
 
 class CommissionService {
-  baseUrl = '/api/user_management';
+  constructor() {
+    this.baseURL = '/api/user_management';
+  }
 
-  // Get all commission transactions
-  async getTransactions(filters = {}, pagination = {}) {
+  /**
+   * Get all commission transactions
+   * Endpoint: /api/user_management/commissions/
+   */
+  async getTransactions(filters = {}, pagination = {}, signal) {
     const params = { 
       ...filters,
       page: pagination.page || 1,
-      page_size: pagination.page_size || 20
+      page_size: pagination.pageSize || 20
     };
     
-    // Clean up params
     Object.keys(params).forEach(key => {
       if (params[key] === 'all' || params[key] === '' || params[key] == null) {
         delete params[key];
       }
     });
     
-    return await api.get(`${this.baseUrl}/commissions/`, { params });
+    const response = await api.get(`${this.baseURL}/commissions/`, { params, signal });
+    return response.data;
   }
 
-  // Get transaction by ID
-  async getTransactionById(id) {
-    return await api.get(`${this.baseUrl}/commissions/${id}/`);
+  /**
+   * Get transaction by ID
+   * Endpoint: /api/user_management/commissions/{id}/
+   */
+  async getTransactionById(id, signal) {
+    const response = await api.get(`${this.baseURL}/commissions/${id}/`, { signal });
+    return response.data;
   }
 
-  // Create commission transaction
-  async createTransaction(data) {
-    return await api.post(`${this.baseUrl}/commissions/`, data);
+  /**
+   * Create commission transaction
+   * Endpoint: /api/user_management/commissions/
+   */
+  async createTransaction(data, signal) {
+    const response = await api.post(`${this.baseURL}/commissions/`, data, { signal });
+    return response.data;
   }
 
-  // Approve commission transaction
-  async approveTransaction(id, notes = '') {
-    return await api.post(`${this.baseUrl}/commissions/${id}/approve/`, { notes });
+  /**
+   * Approve commission transaction
+   * Endpoint: /api/user_management/commissions/{id}/approve/
+   */
+  async approveTransaction(id, notes = '', signal) {
+    const response = await api.post(`${this.baseURL}/commissions/${id}/approve/`, 
+      { notes }, 
+      { signal }
+    );
+    return response.data;
   }
 
-  // Mark transaction as paid
-  async markAsPaid(id, paymentData) {
-    return await api.post(`${this.baseUrl}/commissions/${id}/mark-paid/`, paymentData);
+  /**
+   * Reject transaction
+   * Endpoint: /api/user_management/commissions/{id}/reject/
+   */
+  async rejectTransaction(id, reason, signal) {
+    const response = await api.post(`${this.baseURL}/commissions/${id}/reject/`, 
+      { reason }, 
+      { signal }
+    );
+    return response.data;
   }
 
-  // Reject transaction
-  async rejectTransaction(id, reason) {
-    return await api.post(`${this.baseUrl}/commissions/${id}/reject/`, { reason });
+  /**
+   * Cancel transaction
+   * Endpoint: /api/user_management/commissions/{id}/cancel/
+   */
+  async cancelTransaction(id, reason, signal) {
+    const response = await api.post(`${this.baseURL}/commissions/${id}/cancel/`, 
+      { reason }, 
+      { signal }
+    );
+    return response.data;
   }
 
-  // Cancel transaction
-  async cancelTransaction(id, reason) {
-    return await api.post(`${this.baseUrl}/commissions/${id}/cancel/`, { reason });
-  }
-
-  // Get marketer performance
-  async getMarketerPerformance(marketerId, startDate, endDate) {
-    const params = {};
-    if (startDate) params.start_date = startDate;
-    if (endDate) params.end_date = endDate;
-    
-    if (marketerId) {
-      return await api.get(`${this.baseUrl}/marketers/performance/${marketerId}/`, { params });
-    } else {
-      return await api.get(`${this.baseUrl}/marketers/performance/`, { params });
-    }
-  }
-
-  // Get commission summary
-  async getCommissionSummary(period = 'month') {
-    return await api.get(`${this.baseUrl}/commissions/summary/`, {
-      params: { period }
+  /**
+   * Get commission summary
+   * Endpoint: /api/user_management/commission-dashboard/
+   */
+  async getCommissionSummary(period = 'month', signal) {
+    const response = await api.get(`${this.baseURL}/commission-dashboard/`, {
+      params: { period },
+      signal
     });
+    return response.data;
   }
 
-  // Process commission payout
-  async processPayout(payoutData) {
-    return await api.post(`${this.baseUrl}/commissions/payout/`, payoutData);
+  /**
+   * Process commission payout
+   * Endpoint: /api/user_management/commissions/payout/
+   */
+  async processPayout(payoutData, signal) {
+    const response = await api.post(`${this.baseURL}/commissions/payout/`, {
+      marketer_ids: payoutData.marketer_ids,
+      payment_method: payoutData.payment_method,
+      payment_reference: payoutData.payment_reference,
+      notes: payoutData.notes
+    }, { signal });
+    return response.data;
   }
 
-  // Get payout history
-  async getPayoutHistory(filters = {}) {
+  /**
+   * Get payout history
+   * Endpoint: /api/user_management/commissions/payout/
+   */
+  async getPayoutHistory(filters = {}, signal) {
     const params = { ...filters };
     Object.keys(params).forEach(key => {
       if (params[key] === '' || params[key] == null) {
@@ -182,56 +316,29 @@ class CommissionService {
       }
     });
     
-    return await api.get(`${this.baseUrl}/commissions/payout/`, { params });
-  }
-
-  // Bulk approve transactions
-  async bulkApprove(transactionIds, notes = '') {
-    return await api.post(`${this.baseUrl}/commissions/bulk_approve/`, {
-      transaction_ids: transactionIds,
-      notes
+    const response = await api.get(`${this.baseURL}/commissions/payout/`, { 
+      params,
+      signal 
     });
+    return response.data;
   }
 
-  // Calculate commission for a transaction
-  async calculateCommission(amount, marketerTier, transactionType = 'referral') {
-    return await api.post(`${this.baseUrl}/commissions/calculate/`, {
-      amount: parseFloat(amount),
-      marketer_tier: marketerTier,
-      transaction_type: transactionType
-    });
-  }
-
-  // Export commission report
-  async exportCommissionReport(format = 'csv', filters = {}) {
-    try {
-      const response = await api.get(`${this.baseUrl}/commissions/export/`, {
-        params: { format, ...filters },
-        responseType: 'blob'
-      });
-      
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `commission_report_${new Date().toISOString().split('T')[0]}.${format}`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Commission export failed:', error);
-      throw error;
-    }
-  }
-
-  // Get transaction statistics
-  async getTransactionStats(period = 'month') {
-    return await api.get(`${this.baseUrl}/commissions/stats/`, {
-      params: { period }
-    });
+  /**
+   * Get marketer performance
+   * Endpoint: /api/user_management/marketers/performance/
+   * Endpoint: /api/user_management/marketers/performance/{marketer_id}/
+   */
+  async getMarketerPerformance(marketerId = null, startDate, endDate, signal) {
+    const params = {};
+    if (startDate) params.start_date = startDate;
+    if (endDate) params.end_date = endDate;
+    
+    const url = marketerId 
+      ? `${this.baseURL}/marketers/performance/${marketerId}/`
+      : `${this.baseURL}/marketers/performance/`;
+    
+    const response = await api.get(url, { params, signal });
+    return response.data;
   }
 }
 

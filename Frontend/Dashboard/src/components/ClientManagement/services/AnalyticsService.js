@@ -1,86 +1,153 @@
-// import api from '../../../api'
+
+
+
+
+
+
+// /**
+//  * Analytics API Service
+//  * Handles all analytics-related API calls to /api/user_management/
+//  */
+// import api from '../../../api';
 
 // class AnalyticsService {
-//   // Get comprehensive dashboard data
-//   async getDashboardData(timeRange = '30d', connectionType = 'all', refresh = false) {
-//     const params = { time_range: timeRange, connection_type: connectionType };
+//   constructor() {
+//     this.baseURL = '/api/user_management';
+//   }
+
+//   /**
+//    * Get comprehensive dashboard data
+//    */
+//   async getDashboardData(timeRange = '30d', connectionType = 'all', refresh = false, signal) {
+//     const params = { 
+//       time_range: timeRange, 
+//       connection_type: connectionType 
+//     };
+    
 //     if (refresh) params.refresh = true;
     
-//     return await api.get('/api/user_management/dashboard/', { params });
-//   }
-
-//   // Get client analytics snapshots
-//   async getClientAnalytics(clientId, days = 30) {
-//     return await api.get(`/api/user_management/clients/${clientId}/analytics/`, {
-//       params: { days }
+//     const response = await api.get(`${this.baseURL}/dashboard/`, { 
+//       params,
+//       signal 
 //     });
+//     return response.data;
 //   }
 
-//   // Get commission dashboard data
-//   async getCommissionDashboard(marketerId = null) {
-//     const params = marketerId ? { marketer_id: marketerId } : {};
-//     return await api.get('/api/user_management/commissions/dashboard/', { params });
+//   /**
+//    * Get financial analytics
+//    */
+//   async getFinancialAnalytics(startDate, endDate, groupBy = 'day', signal) {
+//     const params = {};
+//     if (startDate) params.start_date = startDate;
+//     if (endDate) params.end_date = endDate;
+//     params.group_by = groupBy;
+    
+//     const response = await api.get(`${this.baseURL}/analytics/financial/`, { 
+//       params,
+//       signal 
+//     });
+//     return response.data;
 //   }
 
-//   // Get financial analytics
-//   async getFinancialAnalytics(startDate, endDate) {
+//   /**
+//    * Get usage analytics
+//    */
+//   async getUsageAnalytics(startDate, endDate, groupBy = 'day', signal) {
+//     const params = {};
+//     if (startDate) params.start_date = startDate;
+//     if (endDate) params.end_date = endDate;
+//     params.group_by = groupBy;
+    
+//     const response = await api.get(`${this.baseURL}/analytics/usage/`, { 
+//       params,
+//       signal 
+//     });
+//     return response.data;
+//   }
+
+//   /**
+//    * Get behavioral analytics
+//    */
+//   async getBehavioralAnalytics(segmentBy = 'revenue_segment', signal) {
+//     const response = await api.get(`${this.baseURL}/analytics/behavioral/`, {
+//       params: { segment_by: segmentBy },
+//       signal
+//     });
+//     return response.data;
+//   }
+
+//   /**
+//    * Get hotspot-specific analytics
+//    */
+//   async getHotspotAnalytics(startDate, endDate, signal) {
 //     const params = {};
 //     if (startDate) params.start_date = startDate;
 //     if (endDate) params.end_date = endDate;
     
-//     return await api.get('/api/user_management/analytics/financial/', { params });
-//   }
-
-//   // Get usage analytics
-//   async getUsageAnalytics(startDate, endDate) {
-//     const params = {};
-//     if (startDate) params.start_date = startDate;
-//     if (endDate) params.end_date = endDate;
-    
-//     return await api.get('/api/user_management/analytics/usage/', { params });
-//   }
-
-//   // Get behavioral analytics
-//   async getBehavioralAnalytics() {
-//     return await api.get('/api/user_management/analytics/behavioral/');
-//   }
-
-//   // Get hotspot-specific analytics
-//   async getHotspotAnalytics(startDate, endDate) {
-//     const params = {};
-//     if (startDate) params.start_date = startDate;
-//     if (endDate) params.end_date = endDate;
-    
-//     return await api.get('/api/user_management/analytics/hotspot/', { params });
-//   }
-
-//   // Get trend data for charts
-//   async getTrendData(metric, period = '30d') {
-//     return await api.get('/api/user_management/analytics/trends/', {
-//       params: { metric, period }
+//     const response = await api.get(`${this.baseURL}/analytics/hotspot/`, { 
+//       params,
+//       signal 
 //     });
+//     return response.data;
 //   }
 
-//   // Export analytics data
-//   async exportAnalyticsData(format = 'csv', filters = {}) {
-//     const response = await api.get('/api/user_management/analytics/export/', {
-//       params: { format, ...filters },
-//       responseType: 'blob'
+//   /**
+//    * Get trend data for charts
+//    */
+//   async getTrendData(metric = 'revenue', period = '30d', signal) {
+//     const response = await api.get(`${this.baseURL}/analytics/trends/`, {
+//       params: { metric, period },
+//       signal
+//     });
+//     return response.data;
+//   }
+
+//   /**
+//    * Get commission dashboard
+//    */
+//   async getCommissionDashboard(marketerId = null, signal) {
+//     const params = {};
+//     if (marketerId) params.marketer_id = marketerId;
+    
+//     const response = await api.get(`${this.baseURL}/commission-dashboard/`, { 
+//       params,
+//       signal 
+//     });
+//     return response.data;
+//   }
+
+//   /**
+//    * Export analytics data
+//    */
+//   async exportAnalyticsData(format = 'csv', filters = {}, signal) {
+//     const params = { format, ...filters };
+    
+//     const response = await api.get(`${this.baseURL}/analytics/export/`, {
+//       params,
+//       responseType: 'blob',
+//       signal
 //     });
     
-//     // Create download link
-//     const url = window.URL.createObjectURL(new Blob([response.data]));
-//     const link = document.createElement('a');
-//     link.href = url;
-//     link.setAttribute('download', `analytics_export_${new Date().toISOString().split('T')[0]}.${format}`);
-//     document.body.appendChild(link);
-//     link.click();
-//     link.remove();
+//     if (response.data instanceof Blob) {
+//       const url = window.URL.createObjectURL(response.data);
+//       const link = document.createElement('a');
+//       link.href = url;
+//       link.setAttribute('download', `analytics_export_${new Date().toISOString().split('T')[0]}.${format}`);
+//       document.body.appendChild(link);
+//       link.click();
+//       link.remove();
+//       window.URL.revokeObjectURL(url);
+//     }
+    
+//     return { success: true };
 //   }
 
-//   // Update analytics cache
-//   async refreshAnalyticsCache() {
-//     return await api.post('/api/user_management/analytics/refresh-cache/');
+//   /**
+//    * Refresh analytics cache
+//    */
+//   async refreshAnalyticsCache(signal) {
+//     const response = await api.post(`${this.baseURL}/analytics/refresh/`, {}, { signal });
+//     return response.data;
 //   }
 // }
 
@@ -93,123 +160,109 @@
 
 
 
-// services/AnalyticsService.js
-import api from '../../../api'
+
+/**
+ * Analytics API Service
+ * Handles all analytics-related API calls to /api/user_management/
+ */
+import api from '../../../api';
 
 class AnalyticsService {
-  baseUrl = '/api/user_management';
+  constructor() {
+    this.baseURL = '/api/user_management';
+  }
 
-  // Get comprehensive dashboard data
-  async getDashboardData(timeRange = '30d', connectionType = 'all', refresh = false) {
+  /**
+   * Get comprehensive dashboard data
+   * Endpoint: /api/user_management/dashboard/
+   */
+  async getDashboardData(timeRange = '30d', connectionType = 'all', refresh = false, signal) {
     const params = { 
       time_range: timeRange, 
-      connection_type: connectionType 
+      connection_type: connectionType,
+      refresh: refresh || undefined
     };
     
-    if (refresh) params.refresh = true;
-    
-    return await api.get(`${this.baseUrl}/dashboard/`, { params });
+    const response = await api.get(`${this.baseURL}/dashboard/`, { params, signal });
+    return response.data;
   }
 
-  // Get financial analytics
-  async getFinancialAnalytics(startDate, endDate, groupBy = 'day') {
-    const params = {};
-    if (startDate) params.start_date = startDate;
-    if (endDate) params.end_date = endDate;
-    params.group_by = groupBy;
+  /**
+   * Get financial analytics
+   * Endpoint: /api/user_management/analytics/financial/
+   */
+  async getFinancialAnalytics(startDate, endDate, groupBy = 'day', signal) {
+    const params = {
+      start_date: startDate || undefined,
+      end_date: endDate || undefined,
+      group_by: groupBy
+    };
     
-    return await api.get(`${this.baseUrl}/analytics/financial/`, { params });
+    const response = await api.get(`${this.baseURL}/analytics/financial/`, { params, signal });
+    return response.data;
   }
 
-  // Get usage analytics
-  async getUsageAnalytics(startDate, endDate, groupBy = 'day') {
-    const params = {};
-    if (startDate) params.start_date = startDate;
-    if (endDate) params.end_date = endDate;
-    params.group_by = groupBy;
+  /**
+   * Get usage analytics
+   * Endpoint: /api/user_management/analytics/usage/
+   */
+  async getUsageAnalytics(startDate, endDate, groupBy = 'day', signal) {
+    const params = {
+      start_date: startDate || undefined,
+      end_date: endDate || undefined,
+      group_by: groupBy
+    };
     
-    return await api.get(`${this.baseUrl}/analytics/usage/`, { params });
+    const response = await api.get(`${this.baseURL}/analytics/usage/`, { params, signal });
+    return response.data;
   }
 
-  // Get behavioral analytics
-  async getBehavioralAnalytics(segmentBy = 'revenue_segment') {
-    return await api.get(`${this.baseUrl}/analytics/behavioral/`, {
-      params: { segment_by: segmentBy }
+  /**
+   * Get behavioral analytics
+   * Endpoint: /api/user_management/analytics/behavioral/
+   */
+  async getBehavioralAnalytics(segmentBy = 'revenue_segment', signal) {
+    const response = await api.get(`${this.baseURL}/analytics/behavioral/`, {
+      params: { segment_by: segmentBy },
+      signal
     });
+    return response.data;
   }
 
-  // Get hotspot-specific analytics
-  async getHotspotAnalytics(startDate, endDate) {
-    const params = {};
-    if (startDate) params.start_date = startDate;
-    if (endDate) params.end_date = endDate;
+  /**
+   * Get hotspot-specific analytics
+   * Endpoint: /api/user_management/analytics/hotspot/
+   */
+  async getHotspotAnalytics(startDate, endDate, signal) {
+    const params = {
+      start_date: startDate || undefined,
+      end_date: endDate || undefined
+    };
     
-    return await api.get(`${this.baseUrl}/analytics/hotspot/`, { params });
+    const response = await api.get(`${this.baseURL}/analytics/hotspot/`, { params, signal });
+    return response.data;
   }
 
-  // Get trend data for charts
-  async getTrendData(metric = 'revenue', period = '30d') {
-    return await api.get(`${this.baseUrl}/analytics/trends/`, {
-      params: { metric, period }
+  /**
+   * Get trend data for charts
+   * Endpoint: /api/user_management/analytics/trends/
+   */
+  async getTrendData(metric = 'revenue', period = '30d', signal) {
+    const response = await api.get(`${this.baseURL}/analytics/trends/`, {
+      params: { metric, period },
+      signal
     });
+    return response.data;
   }
 
-  // Get commission dashboard
-  async getCommissionDashboard(marketerId = null) {
-    const params = {};
-    if (marketerId) params.marketer_id = marketerId;
-    
-    return await api.get(`${this.baseUrl}/commission-dashboard/`, { params });
-  }
-
-  // Export analytics data
-  async exportAnalyticsData(format = 'csv', filters = {}) {
-    try {
-      const response = await api.get(`${this.baseUrl}/analytics/export/`, {
-        params: { format, ...filters },
-        responseType: 'blob'
-      });
-      
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `analytics_export_${new Date().toISOString().split('T')[0]}.${format}`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Analytics export failed:', error);
-      throw error;
-    }
-  }
-
-  // Refresh analytics cache (if implemented)
-  async refreshAnalyticsCache() {
-    try {
-      return await api.post(`${this.baseUrl}/analytics/refresh-cache/`, {});
-    } catch (error) {
-      // If endpoint doesn't exist, return success anyway
-      console.warn('Analytics cache refresh endpoint not available');
-      return { success: true, message: 'Cache refresh not required' };
-    }
-  }
-
-  // Get client analytics snapshots
-  async getClientAnalyticsSnapshots(clientId, days = 30) {
-    return await api.get(`${this.baseUrl}/clients/${clientId}/analytics/`, {
-      params: { days }
-    });
-  }
-
-  // Get commission analytics
-  async getCommissionAnalytics(period = 'month') {
-    return await api.get(`${this.baseUrl}/commissions/summary/`, {
-      params: { period }
-    });
+  /**
+   * Get commission dashboard
+   * Endpoint: /api/user_management/commission-dashboard/
+   */
+  async getCommissionDashboard(marketerId = null, signal) {
+    const params = marketerId ? { marketer_id: marketerId } : {};
+    const response = await api.get(`${this.baseURL}/commission-dashboard/`, { params, signal });
+    return response.data;
   }
 }
 

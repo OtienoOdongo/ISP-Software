@@ -1,77 +1,1205 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { 
+
+
+// import React, { useState, useCallback, useMemo, useEffect } from 'react';
+// import { motion, AnimatePresence } from 'framer-motion';
+// import { useAuth } from '../../context/AuthContext';
+// import { useTheme } from '../../context/ThemeContext';
+// import {
+//   MessageSquare, Settings, BarChart3, Filter, Users, Clock,
+//   AlertCircle, CheckCircle, XCircle, RefreshCw, Search,
+//   Bell, Zap, Activity, Download, Shield, Server, Loader,
+//   Menu, X, Database, Cpu, Globe, Wifi, WifiOff, LayoutDashboard,
+//   FileText, Play, Pause, Plus, Eye, EyeOff, Copy, Trash2,
+//   ChevronDown, ChevronUp, Calendar, DollarSign, Tag, TrendingUp,
+//   Grid, List, User, Phone, Mail, Clock3
+// } from 'lucide-react';
+
+// // Components
+// import { EnhancedSelect, getThemeClasses } from '../../components/ServiceManagement/Shared/components';
+// import GatewayManager from '../../components/SMSAutomation/components/GatewayManager';
+// import TemplateManager from '../../components/SMSAutomation/components/TemplateManager';
+// import MessageManager from '../../components/SMSAutomation/components/MessageManager';
+// import AutomationRules from '../../components/SMSAutomation/components/AutomationRules';
+// import AnalyticsDashboard from '../../components/SMSAutomation/components/AnalyticsDashboard';
+// import QueueMonitor from '../../components/SMSAutomation/components/QueueMonitor';
+// import ExportManager from '../../components/SMSAutomation/components/ExportManager';
+// import CreateModal from '../../components/SMSAutomation/components/CreateModal';
+
+// // Hooks
+// import { useWebSocket } from '../../components/SMSAutomation/hooks/useWebSocket';
+// import { useSMSData } from '../../components/SMSAutomation/hooks/useSMSData';
+// import { usePerformanceMonitor } from '../../components/SMSAutomation/hooks/usePerformanceMonitor';
+
+// // Utils
+// import { formatCurrency, formatNumber, formatPercentage } from '../../components/SMSAutomation/utils/formatters';
+// import api from '../../api';
+// import { validatePhoneNumber } from '../../components/SMSAutomation/utils/validators';
+
+// // Constants
+// import { SMS_API_ENDPOINTS, SMS_CONSTANTS } from '../../components/SMSAutomation/constants/apiEndpoints';
+
+// /**
+//  * SMS Automation Main Component
+//  * Manages SMS gateways, templates, messages, automation rules, and analytics
+//  */
+// const SMSAutomation = () => {
+//   // ===========================================================================
+//   // Hooks and Context
+//   // ===========================================================================
+//   const { user } = useAuth();
+//   const { theme } = useTheme();
+//   const themeClasses = getThemeClasses(theme);
+
+//   // ===========================================================================
+//   // Local State
+//   // ===========================================================================
+//   const [activeTab, setActiveTab] = useState('dashboard');
+//   const [showFilters, setShowFilters] = useState(false);
+//   const [viewMode, setViewMode] = useState('grid');
+//   const [searchTerm, setSearchTerm] = useState('');
+//   const [statusFilter, setStatusFilter] = useState('all');
+//   const [dateRange, setDateRange] = useState({ start: null, end: null });
+//   const [showCreateModal, setShowCreateModal] = useState(false);
+//   const [createType, setCreateType] = useState('message');
+//   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+//   const [globalError, setGlobalError] = useState(null);
+//   const [connectionQuality, setConnectionQuality] = useState('good');
+//   const [successMessage, setSuccessMessage] = useState(null);
+
+//   // ===========================================================================
+//   // Custom Hooks
+//   // ===========================================================================
+//   const {
+//     gateways,
+//     templates,
+//     messages,
+//     rules,
+//     queue,
+//     analytics,
+//     dashboardStats,
+//     loading: dataLoading,
+//     isRefreshing,
+//     error: dataError,
+//     pagination,
+//     refreshData,
+//     fetchAllData,
+//     fetchGateways,
+//     fetchTemplates,
+//     fetchMessages,
+//     fetchRules,
+//     fetchQueue,
+//     fetchAnalytics,
+//     loadMoreMessages,
+//     loadMoreQueue,
+//     hasActiveFilters,
+//     clearFilters
+//   } = useSMSData();
+
+//   const {
+//     metrics: performanceMetrics,
+//     isActive: perfMonitoring,
+//     toggleMonitoring: togglePerfMonitoring,
+//     getPerformanceScore
+//   } = usePerformanceMonitor({
+//     enabled: true,
+//     sampleInterval: 5000
+//   });
+
+//   const {
+//     isConnected,
+//     lastMessage,
+//     connectionError: wsError,
+//     connectionState,
+//     reconnectAttempts,
+//     sendMessage,
+//     disconnect,
+//     reconnect
+//   } = useWebSocket({
+//     url: process.env.NODE_ENV === 'production'
+//       ? `wss://${window.location.host}/ws/sms/status/`
+//       : 'ws://localhost:8000/ws/sms/status/',
+//     autoConnect: !!user,
+//     reconnectInterval: 3000,
+//     maxReconnectAttempts: 20,
+//     heartbeatInterval: 25000,
+//     onMessage: (data) => handleRealTimeUpdate(data),
+//     onOpen: () => {
+//       console.log('✅ WebSocket connected');
+//       setConnectionQuality('good');
+//       setGlobalError(null);
+//     },
+//     onClose: (event) => {
+//       if (event.code !== 1000) {
+//         setConnectionQuality('poor');
+//       }
+//     },
+//     onError: () => setConnectionQuality('degraded')
+//   });
+
+//   // ===========================================================================
+//   // Memoized Values
+//   // ===========================================================================
+//   const tabs = useMemo(() => [
+//     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, description: 'Overview and key metrics' },
+//     { id: 'messages', label: 'Messages', icon: MessageSquare, description: 'Send and track SMS messages' },
+//     { id: 'templates', label: 'Templates', icon: FileText, description: 'Manage message templates' },
+//     { id: 'gateways', label: 'Gateways', icon: Server, description: 'Configure SMS providers' },
+//     { id: 'automation', label: 'Automation', icon: Zap, description: 'Automated SMS rules' },
+//     { id: 'queue', label: 'Queue', icon: Clock, description: 'Message queue monitor' },
+//     { id: 'analytics', label: 'Analytics', icon: BarChart3, description: 'Detailed analytics' },
+//     { id: 'export', label: 'Export', icon: Download, description: 'Export SMS data' }
+//   ], []);
+
+//   const statusOptions = useMemo(() => [
+//     { value: 'all', label: 'All Statuses' },
+//     { value: 'pending', label: 'Pending' },
+//     { value: 'sent', label: 'Sent' },
+//     { value: 'delivered', label: 'Delivered' },
+//     { value: 'failed', label: 'Failed' }
+//   ], []);
+
+//   const createOptions = useMemo(() => [
+//     { value: 'message', label: 'New Message' },
+//     { value: 'template', label: 'New Template' },
+//     { value: 'gateway', label: 'New Gateway' },
+//     { value: 'rule', label: 'New Automation Rule' }
+//   ], []);
+
+//   // ===========================================================================
+//   // Helper Functions
+//   // ===========================================================================
+//   const safeArray = (data) => {
+//     if (Array.isArray(data)) return data;
+//     if (data && typeof data === 'object') return Object.values(data);
+//     return [];
+//   };
+
+//   const getQueueStats = () => {
+//     const queueArray = safeArray(queue);
+//     return {
+//       total: queueArray.length,
+//       pending: queueArray.filter(q => q.status === 'pending').length,
+//       processing: queueArray.filter(q => q.status === 'processing').length,
+//       completed: queueArray.filter(q => q.status === 'completed').length,
+//       failed: queueArray.filter(q => q.status === 'failed').length
+//     };
+//   };
+
+//   const getGatewayStats = () => {
+//     const gatewaysArray = safeArray(gateways);
+//     return {
+//       total: gatewaysArray.length,
+//       online: gatewaysArray.filter(g => g.is_online).length,
+//       offline: gatewaysArray.filter(g => !g.is_online).length,
+//       active: gatewaysArray.filter(g => g.is_active).length
+//     };
+//   };
+
+//   // ===========================================================================
+//   // API Handlers for Create Operations
+//   // ===========================================================================
+//   const handleCreateMessage = async (data) => {
+//     try {
+//       const response = await api.post(SMS_API_ENDPOINTS.MESSAGES.CREATE, {
+//         ...data,
+//         scheduled_for: data.scheduled_for || null,
+//         gateway_id: data.gateway_id || null,
+//         template_id: data.template_id || null,
+//         priority: data.priority || 'normal'
+//       });
+      
+//       setSuccessMessage('Message sent successfully!');
+//       setTimeout(() => setSuccessMessage(null), 3000);
+//       refreshData();
+//       return response.data;
+//     } catch (error) {
+//       console.error('Failed to send message:', error);
+//       throw error;
+//     }
+//   };
+
+//   const handleCreateTemplate = async (data) => {
+//     try {
+//       const response = await api.post(SMS_API_ENDPOINTS.TEMPLATES.LIST, {
+//         ...data,
+//         is_active: data.is_active ?? true,
+//         allow_unicode: data.allow_unicode || false,
+//         variables: data.message_template?.match(/\{\{([^}]+)\}\}/g)?.map(v => v.replace(/[{}]/g, '')) || []
+//       });
+      
+//       setSuccessMessage('Template created successfully!');
+//       setTimeout(() => setSuccessMessage(null), 3000);
+//       refreshData();
+//       return response.data;
+//     } catch (error) {
+//       console.error('Failed to create template:', error);
+//       throw error;
+//     }
+//   };
+
+//   const handleCreateGateway = async (data) => {
+//     try {
+//       const response = await api.post(SMS_API_ENDPOINTS.GATEWAYS.LIST, {
+//         ...data,
+//         is_active: data.is_active ?? true,
+//         is_default: data.is_default || false,
+//         max_messages_per_minute: data.max_messages_per_minute || 60,
+//         max_messages_per_hour: data.max_messages_per_hour || 1000,
+//         max_messages_per_day: data.max_messages_per_day || 10000
+//       });
+      
+//       setSuccessMessage('Gateway added successfully!');
+//       setTimeout(() => setSuccessMessage(null), 3000);
+//       refreshData();
+//       return response.data;
+//     } catch (error) {
+//       console.error('Failed to create gateway:', error);
+//       throw error;
+//     }
+//   };
+
+//   const handleCreateRule = async (data) => {
+//     try {
+//       const response = await api.post(SMS_API_ENDPOINTS.RULES.LIST, {
+//         ...data,
+//         is_active: data.is_active ?? true,
+//         is_recurring: data.is_recurring || false,
+//         condition: data.condition_field && data.condition_operator && data.condition_value ? {
+//           field: data.condition_field,
+//           operator: data.condition_operator,
+//           value: data.condition_value
+//         } : null,
+//         delay_minutes: data.delay_minutes || 0,
+//         priority: data.priority || 'normal'
+//       });
+      
+//       setSuccessMessage('Automation rule created successfully!');
+//       setTimeout(() => setSuccessMessage(null), 3000);
+//       refreshData();
+//       return response.data;
+//     } catch (error) {
+//       console.error('Failed to create rule:', error);
+//       throw error;
+//     }
+//   };
+
+//   // ===========================================================================
+//   // Callback Handlers
+//   // ===========================================================================
+//   const handleRealTimeUpdate = useCallback((update) => {
+//     if (!update) return;
+
+//     switch (update.type) {
+//       case 'sms_sent':
+//       case 'sms_delivered':
+//       case 'sms_failed':
+//       case 'queue_update':
+//       case 'gateway_update':
+//         refreshData();
+//         break;
+//       case 'ping':
+//         sendMessage({ type: 'pong' });
+//         break;
+//       default:
+//         break;
+//     }
+//   }, [refreshData, sendMessage]);
+
+//   const handleTabChange = useCallback((tabId) => {
+//     setActiveTab(tabId);
+//     setIsMobileMenuOpen(false);
+//   }, []);
+
+//   const handleRefresh = useCallback(async () => {
+//     try {
+//       await refreshData();
+//     } catch (err) {
+//       console.error('Refresh failed:', err);
+//       setGlobalError('Failed to refresh data');
+//     }
+//   }, [refreshData]);
+
+//   const handleSearch = useCallback((e) => {
+//     const value = e.target.value;
+//     setSearchTerm(value);
+    
+//     const timeoutId = setTimeout(() => {
+//       // Apply search filter based on active tab
+//       if (activeTab === 'messages') {
+//         fetchMessages(1, { search: value });
+//       }
+//     }, 300);
+
+//     return () => clearTimeout(timeoutId);
+//   }, [activeTab, fetchMessages]);
+
+//   const handleCreate = useCallback((type) => {
+//     setCreateType(type);
+//     setShowCreateModal(true);
+//   }, []);
+
+//   const handleCreateSubmit = useCallback(async (data) => {
+//     switch (createType) {
+//       case 'message':
+//         await handleCreateMessage(data);
+//         break;
+//       case 'template':
+//         await handleCreateTemplate(data);
+//         break;
+//       case 'gateway':
+//         await handleCreateGateway(data);
+//         break;
+//       case 'rule':
+//         await handleCreateRule(data);
+//         break;
+//       default:
+//         break;
+//     }
+//   }, [createType]);
+
+//   const handleCreateModalClose = useCallback((success) => {
+//     setShowCreateModal(false);
+//     if (success) {
+//       refreshData();
+//     }
+//   }, [refreshData]);
+
+//   // ===========================================================================
+//   // Render Helpers
+//   // ===========================================================================
+//   const renderError = () => {
+//     const error = globalError || dataError || wsError;
+//     if (!error) return null;
+
+//     return (
+//       <motion.div
+//         initial={{ opacity: 0, y: -20 }}
+//         animate={{ opacity: 1, y: 0 }}
+//         exit={{ opacity: 0, y: -20 }}
+//         className={`mb-4 p-4 rounded-lg border ${themeClasses.bg.danger} ${themeClasses.border.danger}`}
+//       >
+//         <div className="flex items-center justify-between">
+//           <div className="flex items-center gap-2">
+//             <AlertCircle className="text-red-500" size={20} />
+//             <span className={themeClasses.text.primary}>{error}</span>
+//           </div>
+//           <button
+//             onClick={() => setGlobalError(null)}
+//             className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30"
+//           >
+//             <X size={16} />
+//           </button>
+//         </div>
+//       </motion.div>
+//     );
+//   };
+
+//   const renderSuccess = () => {
+//     if (!successMessage) return null;
+
+//     return (
+//       <motion.div
+//         initial={{ opacity: 0, y: -20 }}
+//         animate={{ opacity: 1, y: 0 }}
+//         exit={{ opacity: 0, y: -20 }}
+//         className={`mb-4 p-4 rounded-lg border bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800`}
+//       >
+//         <div className="flex items-center justify-between">
+//           <div className="flex items-center gap-2">
+//             <CheckCircle className="text-green-500" size={20} />
+//             <span className={themeClasses.text.primary}>{successMessage}</span>
+//           </div>
+//           <button
+//             onClick={() => setSuccessMessage(null)}
+//             className="p-1 rounded hover:bg-green-100 dark:hover:bg-green-900/30"
+//           >
+//             <X size={16} />
+//           </button>
+//         </div>
+//       </motion.div>
+//     );
+//   };
+
+//   const renderConnectionStatus = () => {
+//     let statusColor = 'bg-green-500';
+//     let statusText = 'Connected';
+//     let statusIcon = <Wifi className="w-4 h-4" />;
+
+//     if (!isConnected) {
+//       if (reconnectAttempts > 0) {
+//         statusColor = 'bg-yellow-500 animate-pulse';
+//         statusText = `Reconnecting (${reconnectAttempts})`;
+//         statusIcon = <WifiOff className="w-4 h-4" />;
+//       } else {
+//         statusColor = 'bg-red-500';
+//         statusText = 'Disconnected';
+//         statusIcon = <WifiOff className="w-4 h-4" />;
+//       }
+//     }
+
+//     return (
+//       <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${themeClasses.bg.secondary}`}>
+//         {statusIcon}
+//         <div className={`w-2 h-2 rounded-full ${statusColor}`} />
+//         <span className="text-sm hidden sm:inline">{statusText}</span>
+//       </div>
+//     );
+//   };
+
+//   const renderHeader = () => (
+//     <header className="mb-6 relative z-10">
+//       {/* Mobile Header */}
+//       <div className="lg:hidden flex items-center justify-between mb-4">
+//         <button
+//           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+//           className={`p-2 rounded-lg ${themeClasses.bg.secondary}`}
+//           aria-label="Toggle menu"
+//         >
+//           {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+//         </button>
+        
+//         <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>
+//           SMS Automation
+//         </h1>
+
+//         <button
+//           onClick={() => handleCreate(createType)}
+//           className={`p-2 rounded-lg ${themeClasses.button.primary}`}
+//           aria-label="Create new"
+//         >
+//           <Plus size={20} />
+//         </button>
+//       </div>
+
+//       {/* Desktop Header */}
+//       <div className="hidden lg:flex lg:flex-col lg:gap-4">
+//         <div className="flex items-center justify-between">
+//           <div>
+//             <h1 className={`text-3xl font-bold mb-1 ${themeClasses.text.primary}`}>
+//               SMS Automation
+//             </h1>
+//             <p className={`text-sm ${themeClasses.text.secondary}`}>
+//               Manage SMS gateways, templates, and automated messaging
+//             </p>
+//           </div>
+
+//           <div className="flex items-center gap-2">
+//             {renderConnectionStatus()}
+
+//             {perfMonitoring && (
+//               <div className={`hidden xl:flex items-center gap-2 px-3 py-2 rounded-lg ${themeClasses.bg.secondary}`}>
+//                 <Cpu className="w-4 h-4" />
+//                 <span className="text-sm font-medium">
+//                   Score: <span className="text-blue-500">{getPerformanceScore()}</span>
+//                 </span>
+//               </div>
+//             )}
+
+//             <button
+//               onClick={togglePerfMonitoring}
+//               className={`p-2 rounded-lg ${themeClasses.button.secondary}`}
+//               title={perfMonitoring ? 'Disable performance monitor' : 'Enable performance monitor'}
+//             >
+//               <Activity size={18} className={perfMonitoring ? 'text-blue-500' : ''} />
+//             </button>
+//           </div>
+//         </div>
+
+//         {/* Action Bar */}
+//         <div className="flex flex-wrap items-center gap-3">
+//           {/* Search - Desktop */}
+//           <div className="relative flex-1 min-w-[200px] max-w-md">
+//             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+//             <input
+//               type="text"
+//               value={searchTerm}
+//               onChange={handleSearch}
+//               placeholder="Search..."
+//               className={`w-full pl-10 pr-4 py-2 rounded-lg border text-sm ${themeClasses.input}`}
+//             />
+//           </div>
+
+//           <button
+//             onClick={() => setShowFilters(!showFilters)}
+//             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap ${
+//               themeClasses.button.secondary
+//             }`}
+//           >
+//             <Filter size={18} />
+//             <span className="hidden sm:inline">{showFilters ? 'Hide' : 'Show'} Filters</span>
+//           </button>
+
+//           <button
+//             onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+//             className={`p-2 rounded-lg ${themeClasses.button.secondary}`}
+//             title={viewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view'}
+//           >
+//             {viewMode === 'grid' ? <List size={18} /> : <Grid size={18} />}
+//           </button>
+
+//           <button
+//             onClick={handleRefresh}
+//             disabled={isRefreshing}
+//             className={`p-2 rounded-lg ${themeClasses.button.secondary}`}
+//           >
+//             <RefreshCw size={18} className={isRefreshing ? 'animate-spin' : ''} />
+//           </button>
+
+//           <div className="flex items-center gap-2">
+//             <EnhancedSelect
+//               value={createType}
+//               onChange={setCreateType}
+//               options={createOptions}
+//               theme={theme}
+//               className="w-40"
+//             />
+
+//             <button
+//               onClick={() => handleCreate(createType)}
+//               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap ${
+//                 themeClasses.button.primary
+//               } hover:scale-105 transition-all`}
+//             >
+//               <Plus size={18} />
+//               <span className="hidden sm:inline">Create</span>
+//             </button>
+//           </div>
+//         </div>
+//       </div>
+
+//       <AnimatePresence>{renderError()}</AnimatePresence>
+//       <AnimatePresence>{renderSuccess()}</AnimatePresence>
+//     </header>
+//   );
+
+//   const renderTabs = () => (
+//     <div className="mb-6 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] relative z-10">
+//       <nav className="flex flex-nowrap gap-1 sm:gap-2 border-b border-gray-200 dark:border-gray-700 pb-2 min-w-max">
+//         {tabs.map((tab) => {
+//           const Icon = tab.icon;
+//           const isActive = activeTab === tab.id;
+          
+//           return (
+//             <button
+//               key={tab.id}
+//               onClick={() => handleTabChange(tab.id)}
+//               className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
+//                 isActive 
+//                   ? themeClasses.button.primary 
+//                   : `${themeClasses.button.secondary} hover:bg-gray-100 dark:hover:bg-gray-800`
+//               }`}
+//               title={tab.description}
+//             >
+//               <Icon size={18} />
+//               {/* Hide label on small screens, show only icons */}
+//               <span className="hidden sm:inline">{tab.label}</span>
+//               {tab.id === 'queue' && getQueueStats().pending > 0 && (
+//                 <span className="px-1.5 py-0.5 text-xs bg-red-500 text-white rounded-full">
+//                   {getQueueStats().pending}
+//                 </span>
+//               )}
+//             </button>
+//           );
+//         })}
+//       </nav>
+//     </div>
+//   );
+
+//   const renderMobileMenu = () => {
+//     if (!isMobileMenuOpen) return null;
+
+//     return (
+//       <motion.div
+//         initial={{ opacity: 0 }}
+//         animate={{ opacity: 1 }}
+//         exit={{ opacity: 0 }}
+//         className="fixed inset-0 z-[9998] bg-black/50 lg:hidden"
+//         onClick={() => setIsMobileMenuOpen(false)}
+//       >
+//         <motion.div
+//           initial={{ x: -300 }}
+//           animate={{ x: 0 }}
+//           exit={{ x: -300 }}
+//           transition={{ type: "spring", damping: 25 }}
+//           className={`absolute left-0 top-0 h-full w-64 ${themeClasses.bg.card} shadow-xl p-4`}
+//           onClick={(e) => e.stopPropagation()}
+//         >
+//           <div className="flex justify-between items-center mb-6">
+//             <h2 className={`font-bold ${themeClasses.text.primary}`}>Menu</h2>
+//             <button
+//               onClick={() => setIsMobileMenuOpen(false)}
+//               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+//             >
+//               <X size={18} />
+//             </button>
+//           </div>
+
+//           {/* Mobile Search */}
+//           <div className="relative mb-4">
+//             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+//             <input
+//               type="text"
+//               value={searchTerm}
+//               onChange={handleSearch}
+//               placeholder="Search..."
+//               className={`w-full pl-9 pr-3 py-2 rounded-lg border text-sm ${themeClasses.input}`}
+//             />
+//           </div>
+
+//           {/* Mobile Tabs */}
+//           <div className="space-y-1">
+//             {tabs.map((tab) => {
+//               const Icon = tab.icon;
+//               const isActive = activeTab === tab.id;
+              
+//               return (
+//                 <button
+//                   key={tab.id}
+//                   onClick={() => handleTabChange(tab.id)}
+//                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg font-medium ${
+//                     isActive ? themeClasses.button.primary : themeClasses.button.secondary
+//                   }`}
+//                 >
+//                   <Icon size={18} />
+//                   <span className="flex-1 text-left">{tab.label}</span>
+//                   {tab.id === 'queue' && getQueueStats().pending > 0 && (
+//                     <span className="px-1.5 py-0.5 text-xs bg-red-500 text-white rounded-full">
+//                       {getQueueStats().pending}
+//                     </span>
+//                   )}
+//                 </button>
+//               );
+//             })}
+//           </div>
+
+//           {/* Mobile Actions */}
+//           <div className={`mt-6 pt-6 border-t ${themeClasses.border.light}`}>
+//             <div className="space-y-2">
+//               <EnhancedSelect
+//                 value={createType}
+//                 onChange={setCreateType}
+//                 options={createOptions}
+//                 theme={theme}
+//                 className="w-full"
+//               />
+              
+//               <button
+//                 onClick={() => {
+//                   handleCreate(createType);
+//                   setIsMobileMenuOpen(false);
+//                 }}
+//                 className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium ${
+//                   themeClasses.button.primary
+//                 }`}
+//               >
+//                 <Plus size={18} />
+//                 Create
+//               </button>
+//             </div>
+//           </div>
+//         </motion.div>
+//       </motion.div>
+//     );
+//   };
+
+//   const renderFilters = () => {
+//     if (!showFilters) return null;
+
+//     return (
+//       <motion.aside
+//         initial={{ opacity: 0, x: -20 }}
+//         animate={{ opacity: 1, x: 0 }}
+//         exit={{ opacity: 0, x: -20 }}
+//         className="w-full lg:w-80 mb-6 lg:mb-0 relative z-10"
+//       >
+//         <div className={`p-5 rounded-xl border sticky top-6 ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+//           <div className="flex items-center justify-between mb-4">
+//             <h3 className={`font-semibold ${themeClasses.text.primary}`}>Filters</h3>
+//             {hasActiveFilters && (
+//               <button
+//                 onClick={clearFilters}
+//                 className={`text-sm ${themeClasses.text.secondary} hover:text-indigo-500`}
+//               >
+//                 Clear all
+//               </button>
+//             )}
+//           </div>
+          
+//           <div className="space-y-4">
+//             <div>
+//               <label className={`block text-sm font-medium mb-2 ${themeClasses.text.secondary}`}>
+//                 Status
+//               </label>
+//               <EnhancedSelect
+//                 value={statusFilter}
+//                 onChange={setStatusFilter}
+//                 options={statusOptions}
+//                 theme={theme}
+//               />
+//             </div>
+
+//             <div>
+//               <label className={`block text-sm font-medium mb-2 ${themeClasses.text.secondary}`}>
+//                 Date Range
+//               </label>
+//               <div className="space-y-2">
+//                 <input
+//                   type="date"
+//                   value={dateRange.start || ''}
+//                   onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+//                   className={`w-full px-3 py-2 rounded-lg border text-sm ${themeClasses.input}`}
+//                 />
+//                 <input
+//                   type="date"
+//                   value={dateRange.end || ''}
+//                   onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+//                   className={`w-full px-3 py-2 rounded-lg border text-sm ${themeClasses.input}`}
+//                 />
+//               </div>
+//             </div>
+
+//             {activeTab === 'gateways' && (
+//               <div>
+//                 <label className={`block text-sm font-medium mb-2 ${themeClasses.text.secondary}`}>
+//                   Gateway Type
+//                 </label>
+//                 <EnhancedSelect
+//                   value={statusFilter}
+//                   onChange={setStatusFilter}
+//                   options={[
+//                     { value: 'all', label: 'All Types' },
+//                     { value: 'africas_talking', label: "Africa's Talking" },
+//                     { value: 'twilio', label: 'Twilio' },
+//                     { value: 'smpp', label: 'SMPP' },
+//                     { value: 'custom', label: 'Custom' }
+//                   ]}
+//                   theme={theme}
+//                 />
+//               </div>
+//             )}
+
+//             {activeTab === 'templates' && (
+//               <div>
+//                 <label className={`block text-sm font-medium mb-2 ${themeClasses.text.secondary}`}>
+//                   Template Type
+//                 </label>
+//                 <EnhancedSelect
+//                   value={statusFilter}
+//                   onChange={setStatusFilter}
+//                   options={[
+//                     { value: 'all', label: 'All Types' },
+//                     { value: 'welcome', label: 'Welcome' },
+//                     { value: 'payment', label: 'Payment' },
+//                     { value: 'reminder', label: 'Reminder' },
+//                     { value: 'promotional', label: 'Promotional' }
+//                   ]}
+//                   theme={theme}
+//                 />
+//               </div>
+//             )}
+//           </div>
+//         </div>
+//       </motion.aside>
+//     );
+//   };
+
+//   const renderMainContent = () => {
+//     const commonProps = {
+//       theme,
+//       themeClasses,
+//       onRefresh: refreshData,
+//       loading: dataLoading
+//     };
+
+//     switch (activeTab) {
+//       case 'dashboard':
+//         return (
+//           <AnalyticsDashboard
+//             stats={dashboardStats}
+//             analytics={analytics}
+//             gateways={safeArray(gateways)}
+//             messages={safeArray(messages)}
+//             templates={safeArray(templates)}
+//             queue={safeArray(queue)}
+//             performanceData={performanceMetrics}
+//             onRefresh={handleRefresh}
+//             {...commonProps}
+//           />
+//         );
+      
+//       case 'messages':
+//         return (
+//           <MessageManager
+//             messages={safeArray(messages)}
+//             gateways={safeArray(gateways)}
+//             templates={safeArray(templates)}
+//             pagination={pagination.messages}
+//             onLoadMore={loadMoreMessages}
+//             onSendMessage={(data) => sendMessage({ type: 'send_sms', ...data })}
+//             viewMode={viewMode}
+//             searchTerm={searchTerm}
+//             statusFilter={statusFilter}
+//             dateRange={dateRange}
+//             {...commonProps}
+//           />
+//         );
+      
+//       case 'templates':
+//         return (
+//           <TemplateManager
+//             templates={safeArray(templates)}
+//             onCreateClick={() => handleCreate('template')}
+//             onDuplicate={async (id) => {
+//               try {
+//                 await api.post(SMS_API_ENDPOINTS.TEMPLATES.DUPLICATE(id));
+//                 setSuccessMessage('Template duplicated successfully');
+//                 refreshData();
+//               } catch (error) {
+//                 setGlobalError('Failed to duplicate template');
+//               }
+//             }}
+//             onTestRender={async (id, data) => {
+//               try {
+//                 const response = await api.post(SMS_API_ENDPOINTS.TEMPLATES.TEST_RENDER(id), data);
+//                 return response.data;
+//               } catch (error) {
+//                 throw error;
+//               }
+//             }}
+//             onEdit={async (id, data) => {
+//               try {
+//                 await api.put(SMS_API_ENDPOINTS.TEMPLATES.DETAIL(id), data);
+//                 setSuccessMessage('Template updated successfully');
+//                 refreshData();
+//               } catch (error) {
+//                 setGlobalError('Failed to update template');
+//               }
+//             }}
+//             onDelete={async (id) => {
+//               try {
+//                 await api.delete(SMS_API_ENDPOINTS.TEMPLATES.DETAIL(id));
+//                 setSuccessMessage('Template deleted successfully');
+//                 refreshData();
+//               } catch (error) {
+//                 setGlobalError('Failed to delete template');
+//               }
+//             }}
+//             viewMode={viewMode}
+//             searchTerm={searchTerm}
+//             statusFilter={statusFilter}
+//             {...commonProps}
+//           />
+//         );
+      
+//       case 'gateways':
+//         return (
+//           <GatewayManager
+//             gateways={safeArray(gateways)}
+//             onTestConnection={async (id) => {
+//               try {
+//                 const response = await api.post(SMS_API_ENDPOINTS.GATEWAYS.TEST_CONNECTION(id));
+//                 if (response.data.success) {
+//                   setSuccessMessage('Connection test successful');
+//                 } else {
+//                   setGlobalError('Connection test failed');
+//                 }
+//                 refreshData();
+//               } catch (error) {
+//                 setGlobalError('Connection test failed');
+//               }
+//             }}
+//             onSetDefault={async (id) => {
+//               try {
+//                 await api.post(SMS_API_ENDPOINTS.GATEWAYS.SET_DEFAULT(id));
+//                 setSuccessMessage('Default gateway updated');
+//                 refreshData();
+//               } catch (error) {
+//                 setGlobalError('Failed to set default gateway');
+//               }
+//             }}
+//             onToggleActive={async (id) => {
+//               try {
+//                 await api.post(SMS_API_ENDPOINTS.GATEWAYS.TOGGLE_ACTIVE(id));
+//                 refreshData();
+//               } catch (error) {
+//                 setGlobalError('Failed to toggle gateway');
+//               }
+//             }}
+//             onEdit={async (id, data) => {
+//               try {
+//                 await api.put(SMS_API_ENDPOINTS.GATEWAYS.DETAIL(id), data);
+//                 setSuccessMessage('Gateway updated successfully');
+//                 refreshData();
+//               } catch (error) {
+//                 setGlobalError('Failed to update gateway');
+//               }
+//             }}
+//             onDelete={async (id) => {
+//               try {
+//                 await api.delete(SMS_API_ENDPOINTS.GATEWAYS.DETAIL(id));
+//                 setSuccessMessage('Gateway deleted successfully');
+//                 refreshData();
+//               } catch (error) {
+//                 setGlobalError('Failed to delete gateway');
+//               }
+//             }}
+//             viewMode={viewMode}
+//             searchTerm={searchTerm}
+//             statusFilter={statusFilter}
+//             {...commonProps}
+//           />
+//         );
+      
+//       case 'automation':
+//         return (
+//           <AutomationRules
+//             rules={safeArray(rules)}
+//             templates={safeArray(templates)}
+//             onToggleActive={async (id) => {
+//               try {
+//                 await api.post(SMS_API_ENDPOINTS.RULES.TOGGLE_ACTIVE(id));
+//                 refreshData();
+//               } catch (error) {
+//                 setGlobalError('Failed to toggle rule');
+//               }
+//             }}
+//             onTestTrigger={async (id, data) => {
+//               try {
+//                 const response = await api.post(SMS_API_ENDPOINTS.RULES.TEST_TRIGGER(id), data);
+//                 return response.data;
+//               } catch (error) {
+//                 throw error;
+//               }
+//             }}
+//             onExecute={async (id, data) => {
+//               try {
+//                 await api.post(SMS_API_ENDPOINTS.RULES.EXECUTE(id), data);
+//                 setSuccessMessage('Rule executed successfully');
+//                 refreshData();
+//               } catch (error) {
+//                 setGlobalError('Failed to execute rule');
+//               }
+//             }}
+//             onDuplicate={async (id) => {
+//               try {
+//                 await api.post(SMS_API_ENDPOINTS.RULES.DUPLICATE(id));
+//                 setSuccessMessage('Rule duplicated successfully');
+//                 refreshData();
+//               } catch (error) {
+//                 setGlobalError('Failed to duplicate rule');
+//               }
+//             }}
+//             onDelete={async (id) => {
+//               try {
+//                 await api.delete(SMS_API_ENDPOINTS.RULES.DETAIL(id));
+//                 setSuccessMessage('Rule deleted successfully');
+//                 refreshData();
+//               } catch (error) {
+//                 setGlobalError('Failed to delete rule');
+//               }
+//             }}
+//             viewMode={viewMode}
+//             searchTerm={searchTerm}
+//             statusFilter={statusFilter}
+//             {...commonProps}
+//           />
+//         );
+      
+//       case 'queue':
+//         return (
+//           <QueueMonitor
+//             queue={safeArray(queue)}
+//             onProcessBatch={async (data) => {
+//               try {
+//                 await api.post(SMS_API_ENDPOINTS.QUEUE.PROCESS_BATCH, data);
+//                 setSuccessMessage('Batch processing started');
+//                 refreshData();
+//               } catch (error) {
+//                 setGlobalError('Failed to process batch');
+//               }
+//             }}
+//             onClearFailed={async (data) => {
+//               try {
+//                 await api.post(SMS_API_ENDPOINTS.QUEUE.CLEAR_FAILED, data);
+//                 setSuccessMessage('Failed messages cleared');
+//                 refreshData();
+//               } catch (error) {
+//                 setGlobalError('Failed to clear messages');
+//               }
+//             }}
+//             realTimeUpdates={lastMessage}
+//             viewMode={viewMode}
+//             searchTerm={searchTerm}
+//             statusFilter={statusFilter}
+//             {...commonProps}
+//           />
+//         );
+      
+//       case 'analytics':
+//         return (
+//           <AnalyticsDashboard
+//             stats={dashboardStats}
+//             analytics={analytics}
+//             gateways={safeArray(gateways)}
+//             messages={safeArray(messages)}
+//             templates={safeArray(templates)}
+//             queue={safeArray(queue)}
+//             detailed={true}
+//             performanceData={performanceMetrics}
+//             onRefresh={handleRefresh}
+//             onExport={async (format) => {
+//               try {
+//                 if (format === 'csv') {
+//                   window.location.href = SMS_API_ENDPOINTS.ANALYTICS.EXPORT;
+//                 }
+//                 setSuccessMessage('Data exported successfully');
+//               } catch (error) {
+//                 setGlobalError('Failed to export data');
+//               }
+//             }}
+//             {...commonProps}
+//           />
+//         );
+      
+//       case 'export':
+//         return (
+//           <ExportManager
+//             messages={safeArray(messages)}
+//             templates={safeArray(templates)}
+//             gateways={safeArray(gateways)}
+//             rules={safeArray(rules)}
+//             analytics={analytics}
+//             onExport={async (format, data) => {
+//               try {
+//                 // Handle export based on format
+//                 console.log('Exporting:', format, data);
+//                 setSuccessMessage(`Data exported as ${format.toUpperCase()}`);
+//               } catch (error) {
+//                 setGlobalError('Failed to export data');
+//               }
+//             }}
+//             {...commonProps}
+//           />
+//         );
+      
+//       default:
+//         return null;
+//     }
+//   };
+
+//   // ===========================================================================
+//   // Main Render
+//   // ===========================================================================
+//   return (
+//     <div className={`relative isolate min-h-screen transition-colors duration-300 ${themeClasses.bg.primary}`}>
+//       <div className="p-3 sm:p-4 md:p-5 lg:p-6 max-w-7xl mx-auto">
+//         {renderHeader()}
+//         {renderTabs()}
+//         <AnimatePresence>{renderMobileMenu()}</AnimatePresence>
+
+//         <div className="flex flex-col lg:flex-row gap-6">
+//           <AnimatePresence>{renderFilters()}</AnimatePresence>
+
+//           <main className={showFilters ? 'w-full lg:flex-1' : 'w-full'}>
+//             <div className="space-y-6">
+//               {renderMainContent()}
+//             </div>
+//           </main>
+//         </div>
+//       </div>
+
+//       {/* Create Modal - Rendered at root level with highest z-index */}
+//       <CreateModal
+//         isOpen={showCreateModal}
+//         onClose={handleCreateModalClose}
+//         type={createType}
+//         onSubmit={handleCreateSubmit}
+//         gateways={safeArray(gateways)}
+//         templates={safeArray(templates)}
+//         theme={theme}
+//       />
+//     </div>
+//   );
+// };
+
+// export default SMSAutomation;
+
+
+
+
+
+
+
+
+
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
+import {
   MessageSquare, Settings, BarChart3, Filter, Users, Clock,
   AlertCircle, CheckCircle, XCircle, RefreshCw, Search,
-  ChevronRight, Bell, Play, Pause, Zap, Activity,
-  Download, Upload, Shield, Server, Loader,
-  Menu, X, Home, Database, Cpu, Globe
+  Bell, Zap, Activity, Download, Shield, Server, Loader,
+  Menu, X, Database, Cpu, Globe, Wifi, WifiOff, LayoutDashboard,
+  FileText, Play, Pause, Plus, Eye, EyeOff, Copy, Trash2,
+  ChevronDown, ChevronUp, Calendar, DollarSign, Tag, TrendingUp,
+  Grid, List, User, Phone, Mail, Clock3
 } from 'lucide-react';
-import { ResponsiveContainer } from 'recharts';
-import api from '../../api'
-import { useAuth } from '../../context/AuthContext'
-import { useTheme } from '../../context/ThemeContext';
-import { useWebSocket } from '../../components/SMSAutomation/hooks/useWebSocket'
-import { useSMSData } from '../../components/SMSAutomation/hooks/useSMSData'
-import {
-  EnhancedSelect,
-  DateRangePicker,
-  ConfirmationModal,
-  LoadingOverlay,
-  EmptyState,
-  StatisticsCard,
-  ChartTooltip
-} from '../../components/ServiceManagement/Shared/components'
 
-// Import child components
-import GatewayManager from '../../components/SMSAutomation/components/GatewayManager'
-import TemplateManager from '../../components/SMSAutomation/components/TemplateManager'
-import MessageManager from '../../components/SMSAutomation/components/MessageManager'
-import AutomationRules from '../../components/SMSAutomation/components/AutomationRules'
-import AnalyticsDashboard from '../../components/SMSAutomation/components/AnalyticsDashboard'
-import QueueMonitor from '../../components/SMSAutomation/components/QueueMonitor'
-import ExportManager from '../../components/SMSAutomation/components/ExportManager'
+// Components
+import { EnhancedSelect, getThemeClasses } from '../../components/ServiceManagement/Shared/components';
+import GatewayManager from '../../components/SMSAutomation/components/GatewayManager';
+import TemplateManager from '../../components/SMSAutomation/components/TemplateManager';
+import MessageManager from '../../components/SMSAutomation/components/MessageManager';
+import AutomationRules from '../../components/SMSAutomation/components/AutomationRules';
+import AnalyticsDashboard from '../../components/SMSAutomation/components/AnalyticsDashboard';
+import QueueMonitor from '../../components/SMSAutomation/components/QueueMonitor';
+import ExportManager from '../../components/SMSAutomation/components/ExportManager';
+import CreateModal from '../../components/SMSAutomation/components/CreateModal';
 
-// Import performance monitoring
-import usePerformanceMonitor from '../../components/SMSAutomation/hooks/usePerformanceMonitor'
+// Hooks
+import { useWebSocket } from '../../components/SMSAutomation/hooks/useWebSocket';
+import { useSMSData } from '../../components/SMSAutomation/hooks/useSMSData';
+import { usePerformanceMonitor } from '../../components/SMSAutomation/hooks/usePerformanceMonitor';
 
+// Utils
+import { formatCurrency, formatNumber, formatPercentage } from '../../components/SMSAutomation/utils/formatters';
+import api from '../../api';
+
+// Constants
+import { SMS_API_ENDPOINTS } from '../../components/SMSAutomation/constants/apiEndpoints';
+
+/**
+ * SMS Automation Main Component
+ * Manages SMS gateways, templates, messages, automation rules, and analytics
+ */
 const SMSAutomation = () => {
-  const { isAuthenticated, user } = useAuth();
+  // ===========================================================================
+  // Hooks and Context
+  // ===========================================================================
+  const { user } = useAuth();
   const { theme } = useTheme();
-  
-  // State management
+  const themeClasses = getThemeClasses(theme);
+
+  // ===========================================================================
+  // Local State
+  // ===========================================================================
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [stats, setStats] = useState({
-    today: { total: 0, sent: 0, delivered: 0, failed: 0, cost: 0 },
-    month: { total: 0, sent: 0, delivered: 0, failed: 0, cost: 0 },
-    gateways: { total: 0, online: 0, offline: 0, healthy: 0 },
-    queue: { pending: 0, processing: 0, failed: 0 },
-    performance: { avgDeliveryTime: 0, successRate: 0, throughput: 0 }
-  });
-  
-  // Mobile menu state
+  const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState('grid');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [dateRange, setDateRange] = useState({ start: null, end: null });
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createType, setCreateType] = useState('message');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
-  // Performance monitoring
-  const { performanceMetrics } = usePerformanceMonitor({
-    enabled: true,
-    collectMetrics: ['fps', 'memory', 'apiResponse']
-  });
+  const [globalError, setGlobalError] = useState(null);
+  const [connectionQuality, setConnectionQuality] = useState('good');
+  const [successMessage, setSuccessMessage] = useState(null);
 
-  // WebSocket integration
-  const { 
-    isConnected, 
-    realTimeUpdates,
-    subscribeToGateway,
-    unsubscribeFromGateway,
-    connectionError
-  } = useWebSocket({
-    autoConnect: true,
-    reconnectInterval: 5000
-  });
-
-  // Custom hook for SMS data management
+  // ===========================================================================
+  // Custom Hooks
+  // ===========================================================================
   const {
     gateways,
     templates,
@@ -79,726 +1207,1060 @@ const SMSAutomation = () => {
     rules,
     queue,
     analytics,
+    dashboardStats,
+    loading: dataLoading,
+    isRefreshing,
+    error: dataError,
+    pagination,
     refreshData,
-    loading,
-    error: dataError
+    fetchGateways,
+    fetchTemplates,
+    fetchMessages,
+    fetchRules,
+    fetchQueue,
+    fetchAnalytics,
+    loadMoreMessages,
+    loadMoreQueue,
+    hasActiveFilters,
+    clearFilters
   } = useSMSData();
 
-  // Ref for performance monitoring
-  const renderCountRef = useRef(0);
-  
-  // Theme classes with responsive breakpoints
-  const themeClasses = useMemo(() => ({
-    container: theme === 'dark' 
-      ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white'
-      : 'bg-gradient-to-br from-gray-50 via-white to-gray-50 text-gray-800',
-    
-    card: theme === 'dark'
-      ? 'bg-gray-800/80 backdrop-blur-md border border-gray-700 shadow-xl'
-      : 'bg-white/95 backdrop-blur-md border border-gray-200 shadow-lg',
-    
-    input: theme === 'dark'
-      ? 'bg-gray-700/70 border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-      : 'bg-white border-gray-300 text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
-    
-    button: {
-      primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all duration-200',
-      secondary: theme === 'dark'
-        ? 'bg-gray-700/80 hover:bg-gray-600/90 text-gray-200 border border-gray-600 hover:border-gray-500'
-        : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 hover:border-gray-400 shadow-sm',
-      danger: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white',
-      success: 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white',
-      warning: 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white'
-    },
-    
-    // Mobile-specific classes
-    mobileMenu: theme === 'dark'
-      ? 'bg-gray-900 border-r border-gray-800'
-      : 'bg-white border-r border-gray-200'
-  }), [theme]);
+  const {
+    metrics: performanceMetrics,
+    isActive: perfMonitoring,
+    toggleMonitoring: togglePerfMonitoring,
+    getPerformanceScore
+  } = usePerformanceMonitor({
+    enabled: true,
+    sampleInterval: 5000
+  });
 
-  // Tab configuration with responsive icons
+  const {
+    isConnected,
+    lastMessage,
+    connectionError: wsError,
+    connectionState,
+    reconnectAttempts,
+    sendMessage
+  } = useWebSocket({
+    url: process.env.NODE_ENV === 'production'
+      ? `wss://${window.location.host}/ws/sms/status/`
+      : 'ws://localhost:8000/ws/sms/status/',
+    autoConnect: !!user,
+    reconnectInterval: 3000,
+    maxReconnectAttempts: 20,
+    heartbeatInterval: 25000,
+    onMessage: (data) => handleRealTimeUpdate(data),
+    onOpen: () => {
+      setConnectionQuality('good');
+      setGlobalError(null);
+    },
+    onClose: (event) => {
+      if (event.code !== 1000) {
+        setConnectionQuality('poor');
+      }
+    },
+    onError: () => setConnectionQuality('degraded')
+  });
+
+  // ===========================================================================
+  // Memoized Values
+  // ===========================================================================
   const tabs = useMemo(() => [
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, color: 'blue', mobileIcon: Home },
-    { id: 'messages', label: 'Messages', icon: MessageSquare, color: 'green', mobileIcon: MessageSquare },
-    { id: 'templates', label: 'Templates', icon: Users, color: 'purple', mobileIcon: Users },
-    { id: 'gateways', label: 'Gateways', icon: Server, color: 'orange', mobileIcon: Server },
-    { id: 'automation', label: 'Automation', icon: Zap, color: 'yellow', mobileIcon: Zap },
-    { id: 'queue', label: 'Queue', icon: Clock, color: 'indigo', mobileIcon: Clock },
-    { id: 'analytics', label: 'Analytics', icon: Filter, color: 'pink', mobileIcon: BarChart3 },
-    { id: 'export', label: 'Export', icon: Download, color: 'teal', mobileIcon: Download }
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, description: 'Overview and key metrics' },
+    { id: 'messages', label: 'Messages', icon: MessageSquare, description: 'Send and track SMS messages' },
+    { id: 'templates', label: 'Templates', icon: FileText, description: 'Manage message templates' },
+    { id: 'gateways', label: 'Gateways', icon: Server, description: 'Configure SMS providers' },
+    { id: 'automation', label: 'Automation', icon: Zap, description: 'Automated SMS rules' },
+    { id: 'queue', label: 'Queue', icon: Clock, description: 'Message queue monitor' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, description: 'Detailed analytics' },
+    { id: 'export', label: 'Export', icon: Download, description: 'Export SMS data' }
   ], []);
 
-  // Fetch initial data with error handling and retry logic
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchInitialData();
-    }
-  }, [isAuthenticated]);
+  const statusOptions = useMemo(() => [
+    { value: 'all', label: 'All Statuses' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'sent', label: 'Sent' },
+    { value: 'delivered', label: 'Delivered' },
+    { value: 'failed', label: 'Failed' }
+  ], []);
 
-  const fetchInitialData = useCallback(async () => {
+  const createOptions = useMemo(() => [
+    { value: 'message', label: 'New Message', icon: MessageSquare },
+    { value: 'template', label: 'New Template', icon: FileText },
+    { value: 'gateway', label: 'New Gateway', icon: Server },
+    { value: 'rule', label: 'New Automation Rule', icon: Zap }
+  ], []);
+
+  // ===========================================================================
+  // Helper Functions
+  // ===========================================================================
+  const safeArray = (data) => {
+    if (Array.isArray(data)) return data;
+    if (data && typeof data === 'object') return Object.values(data);
+    return [];
+  };
+
+  const getQueueStats = () => {
+    const queueArray = safeArray(queue);
+    return {
+      total: queueArray.length,
+      pending: queueArray.filter(q => q.status === 'pending').length,
+      processing: queueArray.filter(q => q.status === 'processing').length,
+      completed: queueArray.filter(q => q.status === 'completed').length,
+      failed: queueArray.filter(q => q.status === 'failed').length
+    };
+  };
+
+  const getGatewayStats = () => {
+    const gatewaysArray = safeArray(gateways);
+    return {
+      total: gatewaysArray.length,
+      online: gatewaysArray.filter(g => g.is_online).length,
+      offline: gatewaysArray.filter(g => !g.is_online).length,
+      active: gatewaysArray.filter(g => g.is_active).length
+    };
+  };
+
+  // ===========================================================================
+  // API Handlers for Create Operations
+  // ===========================================================================
+  const handleCreateMessage = async (data) => {
     try {
-      setIsLoading(true);
-      setError(null);
-      
-      // Parallel API calls with timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
-      
-      const [statsRes, performanceRes] = await Promise.all([
-        api.get('/api/sms/dashboard/', { signal: controller.signal }),
-        api.get('/api/sms/performance/', { signal: controller.signal }).catch(() => ({ data: {} }))
-      ]);
-      
-      clearTimeout(timeoutId);
-      
-      setStats({
-        ...statsRes.data,
-        performance: performanceRes.data || stats.performance
+      const response = await api.post(SMS_API_ENDPOINTS.MESSAGES.CREATE, {
+        ...data,
+        scheduled_for: data.scheduled_for || null,
+        gateway_id: data.gateway_id || null,
+        template_id: data.template_id || null,
+        priority: data.priority || 'normal'
       });
       
-    } catch (err) {
-      if (err.name === 'AbortError') {
-        setError('Request timeout. Please check your connection.');
-      } else {
-        setError(err.response?.data?.error || 'Failed to load SMS automation data');
-      }
-      console.error('Error fetching SMS data:', err);
-    } finally {
-      setIsLoading(false);
+      showSuccessMessage('Message sent successfully!');
+      await refreshData();
+      return response.data;
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      throw error;
     }
-  }, []);
+  };
 
-  // Handle real-time updates
-  useEffect(() => {
-    if (realTimeUpdates) {
-      handleRealTimeUpdate(realTimeUpdates);
+  const handleCreateTemplate = async (data) => {
+    try {
+      const response = await api.post(SMS_API_ENDPOINTS.TEMPLATES.LIST, {
+        ...data,
+        is_active: data.is_active ?? true,
+        allow_unicode: data.allow_unicode || false,
+        variables: data.message_template?.match(/\{\{([^}]+)\}\}/g)?.map(v => v.replace(/[{}]/g, '')) || []
+      });
+      
+      showSuccessMessage('Template created successfully!');
+      await refreshData();
+      return response.data;
+    } catch (error) {
+      console.error('Failed to create template:', error);
+      throw error;
     }
-  }, [realTimeUpdates]);
+  };
 
+  const handleCreateGateway = async (data) => {
+    try {
+      const response = await api.post(SMS_API_ENDPOINTS.GATEWAYS.LIST, {
+        ...data,
+        is_active: data.is_active ?? true,
+        is_default: data.is_default || false,
+        max_messages_per_minute: data.max_messages_per_minute || 60,
+        max_messages_per_hour: data.max_messages_per_hour || 1000,
+        max_messages_per_day: data.max_messages_per_day || 10000
+      });
+      
+      showSuccessMessage('Gateway added successfully!');
+      await refreshData();
+      return response.data;
+    } catch (error) {
+      console.error('Failed to create gateway:', error);
+      throw error;
+    }
+  };
+
+  const handleCreateRule = async (data) => {
+    try {
+      const response = await api.post(SMS_API_ENDPOINTS.RULES.LIST, {
+        ...data,
+        is_active: data.is_active ?? true,
+        is_recurring: data.is_recurring || false,
+        condition: data.condition_field && data.condition_operator && data.condition_value ? {
+          field: data.condition_field,
+          operator: data.condition_operator,
+          value: data.condition_value
+        } : null,
+        delay_minutes: data.delay_minutes || 0,
+        priority: data.priority || 'normal'
+      });
+      
+      showSuccessMessage('Automation rule created successfully!');
+      await refreshData();
+      return response.data;
+    } catch (error) {
+      console.error('Failed to create rule:', error);
+      throw error;
+    }
+  };
+
+  // ===========================================================================
+  // Callback Handlers
+  // ===========================================================================
   const handleRealTimeUpdate = useCallback((update) => {
+    if (!update) return;
+
     switch (update.type) {
       case 'sms_sent':
-        setStats(prev => ({
-          ...prev,
-          today: {
-            ...prev.today,
-            sent: prev.today.sent + 1,
-            total: prev.today.total + 1
-          }
-        }));
-        break;
-        
       case 'sms_delivered':
-        setStats(prev => ({
-          ...prev,
-          today: {
-            ...prev.today,
-            delivered: prev.today.delivered + 1
-          }
-        }));
-        break;
-        
-      case 'gateway_update':
-        // Update gateway stats
-        break;
-        
+      case 'sms_failed':
       case 'queue_update':
-        setStats(prev => ({
-          ...prev,
-          queue: update.data
-        }));
+      case 'gateway_update':
+        refreshData();
         break;
-        
-      case 'performance_update':
-        setStats(prev => ({
-          ...prev,
-          performance: update.data
-        }));
+      case 'ping':
+        sendMessage({ type: 'pong' });
+        break;
+      default:
         break;
     }
-  }, []);
+  }, [refreshData, sendMessage]);
 
-  // Optimized search function with debouncing
-  const debouncedSearch = useCallback((searchTerm, data, fields) => {
-    if (!searchTerm.trim()) return data;
-    
-    const lowerSearch = searchTerm.toLowerCase();
-    return data.filter(item => 
-      fields.some(field => 
-        String(item[field] || '').toLowerCase().includes(lowerSearch)
-      )
-    );
-  }, []);
-
-  // Mobile responsive handlers
   const handleTabChange = useCallback((tabId) => {
     setActiveTab(tabId);
     setIsMobileMenuOpen(false);
   }, []);
 
-  // Performance optimization: Memoize expensive calculations
-  const performanceData = useMemo(() => ({
-    deliveryRate: stats.today.total > 0 
-      ? Math.round((stats.today.delivered / stats.today.total) * 100)
-      : 0,
-    estimatedQueueTime: stats.queue.pending > 0
-      ? Math.round(stats.queue.pending / (stats.performance.throughput || 1))
-      : 0,
-    gatewayHealth: stats.gateways.total > 0
-      ? Math.round((stats.gateways.healthy / stats.gateways.total) * 100)
-      : 0
-  }), [stats]);
-
-  // Render count for debugging
-  useEffect(() => {
-    renderCountRef.current += 1;
-    if (renderCountRef.current > 10) {
-      console.warn('High render count detected in SMSAutomation:', renderCountRef.current);
+  const handleRefresh = useCallback(async () => {
+    try {
+      await refreshData();
+    } catch (err) {
+      setGlobalError('Failed to refresh data');
+      setTimeout(() => setGlobalError(null), 5000);
     }
-  });
+  }, [refreshData]);
 
-  if (!isAuthenticated) {
+  const showSuccessMessage = (message) => {
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(null), 3000);
+  };
+
+  const handleSearch = useCallback((e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    
+    const timeoutId = setTimeout(() => {
+      if (activeTab === 'messages') {
+        fetchMessages(1, { search: value });
+      } else if (activeTab === 'templates') {
+        fetchTemplates(1, { search: value });
+      } else if (activeTab === 'gateways') {
+        fetchGateways(1, { search: value });
+      } else if (activeTab === 'automation') {
+        fetchRules(1, { search: value });
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [activeTab, fetchMessages, fetchTemplates, fetchGateways, fetchRules]);
+
+  const handleCreate = useCallback((type) => {
+    setCreateType(type);
+    setShowCreateModal(true);
+  }, []);
+
+  const handleCreateSubmit = useCallback(async (data) => {
+    try {
+      switch (createType) {
+        case 'message':
+          await handleCreateMessage(data);
+          break;
+        case 'template':
+          await handleCreateTemplate(data);
+          break;
+        case 'gateway':
+          await handleCreateGateway(data);
+          break;
+        case 'rule':
+          await handleCreateRule(data);
+          break;
+        default:
+          break;
+      }
+    } catch (error) {
+      throw error;
+    }
+  }, [createType]);
+
+  const handleCreateModalClose = useCallback((success) => {
+    setShowCreateModal(false);
+    if (success) {
+      refreshData();
+    }
+  }, [refreshData]);
+
+  // ===========================================================================
+  // Render Helpers
+  // ===========================================================================
+  const renderError = () => {
+    const error = globalError || dataError || wsError;
+    if (!error) return null;
+
     return (
-      <div className={`min-h-screen flex items-center justify-center ${themeClasses.container}`}>
-        <div className="text-center p-8">
-          <Shield className="w-16 h-16 mx-auto mb-6 text-gray-400" />
-          <h2 className="text-2xl font-bold mb-3">Authentication Required</h2>
-          <p className="text-gray-500 mb-6 max-w-md mx-auto">
-            Please log in to access the SMS automation system
-          </p>
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className={`mb-4 p-4 rounded-lg border ${themeClasses.bg.danger} ${themeClasses.border.danger}`}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="text-red-500" size={20} />
+            <span className={themeClasses.text.primary}>{error}</span>
+          </div>
           <button
-            onClick={() => window.location.href = '/login'}
-            className={`px-6 py-3 rounded-lg font-medium ${themeClasses.button.primary}`}
+            onClick={() => setGlobalError(null)}
+            className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30"
           >
-            Go to Login
+            <X size={16} />
           </button>
         </div>
-      </div>
+      </motion.div>
     );
-  }
+  };
 
-  if (isLoading) {
+  const renderSuccess = () => {
+    if (!successMessage) return null;
+
     return (
-      <LoadingOverlay 
-        isVisible={true} 
-        message="Loading SMS Automation Dashboard..." 
-        theme={theme}
-        progress={true}
-      />
-    );
-  }
-
-  return (
-    <div className={`min-h-screen transition-all duration-300 ${themeClasses.container}`}>
-      {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* Mobile Sidebar */}
-      <div className={`
-        fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:hidden
-        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-        ${themeClasses.mobileMenu}
-      `}>
-        <div className="flex flex-col h-full">
-          {/* Mobile Header */}
-          <div className="p-4 border-b border-gray-700 dark:border-gray-600">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <MessageSquare className="w-6 h-6 text-blue-500" />
-                SMS
-              </h2>
-              <button
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-800"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className={`mb-4 p-4 rounded-lg border bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800`}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="text-green-500" size={20} />
+            <span className={themeClasses.text.primary}>{successMessage}</span>
           </div>
-
-          {/* Mobile Navigation */}
-          <nav className="flex-1 overflow-y-auto p-4">
-            <div className="space-y-1">
-              {tabs.map((tab) => {
-                const Icon = tab.mobileIcon || tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => handleTabChange(tab.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                      activeTab === tab.id
-                        ? theme === 'dark'
-                          ? `bg-${tab.color}-900/30 text-${tab.color}-400 border-l-4 border-${tab.color}-400`
-                          : `bg-${tab.color}-50 text-${tab.color}-600 border-l-4 border-${tab.color}-500`
-                        : theme === 'dark'
-                        ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-800'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    {tab.label}
-                    {tab.id === 'queue' && stats.queue.pending > 0 && (
-                      <span className="ml-auto px-2 py-1 text-xs bg-red-500 text-white rounded-full">
-                        {stats.queue.pending}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </nav>
-
-          {/* Mobile Footer */}
-          <div className="p-4 border-t border-gray-700 dark:border-gray-600">
-            <div className="flex items-center justify-between text-sm">
-              <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>
-                {user?.username || 'User'}
-              </span>
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${
-                  isConnected ? 'bg-green-500' : 'bg-red-500'
-                }`} />
-                <span>{isConnected ? 'Online' : 'Offline'}</span>
-              </div>
-            </div>
-          </div>
+          <button
+            onClick={() => setSuccessMessage(null)}
+            className="p-1 rounded hover:bg-green-100 dark:hover:bg-green-900/30"
+          >
+            <X size={16} />
+          </button>
         </div>
+      </motion.div>
+    );
+  };
+
+  const renderConnectionStatus = () => {
+    let statusColor = 'bg-green-500';
+    let statusText = 'Connected';
+    let statusIcon = <Wifi className="w-4 h-4" />;
+
+    if (!isConnected) {
+      if (reconnectAttempts > 0) {
+        statusColor = 'bg-yellow-500 animate-pulse';
+        statusText = `Reconnecting (${reconnectAttempts})`;
+        statusIcon = <WifiOff className="w-4 h-4" />;
+      } else {
+        statusColor = 'bg-red-500';
+        statusText = 'Disconnected';
+        statusIcon = <WifiOff className="w-4 h-4" />;
+      }
+    }
+
+    return (
+      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${themeClasses.bg.secondary}`}>
+        {statusIcon}
+        <div className={`w-2 h-2 rounded-full ${statusColor}`} />
+        <span className="text-sm hidden sm:inline">{statusText}</span>
+      </div>
+    );
+  };
+
+  const renderHeader = () => (
+    <header className="mb-6 relative z-10">
+      {/* Mobile Header */}
+      <div className="lg:hidden flex items-center justify-between mb-4">
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className={`p-2 rounded-lg ${themeClasses.bg.secondary}`}
+          aria-label="Toggle menu"
+        >
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+        
+        <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>
+          SMS Automation
+        </h1>
+
+        <button
+          onClick={() => handleCreate(createType)}
+          className={`p-2 rounded-lg ${themeClasses.button.primary}`}
+          aria-label="Create new"
+        >
+          <Plus size={20} />
+        </button>
       </div>
 
-      {/* Main Layout */}
-      <div className="flex flex-col lg:flex-row min-h-screen">
-        {/* Desktop Sidebar */}
-        <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 z-30">
-          <div className={`flex flex-col flex-1 border-r ${theme === 'dark' ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'}`}>
-            {/* Logo */}
-            <div className="p-6">
-              <h1 className="text-2xl font-bold flex items-center gap-2">
-                <MessageSquare className="w-8 h-8 text-blue-500" />
-                SMS Automation
-              </h1>
-              <p className={`text-sm mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                Enterprise SMS Platform
-              </p>
-            </div>
-
-            {/* Navigation */}
-            <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                      activeTab === tab.id
-                        ? theme === 'dark'
-                          ? `bg-${tab.color}-900/30 text-${tab.color}-400`
-                          : `bg-${tab.color}-50 text-${tab.color}-600`
-                        : theme === 'dark'
-                        ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-800'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    {tab.label}
-                    {tab.id === 'queue' && stats.queue.pending > 0 && (
-                      <span className="ml-auto px-2 py-1 text-xs bg-red-500 text-white rounded-full">
-                        {stats.queue.pending}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </nav>
-
-            {/* User Info */}
-            <div className={`p-4 border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
-              <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
-                }`}>
-                  <Users className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{user?.username || 'User'}</p>
-                  <p className={`text-xs truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {user?.email || 'admin@example.com'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 lg:pl-64">
-          {/* Top Bar */}
-          <div className={`sticky top-0 z-20 px-4 sm:px-6 py-4 border-b backdrop-blur-md ${
-            theme === 'dark' 
-              ? 'border-gray-800 bg-gray-900/95' 
-              : 'border-gray-200 bg-white/95'
-          }`}>
-            <div className="flex items-center justify-between">
-              {/* Mobile Menu Button */}
-              <button
-                onClick={() => setIsMobileMenuOpen(true)}
-                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                <Menu className="w-6 h-6" />
-              </button>
-
-              {/* Page Title */}
-              <div className="flex-1 lg:ml-4">
-                <h2 className="text-lg sm:text-xl font-semibold">
-                  {tabs.find(t => t.id === activeTab)?.label || 'Dashboard'}
-                </h2>
-                <p className={`text-sm hidden sm:block ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {activeTab === 'dashboard' && 'Real-time monitoring and analytics'}
-                  {activeTab === 'messages' && 'Send and manage SMS messages'}
-                  {activeTab === 'templates' && 'Create and manage message templates'}
-                  {activeTab === 'gateways' && 'Configure SMS gateway connections'}
-                  {activeTab === 'automation' && 'Set up automated SMS triggers'}
-                  {activeTab === 'queue' && 'Monitor and manage processing queue'}
-                  {activeTab === 'analytics' && 'Detailed analytics and reports'}
-                  {activeTab === 'export' && 'Export data in various formats'}
-                </p>
-              </div>
-
-              {/* Status Indicators */}
-              <div className="flex items-center gap-3">
-                {/* Connection Status */}
-                <div className="hidden sm:flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'
-                  }`} />
-                  <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {isConnected ? 'Live' : 'Offline'}
-                  </span>
-                </div>
-
-                {/* Performance Indicator */}
-                {performanceMetrics.fps > 0 && (
-                  <div className="hidden md:flex items-center gap-2">
-                    <Cpu className="w-4 h-4 text-gray-400" />
-                    <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {Math.round(performanceMetrics.fps)} FPS
-                    </span>
-                  </div>
-                )}
-
-                {/* Refresh Button */}
-                <button
-                  onClick={refreshData}
-                  disabled={loading}
-                  className={`p-2 rounded-lg ${themeClasses.button.secondary}`}
-                  title="Refresh data"
-                >
-                  <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                </button>
-              </div>
-            </div>
+      {/* Desktop Header */}
+      <div className="hidden lg:flex lg:flex-col lg:gap-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className={`text-3xl font-bold mb-1 ${themeClasses.text.primary}`}>
+              SMS Automation
+            </h1>
+            <p className={`text-sm ${themeClasses.text.secondary}`}>
+              Manage SMS gateways, templates, and automated messaging
+            </p>
           </div>
 
-          {/* Error Alert */}
-          {(error || dataError || connectionError) && (
-            <div className="mx-4 mt-4">
-              <div className={`p-4 rounded-lg flex items-start justify-between ${
-                theme === 'dark' 
-                  ? 'bg-red-900/30 text-red-400 border border-red-800/50' 
-                  : 'bg-red-50 text-red-700 border border-red-200'
-              }`}>
-                <div className="flex items-start gap-2">
-                  <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">Error</p>
-                    <p className="text-sm mt-1">{error || dataError || connectionError}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    setError(null);
-                    if (connectionError) refreshData();
-                  }}
-                  className="p-1 hover:opacity-70"
-                >
-                  <XCircle className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {renderConnectionStatus()}
 
-          {/* Content Area */}
-          <div className="p-4 sm:p-6">
-            {/* Dashboard Overview (Only shown on dashboard tab) */}
-            {activeTab === 'dashboard' && (
-              <div className="mb-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <StatisticsCard
-                    title="Today's Messages"
-                    value={stats.today.total}
-                    change={stats.today.total > 0 ? performanceData.deliveryRate : 0}
-                    icon={MessageSquare}
-                    theme={theme}
-                    trend={stats.today.total > 0 ? 'up' : 'neutral'}
-                    format="number"
-                    size="lg"
-                  />
-                  
-                  <StatisticsCard
-                    title="Delivery Rate"
-                    value={performanceData.deliveryRate}
-                    change={5}
-                    icon={CheckCircle}
-                    theme={theme}
-                    trend="up"
-                    format="percentage"
-                    size="lg"
-                  />
-                  
-                  <StatisticsCard
-                    title="Queue Pending"
-                    value={stats.queue.pending}
-                    change={performanceData.estimatedQueueTime}
-                    icon={Clock}
-                    theme={theme}
-                    format="number"
-                    size="lg"
-                    suffix="messages"
-                    subText={`~${performanceData.estimatedQueueTime}m to clear`}
-                  />
-                  
-                  <StatisticsCard
-                    title="Gateway Health"
-                    value={performanceData.gatewayHealth}
-                    change={stats.gateways.online - stats.gateways.offline}
-                    icon={Server}
-                    theme={theme}
-                    trend={stats.gateways.healthy > stats.gateways.total / 2 ? 'up' : 'down'}
-                    format="percentage"
-                    size="lg"
-                    subText={`${stats.gateways.online}/${stats.gateways.total} online`}
-                  />
-                </div>
+            {perfMonitoring && (
+              <div className={`hidden xl:flex items-center gap-2 px-3 py-2 rounded-lg ${themeClasses.bg.secondary}`}>
+                <Cpu className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  Score: <span className="text-blue-500">{getPerformanceScore()}</span>
+                </span>
               </div>
             )}
 
-            {/* Main Content Container */}
-            <div className={`rounded-xl overflow-hidden ${themeClasses.card}`}>
-              {/* Tab Navigation (Desktop) */}
-              <div className={`hidden lg:flex border-b ${
-                theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
-              }`}>
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex-shrink-0 px-6 py-3 font-medium text-sm transition-all duration-300 flex items-center gap-2 ${
-                      activeTab === tab.id
-                        ? theme === 'dark'
-                          ? `text-${tab.color}-400 border-b-2 border-${tab.color}-400`
-                          : `text-${tab.color}-600 border-b-2 border-${tab.color}-600`
-                        : theme === 'dark'
-                        ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-800/50'
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    <tab.icon className="w-4 h-4" />
-                    {tab.label}
-                    {tab.id === 'queue' && stats.queue.pending > 0 && (
-                      <span className="ml-2 px-2 py-0.5 text-xs bg-red-500 text-white rounded-full">
-                        {stats.queue.pending}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              {/* Tab Content */}
-              <div className="p-4 sm:p-6">
-                {activeTab === 'dashboard' && (
-                  <div className="space-y-6">
-                    <AnalyticsDashboard
-                      stats={stats}
-                      analytics={analytics}
-                      theme={theme}
-                    />
-                    
-                    {/* Quick Actions */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <button
-                        onClick={() => setActiveTab('messages')}
-                        className={`p-4 rounded-lg text-left transition-all hover:scale-[1.02] ${themeClasses.card}`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-blue-100 text-blue-600">
-                            <MessageSquare className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <h3 className="font-medium">Send SMS</h3>
-                            <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                              Send a new message
-                            </p>
-                          </div>
-                        </div>
-                      </button>
-                      
-                      <button
-                        onClick={() => setActiveTab('queue')}
-                        className={`p-4 rounded-lg text-left transition-all hover:scale-[1.02] ${themeClasses.card}`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-orange-100 text-orange-600">
-                            <Clock className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <h3 className="font-medium">Queue Monitor</h3>
-                            <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                              {stats.queue.pending} pending messages
-                            </p>
-                          </div>
-                        </div>
-                      </button>
-                      
-                      <button
-                        onClick={() => setActiveTab('gateways')}
-                        className={`p-4 rounded-lg text-left transition-all hover:scale-[1.02] ${themeClasses.card}`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-green-100 text-green-600">
-                            <Server className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <h3 className="font-medium">Gateway Status</h3>
-                            <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                              {stats.gateways.online}/{stats.gateways.total} online
-                            </p>
-                          </div>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === 'messages' && (
-                  <MessageManager
-                    messages={messages}
-                    loading={loading}
-                    theme={theme}
-                    refreshData={refreshData}
-                  />
-                )}
-
-                {activeTab === 'templates' && (
-                  <TemplateManager
-                    templates={templates}
-                    loading={loading}
-                    theme={theme}
-                    refreshData={refreshData}
-                  />
-                )}
-
-                {activeTab === 'gateways' && (
-                  <GatewayManager
-                    gateways={gateways}
-                    loading={loading}
-                    theme={theme}
-                    refreshData={refreshData}
-                  />
-                )}
-
-                {activeTab === 'automation' && (
-                  <AutomationRules
-                    rules={rules}
-                    loading={loading}
-                    theme={theme}
-                    refreshData={refreshData}
-                  />
-                )}
-
-                {activeTab === 'queue' && (
-                  <QueueMonitor
-                    queue={queue}
-                    loading={loading}
-                    theme={theme}
-                    refreshData={refreshData}
-                    realTimeUpdates={realTimeUpdates}
-                  />
-                )}
-
-                {activeTab === 'analytics' && (
-                  <AnalyticsDashboard
-                    stats={stats}
-                    analytics={analytics}
-                    theme={theme}
-                    detailed={true}
-                  />
-                )}
-
-                {activeTab === 'export' && (
-                  <ExportManager
-                    messages={messages}
-                    templates={templates}
-                    gateways={gateways}
-                    rules={rules}
-                    theme={theme}
-                  />
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Performance Footer */}
-          <div className={`px-4 sm:px-6 py-3 border-t ${
-            theme === 'dark' ? 'border-gray-800 bg-gray-900/50' : 'border-gray-200 bg-gray-50/50'
-          }`}>
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-sm">
-              <div className={`flex items-center gap-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                <span className="flex items-center gap-1">
-                  <Database className="w-3 h-3" />
-                  {messages.length} messages
-                </span>
-                <span className="flex items-center gap-1">
-                  <Cpu className="w-3 h-3" />
-                  {Math.round(performanceMetrics.memory || 0)} MB
-                </span>
-                <span className="flex items-center gap-1">
-                  <Globe className="w-3 h-3" />
-                  {gateways.filter(g => g.is_online).length} gateways online
-                </span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                {!isConnected && (
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    theme === 'dark' ? 'bg-yellow-900/50 text-yellow-400' : 'bg-yellow-100 text-yellow-700'
-                  }`}>
-                    Reconnecting...
-                  </span>
-                )}
-                <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>
-                  v2.0.0 • {new Date().getFullYear()}
-                </span>
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-
-      {/* WebSocket Connection Status (Mobile) */}
-      {!isConnected && (
-        <div className="fixed bottom-4 right-4 p-3 bg-yellow-500 text-white rounded-lg shadow-lg animate-pulse lg:hidden">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4" />
-            <span className="text-sm">Reconnecting...</span>
+            <button
+              onClick={togglePerfMonitoring}
+              className={`p-2 rounded-lg ${themeClasses.button.secondary}`}
+              title={perfMonitoring ? 'Disable performance monitor' : 'Enable performance monitor'}
+            >
+              <Activity size={18} className={perfMonitoring ? 'text-blue-500' : ''} />
+            </button>
           </div>
         </div>
-      )}
+
+        {/* Action Bar */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Search - Desktop */}
+          <div className="relative flex-1 min-w-[200px] max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={handleSearch}
+              placeholder="Search..."
+              className={`w-full pl-10 pr-4 py-2 rounded-lg border text-sm ${themeClasses.input}`}
+            />
+          </div>
+
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap ${
+              themeClasses.button.secondary
+            }`}
+          >
+            <Filter size={18} />
+            <span className="hidden sm:inline">{showFilters ? 'Hide' : 'Show'} Filters</span>
+          </button>
+
+          <button
+            onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+            className={`p-2 rounded-lg ${themeClasses.button.secondary}`}
+            title={viewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view'}
+          >
+            {viewMode === 'grid' ? <List size={18} /> : <Grid size={18} />}
+          </button>
+
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className={`p-2 rounded-lg ${themeClasses.button.secondary}`}
+          >
+            <RefreshCw size={18} className={isRefreshing ? 'animate-spin' : ''} />
+          </button>
+
+          <div className="flex items-center gap-2">
+            <EnhancedSelect
+              value={createType}
+              onChange={setCreateType}
+              options={createOptions}
+              theme={theme}
+              className="w-40"
+            />
+
+            <button
+              onClick={() => handleCreate(createType)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap ${
+                themeClasses.button.primary
+              } hover:scale-105 transition-all`}
+            >
+              <Plus size={18} />
+              <span className="hidden sm:inline">Create</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <AnimatePresence>{renderError()}</AnimatePresence>
+      <AnimatePresence>{renderSuccess()}</AnimatePresence>
+    </header>
+  );
+
+  const renderTabs = () => (
+    <div className="mb-6 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] relative z-10">
+      <nav className="flex flex-nowrap gap-1 sm:gap-2 border-b border-gray-200 dark:border-gray-700 pb-2 min-w-max">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          const queueStats = getQueueStats();
+          
+          return (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
+                isActive 
+                  ? themeClasses.button.primary 
+                  : `${themeClasses.button.secondary} hover:bg-gray-100 dark:hover:bg-gray-800`
+              }`}
+              title={tab.description}
+            >
+              <Icon size={18} />
+              <span className="hidden sm:inline">{tab.label}</span>
+              {tab.id === 'queue' && queueStats.pending > 0 && (
+                <span className="px-1.5 py-0.5 text-xs bg-red-500 text-white rounded-full">
+                  {queueStats.pending}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
+    </div>
+  );
+
+  const renderMobileMenu = () => {
+    if (!isMobileMenuOpen) return null;
+
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[9998] bg-black/50 lg:hidden"
+        onClick={() => setIsMobileMenuOpen(false)}
+      >
+        <motion.div
+          initial={{ x: -300 }}
+          animate={{ x: 0 }}
+          exit={{ x: -300 }}
+          transition={{ type: "spring", damping: 25 }}
+          className={`absolute left-0 top-0 h-full w-64 ${themeClasses.bg.card} shadow-xl p-4`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex justify-between items-center mb-6">
+            <h2 className={`font-bold ${themeClasses.text.primary}`}>Menu</h2>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Mobile Search */}
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={handleSearch}
+              placeholder="Search..."
+              className={`w-full pl-9 pr-3 py-2 rounded-lg border text-sm ${themeClasses.input}`}
+            />
+          </div>
+
+          {/* Mobile Tabs */}
+          <div className="space-y-1">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              const queueStats = getQueueStats();
+              
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg font-medium ${
+                    isActive ? themeClasses.button.primary : themeClasses.button.secondary
+                  }`}
+                >
+                  <Icon size={18} />
+                  <span className="flex-1 text-left">{tab.label}</span>
+                  {tab.id === 'queue' && queueStats.pending > 0 && (
+                    <span className="px-1.5 py-0.5 text-xs bg-red-500 text-white rounded-full">
+                      {queueStats.pending}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Mobile Actions */}
+          <div className={`mt-6 pt-6 border-t ${themeClasses.border.light}`}>
+            <div className="space-y-2">
+              <EnhancedSelect
+                value={createType}
+                onChange={setCreateType}
+                options={createOptions}
+                theme={theme}
+                className="w-full"
+              />
+              
+              <button
+                onClick={() => {
+                  handleCreate(createType);
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium ${
+                  themeClasses.button.primary
+                }`}
+              >
+                <Plus size={18} />
+                Create
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    );
+  };
+
+  const renderFilters = () => {
+    if (!showFilters) return null;
+
+    return (
+      <motion.aside
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        className="w-full lg:w-80 mb-6 lg:mb-0 relative z-10"
+      >
+        <div className={`p-5 rounded-xl border sticky top-6 ${themeClasses.bg.card} ${themeClasses.border.light}`}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className={`font-semibold ${themeClasses.text.primary}`}>Filters</h3>
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className={`text-sm ${themeClasses.text.secondary} hover:text-indigo-500`}
+              >
+                Clear all
+              </button>
+            )}
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${themeClasses.text.secondary}`}>
+                Status
+              </label>
+              <EnhancedSelect
+                value={statusFilter}
+                onChange={setStatusFilter}
+                options={statusOptions}
+                theme={theme}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${themeClasses.text.secondary}`}>
+                Date Range
+              </label>
+              <div className="space-y-2">
+                <input
+                  type="date"
+                  value={dateRange.start || ''}
+                  onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                  className={`w-full px-3 py-2 rounded-lg border text-sm ${themeClasses.input}`}
+                />
+                <input
+                  type="date"
+                  value={dateRange.end || ''}
+                  onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                  className={`w-full px-3 py-2 rounded-lg border text-sm ${themeClasses.input}`}
+                />
+              </div>
+            </div>
+
+            {activeTab === 'gateways' && (
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${themeClasses.text.secondary}`}>
+                  Gateway Type
+                </label>
+                <EnhancedSelect
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  options={[
+                    { value: 'all', label: 'All Types' },
+                    { value: 'africas_talking', label: "Africa's Talking" },
+                    { value: 'twilio', label: 'Twilio' },
+                    { value: 'smpp', label: 'SMPP' },
+                    { value: 'custom', label: 'Custom' }
+                  ]}
+                  theme={theme}
+                />
+              </div>
+            )}
+
+            {activeTab === 'templates' && (
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${themeClasses.text.secondary}`}>
+                  Template Type
+                </label>
+                <EnhancedSelect
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  options={[
+                    { value: 'all', label: 'All Types' },
+                    { value: 'welcome', label: 'Welcome' },
+                    { value: 'payment', label: 'Payment' },
+                    { value: 'reminder', label: 'Reminder' },
+                    { value: 'promotional', label: 'Promotional' }
+              ]}
+                  theme={theme}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.aside>
+    );
+  };
+
+  const renderMainContent = () => {
+    const commonProps = {
+      theme,
+      themeClasses,
+      onRefresh: handleRefresh,
+      loading: dataLoading,
+      viewMode,
+      searchTerm,
+      statusFilter
+    };
+
+    switch (activeTab) {
+      case 'dashboard':
+        return (
+          <AnalyticsDashboard
+            stats={dashboardStats}
+            analytics={analytics}
+            gateways={safeArray(gateways)}
+            messages={safeArray(messages)}
+            templates={safeArray(templates)}
+            queue={safeArray(queue)}
+            performanceData={performanceMetrics}
+            onRefresh={handleRefresh}
+            {...commonProps}
+          />
+        );
+      
+      case 'messages':
+        return (
+          <MessageManager
+            messages={safeArray(messages)}
+            gateways={safeArray(gateways)}
+            templates={safeArray(templates)}
+            pagination={pagination.messages}
+            onLoadMore={loadMoreMessages}
+            onSendMessage={(data) => sendMessage({ type: 'send_sms', ...data })}
+            dateRange={dateRange}
+            {...commonProps}
+          />
+        );
+      
+      case 'templates':
+        return (
+          <TemplateManager
+            templates={safeArray(templates)}
+            onCreateClick={() => handleCreate('template')}
+            onDuplicate={async (id) => {
+              try {
+                await api.post(SMS_API_ENDPOINTS.TEMPLATES.DUPLICATE(id));
+                showSuccessMessage('Template duplicated successfully');
+                await refreshData();
+              } catch (error) {
+                setGlobalError('Failed to duplicate template');
+                setTimeout(() => setGlobalError(null), 5000);
+              }
+            }}
+            onTestRender={async (id, data) => {
+              try {
+                const response = await api.post(SMS_API_ENDPOINTS.TEMPLATES.TEST_RENDER(id), data);
+                return response.data;
+              } catch (error) {
+                throw error;
+              }
+            }}
+            onEdit={async (id, data) => {
+              try {
+                await api.put(SMS_API_ENDPOINTS.TEMPLATES.DETAIL(id), data);
+                showSuccessMessage('Template updated successfully');
+                await refreshData();
+              } catch (error) {
+                setGlobalError('Failed to update template');
+                setTimeout(() => setGlobalError(null), 5000);
+              }
+            }}
+            onDelete={async (id) => {
+              try {
+                await api.delete(SMS_API_ENDPOINTS.TEMPLATES.DETAIL(id));
+                showSuccessMessage('Template deleted successfully');
+                await refreshData();
+              } catch (error) {
+                setGlobalError('Failed to delete template');
+                setTimeout(() => setGlobalError(null), 5000);
+              }
+            }}
+            {...commonProps}
+          />
+        );
+      
+      case 'gateways':
+        return (
+          <GatewayManager
+            gateways={safeArray(gateways)}
+            onCreateClick={() => handleCreate('gateway')}
+            onTestConnection={async (id) => {
+              try {
+                const response = await api.post(SMS_API_ENDPOINTS.GATEWAYS.TEST_CONNECTION(id));
+                if (response.data.success) {
+                  showSuccessMessage('Connection test successful');
+                } else {
+                  setGlobalError('Connection test failed');
+                  setTimeout(() => setGlobalError(null), 5000);
+                }
+                await refreshData();
+              } catch (error) {
+                setGlobalError('Connection test failed');
+                setTimeout(() => setGlobalError(null), 5000);
+              }
+            }}
+            onSetDefault={async (id) => {
+              try {
+                await api.post(SMS_API_ENDPOINTS.GATEWAYS.SET_DEFAULT(id));
+                showSuccessMessage('Default gateway updated');
+                await refreshData();
+              } catch (error) {
+                setGlobalError('Failed to set default gateway');
+                setTimeout(() => setGlobalError(null), 5000);
+              }
+            }}
+            onToggleActive={async (id) => {
+              try {
+                await api.post(SMS_API_ENDPOINTS.GATEWAYS.TOGGLE_ACTIVE(id));
+                await refreshData();
+              } catch (error) {
+                setGlobalError('Failed to toggle gateway');
+                setTimeout(() => setGlobalError(null), 5000);
+              }
+            }}
+            onEdit={async (id, data) => {
+              try {
+                await api.put(SMS_API_ENDPOINTS.GATEWAYS.DETAIL(id), data);
+                showSuccessMessage('Gateway updated successfully');
+                await refreshData();
+              } catch (error) {
+                setGlobalError('Failed to update gateway');
+                setTimeout(() => setGlobalError(null), 5000);
+              }
+            }}
+            onDelete={async (id) => {
+              try {
+                await api.delete(SMS_API_ENDPOINTS.GATEWAYS.DETAIL(id));
+                showSuccessMessage('Gateway deleted successfully');
+                await refreshData();
+              } catch (error) {
+                setGlobalError('Failed to delete gateway');
+                setTimeout(() => setGlobalError(null), 5000);
+              }
+            }}
+            {...commonProps}
+          />
+        );
+      
+      case 'automation':
+        return (
+          <AutomationRules
+            rules={safeArray(rules)}
+            templates={safeArray(templates)}
+            onCreateClick={() => handleCreate('rule')}
+            onToggleActive={async (id) => {
+              try {
+                await api.post(SMS_API_ENDPOINTS.RULES.TOGGLE_ACTIVE(id));
+                await refreshData();
+              } catch (error) {
+                setGlobalError('Failed to toggle rule');
+                setTimeout(() => setGlobalError(null), 5000);
+              }
+            }}
+            onTestTrigger={async (id, data) => {
+              try {
+                const response = await api.post(SMS_API_ENDPOINTS.RULES.TEST_TRIGGER(id), data);
+                return response.data;
+              } catch (error) {
+                throw error;
+              }
+            }}
+            onExecute={async (id, data) => {
+              try {
+                await api.post(SMS_API_ENDPOINTS.RULES.EXECUTE(id), data);
+                showSuccessMessage('Rule executed successfully');
+                await refreshData();
+              } catch (error) {
+                setGlobalError('Failed to execute rule');
+                setTimeout(() => setGlobalError(null), 5000);
+              }
+            }}
+            onDuplicate={async (id) => {
+              try {
+                await api.post(SMS_API_ENDPOINTS.RULES.DUPLICATE(id));
+                showSuccessMessage('Rule duplicated successfully');
+                await refreshData();
+              } catch (error) {
+                setGlobalError('Failed to duplicate rule');
+                setTimeout(() => setGlobalError(null), 5000);
+              }
+            }}
+            onDelete={async (id) => {
+              try {
+                await api.delete(SMS_API_ENDPOINTS.RULES.DETAIL(id));
+                showSuccessMessage('Rule deleted successfully');
+                await refreshData();
+              } catch (error) {
+                setGlobalError('Failed to delete rule');
+                setTimeout(() => setGlobalError(null), 5000);
+              }
+            }}
+            {...commonProps}
+          />
+        );
+      
+      case 'queue':
+        return (
+          <QueueMonitor
+            queue={safeArray(queue)}
+            onProcessBatch={async (data) => {
+              try {
+                await api.post(SMS_API_ENDPOINTS.QUEUE.PROCESS_BATCH, data);
+                showSuccessMessage('Batch processing started');
+                await refreshData();
+              } catch (error) {
+                setGlobalError('Failed to process batch');
+                setTimeout(() => setGlobalError(null), 5000);
+              }
+            }}
+            onClearFailed={async (data) => {
+              try {
+                await api.post(SMS_API_ENDPOINTS.QUEUE.CLEAR_FAILED, data);
+                showSuccessMessage('Failed messages cleared');
+                await refreshData();
+              } catch (error) {
+                setGlobalError('Failed to clear messages');
+                setTimeout(() => setGlobalError(null), 5000);
+              }
+            }}
+            realTimeUpdates={lastMessage}
+            {...commonProps}
+          />
+        );
+      
+      case 'analytics':
+        return (
+          <AnalyticsDashboard
+            stats={dashboardStats}
+            analytics={analytics}
+            gateways={safeArray(gateways)}
+            messages={safeArray(messages)}
+            templates={safeArray(templates)}
+            queue={safeArray(queue)}
+            detailed={true}
+            performanceData={performanceMetrics}
+            onRefresh={handleRefresh}
+            onExport={async (format) => {
+              try {
+                if (format === 'csv') {
+                  window.location.href = SMS_API_ENDPOINTS.ANALYTICS.EXPORT;
+                }
+                showSuccessMessage('Data exported successfully');
+              } catch (error) {
+                setGlobalError('Failed to export data');
+                setTimeout(() => setGlobalError(null), 5000);
+              }
+            }}
+            {...commonProps}
+          />
+        );
+      
+      case 'export':
+        return (
+          <ExportManager
+            messages={safeArray(messages)}
+            templates={safeArray(templates)}
+            gateways={safeArray(gateways)}
+            rules={safeArray(rules)}
+            analytics={analytics}
+            onExport={async (format, data) => {
+              try {
+                showSuccessMessage(`Data exported as ${format.toUpperCase()}`);
+              } catch (error) {
+                setGlobalError('Failed to export data');
+                setTimeout(() => setGlobalError(null), 5000);
+              }
+            }}
+            {...commonProps}
+          />
+        );
+      
+      default:
+        return null;
+    }
+  };
+
+  // ===========================================================================
+  // Main Render
+  // ===========================================================================
+  return (
+    <div className={`relative isolate min-h-screen transition-colors duration-300 ${themeClasses.bg.primary}`}>
+      <div className="p-3 sm:p-4 md:p-5 lg:p-6 max-w-7xl mx-auto">
+        {renderHeader()}
+        {renderTabs()}
+        <AnimatePresence>{renderMobileMenu()}</AnimatePresence>
+
+        <div className="flex flex-col lg:flex-row gap-6">
+          <AnimatePresence>{renderFilters()}</AnimatePresence>
+
+          <main className={showFilters ? 'w-full lg:flex-1' : 'w-full'}>
+            <div className="space-y-6">
+              {renderMainContent()}
+            </div>
+          </main>
+        </div>
+      </div>
+
+      {/* Create Modal - Rendered at root level with highest z-index */}
+      <CreateModal
+        isOpen={showCreateModal}
+        onClose={handleCreateModalClose}
+        type={createType}
+        onSubmit={handleCreateSubmit}
+        gateways={safeArray(gateways)}
+        templates={safeArray(templates)}
+        theme={theme}
+      />
     </div>
   );
 };
