@@ -1,44 +1,5 @@
 
 
-# """
-# Combined URL Configuration for User Management with SMS Automation
-# Production-ready with all relevant endpoints
-# """
-# from django.urls import path, include
-# from rest_framework.routers import DefaultRouter
-
-# from user_management.api.views.sms_automation_view import (
-#     SMSGatewayConfigViewSet,
-#     SMSTemplateViewSet,
-#     SMSMessageViewSet,
-#     SMSAutomationRuleViewSet,
-#     SMSAnalyticsView,
-#     SMSDashboardView,
-#     ProcessPendingMessagesView
-# )
-
-# # Initialize routers
-# router = DefaultRouter()
-
-
-# # SMS Automation Routes
-# router.register(r'sms/gateways', SMSGatewayConfigViewSet, basename='sms-gateway')
-# router.register(r'sms/templates', SMSTemplateViewSet, basename='sms-template')
-# router.register(r'sms/messages', SMSMessageViewSet, basename='sms-message')
-# router.register(r'sms/rules', SMSAutomationRuleViewSet, basename='sms-rule')
-
-# urlpatterns = [
-   
-#     # SMS Automation - Analytics & Dashboard
-#     path('sms/analytics/', SMSAnalyticsView.as_view(), name='sms-analytics'),
-#     path('sms/dashboard/', SMSDashboardView.as_view(), name='sms-dashboard'),
-#     path('sms/process-pending/', ProcessPendingMessagesView.as_view(), name='process-pending-messages'),
-
-# ]
-
-
-
-
 
 """
 URL Configuration for Integrated Client Management

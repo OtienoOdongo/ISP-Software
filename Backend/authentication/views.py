@@ -1,18 +1,17 @@
 
 
 
-
 # """
-# AUTHENTICATION APP - API Views
-# Handles only authentication-related endpoints
-# Clear separation of concerns:
+# AUTHENTICATION APP - Enhanced API Views
+# Fixed Djoser compatibility and clear separation of concerns:
+# - Djoser endpoints for authenticated user registration/login
 # - Admin dashboard client creation (authenticated)
 # - Captive portal registration (public)
 # - PPPoE authentication for routers
 # - Validation endpoints
 # """
 
-# from rest_framework.decorators import api_view, permission_classes
+# from rest_framework.decorators import api_view, permission_classes, action
 # from rest_framework.permissions import AllowAny, IsAuthenticated
 # from rest_framework.response import Response
 # from rest_framework import generics, status, viewsets, mixins
@@ -37,8 +36,10 @@
 #     PPPoEAuthSerializer,
 #     PhoneValidationSerializer,
 #     UUIDValidationSerializer,
+#     EmailValidationSerializer,
 #     PPPoECredentialUpdateSerializer,
-#     AuthenticatedUserCreateSerializer
+#     AuthenticatedUserCreateSerializer,
+#     DjoserUserSerializer
 # )
 
 # # Import signals for testing and debugging
@@ -103,222 +104,96 @@
 #     return decorator
 
 
-# # ==================== DEBUG VIEWS FOR SIGNAL TESTING ====================
-# @api_view(['GET'])
-# @permission_classes([AllowAny])
-# def debug_signal_health(request):
-#     """Debug endpoint to check signal system health"""
-#     try:
-#         if not SIGNALS_AVAILABLE:
-#             return Response({
-#                 'status': 'warning',
-#                 'message': 'Signals module not available',
-#                 'signals_available': False
-#             })
-        
-#         health = health_check_signals()
-#         return Response({
-#             'status': 'ok',
-#             'signals_available': True,
-#             'health': health
-#         })
-#     except Exception as e:
-#         logger.error(f"Signal health check error: {e}")
-#         return Response({
-#             'status': 'error',
-#             'error': str(e),
-#             'signals_available': SIGNALS_AVAILABLE
-#         }, status=500)
-
-
-# @api_view(['GET'])
-# @permission_classes([AllowAny])
-# def debug_signal_test(request):
-#     """Debug endpoint to test signal connectivity"""
-#     try:
-#         if not SIGNALS_AVAILABLE:
-#             return Response({
-#                 'status': 'warning',
-#                 'message': 'Signals module not available'
-#             })
-        
-#         results = test_signal_connection()
-#         return Response({
-#             'status': 'ok',
-#             'tests': results
-#         })
-#     except Exception as e:
-#         logger.error(f"Signal test error: {e}")
-#         return Response({
-#             'status': 'error',
-#             'error': str(e)
-#         }, status=500)
-
-
-# @api_view(['GET'])
-# @permission_classes([AllowAny])
-# def debug_signal_stats(request):
-#     """Debug endpoint to get signal statistics"""
-#     try:
-#         if not SIGNALS_AVAILABLE:
-#             return Response({
-#                 'status': 'warning',
-#                 'message': 'Signals module not available'
-#             })
-        
-#         stats = SignalCacheManager.get_signal_stats()
-#         return Response({
-#             'status': 'ok',
-#             'stats': stats
-#         })
-#     except Exception as e:
-#         logger.error(f"Signal stats error: {e}")
-#         return Response({
-#             'status': 'error',
-#             'error': str(e)
-#         }, status=500)
-
-
-# # ==================== DEBUG USER CREATION VIEW ====================
+# # ==================== EMAIL VALIDATION ENDPOINTS ====================
 # @api_view(['POST'])
 # @permission_classes([AllowAny])
-# def debug_user_create(request):
+# @rate_limited(max_calls=200, period=60, scope="email_validation")
+# def validate_email(request):
 #     """
-#     Debug endpoint for user creation with detailed logging
-#     Helps diagnose HTTP 400 errors
+#     Validate email format and check existence
+#     Specifically for authenticated user registration (Djoser)
 #     """
 #     start_time = time.time()
     
-#     logger.warning("=" * 60)
-#     logger.warning("DEBUG USER CREATION REQUEST")
-#     logger.warning("=" * 60)
-    
-#     # Log request details
-#     logger.warning(f"Method: {request.method}")
-#     logger.warning(f"Path: {request.path}")
-#     logger.warning(f"Content-Type: {request.content_type}")
-#     logger.warning(f"IP: {request.META.get('REMOTE_ADDR', 'unknown')}")
-#     logger.warning(f"User-Agent: {request.META.get('HTTP_USER_AGENT', 'Unknown')}")
-    
-#     # Parse and log request body
 #     try:
-#         if request.content_type == 'application/json':
-#             body = request.body.decode('utf-8')
-#             logger.warning(f"Raw Body: {body}")
-#             try:
-#                 data = json.loads(body)
-#                 # Hide passwords in logs
-#                 safe_data = data.copy()
-#                 if 'password' in safe_data:
-#                     safe_data['password'] = '[REDACTED]'
-#                 if 'confirm_password' in safe_data:
-#                     safe_data['confirm_password'] = '[REDACTED]'
-#                 logger.warning(f"Parsed Data: {json.dumps(safe_data, indent=2)}")
-#             except json.JSONDecodeError as e:
-#                 logger.warning(f"JSON Parse Error: {e}")
-#                 data = {}
-#         else:
-#             logger.warning(f"POST Data: {dict(request.POST)}")
-#             data = dict(request.POST)
-#     except Exception as e:
-#         logger.warning(f"Error parsing request: {e}")
-#         data = {}
-    
-#     errors = []
-    
-#     # Check required fields
-#     required_fields = ['username', 'email', 'password']
-#     for field in required_fields:
-#         if field not in data:
-#             errors.append(f"{field} is required")
-    
-#     if errors:
-#         logger.warning(f"Validation errors: {errors}")
-#         return Response({
-#             'success': False,
-#             'errors': errors,
-#             'received_data': {k: v for k, v in data.items() if k not in ['password', 'confirm_password']},
-#             'processing_time_ms': round((time.time() - start_time) * 1000, 2)
-#         }, status=status.HTTP_400_BAD_REQUEST)
-    
-#     # Check if user exists
-#     from django.contrib.auth import get_user_model
-#     User = get_user_model()
-    
-#     if User.objects.filter(username=data['username']).exists():
-#         errors.append('Username already exists')
-    
-#     if User.objects.filter(email=data['email']).exists():
-#         errors.append('Email already exists')
-    
-#     if errors:
-#         logger.warning(f"User exists errors: {errors}")
-#         return Response({
-#             'success': False,
-#             'errors': errors,
-#             'received_data': {k: v for k, v in data.items() if k not in ['password', 'confirm_password']},
-#             'processing_time_ms': round((time.time() - start_time) * 1000, 2)
-#         }, status=status.HTTP_400_BAD_REQUEST)
-    
-#     # Try to create user
-#     try:
-#         user = User.objects.create_user(
-#             username=data['username'],
-#             email=data['email'],
-#             password=data['password']
-#         )
+#         serializer = EmailValidationSerializer(data=request.data)
         
-#         # Add extra fields if provided
-#         extra_fields = ['phone_number', 'name', 'user_type', 'connection_type']
-#         for field in extra_fields:
-#             if field in data:
-#                 setattr(user, field, data[field])
-        
-#         user.save()
-        
-#         logger.warning(f"✅ User created successfully: {user.username}")
-#         logger.warning(f"User ID: {user.id}")
-#         logger.warning(f"Email: {user.email}")
-#         logger.warning(f"User Type: {user.user_type}")
-        
-#         # Test signal emission if available
-#         if SIGNALS_AVAILABLE:
-#             try:
-#                 result = emit_client_account_creation(
-#                     user_id=str(user.id),
-#                     username=user.username,
-#                     phone_number=getattr(user, 'phone_number', '+254700000000'),
-#                     connection_type=getattr(user, 'connection_type', 'hotspot'),
-#                     client_name=getattr(user, 'name', ''),
-#                     created_by_admin=True
-#                 )
-#                 logger.warning(f"Signal emission result: {result['success']}")
-#                 if not result['success']:
-#                     logger.warning(f"Signal error: {result.get('error')}")
-#             except Exception as e:
-#                 logger.warning(f"Signal emission error: {e}")
+#         if not serializer.is_valid():
+#             return Response({
+#                 'success': False,
+#                 'error': 'Invalid email',
+#                 'details': serializer.errors,
+#                 'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+#             }, status=status.HTTP_400_BAD_REQUEST)
         
 #         return Response({
 #             'success': True,
-#             'user_id': user.id,
-#             'username': user.username,
-#             'email': user.email,
-#             'message': 'User created successfully',
-#             'signals_emitted': SIGNALS_AVAILABLE,
+#             'data': serializer.data,
 #             'processing_time_ms': round((time.time() - start_time) * 1000, 2)
-#         }, status=status.HTTP_201_CREATED)
+#         })
         
 #     except Exception as e:
-#         logger.warning(f"❌ Error creating user: {str(e)}")
-#         import traceback
-#         logger.warning(f"Traceback: {traceback.format_exc()}")
-        
+#         logger.error(f"Email validation error: {e}")
 #         return Response({
 #             'success': False,
-#             'errors': [str(e)],
-#             'received_data': {k: v for k, v in data.items() if k not in ['password', 'confirm_password']},
+#             'error': 'Email validation failed',
 #             'processing_time_ms': round((time.time() - start_time) * 1000, 2)
 #         }, status=status.HTTP_400_BAD_REQUEST)
+
+
+# @api_view(['GET'])
+# @permission_classes([AllowAny])
+# @rate_limited(max_calls=300, period=60, scope="check_email")
+# def check_email(request):
+#     """
+#     GET endpoint to check if email exists for authenticated users
+#     Used by signup form for Djoser registration
+#     """
+#     start_time = time.time()
+#     email = request.GET.get('email')
+    
+#     if not email:
+#         return Response({
+#             'success': False,
+#             'error': 'Email parameter is required',
+#             'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+#         }, status=status.HTTP_400_BAD_REQUEST)
+    
+#     try:
+#         from authentication.serializers import ValidationAlgorithms
+        
+#         if not ValidationAlgorithms.is_valid_email(email):
+#             return Response({
+#                 'success': False,
+#                 'exists': False,
+#                 'is_valid': False,
+#                 'message': 'Invalid email format',
+#                 'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+#             })
+        
+#         # Check existence for authenticated users (staff/admin) only
+#         # This is CRITICAL: Djoser registration is for authenticated users only
+#         exists = UserAccount.objects.filter(
+#             email__iexact=email,
+#             user_type__in=['staff', 'admin']  # Only check for authenticated users
+#         ).exists()
+        
+#         return Response({
+#             'success': True,
+#             'exists': exists,
+#             'is_valid': True,
+#             'email': email,
+#             'message': 'Email found' if exists else 'Email available for registration',
+#             'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+#         })
+        
+#     except Exception as e:
+#         logger.error(f"Email check error: {e}")
+#         return Response({
+#             'success': False,
+#             'error': 'Failed to check email',
+#             'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+#         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # # ==================== CAPTIVE PORTAL VIEWS ====================
@@ -645,7 +520,7 @@
 # @rate_limited(max_calls=300, period=60, scope="check_phone")
 # def check_phone(request):
 #     """
-#     GET endpoint to check if phone number exists
+#     GET endpoint to check if phone number exists for clients
 #     Used by hotspot landing page and admin dashboard
 #     """
 #     start_time = time.time()
@@ -764,61 +639,6 @@
 #         return Response({
 #             'success': False,
 #             'error': 'Failed to check UUID',
-#             'processing_time_ms': round((time.time() - start_time) * 1000, 2)
-#         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-# @api_view(['GET'])
-# @permission_classes([AllowAny])
-# @rate_limited(max_calls=300, period=60, scope="check_email")
-# def check_email(request):
-#     """
-#     GET endpoint to check if email exists
-#     Used by dashboard for email validation
-#     """
-#     start_time = time.time()
-#     email = request.GET.get('email')
-    
-#     if not email:
-#         return Response({
-#             'success': False,
-#             'error': 'Email parameter is required',
-#             'processing_time_ms': round((time.time() - start_time) * 1000, 2)
-#         }, status=status.HTTP_400_BAD_REQUEST)
-    
-#     try:
-#         from authentication.serializers import ValidationAlgorithms
-        
-#         if not ValidationAlgorithms.is_valid_email(email):
-#             return Response({
-#                 'success': False,
-#                 'exists': False,
-#                 'is_valid': False,
-#                 'message': 'Invalid email format',
-#                 'processing_time_ms': round((time.time() - start_time) * 1000, 2)
-#             })
-        
-#         # Check existence (authenticated users only)
-#         exists = UserAccount.objects.filter(
-#             email__iexact=email,
-#             user_type__in=['staff', 'admin'],
-#             is_active=True
-#         ).exists()
-        
-#         return Response({
-#             'success': True,
-#             'exists': exists,
-#             'is_valid': True,
-#             'email': email,
-#             'message': 'Email found' if exists else 'Email not found',
-#             'processing_time_ms': round((time.time() - start_time) * 1000, 2)
-#         })
-        
-#     except Exception as e:
-#         logger.error(f"Email check error: {e}")
-#         return Response({
-#             'success': False,
-#             'error': 'Failed to check email',
 #             'processing_time_ms': round((time.time() - start_time) * 1000, 2)
 #         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -1136,107 +956,55 @@
 #         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-# # ==================== FIX FOR THE MAIN USER CREATION ENDPOINT ====================
+
+
 # @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def create_user_debug(request):
+# @permission_classes([AllowAny])
+# def debug_signup(request):
 #     """
-#     Main user creation endpoint with detailed debugging
-#     This is the endpoint that's returning HTTP 400
+#     Debug endpoint to see what's happening with signup
 #     """
-#     start_time = time.time()
-    
-#     # Log everything for debugging
+#     import json
 #     logger.warning("=" * 60)
-#     logger.warning("MAIN USER CREATION ENDPOINT CALLED")
+#     logger.warning("DEBUG SIGNUP REQUEST")
 #     logger.warning("=" * 60)
-    
-#     # Log request details
-#     logger.warning(f"Request user: {request.user.username} ({request.user.user_type})")
-#     logger.warning(f"Request method: {request.method}")
-#     logger.warning(f"Request path: {request.path}")
-#     logger.warning(f"Content-Type: {request.content_type}")
+#     logger.warning(f"Request data: {json.dumps(request.data, indent=2)}")
     
 #     try:
-#         # Parse request body
-#         if request.content_type == 'application/json':
-#             body = request.body.decode('utf-8')
-#             logger.warning(f"Request body (raw): {body}")
-#             try:
-#                 data = json.loads(body)
-#                 # Create safe copy for logging (without passwords)
-#                 safe_data = data.copy()
-#                 if 'password' in safe_data:
-#                     safe_data['password'] = '[REDACTED]'
-#                 logger.warning(f"Request body (parsed): {json.dumps(safe_data, indent=2)}")
-#             except json.JSONDecodeError as e:
-#                 logger.error(f"JSON decode error: {e}")
-#                 return Response({
-#                     'success': False,
-#                     'error': 'Invalid JSON format',
-#                     'details': str(e),
-#                     'processing_time_ms': round((time.time() - start_time) * 1000, 2)
-#                 }, status=status.HTTP_400_BAD_REQUEST)
-#         else:
-#             logger.warning(f"Request POST data: {dict(request.POST)}")
-#             data = dict(request.POST)
+#         # Try to use Djoser's actual view
+#         from djoser.views import UserViewSet
+#         viewset = UserViewSet()
+#         viewset.request = request
+#         viewset.format_kwarg = None
         
-#         # Determine which serializer to use based on user type
-#         if data.get('user_type') in ['admin', 'staff']:
-#             logger.warning("Using AuthenticatedUserCreateSerializer")
-#             serializer = AuthenticatedUserCreateSerializer(data=data)
-#         elif data.get('connection_type') == 'pppoe':
-#             logger.warning("Using PPPoEClientCreateSerializer")
-#             serializer = PPPoEClientCreateSerializer(data=data)
-#         else:
-#             logger.warning("Using HotspotClientCreateSerializer")
-#             serializer = HotspotClientCreateSerializer(data=data)
+#         # Create serializer
+#         from djoser.serializers import UserCreateSerializer
+#         serializer = UserCreateSerializer(data=request.data)
         
-#         # Validate
-#         if not serializer.is_valid():
-#             logger.warning(f"Serializer validation failed: {serializer.errors}")
-#             return Response({
-#                 'success': False,
-#                 'error': 'Validation failed',
-#                 'details': serializer.errors,
-#                 'processing_time_ms': round((time.time() - start_time) * 1000, 2)
-#             }, status=status.HTTP_400_BAD_REQUEST)
-        
-#         # Save user
-#         try:
+#         if serializer.is_valid():
+#             logger.warning("✅ Djoser serializer is valid")
 #             user = serializer.save()
-#             logger.warning(f"✅ User created successfully: {user.username} ({user.user_type})")
-            
+#             logger.warning(f"✅ User created: {user.email}")
 #             return Response({
 #                 'success': True,
-#                 'message': 'User created successfully',
-#                 'user': {
-#                     'id': str(user.id),
-#                     'username': user.username,
-#                     'email': getattr(user, 'email', None),
-#                     'user_type': user.user_type,
-#                     'connection_type': user.connection_type,
-#                 },
-#                 'processing_time_ms': round((time.time() - start_time) * 1000, 2)
-#             }, status=status.HTTP_201_CREATED)
-            
-#         except Exception as save_error:
-#             logger.error(f"Error saving user: {save_error}", exc_info=True)
+#                 'message': 'User created via debug endpoint',
+#                 'user_id': str(user.id)
+#             })
+#         else:
+#             logger.warning(f"❌ Djoser serializer errors: {serializer.errors}")
 #             return Response({
 #                 'success': False,
-#                 'error': 'Failed to create user',
-#                 'details': str(save_error) if settings.DEBUG else None,
-#                 'processing_time_ms': round((time.time() - start_time) * 1000, 2)
-#             }, status=status.HTTP_400_BAD_REQUEST)
+#                 'errors': serializer.errors
+#             }, status=400)
             
 #     except Exception as e:
-#         logger.error(f"Unexpected error in create_user: {e}", exc_info=True)
+#         logger.error(f"❌ Debug signup error: {str(e)}", exc_info=True)
 #         return Response({
 #             'success': False,
-#             'error': 'Internal server error',
-#             'details': str(e) if settings.DEBUG else None,
-#             'processing_time_ms': round((time.time() - start_time) * 1000, 2)
-#         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+#             'error': str(e)
+#         }, status=500)
+
+
 
 
 
@@ -1245,12 +1013,10 @@
 
 """
 AUTHENTICATION APP - Enhanced API Views
-Fixed Djoser compatibility and clear separation of concerns:
-- Djoser endpoints for authenticated user registration/login
-- Admin dashboard client creation (authenticated)
-- Captive portal registration (public)
-- PPPoE authentication for routers
-- Validation endpoints
+UPDATED: Added client search and creation endpoints for hotspot portal
+UPDATED: Improved error handling and response consistency
+UPDATED: Added proper permission classes for client endpoints
+FIXED: Replaced 'created_at' with 'date_joined' in client responses
 """
 
 from rest_framework.decorators import api_view, permission_classes, action
@@ -1264,9 +1030,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.core.cache import cache
 from django.utils import timezone
+from django.db import transaction
+from django.db.models import Q
 import time
 import logging
 import json
+import uuid
 
 from authentication.models import UserAccount, PhoneValidation
 from authentication.serializers import (
@@ -1281,7 +1050,10 @@ from authentication.serializers import (
     EmailValidationSerializer,
     PPPoECredentialUpdateSerializer,
     AuthenticatedUserCreateSerializer,
-    DjoserUserSerializer
+    DjoserUserSerializer,
+    ClientSearchSerializer,
+    ClientCreateSerializer,
+    ClientResponseSerializer
 )
 
 # Import signals for testing and debugging
@@ -1414,10 +1186,9 @@ def check_email(request):
             })
         
         # Check existence for authenticated users (staff/admin) only
-        # This is CRITICAL: Djoser registration is for authenticated users only
         exists = UserAccount.objects.filter(
             email__iexact=email,
-            user_type__in=['staff', 'admin']  # Only check for authenticated users
+            user_type__in=['staff', 'admin']
         ).exists()
         
         return Response({
@@ -1438,6 +1209,285 @@ def check_email(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+# ==================== CLIENT MANAGEMENT ENDPOINTS (NEW) ====================
+# These endpoints are specifically for the hotspot portal to find/create clients
+
+@api_view(['GET'])
+@permission_classes([AllowAny])  # Public for hotspot portal
+@rate_limited(max_calls=300, period=60, scope="client_search")
+def client_search(request):
+    """
+    PUBLIC ENDPOINT - Search for client by phone number
+    Used by hotspot portal to find existing clients
+    """
+    start_time = time.time()
+    phone = request.GET.get('phone_number')
+    
+    if not phone:
+        return Response({
+            'success': False,
+            'error': 'phone_number parameter is required',
+            'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Validate and normalize phone
+        if not PhoneValidation.is_valid_kenyan_phone(phone):
+            return Response({
+                'success': False,
+                'error': 'Invalid phone number format',
+                'is_valid': False,
+                'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        normalized = PhoneValidation.normalize_kenyan_phone(phone)
+        
+        # Search for client (active or inactive)
+        user = UserAccount.get_client_by_phone(normalized, active_only=False)
+        
+        if user:
+            # Return client data - FIXED: changed created_at to date_joined
+            return Response({
+                'success': True,
+                'found': True,
+                'client': [{
+                    'id': str(user.id),
+                    'phone_number': user.phone_number,
+                    'phone_number_display': user.get_phone_display(),
+                    'username': user.username,
+                    'connection_type': user.connection_type,
+                    'is_active': user.is_active,
+                    'source': user.source,
+                    'date_joined': user.date_joined.isoformat() if user.date_joined else None,  # FIXED
+                }],
+                'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+            })
+        else:
+            # No client found
+            return Response({
+                'success': True,
+                'found': False,
+                'client': [],
+                'message': 'No client found with this phone number',
+                'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+            })
+        
+    except Exception as e:
+        logger.error(f"Client search error: {e}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': 'Failed to search for client',
+            'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])  # Public for hotspot portal
+@rate_limited(max_calls=100, period=60, scope="client_create")
+def client_create_hotspot(request):
+    """
+    PUBLIC ENDPOINT - Create a new hotspot client
+    Used by hotspot portal when phone number not found
+    """
+    start_time = time.time()
+    
+    try:
+        phone = request.data.get('phone_number')
+        
+        if not phone:
+            return Response({
+                'success': False,
+                'error': 'phone_number is required',
+                'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate phone
+        if not PhoneValidation.is_valid_kenyan_phone(phone):
+            return Response({
+                'success': False,
+                'error': 'Invalid phone number format',
+                'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        normalized = PhoneValidation.normalize_kenyan_phone(phone)
+        
+        # Check if client already exists
+        existing = UserAccount.get_client_by_phone(normalized, active_only=False)
+        if existing:
+            return Response({
+                'success': True,
+                'message': 'Client already exists',
+                'client': {
+                    'id': str(existing.id),
+                    'phone_number': existing.phone_number,
+                    'phone_number_display': existing.get_phone_display(),
+                    'username': existing.username,
+                    'connection_type': existing.connection_type,
+                    'is_active': existing.is_active,
+                    'source': existing.source,
+                    'date_joined': existing.date_joined.isoformat() if existing.date_joined else None,  # FIXED
+                },
+                'created': False,
+                'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+            })
+        
+        # Create new client using manager
+        with transaction.atomic():
+            user = UserAccount.objects.create_client_user(
+                phone_number=normalized,
+                connection_type='hotspot',
+                source='captive_portal'
+            )
+        
+        logger.info(f"New hotspot client created via portal: {user.username}")
+        
+        return Response({
+            'success': True,
+            'message': 'Client created successfully',
+            'client': {
+                'id': str(user.id),
+                'phone_number': user.phone_number,
+                'phone_number_display': user.get_phone_display(),
+                'username': user.username,
+                'connection_type': user.connection_type,
+                'is_active': user.is_active,
+                'source': user.source,
+                'date_joined': user.date_joined.isoformat() if user.date_joined else None,  # FIXED
+            },
+            'created': True,
+            'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        logger.error(f"Client creation error: {e}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': 'Failed to create client',
+            'details': str(e) if settings.DEBUG else None,
+            'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])  # Protected for admin dashboard
+@rate_limited(max_calls=200, period=60, scope="client_detail")
+def client_detail(request, client_id):
+    """
+    PROTECTED ENDPOINT - Get detailed client information
+    Used by admin dashboard for client management
+    """
+    start_time = time.time()
+    
+    try:
+        # Only admin/staff can access
+        if request.user.user_type not in ['admin', 'staff']:
+            return Response({
+                'success': False,
+                'error': 'Permission denied',
+                'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        try:
+            user = UserAccount.objects.get(id=client_id, user_type='client')
+        except UserAccount.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'Client not found',
+                'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # Return comprehensive client data
+        return Response({
+            'success': True,
+            'client': user.to_dict(include_sensitive=request.user.is_staff),
+            'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+        })
+        
+    except Exception as e:
+        logger.error(f"Client detail error: {e}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': 'Failed to get client details',
+            'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])  # Protected for admin dashboard
+@rate_limited(max_calls=50, period=60, scope="client_bulk_lookup")
+def client_bulk_lookup(request):
+    """
+    PROTECTED ENDPOINT - Bulk lookup multiple clients by phone numbers
+    Used by admin dashboard for batch operations
+    """
+    start_time = time.time()
+    
+    try:
+        # Only admin/staff can access
+        if request.user.user_type not in ['admin', 'staff']:
+            return Response({
+                'success': False,
+                'error': 'Permission denied',
+                'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        phones = request.data.get('phones', [])
+        
+        if not phones or not isinstance(phones, list):
+            return Response({
+                'success': False,
+                'error': 'phones must be a list of phone numbers',
+                'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Limit batch size
+        if len(phones) > 100:
+            phones = phones[:100]
+        
+        results = []
+        for phone in phones:
+            try:
+                normalized = PhoneValidation.normalize_kenyan_phone(str(phone))
+                is_valid = PhoneValidation.is_valid_kenyan_phone(normalized)
+                
+                user = None
+                if is_valid:
+                    user = UserAccount.get_client_by_phone(normalized, active_only=False)
+                
+                results.append({
+                    'phone': phone,
+                    'normalized': normalized if is_valid else None,
+                    'is_valid': is_valid,
+                    'exists': user is not None,
+                    'client_id': str(user.id) if user else None,
+                    'username': user.username if user else None,
+                    'connection_type': user.connection_type if user else None,
+                    'is_active': user.is_active if user else None,
+                })
+            except Exception as e:
+                results.append({
+                    'phone': phone,
+                    'error': str(e),
+                    'is_valid': False,
+                    'exists': False,
+                })
+        
+        return Response({
+            'success': True,
+            'count': len(results),
+            'results': results,
+            'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+        })
+        
+    except Exception as e:
+        logger.error(f"Bulk lookup error: {e}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': 'Failed to process bulk lookup',
+            'processing_time_ms': round((time.time() - start_time) * 1000, 2)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 # ==================== CAPTIVE PORTAL VIEWS ====================
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -1450,7 +1500,6 @@ def captive_portal_register(request):
     start_time = time.time()
     
     try:
-        # Log request for debugging
         logger.info(f"Captive portal registration attempt from {request.META.get('REMOTE_ADDR')}")
         
         serializer = CaptivePortalRegistrationSerializer(
@@ -1482,6 +1531,7 @@ def captive_portal_register(request):
                 'phone_number_display': user.get_phone_display(),
                 'connection_type': user.connection_type,
                 'source': user.source,
+                'date_joined': user.date_joined.isoformat() if user.date_joined else None,  # FIXED for consistency
             },
             'processing_time_ms': round((time.time() - start_time) * 1000, 2)
         }
@@ -1547,6 +1597,7 @@ class HotspotClientCreateView(generics.CreateAPIView):
                     'phone_number': user.phone_number,
                     'phone_number_display': user.get_phone_display(),
                     'source': user.source,
+                    'date_joined': user.date_joined.isoformat() if user.date_joined else None,  # FIXED for consistency
                 },
                 'processing_time_ms': round((time.time() - start_time) * 1000, 2)
             }, status=status.HTTP_201_CREATED)
@@ -1614,6 +1665,7 @@ class PPPoEClientCreateView(generics.CreateAPIView):
                     'pppoe_password': credentials.get('password'),
                     'credentials_generated': user.pppoe_credentials_generated,
                     'source': user.source,
+                    'date_joined': user.date_joined.isoformat() if user.date_joined else None,  # FIXED for consistency
                 },
                 'sms_data': credentials,  # For UserManagement app to send SMS
                 'processing_time_ms': round((time.time() - start_time) * 1000, 2)
@@ -1812,6 +1864,7 @@ def check_phone(request):
                 'is_hotspot_client': user.is_hotspot_client,
                 'source': user.source,
                 'is_active': user.is_active,
+                'date_joined': user.date_joined.isoformat() if user.date_joined else None,  # FIXED for consistency
             }
         
         return Response(response_data)
@@ -2024,13 +2077,13 @@ def check_connection_type(request):
     })
 
 
-# ==================== CLIENT LOOKUP VIEWS ====================
+# ==================== CLIENT LOOKUP VIEWS (DEPRECATED - Use client_search instead) ====================
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_client_by_phone(request):
     """
-    Get client details by phone number
-    Only accessible to authenticated users (for UserManagement app)
+    DEPRECATED - Use client_search instead
+    Get client details by phone number (authenticated only)
     """
     start_time = time.time()
     phone = request.GET.get('phone')
@@ -2108,6 +2161,7 @@ def create_authenticated_user(request):
                 'email': user.email,
                 'name': user.name,
                 'user_type': user.user_type,
+                'date_joined': user.date_joined.isoformat() if user.date_joined else None,  # FIXED for consistency
             },
             'processing_time_ms': round((time.time() - start_time) * 1000, 2)
         }, status=status.HTTP_201_CREATED)
@@ -2173,6 +2227,7 @@ def bulk_check_phones(request):
                     'user_id': str(user.id) if user else None,
                     'username': user.username if user else None,
                     'connection_type': user.connection_type if user else None,
+                    'date_joined': user.date_joined.isoformat() if user and user.date_joined else None,  # FIXED for consistency
                 })
                 
             except Exception as e:
@@ -2198,14 +2253,19 @@ def bulk_check_phones(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-
-
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def debug_signup(request):
     """
     Debug endpoint to see what's happening with signup
+    Only available in DEBUG mode
     """
+    if not settings.DEBUG:
+        return Response({
+            'success': False,
+            'error': 'Debug endpoint not available in production'
+        }, status=status.HTTP_404_NOT_FOUND)
+    
     import json
     logger.warning("=" * 60)
     logger.warning("DEBUG SIGNUP REQUEST")

@@ -1213,13 +1213,10 @@ REST_FRAMEWORK = {
     ],
     'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
     'DEFAULT_TIMEOUT': 30,
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle',
-    ],
+    'DEFAULT_THROTTLE_CLASSES': [],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/day',
         'user': '1000/day',
+        'anon': '100/hour',  
     }
 }
 
@@ -1235,6 +1232,8 @@ SPECTACULAR_SETTINGS = {
     },
     'COMPONENT_SPLIT_REQUEST': True,
 }
+
+
 
 # ==============================================================================
 # JWT CONFIGURATION - UPDATED FOR DJOSER COMPATIBILITY
@@ -1476,6 +1475,8 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SECURE = ENVIRONMENT == 'production'
 SESSION_COOKIE_HTTPONLY = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+
 
 # ==============================================================================
 # TEMPLATES & URL CONFIGURATION

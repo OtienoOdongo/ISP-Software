@@ -15,7 +15,7 @@ from authentication.signals.core import (
 
 from user_management.models.client_model import ClientProfile, ClientInteraction
 from user_management.services.client_services import ClientOnboardingService, AnalyticsService
-from user_management.services.sms_services import SMSService
+from sms_automation.services.sms_service import SMSService
 
 logger = logging.getLogger(__name__)
 

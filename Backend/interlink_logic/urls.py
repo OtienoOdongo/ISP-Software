@@ -7,6 +7,7 @@
 # from django.conf.urls.static import static
 # from django.views.static import serve
 # from django.http import HttpResponse, HttpResponseNotFound
+
 # import os
 # import logging
 
@@ -27,6 +28,9 @@
     
 #     return serve(request, 'index.html', document_root=os.path.dirname(index_path))
 
+
+
+
 # # Base URL patterns
 # urlpatterns = [
 #     # Django Admin
@@ -35,15 +39,18 @@
 #     # API routes
 #     path('api/auth/', include('authentication.urls')),
 #     path('api/user_management/', include('user_management.api.urls')),
-#     # path('api/support/', include('support.urls')),
 #     path('api/payments/', include('payments.api.urls')),
 #     path('api/network_management/', include('network_management.api.urls')),
 #     path('api/internet_plans/', include('internet_plans.api.urls')),
 #     path('api/dashboard/', include('dashboard.urls')),
 #     path('api/account/', include('account.api.urls')),
 #     path('api/otp/', include('otp_auth.urls')),
+#     path('api/service_operations/', include('service_operations.api.urls')),
+#     path('api/sms_automation/', include('sms_automation.api.urls')),
 
+#     # Health checks
 #     path('health/', include(('health_check.urls', 'health_check'), namespace='app_health_check')),
+    
 
 #     # API Documentation with drf-spectacular
 #     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
@@ -53,42 +60,42 @@
 #     # Media files
 # ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# # FIX: Ensure WebSocket URLs are loaded in production too
-# # Remove the development-only condition
-
-# # ADD WebSocket routing to main urlpatterns (not just in development)
+# # FIXED: WebSocket URL configuration - Load in all environments
 # try:
-#     from network_management.routing import websocket_urlpatterns
+#     # First try main app routing
+#     from interlink_logic.routing import websocket_urlpatterns
+#     logger.info("✅ WebSocket URLs configured from interlink_logic.routing")
+# except ImportError:
+#     # Fallback to network_management routing
+#     try:
+#         from network_management.routing import websocket_urlpatterns
+#         logger.info("✅ WebSocket URLs configured from network_management.routing")
+#     except ImportError as e:
+#         logger.warning(f"⚠️ WebSocket routing not available: {e}")
+#         websocket_urlpatterns = []
+
+# # Add WebSocket URLs if available
+# if websocket_urlpatterns:
 #     urlpatterns += [
 #         path('ws/', include(websocket_urlpatterns)),
 #     ]
-#     logger.info("WebSocket URLs configured")
-# except ImportError as e:
-#     logger.warning(f"WebSocket routing not available: {e}")
-# except Exception as e:
-#     logger.error(f"Error configuring WebSocket URLs: {e}")
+#     logger.info(f"✅ WebSocket URLs added with {len(websocket_urlpatterns)} patterns")
+# else:
+#     logger.warning("⚠️ No WebSocket URL patterns available")
 
 # # DEVELOPMENT-ONLY URL PATTERNS
 # if settings.DEBUG:
 #     logger.info("Loading development URL patterns...")
     
-#     # Health Checks
-#     try:
-#         urlpatterns += [
-#             path('health/', include('health_check.urls')),
-#         ]
-#     except Exception as e:
-#         logger.warning(f"Health checks not available: {e}")
-
 #     # Debug toolbar
 #     try:
 #         import debug_toolbar
 #         urlpatterns = [
 #             path('__debug__/', include(debug_toolbar.urls)),
 #         ] + urlpatterns
-#         logger.info("Django Debug Toolbar enabled")
+#         logger.info("✅ Django Debug Toolbar enabled")
 #     except ImportError:
-#         logger.warning("Django Debug Toolbar not installed")
+#         logger.warning("⚠️ Django Debug Toolbar not installed")
 
 #     # Development static file serving
 #     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
@@ -127,6 +134,7 @@
 #                     <li><a href="/dashboard/">Dashboard</a></li>
 #                     <li><a href="/landing/">Landing Page</a></li>
 #                     <li><a href="/health/">Health Checks</a></li>
+#                     <li><a href="/ws/routers/">WebSocket Test</a></li>
 #                 </ul>
 #             </body>
 #         </html>
@@ -162,14 +170,22 @@
 #         }),
 
 #         # Catch-all fallback to dashboard SPA
-#         re_path(r'^(?!api/|admin/|media/).*$', lambda r: serve_frontend(r)),
+#         re_path(r'^(?!api/|admin/|media/|ws/).*$', lambda r: serve_frontend(r)),
 #     ]
 
-# # Custom error handlers
+# # FIXED: Use the correct error handler imports
 # handler400 = 'interlink_logic.views.error_handlers.bad_request'
 # handler403 = 'interlink_logic.views.error_handlers.permission_denied'
 # handler404 = 'interlink_logic.views.error_handlers.page_not_found'
 # handler500 = 'interlink_logic.views.error_handlers.server_error'
+
+# # Log final URL configuration
+# logger.info(f"✅ URL configuration complete - {len(urlpatterns)} total URL patterns")
+# logger.info(f"✅ WebSocket support: {'Enabled' if any('ws/' in str(pattern) for pattern in urlpatterns) else 'Disabled'}")
+
+
+
+
 
 
 
@@ -183,6 +199,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve
 from django.http import HttpResponse, HttpResponseNotFound
+
 import os
 import logging
 
@@ -208,7 +225,7 @@ urlpatterns = [
     # Django Admin
     path('admin/', admin.site.urls),
 
-    # API routes
+    # API routes - FIXED: Make sure all apps are properly included
     path('api/auth/', include('authentication.urls')),
     path('api/user_management/', include('user_management.api.urls')),
     path('api/payments/', include('payments.api.urls')),
@@ -218,11 +235,13 @@ urlpatterns = [
     path('api/account/', include('account.api.urls')),
     path('api/otp/', include('otp_auth.urls')),
     path('api/service_operations/', include('service_operations.api.urls')),
-    path('api/sms_automation/', include('sms_automation.api.urls')),
+    
+    # FIXED: SMS Automation URLs - include at the correct path
+    path('api/sms/', include('sms_automation.api.urls')),
 
     # Health checks
     path('health/', include(('health_check.urls', 'health_check'), namespace='app_health_check')),
-
+    
     # API Documentation with drf-spectacular
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
@@ -231,28 +250,9 @@ urlpatterns = [
     # Media files
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# FIXED: WebSocket URL configuration - Load in all environments
-try:
-    # First try main app routing
-    from interlink_logic.routing import websocket_urlpatterns
-    logger.info("✅ WebSocket URLs configured from interlink_logic.routing")
-except ImportError:
-    # Fallback to network_management routing
-    try:
-        from network_management.routing import websocket_urlpatterns
-        logger.info("✅ WebSocket URLs configured from network_management.routing")
-    except ImportError as e:
-        logger.warning(f"⚠️ WebSocket routing not available: {e}")
-        websocket_urlpatterns = []
-
-# Add WebSocket URLs if available
-if websocket_urlpatterns:
-    urlpatterns += [
-        path('ws/', include(websocket_urlpatterns)),
-    ]
-    logger.info(f"✅ WebSocket URLs added with {len(websocket_urlpatterns)} patterns")
-else:
-    logger.warning("⚠️ No WebSocket URL patterns available")
+# FIXED: WebSocket URL configuration - These go through ASGI, not WSGI
+# So they shouldn't be added to urlpatterns
+# Instead, they're handled by the ASGI application
 
 # DEVELOPMENT-ONLY URL PATTERNS
 if settings.DEBUG:
@@ -302,10 +302,10 @@ if settings.DEBUG:
                 <ul>
                     <li><a href="/admin/">Django Admin</a></li>
                     <li><a href="/api/docs/">API Documentation</a></li>
+                    <li><a href="/api/sms/">SMS API</a></li>
                     <li><a href="/dashboard/">Dashboard</a></li>
                     <li><a href="/landing/">Landing Page</a></li>
                     <li><a href="/health/">Health Checks</a></li>
-                    <li><a href="/ws/routers/">WebSocket Test</a></li>
                 </ul>
             </body>
         </html>
@@ -345,11 +345,17 @@ else:
     ]
 
 # FIXED: Use the correct error handler imports
-handler400 = 'interlink_logic.views.error_handlers.bad_request'
-handler403 = 'interlink_logic.views.error_handlers.permission_denied'
-handler404 = 'interlink_logic.views.error_handlers.page_not_found'
-handler500 = 'interlink_logic.views.error_handlers.server_error'
+try:
+    from interlink_logic.views import error_handlers
+    handler400 = 'interlink_logic.views.error_handlers.bad_request'
+    handler403 = 'interlink_logic.views.error_handlers.permission_denied'
+    handler404 = 'interlink_logic.views.error_handlers.page_not_found'
+    handler500 = 'interlink_logic.views.error_handlers.server_error'
+except ImportError:
+    # Fallback to local handlers
+    if settings.DEBUG:
+        handler404 = development_404
+        handler500 = development_500
 
 # Log final URL configuration
 logger.info(f"✅ URL configuration complete - {len(urlpatterns)} total URL patterns")
-logger.info(f"✅ WebSocket support: {'Enabled' if any('ws/' in str(pattern) for pattern in urlpatterns) else 'Disabled'}")

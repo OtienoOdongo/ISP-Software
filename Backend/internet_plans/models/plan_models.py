@@ -1,8 +1,13 @@
 
 
+
+
+
+
 # """
 # Internet Plans - Core Plan Models with Time Variant Feature
 # UPDATED: Production-ready with consistent snake_case, optimized queries, and proper validation
+# FIXED: Access methods initialization and validation
 # """
 
 # from django.db import models
@@ -417,7 +422,7 @@
 #     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 #     name = models.CharField(max_length=100, unique=True, db_index=True)
 #     description = models.TextField(blank=True, default="")
-#     category = models.CharField(max_length=20, choices=CATEGORIES, default='residential', db_index=True)
+#     category = models.CharField(max_length=20, choices=CATEGORIES, default='Residential', db_index=True)
 #     base_price = models.DecimalField(
 #         max_digits=10, 
 #         decimal_places=2, 
@@ -527,17 +532,88 @@
     
 #     def save(self, *args, **kwargs):
 #         """Save with validation and default configuration"""
-#         if not self.access_methods:
+#         # Ensure access methods are properly initialized
+#         if not self.access_methods or not isinstance(self.access_methods, dict):
 #             self.set_default_access_methods()
+#         else:
+#             # Ensure both methods exist with proper structure
+#             self._ensure_access_methods_structure()
         
 #         self.full_clean()
         
 #         # Clear template cache
 #         cache_key = f"plan_template:{self.id}"
 #         cache.delete(cache_key)
-#         cache.delete_pattern("plan_templates:*")
+#         # Use appropriate cache clear method
+#         try:
+#             cache.delete_pattern("plan_templates:*")
+#         except AttributeError:
+#             # Fallback for cache backends that don't support delete_pattern
+#             pass
         
 #         super().save(*args, **kwargs)
+    
+#     def _ensure_access_methods_structure(self):
+#         """Ensure access methods have proper structure"""
+#         # Ensure both methods exist
+#         if 'hotspot' not in self.access_methods:
+#             self.access_methods['hotspot'] = {}
+#         if 'pppoe' not in self.access_methods:
+#             self.access_methods['pppoe'] = {}
+        
+#         # Ensure each method has required fields with proper defaults
+#         for method in ['hotspot', 'pppoe']:
+#             config = self.access_methods[method]
+#             if not isinstance(config, dict):
+#                 config = {}
+            
+#             # Ensure enabled is boolean
+#             if 'enabled' not in config:
+#                 config['enabled'] = False
+#             elif isinstance(config['enabled'], str):
+#                 config['enabled'] = config['enabled'].lower() == 'true'
+            
+#             # Ensure required nested fields exist
+#             nested_fields = ['download_speed', 'upload_speed', 'data_limit', 'usage_limit', 'validity_period']
+#             for field in nested_fields:
+#                 if field not in config or not isinstance(config[field], dict):
+#                     config[field] = {'value': '', 'unit': self._get_default_unit(field)}
+#                 elif 'value' not in config[field]:
+#                     config[field]['value'] = ''
+#                 elif 'unit' not in config[field]:
+#                     config[field]['unit'] = self._get_default_unit(field)
+            
+#             # Ensure numeric fields exist
+#             numeric_fields = ['bandwidth_limit', 'max_devices', 'session_timeout', 'idle_timeout']
+#             for field in numeric_fields:
+#                 if field not in config:
+#                     config[field] = ''
+            
+#             # PPPoE specific fields
+#             if method == 'pppoe':
+#                 pppoe_fields = ['ip_pool', 'service_name', 'mtu']
+#                 for field in pppoe_fields:
+#                     if field not in config:
+#                         config[field] = ''
+            
+#             # MAC binding
+#             if 'mac_binding' not in config:
+#                 config['mac_binding'] = False
+#             elif isinstance(config['mac_binding'], str):
+#                 config['mac_binding'] = config['mac_binding'].lower() == 'true'
+            
+#             self.access_methods[method] = config
+    
+#     def _get_default_unit(self, field):
+#         """Get default unit for a field"""
+#         units = {
+#             'download_speed': 'mbps',
+#             'upload_speed': 'mbps',
+#             'data_limit': 'gb',
+#             'usage_limit': 'hours',
+#             'validity_period': 'days'
+#         }
+#         return units.get(field, '')
     
 #     def set_default_access_methods(self):
 #         """Set default access method configurations"""
@@ -548,10 +624,10 @@
 #                 'upload_speed': {'value': '5', 'unit': 'mbps'},
 #                 'data_limit': {'value': '10', 'unit': 'gb'},
 #                 'usage_limit': {'value': '24', 'unit': 'hours'},
-#                 'bandwidth_limit': 0,
-#                 'max_devices': 1,
-#                 'session_timeout': 86400,
-#                 'idle_timeout': 300,
+#                 'bandwidth_limit': '',
+#                 'max_devices': '',
+#                 'session_timeout': '',
+#                 'idle_timeout': '',
 #                 'validity_period': {'value': '30', 'unit': 'days'},
 #                 'mac_binding': False,
 #             },
@@ -561,15 +637,15 @@
 #                 'upload_speed': {'value': '5', 'unit': 'mbps'},
 #                 'data_limit': {'value': '10', 'unit': 'gb'},
 #                 'usage_limit': {'value': '24', 'unit': 'hours'},
-#                 'bandwidth_limit': 0,
-#                 'max_devices': 1,
-#                 'session_timeout': 86400,
-#                 'idle_timeout': 300,
+#                 'bandwidth_limit': '',
+#                 'max_devices': '',
+#                 'session_timeout': '',
+#                 'idle_timeout': '',
 #                 'validity_period': {'value': '30', 'unit': 'days'},
 #                 'mac_binding': False,
-#                 'ip_pool': 'pppoe-pool-1',
+#                 'ip_pool': '',
 #                 'service_name': '',
-#                 'mtu': 1492,
+#                 'mtu': '',
 #             }
 #         }
     
@@ -693,7 +769,7 @@
     
 #     # Core Plan Fields
 #     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-#     plan_type = models.CharField(max_length=20, choices=PLAN_TYPES, default='paid', db_index=True)
+#     plan_type = models.CharField(max_length=20, choices=PLAN_TYPES, default='Paid', db_index=True)
 #     name = models.CharField(max_length=100, unique=True, db_index=True)
 #     price = models.DecimalField(
 #         max_digits=10, 
@@ -703,7 +779,7 @@
 #         help_text="Price in KSH"
 #     )
 #     active = models.BooleanField(default=True, db_index=True)
-#     category = models.CharField(max_length=20, choices=CATEGORIES, default='residential', db_index=True)
+#     category = models.CharField(max_length=20, choices=CATEGORIES, default='Residential', db_index=True)
 #     description = models.TextField(blank=True, default="")
     
 #     # Template Reference
@@ -791,7 +867,7 @@
 #         errors = {}
         
 #         # Free Trial validation
-#         if self.plan_type == 'free_trial':
+#         if self.plan_type == 'Free_trial':
 #             if self.price != Decimal('0'):
 #                 errors['price'] = 'Free Trial plans must have price set to 0'
 #             if self.router_specific:
@@ -847,17 +923,88 @@
 #             raise ValidationError(errors)
     
 #     def save(self, *args, **kwargs):
-#         """Save with validation"""
-#         if not self.access_methods:
+#         """Save with validation and ensure access methods are properly structured"""
+#         # Ensure access methods are properly initialized
+#         if not self.access_methods or not isinstance(self.access_methods, dict):
 #             self.set_default_access_methods()
+#         else:
+#             # Ensure both methods exist with proper structure
+#             self._ensure_access_methods_structure()
         
 #         self.full_clean()
         
 #         # Clear plan cache
 #         cache.delete(f"internet_plan:{self.id}")
-#         cache.delete_pattern("internet_plans:*")
+#         # Use appropriate cache clear method
+#         try:
+#             cache.delete_pattern("internet_plans:*")
+#         except AttributeError:
+#             # Fallback for cache backends that don't support delete_pattern
+#             pass
         
 #         super().save(*args, **kwargs)
+    
+#     def _ensure_access_methods_structure(self):
+#         """Ensure access methods have proper structure"""
+#         # Ensure both methods exist
+#         if 'hotspot' not in self.access_methods:
+#             self.access_methods['hotspot'] = {}
+#         if 'pppoe' not in self.access_methods:
+#             self.access_methods['pppoe'] = {}
+        
+#         # Ensure each method has required fields with proper defaults
+#         for method in ['hotspot', 'pppoe']:
+#             config = self.access_methods[method]
+#             if not isinstance(config, dict):
+#                 config = {}
+            
+#             # Ensure enabled is boolean
+#             if 'enabled' not in config:
+#                 config['enabled'] = method == 'hotspot'  # Default hotspot enabled
+#             elif isinstance(config['enabled'], str):
+#                 config['enabled'] = config['enabled'].lower() == 'true'
+            
+#             # Ensure required nested fields exist with proper structure
+#             nested_fields = ['download_speed', 'upload_speed', 'data_limit', 'usage_limit', 'validity_period']
+#             for field in nested_fields:
+#                 if field not in config or not isinstance(config[field], dict):
+#                     config[field] = {'value': '', 'unit': self._get_default_unit(field)}
+#                 elif 'value' not in config[field]:
+#                     config[field]['value'] = ''
+#                 elif 'unit' not in config[field]:
+#                     config[field]['unit'] = self._get_default_unit(field)
+            
+#             # Ensure numeric fields exist
+#             numeric_fields = ['bandwidth_limit', 'max_devices', 'session_timeout', 'idle_timeout']
+#             for field in numeric_fields:
+#                 if field not in config:
+#                     config[field] = ''
+            
+#             # PPPoE specific fields
+#             if method == 'pppoe':
+#                 pppoe_fields = ['ip_pool', 'service_name', 'mtu']
+#                 for field in pppoe_fields:
+#                     if field not in config:
+#                         config[field] = ''
+            
+#             # MAC binding
+#             if 'mac_binding' not in config:
+#                 config['mac_binding'] = False
+#             elif isinstance(config['mac_binding'], str):
+#                 config['mac_binding'] = config['mac_binding'].lower() == 'true'
+            
+#             self.access_methods[method] = config
+    
+#     def _get_default_unit(self, field):
+#         """Get default unit for a field"""
+#         units = {
+#             'download_speed': 'mbps',
+#             'upload_speed': 'mbps',
+#             'data_limit': 'gb',
+#             'usage_limit': 'hours',
+#             'validity_period': 'days'
+#         }
+#         return units.get(field, '')
     
 #     def set_default_access_methods(self):
 #         """Set default access method configurations"""
@@ -868,10 +1015,10 @@
 #                 'upload_speed': {'value': '5', 'unit': 'mbps'},
 #                 'data_limit': {'value': '10', 'unit': 'gb'},
 #                 'usage_limit': {'value': '24', 'unit': 'hours'},
-#                 'bandwidth_limit': 0,
-#                 'max_devices': 1,
-#                 'session_timeout': 86400,
-#                 'idle_timeout': 300,
+#                 'bandwidth_limit': '',
+#                 'max_devices': '',
+#                 'session_timeout': '',
+#                 'idle_timeout': '',
 #                 'validity_period': {'value': '30', 'unit': 'days'},
 #                 'mac_binding': False,
 #             },
@@ -881,15 +1028,15 @@
 #                 'upload_speed': {'value': '5', 'unit': 'mbps'},
 #                 'data_limit': {'value': '10', 'unit': 'gb'},
 #                 'usage_limit': {'value': '24', 'unit': 'hours'},
-#                 'bandwidth_limit': 0,
-#                 'max_devices': 1,
-#                 'session_timeout': 86400,
-#                 'idle_timeout': 300,
+#                 'bandwidth_limit': '',
+#                 'max_devices': '',
+#                 'session_timeout': '',
+#                 'idle_timeout': '',
 #                 'validity_period': {'value': '30', 'unit': 'days'},
 #                 'mac_binding': False,
-#                 'ip_pool': 'pppoe-pool-1',
+#                 'ip_pool': '',
 #                 'service_name': '',
-#                 'mtu': 1492,
+#                 'mtu': '',
 #             }
 #         }
     
@@ -899,7 +1046,13 @@
 #         self.category = template.category
 #         self.price = template.base_price
 #         self.description = template.description
-#         self.access_methods = template.access_methods.copy()
+#         # Deep copy access methods to ensure proper structure
+#         self.access_methods = {}
+#         for method, config in template.access_methods.items():
+#             if isinstance(config, dict):
+#                 self.access_methods[method] = config.copy()
+#             else:
+#                 self.access_methods[method] = config
 #         self.template = template
         
 #         # Copy time variant from template if exists
@@ -924,9 +1077,12 @@
 #             self.time_variant = time_variant_copy
         
 #         if template.base_price > 0:
-#             self.plan_type = 'paid'
+#             self.plan_type = 'Paid'
 #         else:
-#             self.plan_type = 'free_trial'
+#             self.plan_type = 'Free_trial'
+        
+#         # Ensure access methods are properly structured after template copy
+#         self._ensure_access_methods_structure()
         
 #         template.increment_usage()
 #         self.save()
@@ -1184,10 +1340,12 @@
 
 
 
+
+
 """
 Internet Plans - Core Plan Models with Time Variant Feature
 UPDATED: Production-ready with consistent snake_case, optimized queries, and proper validation
-FIXED: Access methods initialization and validation
+FIXED: Added subscription integration properties and methods
 """
 
 from django.db import models
@@ -1921,6 +2079,7 @@ class InternetPlan(models.Model):
     """
     Internet Plan that can be purchased by clients
     Each plan is created from a template or custom configuration
+    UPDATED: Added subscription integration properties
     """
     
     PLAN_TYPES = (
@@ -2041,6 +2200,175 @@ class InternetPlan(models.Model):
     def __str__(self):
         plan_type = self.get_plan_type_display()
         return f"{self.name} ({plan_type}) - KSH {self.price}"
+    
+    # ==================== SUBSCRIPTION INTEGRATION PROPERTIES ====================
+    
+    @property
+    def subscriptions(self):
+        """
+        Get all subscriptions for this plan from service_operations
+        Returns empty list if service_operations not available
+        """
+        try:
+            from service_operations.models import Subscription
+            return Subscription.objects.filter(internet_plan_id=self.id)
+        except (ImportError, LookupError, Exception) as e:
+            logger.debug(f"Could not get subscriptions for plan {self.id}: {e}")
+            return []
+    
+    @property
+    def subscription_count(self):
+        """Get total number of subscriptions for this plan"""
+        try:
+            return self.subscriptions.count()
+        except Exception:
+            return 0
+    
+    @property
+    def active_subscriptions(self):
+        """Get active subscriptions for this plan"""
+        try:
+            return self.subscriptions.filter(status='active', is_active=True)
+        except Exception:
+            return []
+    
+    @property
+    def active_subscription_count(self):
+        """Get count of active subscriptions for this plan"""
+        try:
+            return self.active_subscriptions.count()
+        except Exception:
+            return 0
+    
+    @property
+    def pending_subscriptions(self):
+        """Get pending subscriptions for this plan"""
+        try:
+            return self.subscriptions.filter(status='pending_activation')
+        except Exception:
+            return []
+    
+    @property
+    def pending_subscription_count(self):
+        """Get count of pending subscriptions for this plan"""
+        try:
+            return self.pending_subscriptions.count()
+        except Exception:
+            return 0
+    
+    @property
+    def expired_subscriptions(self):
+        """Get expired subscriptions for this plan"""
+        try:
+            return self.subscriptions.filter(status='expired')
+        except Exception:
+            return []
+    
+    @property
+    def expired_subscription_count(self):
+        """Get count of expired subscriptions for this plan"""
+        try:
+            return self.expired_subscriptions.count()
+        except Exception:
+            return 0
+    
+    @property
+    def cancelled_subscriptions(self):
+        """Get cancelled subscriptions for this plan"""
+        try:
+            return self.subscriptions.filter(status='cancelled')
+        except Exception:
+            return []
+    
+    @property
+    def cancelled_subscription_count(self):
+        """Get count of cancelled subscriptions for this plan"""
+        try:
+            return self.cancelled_subscriptions.count()
+        except Exception:
+            return 0
+    
+    @property
+    def suspended_subscriptions(self):
+        """Get suspended subscriptions for this plan"""
+        try:
+            return self.subscriptions.filter(status='suspended')
+        except Exception:
+            return []
+    
+    @property
+    def suspended_subscription_count(self):
+        """Get count of suspended subscriptions for this plan"""
+        try:
+            return self.suspended_subscriptions.count()
+        except Exception:
+            return 0
+    
+    @property
+    def total_data_used(self):
+        """Get total data used across all subscriptions for this plan (in bytes)"""
+        try:
+            active_subs = self.active_subscriptions
+            if active_subs.exists():
+                return sum(sub.used_data_bytes for sub in active_subs)
+            return 0
+        except Exception:
+            return 0
+    
+    @property
+    def total_data_used_gb(self):
+        """Get total data used in GB"""
+        return self.total_data_used / (1024**3)
+    
+    @property
+    def total_time_used(self):
+        """Get total time used across all subscriptions (in seconds)"""
+        try:
+            active_subs = self.active_subscriptions
+            if active_subs.exists():
+                return sum(sub.used_time_seconds for sub in active_subs)
+            return 0
+        except Exception:
+            return 0
+    
+    @property
+    def total_time_used_hours(self):
+        """Get total time used in hours"""
+        return self.total_time_used / 3600
+    
+    @property
+    def estimated_revenue(self):
+        """Calculate estimated revenue from this plan"""
+        try:
+            return self.active_subscription_count * float(self.price)
+        except Exception:
+            return 0.0
+    
+    @property
+    def subscription_stats(self):
+        """Get comprehensive subscription statistics"""
+        try:
+            subs = self.subscriptions
+            return {
+                'total': subs.count(),
+                'active': self.active_subscription_count,
+                'pending': self.pending_subscription_count,
+                'expired': self.expired_subscription_count,
+                'cancelled': self.cancelled_subscription_count,
+                'suspended': self.suspended_subscription_count,
+                'total_data_used_gb': round(self.total_data_used_gb, 2),
+                'total_time_used_hours': round(self.total_time_used_hours, 2),
+                'estimated_revenue': round(self.estimated_revenue, 2),
+            }
+        except Exception as e:
+            logger.error(f"Error getting subscription stats for plan {self.id}: {e}")
+            return {
+                'total': 0, 'active': 0, 'pending': 0, 'expired': 0,
+                'cancelled': 0, 'suspended': 0, 'total_data_used_gb': 0,
+                'total_time_used_hours': 0, 'estimated_revenue': 0,
+            }
+    
+    # ==================== END SUBSCRIPTION INTEGRATION ====================
     
     def clean(self):
         """Validate plan configuration"""

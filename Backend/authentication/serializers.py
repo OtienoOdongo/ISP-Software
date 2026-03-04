@@ -1406,3 +1406,52 @@ class EmailValidationSerializer(serializers.Serializer):
             'is_valid': True,
             'message': 'Email found' if self.context.get('email_exists') else 'Email available'
         }
+    
+
+
+
+
+
+
+
+# Add to authentication/serializers.py
+
+class ClientSearchSerializer(serializers.Serializer):
+    """Serializer for client search requests"""
+    phone_number = serializers.CharField(required=True, max_length=20)
+    
+    def validate_phone_number(self, value):
+        from authentication.models import PhoneValidation
+        if not PhoneValidation.is_valid_kenyan_phone(value):
+            raise serializers.ValidationError("Invalid phone number format")
+        return PhoneValidation.normalize_kenyan_phone(value)
+
+
+class ClientCreateSerializer(serializers.Serializer):
+    """Serializer for creating new hotspot clients"""
+    phone_number = serializers.CharField(required=True, max_length=20)
+    
+    def validate_phone_number(self, value):
+        from authentication.models import PhoneValidation, UserAccount
+        if not PhoneValidation.is_valid_kenyan_phone(value):
+            raise serializers.ValidationError("Invalid phone number format")
+        
+        normalized = PhoneValidation.normalize_kenyan_phone(value)
+        
+        # Check if client already exists
+        if UserAccount.get_client_by_phone(normalized, active_only=False):
+            raise serializers.ValidationError("Client already exists with this phone number")
+        
+        return normalized
+
+
+class ClientResponseSerializer(serializers.Serializer):
+    """Serializer for client responses"""
+    id = serializers.UUIDField()
+    phone_number = serializers.CharField()
+    phone_number_display = serializers.CharField()
+    username = serializers.CharField()
+    connection_type = serializers.CharField()
+    is_active = serializers.BooleanField()
+    source = serializers.CharField()
+    created_at = serializers.DateTimeField()

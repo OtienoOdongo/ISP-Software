@@ -641,7 +641,7 @@ class NetworkAdapter:
             start_time = time.time()
             success, response_data, error, status_code = cls._make_request(
                 method=RequestMethod.GET,
-                endpoint="/api/health/",
+                endpoint="/health/",
                 timeout=cls._timeout_config.connection_timeout
             )
             elapsed_time = time.time() - start_time
