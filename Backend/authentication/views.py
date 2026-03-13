@@ -1369,7 +1369,7 @@ def client_create_hotspot(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])  # Protected for admin dashboard
+@permission_classes([AllowAny])  
 @rate_limited(max_calls=200, period=60, scope="client_detail")
 def client_detail(request, client_id):
     """

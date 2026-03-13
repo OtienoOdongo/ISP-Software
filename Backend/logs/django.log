@@ -10690,3 +10690,826 @@ WARNING 2026-03-04 17:32:42,404 log 2262 130878495782592 Unauthorized: /api/auth
 WARNING 2026-03-04 17:32:42,440 log 2262 130878495782592 Unauthorized: /api/auth/users/me/
 WARNING 2026-03-04 17:45:43,681 log 2262 130878495782592 Unauthorized: /api/auth/jwt/refresh/
 WARNING 2026-03-04 17:45:43,726 log 2262 130878495782592 Unauthorized: /api/auth/users/me/
+WARNING 2026-03-05 10:24:17,454 log 20801 133567408383680 Unauthorized: /api/auth/jwt/create/
+WARNING 2026-03-05 10:24:18,200 log 20801 133567408383680 Unauthorized: /api/auth/users/me/
+WARNING 2026-03-05 10:24:18,430 log 20801 133567408383680 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 10:24:50,842 log 20801 133567174670016 Internal Server Error: /api/user_management/analytics/usage/
+ERROR 2026-03-05 10:24:50,890 log 20801 133567408383680 Internal Server Error: /api/user_management/analytics/behavioral/
+WARNING 2026-03-05 10:24:51,410 log 20801 133567157884608 Not Found: /api/user_management/commissions/payout/
+WARNING 2026-03-05 10:50:44,713 log 23590 128991231993536 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 10:50:44,732 log 23590 128991231993536 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 10:55:33,814 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 10:55:33,828 log 23590 128991240386240 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 10:56:33,656 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 10:57:33,641 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 10:58:33,657 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 10:59:33,781 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:00:33,802 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:01:33,650 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 11:01:33,687 log 23590 128991240386240 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 11:02:33,650 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:03:33,686 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 11:03:46,955 log 23590 128991240386240 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 11:03:46,977 log 23590 128991240386240 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 11:04:33,645 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:05:33,644 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:06:33,644 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:07:33,774 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 11:07:33,789 log 23590 128991240386240 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 11:08:33,728 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:09:33,719 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:10:33,633 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:11:33,703 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:12:33,635 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 11:13:33,675 log 23590 128991240386240 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 11:13:33,701 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:14:33,656 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:15:33,640 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:16:33,755 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 11:16:47,988 log 23590 128991240386240 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 11:16:48,053 log 23590 128991240386240 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 11:17:33,723 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:18:33,737 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:19:33,652 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 11:19:33,705 log 23590 128991240386240 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 11:20:33,678 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:21:33,686 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:22:33,996 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:23:33,684 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:24:33,684 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:25:33,653 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 11:25:33,667 log 23590 128991240386240 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 11:26:33,794 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:27:33,640 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:28:33,790 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:29:33,747 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 11:29:48,760 log 23590 128991240386240 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 11:29:48,793 log 23590 128991240386240 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 11:30:33,658 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:31:33,784 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 11:31:33,848 log 23590 128991240386240 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 11:32:33,683 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:33:33,739 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:34:33,675 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:35:33,673 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:36:33,689 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 11:37:33,645 log 23590 128991240386240 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 11:37:33,680 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:38:33,648 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:39:33,662 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:40:33,799 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:41:33,648 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:42:33,787 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 11:42:50,130 log 23590 128991240386240 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 11:42:50,166 log 23590 128991240386240 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 11:43:33,645 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 11:43:33,659 log 23590 128991240386240 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 11:44:33,606 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:45:33,648 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:46:33,698 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:47:33,636 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:48:33,636 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 11:49:33,645 log 23590 128991240386240 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 11:49:33,719 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:50:33,654 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:51:33,794 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:52:34,037 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:53:33,736 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:54:33,638 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:55:33,653 log 23590 128991240386240 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 11:55:33,682 log 23590 128991231993536 Unauthorized: /api/service_operations/activations/stats/
+WARNING 2026-03-05 11:55:50,832 log 23590 128991231993536 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 11:55:50,857 log 23590 128991231993536 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 11:56:33,654 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:57:33,695 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:58:33,692 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 11:59:33,708 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:00:33,659 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:01:33,622 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 12:01:33,666 log 23590 128991231993536 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 12:02:33,622 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:03:34,361 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:04:33,658 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:05:33,675 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:06:33,692 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:07:33,682 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 12:07:33,731 log 23590 128991231993536 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 12:08:33,599 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 12:08:51,776 log 23590 128991231993536 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 12:08:51,799 log 23590 128991231993536 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 12:09:33,689 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:10:33,694 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:11:33,669 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:12:33,641 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:13:33,649 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 12:13:33,693 log 23590 128991231993536 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 12:14:33,662 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:15:33,663 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:16:34,027 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:17:33,716 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:18:33,979 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 12:19:33,622 log 23590 128991240386240 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 12:19:33,643 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:20:33,638 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:21:33,678 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 12:21:52,924 log 23590 128991231993536 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 12:21:52,964 log 23590 128991231993536 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 12:22:33,973 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:23:33,691 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:24:34,342 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:25:33,701 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 12:25:33,733 log 23590 128991231993536 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 12:26:33,764 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:27:33,697 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:28:33,787 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:29:33,668 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:30:33,713 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:31:33,752 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 12:31:33,854 log 23590 128991231993536 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 12:32:33,696 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:33:33,645 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:34:33,616 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 12:34:54,143 log 23590 128991231993536 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 12:34:54,217 log 23590 128991231993536 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 12:35:33,641 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:36:33,665 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 12:37:33,706 log 23590 128991231993536 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 12:37:33,753 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:38:33,720 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:39:33,689 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:40:34,010 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:41:33,611 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:42:33,643 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 12:43:33,636 log 23590 128991231993536 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 12:43:33,698 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:44:33,683 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:45:33,704 log 23590 128991231993536 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:46:35,002 log 47714 123196666803904 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:47:33,662 log 47714 123196666803904 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 12:47:55,704 log 47714 123196666803904 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 12:47:55,781 log 47714 123196666803904 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 12:48:33,595 log 47714 123196666803904 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:49:33,652 log 47714 123196666803904 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 12:49:33,674 log 47714 123196666803904 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 12:50:33,659 log 47714 123196666803904 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:51:33,686 log 47714 123196666803904 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:52:33,709 log 47714 123196666803904 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:53:33,696 log 47714 123196666803904 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:54:33,657 log 47714 123196666803904 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:55:33,924 log 47714 123196666803904 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 12:55:33,939 log 47714 123196657362624 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 12:56:33,623 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:57:33,660 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:58:33,669 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 12:59:33,699 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:00:33,693 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 13:00:56,936 log 47714 123196657362624 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 13:00:56,956 log 47714 123196657362624 Unauthorized: /api/auth/users/me/
+WARNING 2026-03-05 13:01:33,691 log 47714 123196657362624 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 13:01:33,730 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:02:33,591 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:03:33,613 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:04:36,072 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:05:33,467 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:06:33,731 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 13:07:33,718 log 47714 123196657362624 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 13:07:33,757 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:08:33,706 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:09:33,619 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:10:33,616 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:11:33,978 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:12:33,683 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:13:33,692 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 13:13:33,718 log 47714 123196657362624 Unauthorized: /api/service_operations/activations/stats/
+WARNING 2026-03-05 13:13:57,939 log 47714 123196657362624 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 13:13:57,990 log 47714 123196657362624 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 13:14:33,793 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:15:33,699 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:16:33,635 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:17:33,623 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:18:33,646 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:19:33,694 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 13:19:33,720 log 47714 123196657362624 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 13:20:33,731 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:21:33,757 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:22:34,135 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:23:33,671 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:24:33,627 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:25:33,654 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 13:25:33,689 log 47714 123196657362624 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 13:26:33,680 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 13:26:59,426 log 47714 123196657362624 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 13:26:59,465 log 47714 123196657362624 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 13:27:33,702 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:28:33,734 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:29:33,713 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:30:33,644 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:31:33,599 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 13:31:33,622 log 47714 123196657362624 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 13:32:33,622 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:33:33,661 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:34:33,675 log 47714 123196657362624 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:35:34,457 log 56920 139377771542208 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:36:34,392 log 57089 135207315306176 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 13:37:33,643 log 57089 135207315306176 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 13:37:33,660 log 57089 135207306913472 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:38:34,124 log 57487 133717977159360 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:39:33,625 log 57487 133717977159360 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 13:40:00,630 log 57487 133717977159360 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 13:40:00,704 log 57487 133717977159360 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 13:40:33,670 log 57487 133717977159360 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:41:33,676 log 57487 133717977159360 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:42:33,698 log 57487 133717977159360 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 13:43:33,710 log 57487 133717977159360 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 13:43:33,741 log 57487 133717977159360 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:45:33,687 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:46:33,632 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:47:34,264 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:48:34,252 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 13:49:33,721 log 58782 139041405761216 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 13:49:33,744 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:50:33,692 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:51:33,645 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:52:33,967 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 13:53:02,328 log 58782 139041405761216 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 13:53:02,376 log 58782 139041405761216 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 13:53:33,623 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:54:33,646 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:55:33,730 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 13:55:33,776 log 58782 139041405761216 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 13:56:33,722 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:57:33,712 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:58:33,697 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 13:59:33,605 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:00:33,599 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:01:33,673 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 14:01:33,707 log 58782 139041405761216 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 14:02:33,675 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:03:33,886 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:04:33,715 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:05:33,679 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 14:06:02,730 log 58782 139041405761216 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 14:06:02,750 log 58782 139041405761216 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 14:06:33,605 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:07:33,610 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 14:07:33,643 log 58782 139041405761216 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 14:08:33,640 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:09:33,684 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:10:33,696 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:11:33,714 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:12:33,693 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:13:33,648 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 14:13:33,695 log 58782 139041405761216 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 14:14:33,595 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:15:33,660 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:16:33,679 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:17:33,704 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:18:33,909 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 14:19:05,782 log 58782 139041405761216 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 14:19:05,807 log 58782 139041405761216 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 14:19:33,838 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 14:19:33,872 log 58782 139041405761216 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 14:20:35,719 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:21:33,612 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:22:34,068 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:23:33,753 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:24:33,691 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:25:33,661 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 14:25:33,693 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 14:26:33,733 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:27:33,726 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:28:33,725 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:29:33,732 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:30:33,735 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:31:33,638 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 14:31:33,666 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+WARNING 2026-03-05 14:32:08,769 log 58782 139041256240832 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 14:32:08,792 log 58782 139041256240832 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 14:32:33,578 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:33:33,632 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:34:33,673 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:35:33,726 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:36:33,727 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:37:33,715 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 14:37:33,777 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 14:38:33,687 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:39:33,582 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:40:33,628 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:41:33,662 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:42:33,700 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 14:43:33,716 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 14:43:33,784 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:44:33,730 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 14:45:10,377 log 58782 139041256240832 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 14:45:10,454 log 58782 139041256240832 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 14:45:33,670 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:46:33,564 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:47:33,611 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:48:33,655 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 14:49:33,698 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 14:49:33,737 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:50:33,706 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:51:33,725 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:52:33,978 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:53:33,586 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:54:33,603 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:55:33,702 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 14:55:33,718 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 14:56:33,675 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:57:33,756 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 14:58:11,962 log 58782 139041256240832 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 14:58:12,098 log 58782 139041256240832 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 14:58:33,712 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 14:59:33,686 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:00:33,614 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:01:33,598 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 15:01:33,627 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 15:02:33,646 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:03:33,692 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:04:33,708 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:05:33,704 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:06:33,721 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 15:07:33,602 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 15:07:33,645 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:08:33,592 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:09:34,068 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:10:33,940 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 15:11:14,176 log 58782 139041256240832 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 15:11:14,785 log 58782 139041256240832 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 15:11:33,463 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:12:33,533 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:13:33,585 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 15:13:33,607 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 15:14:33,836 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:15:33,809 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:16:33,866 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:17:33,931 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:18:33,552 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:19:33,856 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 15:19:33,881 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 15:20:33,982 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:21:34,548 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:22:33,908 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:23:33,659 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 15:24:16,157 log 58782 139041256240832 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 15:24:16,180 log 58782 139041256240832 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 15:24:33,824 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:25:33,841 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 15:25:33,866 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 15:26:33,926 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:27:33,545 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:28:33,603 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:29:33,690 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:30:33,788 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:31:33,861 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 15:31:33,881 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 15:32:33,926 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:33:33,525 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:34:33,604 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:35:33,708 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:36:33,781 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 15:37:16,850 log 58782 139041256240832 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 15:37:16,874 log 58782 139041256240832 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 15:37:33,909 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 15:37:33,933 log 58782 139041174451904 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 15:38:33,956 log 58782 139041174451904 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:39:33,483 log 58782 139041174451904 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:40:33,536 log 58782 139041174451904 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:41:33,766 log 58782 139041174451904 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:42:33,974 log 58782 139041174451904 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:43:33,938 log 58782 139041174451904 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 15:43:33,971 log 58782 139041174451904 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 15:44:33,950 log 58782 139041174451904 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:45:33,478 log 58782 139041174451904 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:46:33,570 log 58782 139041174451904 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:47:33,671 log 58782 139041174451904 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:48:34,153 log 58782 139041174451904 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:49:33,888 log 58782 139041174451904 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 15:49:33,918 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+WARNING 2026-03-05 15:50:17,847 log 58782 139041256240832 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 15:50:17,876 log 58782 139041256240832 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 15:50:33,969 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:51:33,527 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:52:33,936 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:53:33,710 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:54:33,842 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 15:55:33,921 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 15:55:33,988 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:56:33,509 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:57:33,564 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:58:33,647 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 15:59:33,764 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:00:33,886 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 16:01:33,909 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 16:01:33,945 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:02:33,484 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 16:03:18,953 log 58782 139041256240832 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 16:03:18,979 log 58782 139041256240832 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 16:03:33,472 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:04:33,613 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:05:33,777 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:06:33,884 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 16:07:33,935 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 16:07:33,979 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:08:33,415 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:09:33,557 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:10:33,636 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:11:33,751 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:12:33,856 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 16:13:33,910 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 16:13:33,944 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:14:33,461 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:15:33,550 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 16:16:20,364 log 58782 139041256240832 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 16:16:20,394 log 58782 139041256240832 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 16:16:33,701 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:17:33,643 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:18:33,845 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:19:33,931 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 16:19:33,977 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 16:20:33,486 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:21:33,600 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:22:34,006 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:23:33,790 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:24:33,900 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 16:25:33,987 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 16:25:34,015 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:26:33,522 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:27:33,581 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:28:33,753 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 16:29:20,970 log 58782 139041256240832 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 16:29:20,992 log 58782 139041256240832 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 16:29:33,826 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:30:33,943 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 16:31:33,976 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 16:31:34,012 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:32:33,537 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:33:33,621 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:34:33,724 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:35:33,787 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:36:33,913 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 16:37:33,997 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 16:37:34,026 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:38:33,561 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:39:33,738 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:40:33,760 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:41:33,930 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 16:42:21,680 log 58782 139041256240832 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 16:42:21,698 log 58782 139041256240832 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 16:42:33,974 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:43:34,007 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 16:43:34,069 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 16:44:33,642 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:45:33,729 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:46:33,760 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:47:33,852 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:48:33,894 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 16:49:33,967 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 16:49:34,006 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:50:33,664 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:51:33,679 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:52:34,063 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:53:33,849 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:54:33,849 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 16:55:22,852 log 58782 139041256240832 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 16:55:22,933 log 58782 139041256240832 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 16:55:33,759 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 16:55:33,784 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 16:56:33,746 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:57:33,773 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:58:33,813 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 16:59:33,842 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:00:33,869 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:01:33,867 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 17:01:33,891 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 17:02:33,859 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:03:33,901 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:04:33,847 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:05:33,845 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:06:33,872 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 17:07:33,878 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 17:07:33,917 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 17:08:23,884 log 58782 139041256240832 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 17:08:23,945 log 58782 139041256240832 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 17:08:33,880 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:09:33,860 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:10:33,834 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:11:33,822 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:12:33,840 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 17:13:33,829 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 17:13:33,864 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:14:33,902 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:15:33,982 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:16:33,879 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:17:33,905 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:18:33,881 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:19:33,968 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 17:19:33,993 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 17:20:33,974 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 17:21:25,047 log 58782 139041256240832 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 17:21:25,069 log 58782 139041256240832 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 17:21:33,932 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:22:34,262 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:23:33,900 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:24:33,866 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:25:34,628 log 58782 139041256240832 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 17:25:34,655 log 58782 139041256240832 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 17:26:34,178 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:27:33,912 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:28:33,948 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:29:33,951 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:30:33,875 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:31:33,933 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 17:31:33,955 log 58782 139041405761216 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 17:32:33,921 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:33:33,923 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 17:34:25,981 log 58782 139041405761216 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-05 17:34:26,002 log 58782 139041405761216 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-05 17:34:33,927 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:35:33,927 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-05 17:36:33,981 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-05 17:37:33,922 log 58782 139041405761216 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-05 17:37:33,950 log 58782 139041405761216 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 12:08:38,980 log 3817 133455683770048 Internal Server Error: /api/user_management/analytics/usage/
+ERROR 2026-03-09 12:08:39,061 log 3817 133455920953024 Internal Server Error: /api/user_management/analytics/behavioral/
+WARNING 2026-03-09 12:08:39,512 log 3817 133455683770048 Not Found: /api/user_management/commissions/payout/
+WARNING 2026-03-09 12:33:45,522 log 3817 133455683770048 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-09 12:33:45,562 log 3817 133455683770048 Unauthorized: /api/auth/users/me/
+WARNING 2026-03-09 12:34:43,449 log 3817 133455683770048 Unauthorized: /api/sms/messages/
+WARNING 2026-03-09 12:34:43,462 log 3817 133455920953024 Unauthorized: /api/sms/queue/
+WARNING 2026-03-09 12:35:43,486 log 3817 133455920953024 Unauthorized: /api/sms/messages/
+WARNING 2026-03-09 12:35:43,499 log 3817 133455683770048 Unauthorized: /api/sms/queue/
+WARNING 2026-03-09 12:36:43,523 log 3817 133455683770048 Unauthorized: /api/sms/messages/
+WARNING 2026-03-09 12:36:43,534 log 3817 133455920953024 Unauthorized: /api/sms/queue/
+WARNING 2026-03-09 12:37:43,524 log 3817 133455683770048 Unauthorized: /api/sms/queue/
+WARNING 2026-03-09 12:37:43,543 log 3817 133455920953024 Unauthorized: /api/sms/messages/
+WARNING 2026-03-09 12:38:43,468 log 3817 133455920953024 Unauthorized: /api/sms/messages/
+WARNING 2026-03-09 12:38:43,476 log 3817 133455683770048 Unauthorized: /api/sms/queue/
+WARNING 2026-03-09 12:39:43,432 log 3817 133455920953024 Unauthorized: /api/sms/queue/
+WARNING 2026-03-09 12:39:43,454 log 3817 133455683770048 Unauthorized: /api/sms/messages/
+WARNING 2026-03-09 12:40:43,446 log 3817 133455683770048 Unauthorized: /api/sms/messages/
+WARNING 2026-03-09 12:40:43,460 log 3817 133455920953024 Unauthorized: /api/sms/queue/
+WARNING 2026-03-09 12:41:43,497 log 3817 133455920953024 Unauthorized: /api/sms/messages/
+WARNING 2026-03-09 12:41:43,509 log 3817 133455683770048 Unauthorized: /api/sms/queue/
+WARNING 2026-03-09 12:42:43,631 log 3817 133455683770048 Unauthorized: /api/sms/messages/
+WARNING 2026-03-09 12:42:43,666 log 3817 133455920953024 Unauthorized: /api/sms/queue/
+WARNING 2026-03-09 12:43:44,282 log 11730 135097525204672 Unauthorized: /api/sms/queue/
+WARNING 2026-03-09 12:43:44,284 log 11730 135097744238272 Unauthorized: /api/sms/messages/
+WARNING 2026-03-09 12:44:43,555 log 11730 135097525204672 Unauthorized: /api/sms/queue/
+WARNING 2026-03-09 12:44:43,570 log 11730 135097744238272 Unauthorized: /api/sms/messages/
+WARNING 2026-03-09 12:45:43,719 log 12140 138314731968192 Unauthorized: /api/sms/messages/
+WARNING 2026-03-09 12:45:43,731 log 12140 138314583635648 Unauthorized: /api/sms/queue/
+WARNING 2026-03-09 12:46:43,526 log 12140 138314583635648 Unauthorized: /api/sms/messages/
+WARNING 2026-03-09 12:46:43,538 log 12140 138314731968192 Unauthorized: /api/sms/queue/
+WARNING 2026-03-09 12:46:46,832 log 12140 138314731968192 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-09 12:46:46,850 log 12140 138314731968192 Unauthorized: /api/auth/users/me/
+WARNING 2026-03-09 12:47:43,836 log 12140 138314583635648 Unauthorized: /api/sms/messages/
+WARNING 2026-03-09 12:47:43,846 log 12140 138314731968192 Unauthorized: /api/sms/queue/
+WARNING 2026-03-09 12:48:44,078 log 12750 135818597365440 Unauthorized: /api/sms/messages/
+WARNING 2026-03-09 12:48:44,114 log 12750 135818564859584 Unauthorized: /api/sms/queue/
+WARNING 2026-03-09 12:49:43,923 log 13106 129358223111872 Unauthorized: /api/sms/messages/
+WARNING 2026-03-09 12:49:43,948 log 13106 129358187460288 Unauthorized: /api/sms/queue/
+WARNING 2026-03-09 12:50:43,526 log 13106 129358223111872 Unauthorized: /api/sms/queue/
+WARNING 2026-03-09 12:50:43,541 log 13106 129358187460288 Unauthorized: /api/sms/messages/
+WARNING 2026-03-09 12:52:42,794 log 13681 130430544115392 Not Found: /api/user_management/commissions/payout/
+ERROR 2026-03-09 12:52:43,094 log 13681 130430527329984 Internal Server Error: /api/user_management/analytics/usage/
+ERROR 2026-03-09 12:52:43,149 log 13681 130430237931200 Internal Server Error: /api/user_management/analytics/behavioral/
+WARNING 2026-03-09 12:52:47,865 log 13681 130430652118720 Not Found: /api/user_management/commissions/payout/
+WARNING 2026-03-09 13:18:36,908 log 15340 129638772487872 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-09 13:18:36,928 log 15340 129638772487872 Unauthorized: /api/auth/users/me/
+WARNING 2026-03-09 13:18:43,554 log 15340 129638554662592 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-09 13:18:43,568 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:19:43,541 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:20:43,572 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:21:43,570 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:22:09,499 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:22:39,495 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:23:43,498 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:24:43,539 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-09 13:24:43,555 log 15340 129638772487872 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-09 13:25:43,868 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:26:43,555 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:27:43,460 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:28:43,509 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:29:43,570 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:30:43,541 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-09 13:30:43,555 log 15340 129638772487872 Unauthorized: /api/service_operations/activations/stats/
+WARNING 2026-03-09 13:31:37,635 log 15340 129638772487872 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-09 13:31:37,658 log 15340 129638772487872 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-09 13:31:43,569 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:32:43,605 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:33:43,584 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:34:43,614 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:35:43,588 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-09 13:36:43,564 log 15340 129638772487872 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-09 13:36:43,582 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:37:43,558 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:38:38,719 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:39:09,618 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:39:39,558 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:40:40,547 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:41:41,544 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:42:42,538 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-09 13:42:42,549 log 15340 129638772487872 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-09 13:43:43,577 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-09 13:44:38,628 log 15340 129638772487872 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-09 13:44:38,649 log 15340 129638772487872 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-09 13:44:43,606 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:45:43,579 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:46:43,579 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:47:43,611 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-09 13:47:43,633 log 15340 129638772487872 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-09 13:48:43,611 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:49:43,554 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:50:43,567 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:51:12,559 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:51:38,797 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:52:08,827 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:52:38,762 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:53:08,790 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-09 13:53:08,805 log 15340 129638772487872 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-09 13:53:38,869 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:54:08,805 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:54:38,812 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:55:08,777 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:55:39,086 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:56:08,820 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:56:38,784 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:57:08,800 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-09 13:57:38,792 log 15340 129638772487872 Unauthorized: /api/auth/jwt/refresh/
+ERROR 2026-03-09 13:57:38,818 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-09 13:57:38,883 log 15340 129638772487872 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-09 13:58:08,739 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:58:38,861 log 15340 129638554662592 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-09 13:58:38,871 log 15340 129638772487872 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-09 13:59:08,816 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 13:59:38,836 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 14:00:08,827 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 14:00:39,067 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 14:01:08,871 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 14:01:38,824 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 14:02:08,825 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 14:02:38,752 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 14:03:08,793 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 14:03:38,807 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-09 14:04:09,578 log 15340 129638772487872 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-09 14:04:09,606 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 14:04:39,569 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 14:05:40,573 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 14:06:41,959 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 14:07:42,623 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 14:08:43,939 log 15340 129638772487872 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-09 14:09:15,100 log 15340 129638772487872 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-09 14:09:15,136 log 15340 129638554662592 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-09 14:52:13,086 log 28486 128622107023040 Unauthorized: /api/internet_plans/plans/938dde90-75fd-4371-a3a0-483b61a79e74/
+WARNING 2026-03-09 14:52:13,819 log 28486 128622107023040 Not Found: /favicon.ico
+WARNING 2026-03-09 14:52:42,350 log 28486 128622107023040 Unauthorized: /api/auth/clients/d70c01ab-b978-4a1e-bef7-03a5b256f769/
+WARNING 2026-03-09 15:02:22,739 log 28486 128622635501248 Unauthorized: /api/internet_plans/plans/938dde90-75fd-4371-a3a0-483b61a79e74/
+WARNING 2026-03-09 15:02:22,903 log 28486 128622635501248 Not Found: /favicon.ico
+WARNING 2026-03-09 15:36:01,710 log 41853 130370857211584 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-09 15:36:01,764 log 41853 130370857211584 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-09 15:39:43,702 log 44335 138431638615744 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-09 15:39:43,722 log 44335 138431638615744 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-09 15:40:43,613 log 44335 138431638615744 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 15:41:43,664 log 44335 138431638615744 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 15:42:43,660 log 44335 138431638615744 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 15:43:42,038 log 45428 129143752193728 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 15:44:04,573 log 45428 129143752193728 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-09 16:00:11,324 log 45428 129143591134912 Internal Server Error: /api/user_management/analytics/usage/
+ERROR 2026-03-09 16:00:11,437 log 45428 129143582742208 Internal Server Error: /api/user_management/analytics/behavioral/
+WARNING 2026-03-09 16:00:11,776 log 45428 129143591134912 Not Found: /api/user_management/commissions/payout/
+WARNING 2026-03-09 16:00:18,641 log 45428 129143604770496 Not Found: /api/user_management/commissions/payout/
+WARNING 2026-03-09 16:00:50,705 log 45428 129143604770496 Not Found: /api/user_management/commissions/payout/
+WARNING 2026-03-09 16:05:59,122 log 45428 129143582742208 Bad Request: /api/service_operations/client/operations/
+ERROR 2026-03-09 16:23:55,861 log 51734 124814299756224 Internal Server Error: /api/account/profile/
+WARNING 2026-03-09 16:26:04,036 log 51734 124814289266368 Unauthorized: /api/auth/users/set_password/
+ERROR 2026-03-09 16:27:32,593 log 51734 124814289266368 Internal Server Error: /api/account/profile/
+ERROR 2026-03-09 16:27:43,161 log 51734 124814280873664 Internal Server Error: /api/user_management/analytics/usage/
+ERROR 2026-03-09 16:27:43,230 log 51734 124814254646976 Internal Server Error: /api/user_management/analytics/behavioral/
+WARNING 2026-03-09 16:27:43,263 log 51734 124814299756224 Not Found: /api/user_management/commissions/payout/
+WARNING 2026-03-11 13:29:08,464 log 2437 134158388598464 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-11 13:29:08,561 log 2437 134158388598464 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-11 13:30:48,957 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-11 13:30:49,038 log 2437 134158388598464 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-11 13:31:15,345 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:31:44,284 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:32:19,257 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:33:19,337 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:34:19,821 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:35:19,764 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:36:19,325 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-11 13:36:19,349 log 2437 134158388598464 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-11 13:37:19,269 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:38:19,268 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:39:19,251 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:40:19,252 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:41:19,305 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:41:33,285 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-11 13:41:33,302 log 2437 134158388598464 Unauthorized: /api/internet_plans/plans/
+WARNING 2026-03-11 13:41:33,359 log 2437 134158388598464 Unauthorized: /api/network_management/routers/
+WARNING 2026-03-11 13:41:33,422 log 2437 134158388598464 Unauthorized: /api/service_operations/activations/stats/
+WARNING 2026-03-11 13:41:33,477 log 2437 134158388598464 Unauthorized: /api/service_operations/operations/stats/
+ERROR 2026-03-11 13:42:04,314 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-11 13:42:09,515 log 2437 134158388598464 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-11 13:42:09,537 log 2437 134158388598464 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-11 13:42:34,279 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:43:04,313 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:43:34,287 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:44:04,306 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:45:19,284 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:46:19,294 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:47:19,303 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-11 13:47:19,323 log 2437 134158388598464 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-11 13:48:19,268 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:48:45,423 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-11 13:48:45,480 log 2437 134158388598464 Unauthorized: /api/network_management/routers/
+WARNING 2026-03-11 13:48:45,766 log 2437 134158218155712 Unauthorized: /api/internet_plans/plans/
+WARNING 2026-03-11 13:48:45,813 log 2437 134158388598464 Unauthorized: /api/service_operations/operations/stats/
+ERROR 2026-03-11 13:49:16,255 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:49:46,574 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:50:16,303 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:50:46,278 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:51:16,273 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:52:19,266 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-11 13:53:19,254 log 2437 134158388598464 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-11 13:53:19,283 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:54:19,267 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-11 13:55:10,424 log 2437 134158388598464 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-11 13:55:10,455 log 2437 134158388598464 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-11 13:55:19,277 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:56:19,316 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 13:57:19,735 log 2437 134158388598464 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 14:49:40,812 log 30782 125694329730752 Internal Server Error: /api/user_management/analytics/behavioral/
+ERROR 2026-03-11 14:49:40,832 log 30782 125694482839232 Internal Server Error: /api/user_management/analytics/usage/
+WARNING 2026-03-11 14:49:42,037 log 30782 125694329730752 Not Found: /api/user_management/commissions/payout/
+ERROR 2026-03-11 14:54:30,172 log 30782 125694447187648 Internal Server Error: /api/user_management/analytics/usage/
+ERROR 2026-03-11 14:54:30,302 log 30782 125694329730752 Internal Server Error: /api/user_management/analytics/behavioral/
+WARNING 2026-03-11 14:54:30,719 log 30782 125694329730752 Not Found: /api/user_management/commissions/payout/
+ERROR 2026-03-11 14:55:41,885 log 30782 125694348613312 Internal Server Error: /api/user_management/analytics/usage/
+ERROR 2026-03-11 14:55:41,980 log 30782 125694447187648 Internal Server Error: /api/user_management/analytics/behavioral/
+WARNING 2026-03-11 14:55:42,224 log 30782 125694348613312 Not Found: /api/user_management/commissions/payout/
+WARNING 2026-03-11 14:56:45,958 log 30782 125694365398720 Bad Request: /api/service_operations/client/operations/
+WARNING 2026-03-11 16:12:53,605 log 30782 125694447187648 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-11 16:12:53,772 log 30782 125694447187648 Unauthorized: /api/auth/users/me/
+WARNING 2026-03-11 16:16:19,605 log 30782 125694348613312 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-11 16:16:19,613 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:17:19,245 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:18:19,235 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:19:19,280 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:20:19,289 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:21:19,295 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-11 16:22:19,276 log 30782 125694447187648 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-11 16:22:19,298 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:23:19,243 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:24:19,225 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:25:19,226 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-11 16:25:54,434 log 30782 125694447187648 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-11 16:25:54,456 log 30782 125694447187648 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-11 16:26:19,291 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:27:19,311 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:28:19,642 log 30782 125694348613312 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-11 16:28:19,649 log 30782 125694447187648 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-11 16:29:19,315 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:30:19,262 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:31:19,201 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:32:19,259 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:33:19,264 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:34:19,314 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-11 16:34:19,329 log 30782 125694447187648 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-11 16:35:19,330 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:36:19,346 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:37:19,262 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:38:19,191 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-11 16:38:55,324 log 30782 125694447187648 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-11 16:38:55,455 log 30782 125694447187648 Unauthorized: /api/auth/users/me/
+ERROR 2026-03-11 16:39:19,226 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:40:19,450 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-11 16:40:19,471 log 30782 125694447187648 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-11 16:41:19,233 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:42:19,237 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:43:19,263 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:44:19,305 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:45:19,333 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:46:19,328 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-11 16:46:19,346 log 30782 125694348613312 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-11 16:47:19,309 log 30782 125694348613312 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:48:19,236 log 30782 125694348613312 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:49:19,216 log 30782 125694348613312 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:50:19,553 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:51:19,283 log 30782 125694447187648 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-11 16:51:56,273 log 30782 125694447187648 Unauthorized: /api/auth/jwt/refresh/
+WARNING 2026-03-11 16:51:56,289 log 30782 125694447187648 Unauthorized: /api/auth/users/me/
+WARNING 2026-03-11 16:52:19,619 log 30782 125694447187648 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-11 16:52:19,642 log 30782 125694348613312 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:53:19,625 log 30782 125694329730752 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:54:19,229 log 30782 125694329730752 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:55:19,290 log 30782 125694329730752 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:56:19,304 log 30782 125694329730752 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:57:19,329 log 30782 125694329730752 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 16:58:19,348 log 30782 125694329730752 Internal Server Error: /api/service_operations/subscriptions/
+WARNING 2026-03-11 16:58:19,357 log 30782 125694447187648 Unauthorized: /api/service_operations/activations/stats/
+ERROR 2026-03-11 16:59:19,251 log 30782 125694329730752 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 17:00:19,220 log 30782 125694329730752 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 17:01:19,266 log 30782 125694329730752 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 17:02:19,301 log 30782 125694329730752 Internal Server Error: /api/service_operations/subscriptions/
+ERROR 2026-03-11 17:03:19,335 log 30782 125694329730752 Internal Server Error: /api/service_operations/subscriptions/

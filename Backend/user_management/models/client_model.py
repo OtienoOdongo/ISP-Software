@@ -1,8 +1,15 @@
 
 
+
+
+
+
+
 # """
-# Integrated User Management Models with Internet Plan Integration
-# Production-ready with complete plan management
+# User Management Models - Business Logic Extension
+# Extends Authentication app's UserAccount without duplication
+# Production-ready with advanced analytics
+# Integrated with Service Operations
 # """
 # from django.db import models
 # from django.utils import timezone
@@ -14,10 +21,11 @@
 # from decimal import Decimal
 # import json
 # import re
-# from cryptography.fernet import Fernet
-# from django.conf import settings
+
+
 
 # logger = logging.getLogger(__name__)
+
 
 # try:
 #     from authentication.models import UserAccount, PhoneValidation
@@ -33,7 +41,8 @@
 # class ClientProfile(models.Model):
 #     """
 #     Comprehensive client profile EXTENDING UserAccount
-#     Integrated with Internet Plans
+#     Contains ONLY business logic, no authentication
+#     Integrated with Service Operations for subscriptions and plans
 #     """
 #     class ClientTier(models.TextChoices):
 #         NEW = 'new', 'New Client'
@@ -52,6 +61,7 @@
 #         AT_RISK = 'at_risk', 'At Risk'
 #         CHURNED = 'churned', 'Churned'
     
+#     # Link to Authentication app
 #     user = models.OneToOneField(
 #         UserAccount if AUTH_APP_AVAILABLE else 'authentication.UserAccount',
 #         on_delete=models.CASCADE,
@@ -59,14 +69,19 @@
 #         help_text="Linked user from authentication system"
 #     )
     
-#     # Basic Information
+#     # Business Identification
+#     client_id = models.UUIDField(
+#         unique=True,
+#         default=uuid.uuid4,
+#         editable=False,
+#         help_text="Unique business identifier for Service Operations"
+#     )
+    
 #     client_type = models.CharField(
 #         max_length=20,
 #         choices=[
 #             ('residential', 'Residential'),
 #             ('business', 'Business'),
-#             ('corporate', 'Corporate'),
-#             ('student', 'Student')
 #         ],
 #         default='residential'
 #     )
@@ -230,11 +245,24 @@
 #     preferred_payment_method = models.CharField(
 #         max_length=20,
 #         default='mpesa',
-#         choices=[('mpesa', 'M-Pesa'), ("paypal", "PayPal"), ('bank', 'Bank Transfer'), ('card', 'Credit Card')]
+#         choices=[('mpesa', 'M-Pesa'), ("paypal", "PayPal"), ('bank', 'Bank Transfer')]
 #     )
     
 #     notification_preferences = models.JSONField(default=dict, help_text="Notification settings")
 #     communication_preferences = models.JSONField(default=dict, help_text="Preferred communication channels")
+    
+#     # Service Operations Integration
+#     router_id = models.CharField(
+#         max_length=100,
+#         blank=True,
+#         help_text="Router ID for PPPoE clients (from Service Operations)"
+#     )
+    
+#     hotspot_mac_address = models.CharField(
+#         max_length=100,
+#         blank=True,
+#         help_text="MAC address for hotspot clients"
+#     )
     
 #     # Intelligent Tags & Classification
 #     behavior_tags = models.JSONField(default=list, help_text="Automated behavior classification tags")
@@ -255,13 +283,6 @@
 #     recommendations = models.JSONField(default=list, help_text="Recommended actions for this client")
 #     next_best_offer = models.JSONField(default=dict, help_text="Recommended next offer for this client")
     
-#     # Current Plan Information (Cache for quick access)
-#     current_plan_info = models.JSONField(default=dict, help_text="Cached current plan information")
-    
-#     # Plan Management
-#     plan_auto_renew = models.BooleanField(default=True)
-#     plan_notification_sent = models.BooleanField(default=False)
-    
 #     # Audit & Metadata
 #     metadata = models.JSONField(default=dict, help_text="Additional metadata")
 #     flags = models.JSONField(default=list, help_text="System flags and alerts")
@@ -273,7 +294,6 @@
 #     last_login_date = models.DateTimeField(null=True, blank=True)
 #     next_payment_due = models.DateTimeField(null=True, blank=True)
 #     tier_upgraded_at = models.DateTimeField(null=True, blank=True)
-#     plan_updated_at = models.DateTimeField(null=True, blank=True)
 #     created_at = models.DateTimeField(auto_now_add=True)
 #     updated_at = models.DateTimeField(auto_now=True)
     
@@ -281,6 +301,7 @@
 #         verbose_name = 'Client Business Profile'
 #         verbose_name_plural = 'Client Business Profiles'
 #         indexes = [
+#             models.Index(fields=['client_id']),
 #             models.Index(fields=['referral_code']),
 #             models.Index(fields=['status', 'tier']),
 #             models.Index(fields=['client_type']),
@@ -302,39 +323,13 @@
 #         if not self.referral_code:
 #             self.referral_code = self._generate_referral_code()
         
-#         # Update current plan info from subscription
-#         self._update_current_plan_info()
+#         if not self.client_id:
+#             self.client_id = uuid.uuid4()
         
 #         super().save(*args, **kwargs)
         
 #         # Queue metrics update for async processing
 #         self._queue_metrics_update()
-    
-#     def _update_current_plan_info(self):
-#         """Update cached current plan information"""
-#         try:
-#             subscription = self.active_plan_subscription()
-#             if subscription:
-#                 from internet_plans.serializers.plan_serializers import InternetPlanSerializer
-#                 self.current_plan_info = {
-#                     'plan': InternetPlanSerializer(subscription.internet_plan).data,
-#                     'subscription': {
-#                         'id': str(subscription.id),
-#                         'status': subscription.status,
-#                         'start_date': subscription.start_date.isoformat(),
-#                         'end_date': subscription.end_date.isoformat(),
-#                         'data_used': float(subscription.data_used_gb),
-#                         'data_limit': float(subscription.data_limit_gb),
-#                         'auto_renew': subscription.auto_renew,
-#                         'remaining_days': (subscription.end_date - timezone.now()).days,
-#                         'percentage_used': float((subscription.data_used_gb / subscription.data_limit_gb) * 100) if subscription.data_limit_gb > 0 else 0
-#                     }
-#                 }
-#             else:
-#                 self.current_plan_info = {}
-#         except Exception as e:
-#             logger.error(f"Error updating plan info: {str(e)}")
-#             self.current_plan_info = {}
     
 #     def _generate_referral_code(self):
 #         """Generate unique referral code"""
@@ -357,9 +352,9 @@
 #         return code
     
 #     def _queue_metrics_update(self):
+#         from user_management.tasks import update_client_metrics_task
 #         """Queue metrics update for async processing"""
 #         try:
-#             from user_management.tasks import update_client_metrics_task
 #             update_client_metrics_task.delay(self.id)
 #         except ImportError:
 #             # Fallback to synchronous update
@@ -411,10 +406,7 @@
 #         """Get connection_type from UserAccount in Authentication app"""
 #         return self.user.connection_type if hasattr(self.user, 'connection_type') else ''
     
-#     @property
-#     def email(self):
-#         """Get email from UserAccount in Authentication app"""
-#         return self.user.email if hasattr(self.user, 'email') else ''
+#     # REMOVED: email property - No longer part of business logic
     
 #     @property
 #     def is_pppoe_client(self):
@@ -452,83 +444,6 @@
 #     def referral_link(self):
 #         return f"https://yourapp.com/register?ref={self.referral_code}"
     
-#     # Plan Management Methods
-#     def active_plan_subscription(self):
-#         """Get active plan subscription"""
-#         try:
-#             from internet_plans.models import ClientPlanSubscription
-#             return ClientPlanSubscription.objects.filter(
-#                 client=self,
-#                 status='active'
-#             ).select_related('internet_plan').first()
-#         except ImportError:
-#             return None
-    
-#     def plan_history(self, limit=10):
-#         """Get plan history"""
-#         try:
-#             from internet_plans.models import ClientPlanSubscription
-#             return ClientPlanSubscription.objects.filter(
-#                 client=self
-#             ).select_related('internet_plan').order_by('-start_date')[:limit]
-#         except ImportError:
-#             return []
-    
-#     def available_plans(self):
-#         """Get available plans for this client type"""
-#         try:
-#             from internet_plans.models import InternetPlan
-#             if self.is_pppoe_client:
-#                 return InternetPlan.objects.filter(
-#                     active=True,
-#                     available_for_pppoe=True
-#                 ).order_by('price')
-#             elif self.is_hotspot_client:
-#                 return InternetPlan.objects.filter(
-#                     active=True,
-#                     available_for_hotspot=True
-#                 ).order_by('price')
-#             else:
-#                 return InternetPlan.objects.filter(active=True).order_by('price')
-#         except ImportError:
-#             return []
-    
-#     def get_technical_details(self):
-#         """Get technical details for connection"""
-#         details = {}
-#         subscription = self.active_plan_subscription()
-        
-#         if not subscription:
-#             return details
-        
-#         if self.is_pppoe_client:
-#             details['pppoe'] = {
-#                 'username': subscription.pppoe_username,
-#                 'password': '••••••••',
-#                 'ip_address': subscription.ip_address if hasattr(subscription, 'ip_address') else '',
-#                 'mac_address': subscription.mac_address if hasattr(subscription, 'mac_address') else '',
-#                 'plan_details': {
-#                     'speed': f"{subscription.internet_plan.download_speed}Mbps/{subscription.internet_plan.upload_speed}Mbps",
-#                     'data_limit': subscription.data_limit_gb,
-#                     'data_used': subscription.data_used_gb,
-#                     'remaining': subscription.data_limit_gb - subscription.data_used_gb
-#                 }
-#             }
-        
-#         if self.is_hotspot_client:
-#             details['hotspot'] = {
-#                 'plan_id': subscription.hotspot_plan_id,
-#                 'session_details': subscription.session_details if hasattr(subscription, 'session_details') else {},
-#                 'plan_details': {
-#                     'name': subscription.internet_plan.name,
-#                     'duration': subscription.internet_plan.duration_hours,
-#                     'price': subscription.internet_plan.price,
-#                     'max_devices': subscription.internet_plan.max_devices
-#                 }
-#             }
-        
-#         return details
-    
 #     def calculate_commission(self, amount):
 #         """Calculate commission based on marketer tier"""
 #         commission_rates = {
@@ -539,6 +454,15 @@
 #         }
 #         rate = commission_rates.get(self.marketer_tier, Decimal('0.05'))
 #         return amount * rate
+    
+#     def get_current_plan_info(self):
+#         """Get current plan information via Service Operations adapter"""
+#         try:
+#             from service_operations.adapters.user_management_adapter import UserManagementAdapter
+#             return UserManagementAdapter.get_client_details(str(self.client_id))
+#         except ImportError:
+#             logger.error("Service Operations adapter not available")
+#             return None
 
 
 # class ClientAnalyticsSnapshot(models.Model):
@@ -556,11 +480,6 @@
 #     session_count = models.IntegerField(default=0)
 #     avg_session_duration_minutes = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
 #     peak_usage_hour = models.IntegerField(null=True, blank=True)
-    
-#     # Plan-specific Metrics
-#     plan_utilization_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
-#     data_capacity_used = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
-#     speed_utilization = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     
 #     # Behavioral Metrics
 #     churn_risk_score = models.DecimalField(max_digits=4, decimal_places=2, default=0.00)
@@ -585,7 +504,6 @@
 #     predicted_next_payment = models.DateField(null=True, blank=True)
 #     predicted_churn_date = models.DateField(null=True, blank=True)
 #     predicted_ltv = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-#     recommended_plan_upgrade = models.JSONField(default=dict)
     
 #     created_at = models.DateTimeField(default=timezone.now)
     
@@ -596,7 +514,6 @@
 #         indexes = [
 #             models.Index(fields=['date', 'churn_risk_score']),
 #             models.Index(fields=['client', 'date']),
-#             models.Index(fields=['plan_utilization_rate']),
 #         ]
     
 #     def __str__(self):
@@ -611,7 +528,6 @@
 #         PAYOUT = 'payout', 'Commission Payout'
 #         ADJUSTMENT = 'adjustment', 'Adjustment'
 #         PROMOTIONAL = 'promotional', 'Promotional Commission'
-#         PLAN_SALE = 'plan_sale', 'Plan Sale Commission'
     
 #     class Status(models.TextChoices):
 #         PENDING = 'pending', 'Pending Approval'
@@ -633,15 +549,6 @@
 #     transaction_type = models.CharField(max_length=20, choices=TransactionType.choices, default=TransactionType.REFERRAL)
 #     amount = models.DecimalField(max_digits=10, decimal_places=2)
 #     description = models.TextField()
-    
-#     # Plan Reference (if related to plan sale)
-#     plan_reference = models.ForeignKey(
-#         'internet_plans.InternetPlan',
-#         on_delete=models.SET_NULL,
-#         null=True,
-#         blank=True,
-#         related_name='commission_transactions'
-#     )
     
 #     # Reference Tracking
 #     reference_id = models.CharField(max_length=100, db_index=True)
@@ -689,7 +596,6 @@
 #             models.Index(fields=['status', 'transaction_type']),
 #             models.Index(fields=['reference_id']),
 #             models.Index(fields=['due_date', 'status']),
-#             models.Index(fields=['plan_reference']),
 #         ]
 #         ordering = ['-transaction_date']
     
@@ -709,15 +615,14 @@
 #             self.notes.append({
 #                 'type': 'approval_note',
 #                 'timestamp': timezone.now().isoformat(),
-#                 'user': approved_by_user.email,
+#                 'user': approved_by_user.username,
 #                 'note': notes
 #             })
         
 #         # Update marketer's commission balance
 #         if self.transaction_type in [self.TransactionType.REFERRAL, 
 #                                     self.TransactionType.BONUS,
-#                                     self.TransactionType.PROMOTIONAL,
-#                                     self.TransactionType.PLAN_SALE]:
+#                                     self.TransactionType.PROMOTIONAL]:
 #             self.marketer.commission_balance += self.amount
 #             self.marketer.total_commission_earned += self.amount
 #             self.marketer.save()
@@ -778,15 +683,6 @@
 #         HOTSPOT_AUTH = 'hotspot_auth', 'Hotspot Authentication'
 #         HOTSPOT_PAYMENT_PAGE = 'hotspot_payment_page', 'Hotspot Payment Page'
 #         HOTSPOT_PLAN_SELECTION = 'hotspot_plan_selection', 'Hotspot Plan Selection'
-        
-#         # Plan Related
-#         PLAN_PURCHASE = 'plan_purchase', 'Plan Purchased'
-#         PLAN_RENEWAL = 'plan_renewal', 'Plan Renewed'
-#         PLAN_UPGRADE = 'plan_upgrade', 'Plan Upgraded'
-#         PLAN_DOWNGRADE = 'plan_downgrade', 'Plan Downgraded'
-#         PLAN_CANCELLATION = 'plan_cancellation', 'Plan Cancelled'
-#         PLAN_EXPIRY = 'plan_expiry', 'Plan Expired'
-#         PLAN_SUSPENSION = 'plan_suspension', 'Plan Suspended'
     
 #     class Outcome(models.TextChoices):
 #         SUCCESS = 'success', 'Success'
@@ -804,15 +700,6 @@
 #     action = models.CharField(max_length=100)
 #     description = models.TextField()
 #     outcome = models.CharField(max_length=20, choices=Outcome.choices, default=Outcome.PENDING)
-    
-#     # Plan Reference
-#     plan_reference = models.ForeignKey(
-#         'internet_plans.InternetPlan',
-#         on_delete=models.SET_NULL,
-#         null=True,
-#         blank=True,
-#         related_name='interactions'
-#     )
     
 #     # Hotspot Specific
 #     is_hotspot = models.BooleanField(default=False)
@@ -865,7 +752,6 @@
 #             models.Index(fields=['is_hotspot', 'outcome']),
 #             models.Index(fields=['converted_to_purchase']),
 #             models.Index(fields=['flow_stage', 'flow_abandoned_at']),
-#             models.Index(fields=['plan_reference']),
 #         ]
     
 #     def __str__(self):
@@ -883,8 +769,11 @@ User Management Models - Business Logic Extension
 Extends Authentication app's UserAccount without duplication
 Production-ready with advanced analytics
 Integrated with Service Operations
+FIXED: Added post_save signal for automatic ClientProfile creation
 """
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import Avg, Sum, Count, Q
@@ -1336,6 +1225,27 @@ class ClientProfile(models.Model):
         except ImportError:
             logger.error("Service Operations adapter not available")
             return None
+
+
+# ==================== AUTOMATIC PROFILE CREATION SIGNAL ====================
+@receiver(post_save, sender=UserAccount)
+def create_client_profile(sender, instance, created, **kwargs):
+    """
+    Automatically create ClientProfile when a UserAccount is created
+    This is a backup in case signals from Authentication app don't arrive
+    """
+    if created and instance.user_type == 'client':
+        try:
+            # Check if profile already exists (avoid duplicates)
+            if not hasattr(instance, 'business_profile'):
+                ClientProfile.objects.create(
+                    user=instance,
+                    client_type='residential',
+                    customer_since=timezone.now()
+                )
+                logger.info(f"Auto-created ClientProfile for {instance.username}")
+        except Exception as e:
+            logger.error(f"Failed to auto-create ClientProfile: {e}")
 
 
 class ClientAnalyticsSnapshot(models.Model):

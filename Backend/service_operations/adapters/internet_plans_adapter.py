@@ -1,8 +1,12 @@
+
+
+
+
 # """
 # Service Operations - Internet Plans Adapter
 # Production-ready adapter for internet_plans app integration
 # Fully integrated with existing subscription service logic
-# Optimized to avoid duplication of model logic
+# FIXED: Added proper authentication headers and fallback handling
 # """
 
 # import logging
@@ -27,7 +31,103 @@
 #     Fully implements ServiceOperationsInterface from internet_plans app
 #     Uses existing subscription service logic for database operations
 #     Avoids duplication of model logic (PPPoe credentials, MAC validation, etc.)
+#     FIXED: Added proper authentication for API calls and improved error handling
 #     """
+    
+#     @staticmethod
+#     def _get_base_url() -> str:
+#         """Get base URL for internet_plans service"""
+#         return getattr(settings, 'INTERNET_PLANS_BASE_URL', 'http://localhost:8000')
+    
+#     @staticmethod
+#     def _get_auth_headers() -> Dict[str, str]:
+#         """Get authentication headers for internet_plans API"""
+#         headers = {
+#             'Content-Type': 'application/json',
+#         }
+        
+#         # Use internal API token for service-to-service communication
+#         api_token = getattr(settings, 'INTERNAL_API_TOKEN', None)
+#         if api_token:
+#             headers['Authorization'] = f'Bearer {api_token}'
+        
+#         # Add service name for identification
+#         headers['X-Service-Name'] = 'service-operations'
+#         headers['X-Service-Version'] = '1.0.0'
+        
+#         return headers
+    
+#     @staticmethod
+#     def _normalize_plan_data(plan_data: Dict[str, Any]) -> Dict[str, Any]:
+#         """Normalize plan data to consistent format"""
+#         return {
+#             'id': str(plan_data.get('id', '')),
+#             'name': plan_data.get('name', 'Internet Plan'),
+#             'planType': plan_data.get('planType') or plan_data.get('type', 'paid'),
+#             'price': float(plan_data.get('price', 0)),
+#             'is_active': plan_data.get('is_active', plan_data.get('active', True)),
+#             'active': plan_data.get('active', plan_data.get('is_active', True)),
+#             'category': plan_data.get('category', 'Hotspot'),
+#             'description': plan_data.get('description', 'Internet access plan'),
+#             'data_limit_bytes': plan_data.get('data_limit_bytes', 10 * 1024 * 1024 * 1024),
+#             'time_limit_seconds': plan_data.get('time_limit_seconds', 24 * 3600),
+#             'data_limit_display': plan_data.get('data_limit_display', '10 GB'),
+#             'time_limit_display': plan_data.get('time_limit_display', '24 Hours'),
+#             'download_speed': str(plan_data.get('download_speed', '10')),
+#             'upload_speed': str(plan_data.get('upload_speed', '5')),
+#             'speed_unit': plan_data.get('speed_unit', 'Mbps'),
+#             'enabledAccessMethods': plan_data.get('enabledAccessMethods', ['hotspot']),
+#             'technicalConfig': plan_data.get('technicalConfig', {}),
+#             'router_specific': plan_data.get('router_specific', False),
+#             'allowedRouters': plan_data.get('allowedRouters', []),
+#             'accessMethods': plan_data.get('accessMethods', {}),
+#         }
+    
+#     @staticmethod
+#     def _get_fallback_plan_details(plan_id: str) -> Dict[str, Any]:
+#         """Get fallback plan details when API is unavailable"""
+#         return {
+#             'id': plan_id,
+#             'name': 'Internet Plan',
+#             'planType': 'paid',
+#             'price': 0,
+#             'is_active': True,
+#             'active': True,
+#             'category': 'Hotspot',
+#             'description': 'Internet access plan',
+#             'data_limit_bytes': 10 * 1024 * 1024 * 1024,  # 10GB
+#             'time_limit_seconds': 24 * 3600,  # 24 hours
+#             'data_limit_display': '10 GB',
+#             'time_limit_display': '24 Hours',
+#             'download_speed': '10',
+#             'upload_speed': '5',
+#             'speed_unit': 'Mbps',
+#             'enabledAccessMethods': ['hotspot'],
+#             'technicalConfig': {
+#                 'hotspot': {
+#                     'download_speed': '10',
+#                     'upload_speed': '5',
+#                     'data_limit_bytes': 10 * 1024 * 1024 * 1024,
+#                     'time_limit_seconds': 24 * 3600,
+#                 }
+#             },
+#             'router_specific': False,
+#             'allowedRouters': [],
+#             'accessMethods': {
+#                 'hotspot': {
+#                     'enabled': True,
+#                     'downloadSpeed': {'value': '10', 'unit': 'Mbps'},
+#                     'uploadSpeed': {'value': '5', 'unit': 'Mbps'},
+#                     'dataLimit': {'value': '10', 'unit': 'GB'},
+#                     'usageLimit': {'value': '24', 'unit': 'Hours'},
+#                     'maxDevices': 1,
+#                     'sessionTimeout': 86400,
+#                     'idleTimeout': 300,
+#                     'validityPeriod': {'value': '30', 'unit': 'Days'},
+#                     'macBinding': False
+#                 }
+#             },
+#         }
     
 #     # ==================== Core Interface Methods ====================
     
@@ -90,7 +190,8 @@
 #                 'router_id': router_id,
 #                 'technical_config': technical_config,
 #                 'created_by': 'internet_plans_adapter',
-#                 'source': 'internet_plans_integration'
+#                 'source': 'internet_plans_integration',
+#                 'compatibility_check': compatibility
 #             }
             
 #             # Use existing subscription service to create subscription
@@ -206,8 +307,7 @@
 #                 return cached_result
             
 #             # Get internet plans API configuration
-#             internet_plans_url = getattr(settings, 'INTERNET_PLANS_BASE_URL', 'http://localhost:8000')
-#             api_token = getattr(settings, 'INTERNAL_API_TOKEN', '')
+#             base_url = InternetPlansAdapter._get_base_url()
             
 #             # Prepare request data
 #             request_data = {
@@ -217,16 +317,11 @@
 #             }
             
 #             # Make API call to internet_plans compatibility endpoint
-#             headers = {
-#                 'Content-Type': 'application/json'
-#             }
-            
-#             if api_token:
-#                 headers['Authorization'] = f'Bearer {api_token}'
+#             headers = InternetPlansAdapter._get_auth_headers()
             
 #             try:
 #                 response = requests.post(
-#                     f"{internet_plans_url}/api/internet_plans/plans/compatibility/check/",
+#                     f"{base_url}/api/internet_plans/plans/compatibility/check/",
 #                     json=request_data,
 #                     headers=headers,
 #                     timeout=10
@@ -310,7 +405,7 @@
 #         router_compatible = True
 #         if router_specific and router_id:
 #             allowed_routers = plan_details.get('allowedRouters', [])
-#             router_compatible = any(r.get('id') == router_id for r in allowed_routers)
+#             router_compatible = any(str(r.get('id')) == str(router_id) for r in allowed_routers)
         
 #         compatible = access_compatible and router_compatible
         
@@ -721,7 +816,7 @@
 #                 used_free_trial = Subscription.objects.filter(
 #                     client_id=client_id,
 #                     internet_plan_id=plan_id,
-#                     plan_details__planType='free_trial'
+#                     metadata__plan_details__planType='free_trial'
 #                 ).exists()
                 
 #                 if used_free_trial:
@@ -906,6 +1001,7 @@
 #         """
 #         Get basic plan details (name, price, etc.)
 #         Calls internet_plans API
+#         FIXED: Added proper authentication headers and better fallback
 #         """
 #         try:
 #             # Cache key for plan details
@@ -913,61 +1009,111 @@
 #             cached_details = cache.get(cache_key)
             
 #             if cached_details:
+#                 logger.debug(f"Cache hit for plan details: {plan_id}")
 #                 return cached_details
             
 #             # Get internet plans API configuration
-#             internet_plans_url = getattr(settings, 'INTERNET_PLANS_BASE_URL', 'http://localhost:8000')
-#             api_token = getattr(settings, 'INTERNAL_API_TOKEN', '')
+#             base_url = InternetPlansAdapter._get_base_url()
             
-#             # Make API call
-#             headers = {}
-#             if api_token:
-#                 headers['Authorization'] = f'Bearer {api_token}'
+#             # Try multiple endpoints in order
+#             endpoints = [
+#                 f"{base_url}/api/internet_plans/plans/{plan_id}/",  # Authenticated endpoint
+#                 f"{base_url}/api/internet_plans/plans/public/{plan_id}/",  # Public endpoint
+#                 f"{base_url}/api/internet_plans/plans/?id={plan_id}",  # List endpoint with filter
+#             ]
             
-#             try:
-#                 response = requests.get(
-#                     f"{internet_plans_url}/api/internet_plans/plans/{plan_id}/",
-#                     headers=headers,
-#                     timeout=10
-#                 )
-                
-#                 if response.status_code == 200:
-#                     result = response.json()
+#             plan_data = None
+#             headers = InternetPlansAdapter._get_auth_headers()
+            
+#             for endpoint in endpoints:
+#                 try:
+#                     logger.debug(f"Trying endpoint: {endpoint}")
+#                     response = requests.get(
+#                         endpoint,
+#                         headers=headers,
+#                         timeout=5
+#                     )
                     
-#                     if result.get('success'):
-#                         plan_data = result.get('plan', {})
+#                     if response.status_code == 200:
+#                         data = response.json()
                         
-#                         # Cache for 10 minutes
-#                         cache.set(cache_key, plan_data, 600)
+#                         # Handle different response structures
+#                         if data.get('success'):
+#                             plan_data = data.get('plan') or data.get('data') or data.get('results')
+#                         elif data.get('plan'):
+#                             plan_data = data.get('plan')
+#                         elif isinstance(data, dict) and 'id' in data:
+#                             plan_data = data
+#                         elif isinstance(data, list) and len(data) > 0:
+#                             plan_data = data[0]
                         
-#                         return plan_data
+#                         if plan_data:
+#                             logger.info(f"Successfully fetched plan details from {endpoint}")
+#                             break
+                            
+#                 except requests.exceptions.RequestException as e:
+#                     logger.warning(f"Endpoint {endpoint} failed: {e}")
+#                     continue
+            
+#             if plan_data:
+#                 # Normalize plan data structure
+#                 normalized_plan = InternetPlansAdapter._normalize_plan_data(plan_data)
                 
-#                 # If API call fails, return minimal details
-#                 return {
-#                     'id': plan_id,
-#                     'name': 'Unknown Plan',
-#                     'planType': 'paid',
-#                     'price': 0,
-#                     'active': False,
-#                     'category': 'Unknown',
-#                     'description': 'Plan details unavailable'
-#                 }
+#                 # Cache for 10 minutes
+#                 cache.set(cache_key, normalized_plan, 600)
                 
-#             except requests.exceptions.RequestException as e:
-#                 logger.warning(f"Failed to get plan details from API: {e}")
-#                 return {
-#                     'id': plan_id,
-#                     'name': 'Unknown Plan',
-#                     'planType': 'paid',
-#                     'price': 0,
-#                     'active': False,
-#                     'category': 'Unknown',
-#                     'description': 'Plan details unavailable'
-#                 }
+#                 return normalized_plan
+            
+#             # If all API calls fail, return minimal details
+#             logger.warning(f"All endpoints failed for plan {plan_id}, using fallback")
+#             return InternetPlansAdapter._get_fallback_plan_details(plan_id)
             
 #         except Exception as e:
 #             logger.error(f"Failed to get plan details: {e}")
-#             return None
+#             return InternetPlansAdapter._get_fallback_plan_details(plan_id)
+    
+#     @staticmethod
+#     def get_public_plans(client_type: str = None) -> List[Dict[str, Any]]:
+#         """
+#         Get public plans from internet_plans app
+#         """
+#         try:
+#             base_url = InternetPlansAdapter._get_base_url()
+            
+#             params = {}
+#             if client_type:
+#                 params['client_type'] = client_type
+            
+#             response = requests.get(
+#                 f"{base_url}/api/internet_plans/plans/public/",
+#                 params=params,
+#                 timeout=5
+#             )
+            
+#             if response.status_code == 200:
+#                 data = response.json()
+                
+#                 if data.get('success'):
+#                     plans = data.get('plans', [])
+#                 elif data.get('results'):
+#                     plans = data.get('results', [])
+#                 elif isinstance(data, list):
+#                     plans = data
+#                 else:
+#                     plans = []
+                
+#                 # Normalize each plan
+#                 return [InternetPlansAdapter._normalize_plan_data(plan) for plan in plans]
+            
+#             logger.warning(f"Failed to get public plans: {response.status_code}")
+#             return []
+            
+#         except requests.exceptions.RequestException as e:
+#             logger.error(f"Request failed for public plans: {e}")
+#             return []
+#         except Exception as e:
+#             logger.error(f"Failed to get public plans: {e}")
+#             return []
     
 #     @staticmethod
 #     def health_check() -> Dict[str, Any]:
@@ -975,19 +1121,21 @@
 #         Check Internet Plans service health
 #         """
 #         try:
-#             internet_plans_url = getattr(settings, 'INTERNET_PLANS_BASE_URL', 'http://localhost:8000')
+#             base_url = InternetPlansAdapter._get_base_url()
             
 #             # Try to access public endpoint
+#             start_time = timezone.now()
 #             response = requests.get(
-#                 f"{internet_plans_url}/api/internet_plans/plans/public/",
-#                 timeout=5
+#                 f"{base_url}/api/internet_plans/plans/public/",
+#                 timeout=3
 #             )
+#             response_time = (timezone.now() - start_time).total_seconds()
             
 #             if response.status_code == 200:
 #                 return {
 #                     'status': 'healthy',
 #                     'service': 'internet_plans',
-#                     'response_time': response.elapsed.total_seconds(),
+#                     'response_time': response_time,
 #                     'timestamp': timezone.now().isoformat()
 #                 }
 #             else:
@@ -995,6 +1143,7 @@
 #                     'status': 'degraded',
 #                     'service': 'internet_plans',
 #                     'status_code': response.status_code,
+#                     'response_time': response_time,
 #                     'timestamp': timezone.now().isoformat()
 #                 }
                 
@@ -1017,11 +1166,6 @@
 #                 'error': str(e),
 #                 'timestamp': timezone.now().isoformat()
 #             }
-   
-
-
-
-
 
 
 
@@ -1034,7 +1178,8 @@
 Service Operations - Internet Plans Adapter
 Production-ready adapter for internet_plans app integration
 Fully integrated with existing subscription service logic
-FIXED: Added proper authentication headers and fallback handling
+FIXED: Added proper authentication headers, fallback handling, and improved response parsing
+UPDATED: Enhanced get_plan_details() to better handle different endpoint types
 """
 
 import logging
@@ -2022,14 +2167,14 @@ class InternetPlansAdapter:
             logger.error(f"Failed to get client plan history: {e}")
             return []
     
-    # ==================== Helper Methods ====================
+    # ==================== UPDATED METHOD: get_plan_details ====================
     
     @staticmethod
     def get_plan_details(plan_id: str) -> Optional[Dict[str, Any]]:
         """
         Get basic plan details (name, price, etc.)
         Calls internet_plans API
-        FIXED: Added proper authentication headers and better fallback
+        FIXED: Better handling of response structure and multiple endpoint types
         """
         try:
             # Cache key for plan details
@@ -2046,8 +2191,9 @@ class InternetPlansAdapter:
             # Try multiple endpoints in order
             endpoints = [
                 f"{base_url}/api/internet_plans/plans/{plan_id}/",  # Authenticated endpoint
-                f"{base_url}/api/internet_plans/plans/public/{plan_id}/",  # Public endpoint
+                f"{base_url}/api/internet_plans/plans/public/",  # Public endpoint (no ID needed)
                 f"{base_url}/api/internet_plans/plans/?id={plan_id}",  # List endpoint with filter
+                f"{base_url}/api/internet_plans/plans/available/",  # Available plans endpoint
             ]
             
             plan_data = None
@@ -2056,28 +2202,62 @@ class InternetPlansAdapter:
             for endpoint in endpoints:
                 try:
                     logger.debug(f"Trying endpoint: {endpoint}")
-                    response = requests.get(
-                        endpoint,
-                        headers=headers,
-                        timeout=5
-                    )
                     
-                    if response.status_code == 200:
-                        data = response.json()
+                    # For public endpoint without ID, we need to filter results
+                    if 'public/' in endpoint and not endpoint.endswith(f"{plan_id}/"):
+                        # Public endpoint doesn't accept ID in URL, so we'll get all and filter
+                        response = requests.get(
+                            endpoint,
+                            headers=headers,
+                            timeout=5
+                        )
                         
-                        # Handle different response structures
-                        if data.get('success'):
-                            plan_data = data.get('plan') or data.get('data') or data.get('results')
-                        elif data.get('plan'):
-                            plan_data = data.get('plan')
-                        elif isinstance(data, dict) and 'id' in data:
-                            plan_data = data
-                        elif isinstance(data, list) and len(data) > 0:
-                            plan_data = data[0]
+                        if response.status_code == 200:
+                            data = response.json()
+                            
+                            # Handle different response structures for list endpoints
+                            plans_list = None
+                            if isinstance(data, list):
+                                plans_list = data
+                            elif data.get('results'):
+                                plans_list = data['results']
+                            elif data.get('plans'):
+                                plans_list = data['plans']
+                            elif data.get('data'):
+                                plans_list = data['data']
+                            
+                            if plans_list:
+                                # Find the plan with matching ID
+                                for plan in plans_list:
+                                    if str(plan.get('id')) == str(plan_id):
+                                        plan_data = plan
+                                        logger.info(f"Found plan {plan_id} in public plans list")
+                                        break
+                    else:
+                        # For endpoints that take ID directly
+                        response = requests.get(
+                            endpoint,
+                            headers=headers,
+                            timeout=5
+                        )
                         
-                        if plan_data:
-                            logger.info(f"Successfully fetched plan details from {endpoint}")
-                            break
+                        if response.status_code == 200:
+                            data = response.json()
+                            
+                            # Handle different response structures for single plan endpoints
+                            if data.get('success'):
+                                plan_data = data.get('plan') or data.get('data')
+                            elif data.get('plan'):
+                                plan_data = data.get('plan')
+                            elif isinstance(data, dict) and 'id' in data:
+                                plan_data = data
+                            
+                            if plan_data:
+                                logger.info(f"Successfully fetched plan details from {endpoint}")
+                                break
+                    
+                    if plan_data:
+                        break
                             
                 except requests.exceptions.RequestException as e:
                     logger.warning(f"Endpoint {endpoint} failed: {e}")

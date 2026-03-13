@@ -1414,7 +1414,6 @@ class EmailValidationSerializer(serializers.Serializer):
 
 
 
-# Add to authentication/serializers.py
 
 class ClientSearchSerializer(serializers.Serializer):
     """Serializer for client search requests"""
